@@ -12,7 +12,7 @@ const Hero = () => {
       setIsVisible(true);
     }, 100);
     
-    // Animation sequence timer
+    // Animation sequence timer - increased visibility time
     const animationInterval = setInterval(() => {
       setAnimationStep(prev => (prev >= 4 ? 0 : prev + 1));
     }, 3000);
@@ -45,15 +45,15 @@ const Hero = () => {
     <section className="relative pt-28 pb-20 md:pt-40 md:pb-28 overflow-hidden">
       {/* Background elements */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gray-50 to-white"></div>
-        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-gray-50 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute bottom-20 left-0 w-[600px] h-[600px] bg-gray-50 rounded-full blur-3xl opacity-30"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gray-100 to-white"></div>
+        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-gray-100 rounded-full blur-3xl opacity-50"></div>
+        <div className="absolute bottom-20 left-0 w-[600px] h-[600px] bg-gray-100 rounded-full blur-3xl opacity-50"></div>
       </div>
       
       <div className="container mx-auto px-4 md:px-8 relative z-10">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className={`max-w-xl transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className="inline-block py-1 px-3 mb-4 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
+            <span className="inline-block py-1 px-3 mb-4 bg-gray-200 text-gray-800 rounded-full text-sm font-medium">
               AI & Automation Solutions
             </span>
             
@@ -85,12 +85,21 @@ const Hero = () => {
           </div>
           
           <div className={`relative transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            {/* Main Image */}
+            <div className="absolute -z-10 inset-0 flex items-center justify-center">
+              <img 
+                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800" 
+                alt="Technology background" 
+                className="w-full h-full object-cover rounded-xl opacity-10"
+              />
+            </div>
+            
             {/* Animation Card 1: Process Automation */}
-            <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden p-1 border border-gray-100 w-full max-w-md">
+            <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden p-1 border border-gray-200 w-full max-w-md">
               <div className="p-5 rounded-xl bg-gray-50">
                 <h3 className="text-xl font-semibold mb-4 text-gray-900">Automation Process</h3>
                 
-                <div className="bg-white rounded-xl p-4 border border-gray-100 min-h-[160px] relative">
+                <div className="bg-white rounded-xl p-4 border border-gray-200 min-h-[160px] relative">
                   {automationSteps.map((step, index) => (
                     <div 
                       key={index} 
@@ -123,7 +132,7 @@ const Hero = () => {
             <div className="absolute -bottom-6 -left-6 bg-white/90 backdrop-blur-xl rounded-xl p-4 shadow-lg border border-gray-200">
               <h3 className="text-md font-semibold mb-2 text-gray-900">Personal AI Assistant</h3>
               <div className="flex items-center gap-3 mb-2">
-                <div className="bg-gray-100 h-10 w-10 rounded-full flex items-center justify-center text-gray-600">
+                <div className="bg-gray-200 h-10 w-10 rounded-full flex items-center justify-center text-gray-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2c1.1 0 2 .9 2 2v7c0 1.1-.9 2-2 2s-2-.9-2-2V4c0-1.1.9-2 2-2z"></path>
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -137,9 +146,9 @@ const Hero = () => {
               </div>
             </div>
             
-            <div className="absolute -top-6 -right-6 bg-white/80 backdrop-blur-xl rounded-xl p-4 shadow-lg border border-gray-200">
+            <div className="absolute -top-6 -right-6 bg-white/90 backdrop-blur-xl rounded-xl p-4 shadow-lg border border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="bg-gray-100 h-10 w-10 rounded-full flex items-center justify-center text-gray-600">
+                <div className="bg-gray-200 h-10 w-10 rounded-full flex items-center justify-center text-gray-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
                     <path d="m9 12 2 2 4-4"></path>

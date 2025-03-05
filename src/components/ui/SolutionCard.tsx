@@ -66,7 +66,7 @@ const SolutionCard = ({
 
       <div className="p-6">
         <div className="flex items-center mb-4">
-          <div className="bg-blue-50 p-2 rounded-lg text-automatizalo-blue mr-3">
+          <div className="bg-gray-100 p-2 rounded-lg text-gray-800 mr-3">
             {icon}
           </div>
           <h3 className="text-lg font-semibold">{title}</h3>
@@ -79,7 +79,7 @@ const SolutionCard = ({
             <li key={idx} className="flex items-start">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-automatizalo-blue shrink-0 mr-2"
+                className="h-5 w-5 text-gray-800 shrink-0 mr-2"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -96,7 +96,7 @@ const SolutionCard = ({
 
         <Button
           variant="ghost"
-          className="w-full justify-between px-4 py-2 border border-gray-200 hover:bg-blue-50 hover:text-automatizalo-blue hover:border-blue-200 transition-colors"
+          className="w-full justify-between px-4 py-2 border border-gray-200 hover:bg-gray-100 hover:text-gray-800 hover:border-gray-300 transition-colors"
         >
           <span>Learn More</span>
           <ArrowRight size={16} />

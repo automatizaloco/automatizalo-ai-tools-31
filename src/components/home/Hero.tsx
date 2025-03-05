@@ -84,38 +84,38 @@ const Hero = () => {
             </div>
           </div>
           
-          <div className={`relative transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            {/* Main Image */}
-            <div className="absolute -z-10 inset-0 flex items-center justify-center">
+          <div className={`relative w-full max-w-md transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            {/* Main Computer Image */}
+            <div className="rounded-xl overflow-hidden mb-8 shadow-lg border border-gray-200">
               <img 
-                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800" 
-                alt="Technology background" 
-                className="w-full h-full object-cover rounded-xl opacity-10"
+                src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80&w=800" 
+                alt="Person using computer" 
+                className="w-full h-auto object-cover"
               />
             </div>
             
             {/* Animation Card 1: Process Automation */}
-            <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden p-1 border border-gray-200 w-full max-w-md">
-              <div className="p-5 rounded-xl bg-gray-50">
-                <h3 className="text-xl font-semibold mb-4 text-gray-900">Automation Process</h3>
+            <div className="absolute -bottom-12 -right-8 bg-white rounded-2xl shadow-xl overflow-hidden p-1 border border-gray-200 w-[280px] z-10">
+              <div className="p-4 rounded-xl bg-gray-50">
+                <h3 className="text-md font-semibold mb-3 text-gray-900">Automation Process</h3>
                 
-                <div className="bg-white rounded-xl p-4 border border-gray-200 min-h-[160px] relative">
+                <div className="bg-white rounded-xl p-3 border border-gray-200 min-h-[120px] relative">
                   {automationSteps.map((step, index) => (
                     <div 
                       key={index} 
-                      className={`absolute inset-0 p-4 transition-all duration-500 flex flex-col ${
+                      className={`absolute inset-0 p-3 transition-all duration-500 flex flex-col ${
                         animationStep === index 
                           ? 'opacity-100 translate-y-0' 
                           : 'opacity-0 translate-y-8 pointer-events-none'
                       }`}
                     >
-                      <h4 className="font-medium text-gray-900">{step.title}</h4>
-                      <p className="text-sm text-gray-600 mt-2">{step.content}</p>
+                      <h4 className="font-medium text-sm text-gray-900">{step.title}</h4>
+                      <p className="text-xs text-gray-600 mt-1">{step.content}</p>
                     </div>
                   ))}
                 </div>
                 
-                <div className="flex justify-between mt-4">
+                <div className="flex justify-between mt-3">
                   {automationSteps.map((_, index) => (
                     <div 
                       key={index} 
@@ -129,10 +129,10 @@ const Hero = () => {
             </div>
             
             {/* Animation Card 2: AI Assistant */}
-            <div className="absolute -bottom-6 -left-6 bg-white/90 backdrop-blur-xl rounded-xl p-4 shadow-lg border border-gray-200">
+            <div className="absolute -top-8 -left-8 bg-white/90 backdrop-blur-xl rounded-xl p-4 shadow-lg border border-gray-200 w-64 z-20">
               <h3 className="text-md font-semibold mb-2 text-gray-900">Personal AI Assistant</h3>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="bg-gray-200 h-10 w-10 rounded-full flex items-center justify-center text-gray-600">
+              <div className="flex items-start gap-3 mb-2">
+                <div className="bg-gray-200 h-10 w-10 rounded-full flex items-center justify-center text-gray-600 mt-1 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2c1.1 0 2 .9 2 2v7c0 1.1-.9 2-2 2s-2-.9-2-2V4c0-1.1.9-2 2-2z"></path>
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -146,7 +146,7 @@ const Hero = () => {
               </div>
             </div>
             
-            <div className="absolute -top-6 -right-6 bg-white/90 backdrop-blur-xl rounded-xl p-4 shadow-lg border border-gray-200">
+            <div className="absolute -bottom-16 -left-6 bg-white/90 backdrop-blur-xl rounded-xl p-4 shadow-lg border border-gray-200 z-20">
               <div className="flex items-center gap-3">
                 <div className="bg-gray-200 h-10 w-10 rounded-full flex items-center justify-center text-gray-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -5,78 +5,24 @@ import { CalendarIcon, Clock, ArrowRight, User } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-
-// Blog posts data
-const blogPosts = [
-  {
-    id: 1,
-    title: "The Future of Workflow Automation: How AI is Transforming Business Operations",
-    excerpt: "Discover how artificial intelligence is revolutionizing workflow automation and creating more efficient business processes across industries.",
-    content: "Artificial intelligence is rapidly transforming how businesses operate, particularly in the realm of workflow automation. From simple task automation to complex decision-making processes, AI is helping companies reduce manual work, minimize errors, and accelerate operations...",
-    category: "Automation",
-    author: "Maria Rodriguez",
-    date: "May 15, 2023",
-    readTime: "8 min read",
-    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-    featured: true
-  },
-  {
-    id: 2,
-    title: "Implementing Conversational AI: Best Practices for Customer Service",
-    excerpt: "Learn how to effectively implement conversational AI to enhance customer service experiences and increase satisfaction rates.",
-    content: "Conversational AI has become a cornerstone of modern customer service strategies. When implemented correctly, these intelligent systems can provide 24/7 support, reduce wait times, and deliver consistent service quality...",
-    category: "AI",
-    author: "James Chen",
-    date: "April 3, 2023",
-    readTime: "6 min read",
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-    featured: false
-  },
-  {
-    id: 3,
-    title: "Ethical Considerations in Business Process Automation",
-    excerpt: "Explore the ethical dimensions of implementing automation technologies in the workplace and strategies for responsible innovation.",
-    content: "As businesses increasingly adopt automation technologies, important ethical questions arise about impacts on employment, privacy, security, and social responsibility...",
-    category: "Automation",
-    author: "Sarah Johnson",
-    date: "March 21, 2023",
-    readTime: "10 min read",
-    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-    featured: false
-  },
-  {
-    id: 4,
-    title: "How Small Businesses Can Leverage AI Without Breaking the Bank",
-    excerpt: "Practical approaches for small businesses to implement AI solutions with limited resources while maximizing ROI.",
-    content: "Artificial intelligence isn't just for tech giants and enterprises with massive IT budgets. Today, small businesses can access powerful AI tools through affordable SaaS platforms, APIs, and open-source solutions...",
-    category: "AI",
-    author: "David Park",
-    date: "February 12, 2023",
-    readTime: "7 min read",
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-    featured: false
-  },
-  {
-    id: 5,
-    title: "The Integration of AI and RPA: Creating Intelligent Automation",
-    excerpt: "Understanding how the combination of AI and Robotic Process Automation is creating a new paradigm of intelligent automation solutions.",
-    content: "The convergence of Artificial Intelligence and Robotic Process Automation represents one of the most significant developments in business technology in recent years. While RPA excels at rule-based, repetitive tasks, AI brings cognitive capabilities that can handle exceptions and make judgments...",
-    category: "Automation",
-    author: "Michael Thompson",
-    date: "January 30, 2023",
-    readTime: "9 min read",
-    image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-    featured: true
-  }
-];
-
-// Categories
-const categories = ["All", "AI", "Automation", "Technology"];
+import { getBlogPosts } from "@/services/blogService";
+import { BlogPost } from "@/types/blog";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("All");
-  const [filteredPosts, setFilteredPosts] = useState(blogPosts);
+  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  // Categories
+  const categories = ["All", "AI", "Automation", "Technology"];
+
+  useEffect(() => {
+    // Get posts from service
+    setBlogPosts(getBlogPosts());
+  }, []);
 
   useEffect(() => {
     if (activeCategory === "All") {
@@ -84,7 +30,7 @@ const Blog = () => {
     } else {
       setFilteredPosts(blogPosts.filter(post => post.category === activeCategory));
     }
-  }, [activeCategory]);
+  }, [activeCategory, blogPosts]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -94,15 +40,17 @@ const Blog = () => {
         <div className="container mx-auto px-4">
           {/* Hero Section */}
           <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-4">Our Blog</h1>
+            <h1 className="text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-4">
+              {t("blog.title")}
+            </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Insights, news, and perspectives on AI, automation, and digital transformation.
+              {t("blog.subtitle")}
             </p>
           </div>
           
           {/* Featured Posts */}
           <div className="mb-16">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Featured Articles</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">{t("blog.featured")}</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {blogPosts.filter(post => post.featured).map((post) => (
                 <div key={post.id} className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
@@ -162,7 +110,7 @@ const Blog = () => {
           
           {/* All Blog Posts */}
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">All Articles</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">{t("blog.all")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredPosts.map((post) => (
                 <div key={post.id} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300">
@@ -194,7 +142,7 @@ const Blog = () => {
                       variant="ghost" 
                       className="w-full justify-between px-4 py-2 border border-gray-200 hover:bg-gray-100 hover:text-gray-800 hover:border-gray-300 transition-colors"
                     >
-                      <span>Read More</span>
+                      <span>{t("blog.readMore")}</span>
                       <ArrowRight size={16} />
                     </Button>
                   </div>
@@ -207,19 +155,19 @@ const Blog = () => {
           <div className="mt-16 bg-gray-50 rounded-2xl p-8 lg:p-12">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl lg:text-3xl font-semibold text-gray-900 mb-4">
-                Stay up to date with our latest insights
+                {t("blog.newsletter.title")}
               </h2>
               <p className="text-gray-600 mb-6">
-                Subscribe to our newsletter to receive the latest updates on AI, automation, and digital transformation.
+                {t("blog.newsletter.subtitle")}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t("blog.newsletter.placeholder")}
                   className="flex-grow px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 />
                 <Button className="bg-gray-900 hover:bg-gray-800">
-                  Subscribe
+                  {t("blog.newsletter.button")}
                 </Button>
               </div>
             </div>

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogIn } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -102,12 +102,22 @@ const Navbar = () => {
                 className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
                 onClick={logout}
               >
-                Logout
+                {t('nav.logout')}
               </Button>
             ) : (
-              <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 transition-all duration-300 rounded-xl">
-                {t('nav.getStarted')}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Link to="/login">
+                  <Button variant="outline" className="flex items-center gap-1">
+                    <LogIn className="h-4 w-4" />
+                    {t('nav.login')}
+                  </Button>
+                </Link>
+                <Link to="/contact">
+                  <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 transition-all duration-300 rounded-xl">
+                    {t('nav.getStarted')}
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
 
@@ -166,12 +176,22 @@ const Navbar = () => {
                   className="w-full mt-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
                   onClick={logout}
                 >
-                  Logout
+                  {t('nav.logout')}
                 </Button>
               ) : (
-                <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 w-full mt-2 transition-all duration-300 rounded-xl">
-                  {t('nav.getStarted')}
-                </Button>
+                <div className="flex flex-col gap-2 mt-2">
+                  <Link to="/login" className="w-full">
+                    <Button variant="outline" className="w-full flex items-center justify-center gap-1">
+                      <LogIn className="h-4 w-4" />
+                      {t('nav.login')}
+                    </Button>
+                  </Link>
+                  <Link to="/contact" className="w-full">
+                    <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 w-full transition-all duration-300 rounded-xl">
+                      {t('nav.getStarted')}
+                    </Button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>

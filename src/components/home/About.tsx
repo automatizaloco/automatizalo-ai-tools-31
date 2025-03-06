@@ -2,10 +2,12 @@
 import { CheckCircle2, Zap, Brain, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const About = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useLanguage();
   
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -28,18 +30,18 @@ const About = () => {
   const features = [
     { 
       icon: <Zap size={20} />, 
-      title: "Automated Workflows", 
-      description: "Connect and automate your workflows using cutting-edge AI and Make.com/N8N tools." 
+      title: t('home.about.feature1.title'), 
+      description: t('home.about.feature1.description')
     },
     { 
       icon: <Bot size={20} />, 
-      title: "AI Chatbots", 
-      description: "Personalized chatbots to handle customer service, scheduling, and lead engagement." 
+      title: t('home.about.feature2.title'), 
+      description: t('home.about.feature2.description')
     },
     { 
       icon: <Brain size={20} />, 
-      title: "Smart Systems", 
-      description: "AI-driven systems that learn and adapt to your business needs over time." 
+      title: t('home.about.feature3.title'), 
+      description: t('home.about.feature3.description')
     },
   ];
 
@@ -49,15 +51,15 @@ const About = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className={`transition-all duration-1000 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="inline-block py-1 px-3 mb-4 bg-blue-50 text-automatizalo-blue rounded-full text-sm font-medium">
-              About Us
+              {t('home.about.tagline')}
             </span>
             
             <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6">
-              We're Building the Future of AI Automation
+              {t('home.about.title')}
             </h2>
             
             <p className="text-gray-600 mb-8">
-              At Automatízalo, we're a team of young, passionate AI specialists and automation experts. We connect, fine-tune, and optimize automation tools like Make.com, N8N, AI chatbots, and custom workflows to help businesses and individuals become more efficient, scalable, and future-ready.
+              {t('home.about.description')}
             </p>
             
             <div className="space-y-4 mb-8">
@@ -76,10 +78,10 @@ const About = () => {
             
             <div className="flex items-center gap-4 mt-6">
               <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 transition-all duration-300 rounded-xl">
-                Learn More
+                {t('home.about.learnMore')}
               </Button>
               <Button variant="ghost" className="text-gray-600 hover:text-automatizalo-blue hover:bg-blue-50">
-                Contact Us
+                {t('home.about.contactUs')}
               </Button>
             </div>
           </div>
@@ -96,19 +98,19 @@ const About = () => {
             
             <div className="absolute -bottom-6 right-6 md:right-8 bg-white rounded-xl p-5 shadow-lg max-w-xs">
               <div className="flex flex-col">
-                <h3 className="font-medium text-lg mb-2">Why Work With Us?</h3>
+                <h3 className="font-medium text-lg mb-2">{t('home.about.whyWorkWithUs')}</h3>
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <CheckCircle2 size={18} className="text-green-500 mr-2 mt-0.5 shrink-0" />
-                    <span className="text-sm text-gray-600">Affordable & scalable – One-time setup, low-cost maintenance</span>
+                    <span className="text-sm text-gray-600">{t('home.about.reason1')}</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 size={18} className="text-green-500 mr-2 mt-0.5 shrink-0" />
-                    <span className="text-sm text-gray-600">Personalized AI tools – We tailor solutions for each client</span>
+                    <span className="text-sm text-gray-600">{t('home.about.reason2')}</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 size={18} className="text-green-500 mr-2 mt-0.5 shrink-0" />
-                    <span className="text-sm text-gray-600">Always improving – New features & fine-tuned automations every month</span>
+                    <span className="text-sm text-gray-600">{t('home.about.reason3')}</span>
                   </li>
                 </ul>
               </div>

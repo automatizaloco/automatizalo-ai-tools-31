@@ -4,8 +4,10 @@ import { Phone, Mail, MapPin, Globe, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Contact = () => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -43,17 +45,16 @@ const Contact = () => {
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">Get in Touch</h1>
+            <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">{t('contact.title')}</h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Have questions about our AI solutions? Need help automating your business processes? 
-              We're here to help you transform your ideas into reality.
+              {t('contact.subtitle')}
             </p>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Contact Information */}
             <div className="bg-gray-50 p-8 rounded-2xl shadow-sm">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Contact Information</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-6">{t('contact.title')}</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start">
@@ -61,7 +62,7 @@ const Contact = () => {
                     <Phone className="h-5 w-5 text-gray-700" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">Phone</h3>
+                    <h3 className="font-medium text-gray-800">{t('contact.phone')}</h3>
                     <p className="text-gray-600">+1 (555) 123-4567</p>
                   </div>
                 </div>
@@ -71,7 +72,7 @@ const Contact = () => {
                     <Mail className="h-5 w-5 text-gray-700" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">Email</h3>
+                    <h3 className="font-medium text-gray-800">{t('contact.email')}</h3>
                     <p className="text-gray-600">contact@automatizalo.com</p>
                   </div>
                 </div>
@@ -81,7 +82,7 @@ const Contact = () => {
                     <MapPin className="h-5 w-5 text-gray-700" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">Location</h3>
+                    <h3 className="font-medium text-gray-800">{t('contact.address')}</h3>
                     <p className="text-gray-600">123 AI Boulevard, Tech District<br />San Francisco, CA 94105</p>
                   </div>
                 </div>
@@ -117,12 +118,12 @@ const Contact = () => {
             
             {/* Contact Form */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Send us a message</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-6">{t('contact.form.submit')}</h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Name
+                    {t('contact.form.name')}
                   </label>
                   <input
                     type="text"
@@ -137,7 +138,7 @@ const Contact = () => {
                 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
+                    {t('contact.form.email')}
                   </label>
                   <input
                     type="email"
@@ -167,7 +168,7 @@ const Contact = () => {
                 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Message
+                    {t('contact.form.message')}
                   </label>
                   <textarea
                     id="message"
@@ -181,7 +182,7 @@ const Contact = () => {
                 </div>
                 
                 <Button type="submit" className="w-full py-3 bg-gray-900 hover:bg-gray-800">
-                  Send Message
+                  {t('contact.form.submit')}
                 </Button>
               </form>
             </div>

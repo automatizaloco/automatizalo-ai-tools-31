@@ -2,10 +2,12 @@
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [animationStep, setAnimationStep] = useState(0);
+  const { t } = useLanguage();
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -54,15 +56,15 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className={`max-w-xl transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="inline-block py-1 px-3 mb-4 bg-gray-200 text-gray-800 rounded-full text-sm font-medium">
-              AI & Automation Solutions
+              {t('home.hero.tagline')}
             </span>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">
-              Stop wasting time on repetitive tasks
+              {t('home.hero.title')}
             </h1>
             
             <p className="text-lg text-gray-600 mb-8">
-              <span className="font-semibold">Automatízalo</span> brings cutting-edge AI and automation tools to help you work smarter, grow faster, and stay ahead of the future.
+              <span className="font-semibold">Automatízalo</span> {t('home.hero.description')}
             </p>
             
             <div className="flex flex-wrap gap-4">
@@ -70,7 +72,7 @@ const Hero = () => {
                 className="bg-gray-900 hover:bg-gray-800 px-6 text-base transition-all duration-300 rounded-xl h-12" 
                 size="lg"
               >
-                Get Started
+                {t('home.hero.getStarted')}
                 <ArrowRight size={18} className="ml-2" />
               </Button>
               
@@ -79,7 +81,7 @@ const Hero = () => {
                 className="border-gray-300 text-gray-800 hover:bg-gray-100 px-6 text-base transition-all duration-300 rounded-xl h-12" 
                 size="lg"
               >
-                Learn More
+                {t('home.hero.learnMore')}
               </Button>
             </div>
           </div>

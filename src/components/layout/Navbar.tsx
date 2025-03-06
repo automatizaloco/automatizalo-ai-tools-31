@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogIn } from 'lucide-react';
+import { Menu, X, LogIn, Settings } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -41,7 +41,8 @@ const Navbar = () => {
 
   // Admin items only visible when authenticated
   const adminItems = [
-    { title: 'Blog Admin', path: '/admin/blog' }
+    { title: 'Blog Admin', path: '/admin/blog' },
+    { title: 'Content Manager', path: '/admin/content' }
   ];
 
   const isActive = (path: string) => {

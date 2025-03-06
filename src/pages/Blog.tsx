@@ -9,11 +9,13 @@ import FeaturedPosts from "@/components/blog/FeaturedPosts";
 import CategoryFilter from "@/components/blog/CategoryFilter";
 import BlogList from "@/components/blog/BlogList";
 import NewsletterSignup from "@/components/blog/NewsletterSignup";
+import { useTheme } from "@/context/ThemeContext";
 
 const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const { theme } = useTheme();
 
   // Categories
   const categories = ["All", "AI", "Automation", "Technology"];
@@ -32,7 +34,7 @@ const Blog = () => {
   }, [activeCategory, blogPosts]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">

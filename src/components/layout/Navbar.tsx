@@ -2,10 +2,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogIn, Settings } from 'lucide-react';
+import { Menu, X, LogIn } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import LanguageSwitcher from './LanguageSwitcher';
+import ThemeSwitcher from './ThemeSwitcher';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,6 +15,7 @@ const Navbar = () => {
   const location = useLocation();
   const { t } = useLanguage();
   const { isAuthenticated, logout } = useAuth();
+  const { theme } = useTheme();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -49,13 +52,22 @@ const Navbar = () => {
     return location.pathname === path;
   };
 
+  const getNavbarBackground = () => {
+    if (theme === 'dark') {
+      return scrolled ? 'bg-gray-900/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6';
+    }
+    return scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6';
+  };
+
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${getNavbarBackground()}`}>
       <div className="container mx-auto px-4 md:px-8">
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/d2b2a72c-6cfe-4670-8019-000ed70ff370.png" 
+              src={theme === 'dark' 
+                ? "/lovable-uploads/d2b2a72c-6cfe-4670-8019-000ed70ff370.png" 
+                : "/lovable-uploads/d2b2a72c-6cfe-4670-8019-000ed70ff370.png"}
               alt="Automatízalo Logo" 
               className="h-8 md:h-10"
             />
@@ -70,8 +82,8 @@ const Navbar = () => {
                 className={`
                   text-sm font-medium transition-colors py-1.5 px-1 link-underline
                   ${isActive(item.path) 
-                    ? 'text-automatizalo-blue' 
-                    : 'text-slate-700 hover:text-automatizalo-blue'
+                    ? 'text-automatizalo-blue dark:text-blue-400' 
+                    : 'text-slate-700 hover:text-automatizalo-blue dark:text-slate-200 dark:hover:text-blue-400'
                   }
                 `}
               >
@@ -86,8 +98,8 @@ const Navbar = () => {
                 className={`
                   text-sm font-medium transition-colors py-1.5 px-1 link-underline
                   ${isActive(item.path) 
-                    ? 'text-automatizalo-blue' 
-                    : 'text-slate-700 hover:text-automatizalo-blue'
+                    ? 'text-automatizalo-blue dark:text-blue-400' 
+                    : 'text-slate-700 hover:text-automatizalo-blue dark:text-slate-200 dark:hover:text-blue-400'
                   }
                 `}
               >
@@ -96,11 +108,12 @@ const Navbar = () => {
             ))}
             
             <LanguageSwitcher />
+            <ThemeSwitcher />
             
             {isAuthenticated ? (
               <Button 
                 variant="outline" 
-                className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
                 onClick={logout}
               >
                 {t('nav.logout')}
@@ -108,13 +121,13 @@ const Navbar = () => {
             ) : (
               <div className="flex items-center gap-2">
                 <Link to="/login">
-                  <Button variant="outline" className="flex items-center gap-1">
+                  <Button variant="outline" className="flex items-center gap-1 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
                     <LogIn className="h-4 w-4" />
                     {t('nav.login')}
                   </Button>
                 </Link>
                 <Link to="/contact">
-                  <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 transition-all duration-300 rounded-xl">
+                  <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 transition-all duration-300 rounded-xl dark:bg-blue-600 dark:hover:bg-blue-700">
                     {t('nav.getStarted')}
                   </Button>
                 </Link>
@@ -125,8 +138,9 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <LanguageSwitcher />
+            <ThemeSwitcher />
             <button
-              className="text-slate-700 p-2"
+              className="text-slate-700 dark:text-slate-200 p-2"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle Menu"
             >
@@ -137,7 +151,7 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden pt-5 pb-4 absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md shadow-lg animate-fade-in">
+          <div className="md:hidden pt-5 pb-4 absolute top-full left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg animate-fade-in">
             <div className="flex flex-col space-y-4 px-6">
               {navItems.map((item) => (
                 <Link
@@ -146,8 +160,8 @@ const Navbar = () => {
                   className={`
                     py-2 text-base font-medium transition-colors
                     ${isActive(item.path) 
-                      ? 'text-automatizalo-blue' 
-                      : 'text-slate-700 hover:text-automatizalo-blue'
+                      ? 'text-automatizalo-blue dark:text-blue-400' 
+                      : 'text-slate-700 hover:text-automatizalo-blue dark:text-slate-200 dark:hover:text-blue-400'
                     }
                   `}
                 >
@@ -162,8 +176,8 @@ const Navbar = () => {
                   className={`
                     py-2 text-base font-medium transition-colors
                     ${isActive(item.path) 
-                      ? 'text-automatizalo-blue' 
-                      : 'text-slate-700 hover:text-automatizalo-blue'
+                      ? 'text-automatizalo-blue dark:text-blue-400' 
+                      : 'text-slate-700 hover:text-automatizalo-blue dark:text-slate-200 dark:hover:text-blue-400'
                     }
                   `}
                 >
@@ -174,7 +188,7 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <Button 
                   variant="outline" 
-                  className="w-full mt-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                  className="w-full mt-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
                   onClick={logout}
                 >
                   {t('nav.logout')}
@@ -182,13 +196,13 @@ const Navbar = () => {
               ) : (
                 <div className="flex flex-col gap-2 mt-2">
                   <Link to="/login" className="w-full">
-                    <Button variant="outline" className="w-full flex items-center justify-center gap-1">
+                    <Button variant="outline" className="w-full flex items-center justify-center gap-1 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
                       <LogIn className="h-4 w-4" />
                       {t('nav.login')}
                     </Button>
                   </Link>
                   <Link to="/contact" className="w-full">
-                    <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 w-full transition-all duration-300 rounded-xl">
+                    <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 w-full transition-all duration-300 rounded-xl dark:bg-blue-600 dark:hover:bg-blue-700">
                       {t('nav.getStarted')}
                     </Button>
                   </Link>

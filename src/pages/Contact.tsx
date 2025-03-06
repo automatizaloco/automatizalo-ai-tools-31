@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const Contact = () => {
   const { t } = useLanguage();
+  const { theme } = useTheme();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -39,67 +41,67 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">{t('contact.title')}</h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <h1 className={`text-4xl font-heading font-bold mb-4 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{t('contact.title')}</h1>
+            <p className={`text-lg max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               {t('contact.subtitle')}
             </p>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Contact Information */}
-            <div className="bg-gray-50 p-8 rounded-2xl shadow-sm">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">{t('contact.title')}</h2>
+            <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+              <h2 className={`text-2xl font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{t('contact.title')}</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start">
-                  <div className="bg-gray-200 p-3 rounded-full mr-4">
-                    <Phone className="h-5 w-5 text-gray-700" />
+                  <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    <Phone className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">{t('contact.phone')}</h3>
-                    <p className="text-gray-600">+1 (555) 123-4567</p>
+                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.phone')}</h3>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>+1 (555) 123-4567</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  <div className="bg-gray-200 p-3 rounded-full mr-4">
-                    <Mail className="h-5 w-5 text-gray-700" />
+                  <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    <Mail className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">{t('contact.email')}</h3>
-                    <p className="text-gray-600">contact@automatizalo.com</p>
+                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.email')}</h3>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>contact@automatizalo.com</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  <div className="bg-gray-200 p-3 rounded-full mr-4">
-                    <MapPin className="h-5 w-5 text-gray-700" />
+                  <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    <MapPin className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">{t('contact.address')}</h3>
-                    <p className="text-gray-600">123 AI Boulevard, Tech District<br />San Francisco, CA 94105</p>
+                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.address')}</h3>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>123 AI Boulevard, Tech District<br />San Francisco, CA 94105</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  <div className="bg-gray-200 p-3 rounded-full mr-4">
-                    <Globe className="h-5 w-5 text-gray-700" />
+                  <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    <Globe className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">Website</h3>
-                    <p className="text-gray-600">www.automatizalo.com</p>
+                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Website</h3>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>www.automatizalo.com</p>
                   </div>
                 </div>
               </div>
               
               <div className="mt-10">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Connect with us</h3>
+                <h3 className={`text-lg font-medium mb-4 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Connect with us</h3>
                 <div className="flex space-x-4">
                   <a 
                     href="https://wa.me/15551234567" 
@@ -107,7 +109,7 @@ const Contact = () => {
                     rel="noopener noreferrer"
                     className="inline-flex"
                   >
-                    <Button variant="outline" className="border-gray-300 bg-white hover:bg-gray-100">
+                    <Button variant="outline" className={theme === 'dark' ? 'border-gray-700 bg-gray-800 hover:bg-gray-700' : 'border-gray-300 bg-white hover:bg-gray-100'}>
                       <MessageSquare className="mr-2 h-5 w-5" />
                       WhatsApp
                     </Button>
@@ -117,12 +119,12 @@ const Contact = () => {
             </div>
             
             {/* Contact Form */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">{t('contact.form.submit')}</h2>
+            <div className={`p-8 rounded-2xl shadow-sm border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+              <h2 className={`text-2xl font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{t('contact.form.submit')}</h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="name" className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     {t('contact.form.name')}
                   </label>
                   <input
@@ -131,13 +133,17 @@ const Contact = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-gray-500' 
+                        : 'border-gray-300 focus:ring-gray-500'
+                    }`}
                     required
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="email" className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     {t('contact.form.email')}
                   </label>
                   <input
@@ -146,13 +152,17 @@ const Contact = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-gray-500' 
+                        : 'border-gray-300 focus:ring-gray-500'
+                    }`}
                     required
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="subject" className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     Subject
                   </label>
                   <input
@@ -161,13 +171,17 @@ const Contact = () => {
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-gray-500' 
+                        : 'border-gray-300 focus:ring-gray-500'
+                    }`}
                     required
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="message" className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     {t('contact.form.message')}
                   </label>
                   <textarea
@@ -176,12 +190,19 @@ const Contact = () => {
                     value={formData.message}
                     onChange={handleChange}
                     rows={6}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-gray-500' 
+                        : 'border-gray-300 focus:ring-gray-500'
+                    }`}
                     required
                   ></textarea>
                 </div>
                 
-                <Button type="submit" className="w-full py-3 bg-gray-900 hover:bg-gray-800">
+                <Button 
+                  type="submit" 
+                  className={theme === 'dark' ? 'w-full py-3 bg-blue-600 hover:bg-blue-700' : 'w-full py-3 bg-gray-900 hover:bg-gray-800'}
+                >
                   {t('contact.form.submit')}
                 </Button>
               </form>

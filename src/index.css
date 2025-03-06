@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
@@ -95,7 +96,7 @@
   }
 
   .glass-card {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg dark:bg-gray-900/80 dark:border-gray-800/20;
   }
 
   .heading {
@@ -103,7 +104,7 @@
   }
 
   .link-underline {
-    @apply relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-automatizalo-blue after:transition-all after:duration-300 hover:after:w-full;
+    @apply relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-automatizalo-blue after:transition-all after:duration-300 hover:after:w-full dark:after:bg-blue-400;
   }
 }
 
@@ -113,7 +114,7 @@
   }
 }
 
-/* Custom scroll bar */
+/* Custom scroll bar - Light Mode */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -129,6 +130,24 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Custom scroll bar - Dark Mode */
+.dark::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dark::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+.dark::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 5px;
+}
+
+.dark::-webkit-scrollbar-thumb:hover {
+  background: #718096;
 }
 
 /* Transitions and animations */

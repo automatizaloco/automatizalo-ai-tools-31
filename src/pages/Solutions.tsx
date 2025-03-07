@@ -5,43 +5,46 @@ import Footer from "@/components/layout/Footer";
 import SolutionCard from "@/components/ui/SolutionCard";
 import ProductFeature from "@/components/solutions/ProductFeature";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Solutions = () => {
+  const { t } = useLanguage();
+  
   // Solution Cards Data
   const solutionCards = [
     {
-      title: "AI Workflow Automation",
-      description: "Streamline your business processes with intelligent automation",
+      title: t("solutions.chatbots.title"),
+      description: t("solutions.chatbots.description"),
       icon: <Zap className="h-5 w-5" />,
       features: [
-        "Automate repetitive tasks",
-        "Integrate with existing systems",
-        "Reduce operational costs",
-        "Increase productivity"
+        t("solutions.chatbots.feature1"),
+        t("solutions.chatbots.feature2"),
+        t("solutions.chatbots.feature3"),
+        t("solutions.leadGeneration.feature2")
       ],
       imageUrl: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
     },
     {
-      title: "Conversational AI",
-      description: "Enhance customer experiences with intelligent virtual assistants",
+      title: t("solutions.socialMedia.title"),
+      description: t("solutions.socialMedia.description"),
       icon: <MessageSquare className="h-5 w-5" />,
       features: [
-        "24/7 customer support",
-        "Natural language processing",
-        "Multi-channel deployment",
-        "Continuous learning"
+        t("solutions.socialMedia.feature1"),
+        t("solutions.socialMedia.feature2"),
+        t("solutions.socialMedia.feature3"),
+        t("solutions.aiAgents.feature3")
       ],
       imageUrl: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
     },
     {
-      title: "Data Intelligence",
-      description: "Transform your data into actionable business insights",
+      title: t("solutions.aiAgents.title"),
+      description: t("solutions.aiAgents.description"),
       icon: <Database className="h-5 w-5" />,
       features: [
-        "Advanced analytics",
-        "Predictive modeling",
-        "Customizable dashboards",
-        "Real-time monitoring"
+        t("solutions.aiAgents.feature1"),
+        t("solutions.aiAgents.feature2"),
+        t("solutions.aiAgents.feature3"),
+        t("solutions.leadGeneration.feature1")
       ],
       imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
     }
@@ -51,69 +54,69 @@ const Solutions = () => {
   const aiWorkflowFeatures = [
     {
       icon: <Bot className="h-5 w-5 text-gray-700" />,
-      title: "Intelligent Automation",
-      description: "Leverage AI to automate complex business processes, reducing manual effort and increasing accuracy."
+      title: t("solutions.chatbots.feature1"),
+      description: t("solutions.chatbots.description")
     },
     {
       icon: <Cog className="h-5 w-5 text-gray-700" />,
-      title: "Process Optimization",
-      description: "Analyze and optimize workflows to eliminate bottlenecks and improve operational efficiency."
+      title: t("solutions.leadGeneration.feature1"),
+      description: t("solutions.leadGeneration.description")
     },
     {
       icon: <FileText className="h-5 w-5 text-gray-700" />,
-      title: "Document Processing",
-      description: "Extract, classify, and process information from documents using advanced OCR and AI technologies."
+      title: t("solutions.socialMedia.feature1"),
+      description: t("solutions.socialMedia.description")
     },
     {
       icon: <Zap className="h-5 w-5 text-gray-700" />,
-      title: "API Integrations",
-      description: "Seamlessly connect with your existing business systems through our extensive API ecosystem."
+      title: t("solutions.aiAgents.feature1"),
+      description: t("solutions.aiAgents.description")
     }
   ];
 
   const conversationalAIFeatures = [
     {
       icon: <MessageSquare className="h-5 w-5 text-gray-700" />,
-      title: "Virtual Assistants",
-      description: "Deploy intelligent chatbots that understand natural language and provide helpful responses."
+      title: t("solutions.chatbots.feature2"),
+      description: t("solutions.chatbots.description")
     },
     {
       icon: <Brain className="h-5 w-5 text-gray-700" />,
-      title: "NLP Capabilities",
-      description: "Advanced natural language processing to understand context, intent, and sentiment."
+      title: t("solutions.leadGeneration.feature2"),
+      description: t("solutions.leadGeneration.description")
     },
     {
       icon: <Sparkles className="h-5 w-5 text-gray-700" />,
-      title: "Contextual Awareness",
-      description: "Maintain conversation context for more natural and meaningful interactions."
+      title: t("solutions.socialMedia.feature2"),
+      description: t("solutions.socialMedia.description")
     },
     {
       icon: <Users className="h-5 w-5 text-gray-700" />,
-      title: "Human Handoff",
-      description: "Seamless transition to human agents when complex issues require personal attention."
+      title: t("solutions.aiAgents.feature2"),
+      description: t("solutions.aiAgents.description")
     }
   ];
 
   const dataIntelligenceFeatures = [
     {
       icon: <Database className="h-5 w-5 text-gray-700" />,
-      title: "Data Integration",
-      description: "Collect and unify data from multiple sources to create a comprehensive view of your business."
+      title: t("solutions.chatbots.feature3"),
+      description: t("solutions.chatbots.description")
     },
     {
       icon: <BarChart className="h-5 w-5 text-gray-700" />,
-      title: "Predictive Analytics",
-      description: "Forecast trends and anticipate business outcomes using advanced machine learning models."
+      title: t("solutions.leadGeneration.feature3"),
+      description: t("solutions.leadGeneration.description")
     },
     {
       icon: <Clock className="h-5 w-5 text-gray-700" />,
-      title: "Real-time Insights",
-      description: "Monitor business metrics in real-time to make quick, data-driven decisions."
+      title: t("solutions.socialMedia.feature3"),
+      description: t("solutions.socialMedia.description")
     },
     {
       icon: <Shield className="h-5 w-5 text-gray-700" />,
-      title: "Secure Architecture",
-      description: "Enterprise-grade security to protect your sensitive business data at all times."
+      title: t("solutions.aiAgents.feature3"),
+      description: t("solutions.aiAgents.description")
     }
   ];
 
@@ -126,21 +129,20 @@ const Solutions = () => {
           {/* Hero Section */}
           <div className="text-center mb-20">
             <h1 className="text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-6">
-              AI Solutions for Modern Businesses
+              {t("solutions.title")}
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-10">
-              Harness the power of artificial intelligence and automation to transform your business operations,
-              enhance customer experiences, and drive growth.
+              {t("solutions.subtitle")}
             </p>
             <Button className="bg-gray-900 hover:bg-gray-800 py-6 px-8 rounded-xl text-base">
-              Explore Solutions
+              {t("solutions.viewAllButton")}
             </Button>
           </div>
           
           {/* Main Solutions */}
           <div className="mb-24">
             <h2 className="text-3xl font-semibold text-gray-900 text-center mb-12">
-              Our Core Solutions
+              {t("solutions.sectionTitle")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {solutionCards.map((solution, index) => (
@@ -163,25 +165,22 @@ const Solutions = () => {
             <div className="flex flex-col lg:flex-row items-center gap-12 mb-16">
               <div className="lg:w-1/2">
                 <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-                  AI Workflow Automation
+                  {t("solutions.chatbots.title")}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Transform your business operations with intelligent automation that reduces manual effort, 
-                  minimizes errors, and accelerates processes. Our AI workflow solutions adapt to your 
-                  unique business needs and integrate seamlessly with your existing systems.
+                  {t("solutions.chatbots.description")}
                 </p>
                 <p className="text-gray-600 mb-8">
-                  From simple task automation to complex business process orchestration, our platform 
-                  provides the tools you need to achieve operational excellence.
+                  {t("solutions.futureproof.description")}
                 </p>
                 <Button className="bg-gray-900 hover:bg-gray-800">
-                  Learn More
+                  {t("blog.readMore")}
                 </Button>
               </div>
               <div className="lg:w-1/2">
                 <img 
                   src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-                  alt="AI Workflow Automation" 
+                  alt={t("solutions.chatbots.title")} 
                   className="rounded-xl shadow-lg"
                 />
               </div>
@@ -205,25 +204,22 @@ const Solutions = () => {
             <div className="flex flex-col lg:flex-row-reverse items-center gap-12 mb-16">
               <div className="lg:w-1/2">
                 <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-                  Conversational AI
+                  {t("solutions.socialMedia.title")}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Enhance customer experiences with intelligent virtual assistants that understand 
-                  natural language and provide helpful, contextually relevant responses. Our conversational 
-                  AI solutions can be deployed across multiple channels to provide consistent, 24/7 support.
+                  {t("solutions.socialMedia.description")}
                 </p>
                 <p className="text-gray-600 mb-8">
-                  From simple FAQ bots to sophisticated virtual agents capable of handling complex 
-                  interactions, our platform adapts to your specific communication needs.
+                  {t("solutions.futureproof.subtitle")}
                 </p>
                 <Button className="bg-gray-900 hover:bg-gray-800">
-                  Learn More
+                  {t("blog.readMore")}
                 </Button>
               </div>
               <div className="lg:w-1/2">
                 <img 
                   src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-                  alt="Conversational AI" 
+                  alt={t("solutions.socialMedia.title")} 
                   className="rounded-xl shadow-lg"
                 />
               </div>
@@ -247,26 +243,22 @@ const Solutions = () => {
             <div className="flex flex-col lg:flex-row items-center gap-12 mb-16">
               <div className="lg:w-1/2">
                 <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-                  Data Intelligence
+                  {t("solutions.aiAgents.title")}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Transform your data into actionable business insights with our advanced analytics 
-                  and machine learning solutions. Our data intelligence platform helps you uncover 
-                  patterns, predict trends, and make data-driven decisions with confidence.
+                  {t("solutions.aiAgents.description")}
                 </p>
                 <p className="text-gray-600 mb-8">
-                  From basic reporting to sophisticated predictive models, our solutions scale to 
-                  meet your specific data analysis needs while maintaining the highest standards 
-                  of security and compliance.
+                  {t("solutions.futureproof.title")}
                 </p>
                 <Button className="bg-gray-900 hover:bg-gray-800">
-                  Learn More
+                  {t("blog.readMore")}
                 </Button>
               </div>
               <div className="lg:w-1/2">
                 <img 
                   src="https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-                  alt="Data Intelligence" 
+                  alt={t("solutions.aiAgents.title")} 
                   className="rounded-xl shadow-lg"
                 />
               </div>
@@ -288,18 +280,17 @@ const Solutions = () => {
           {/* CTA Section */}
           <div className="bg-gray-50 rounded-2xl p-10 lg:p-16 text-center">
             <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-              Ready to Transform Your Business?
+              {t("solutions.cta.title")}
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-              Contact our team of experts to learn how our AI solutions can be tailored to your 
-              specific business needs and objectives.
+              {t("solutions.cta.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button className="bg-gray-900 hover:bg-gray-800 py-6 px-8 rounded-xl text-base">
-                Request Demo
+                {t("solutions.cta.button")}
               </Button>
               <Button variant="outline" className="border-gray-300 py-6 px-8 rounded-xl text-base">
-                Contact Sales
+                {t("contact.form.submit")}
               </Button>
             </div>
           </div>

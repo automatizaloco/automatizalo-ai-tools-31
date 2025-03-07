@@ -1,8 +1,11 @@
 
 import { Link } from 'react-router-dom';
 import { ChevronRight, Mail, MapPin, Phone } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Footer = () => {
+  const { t } = useLanguage();
+  
   return (
     <footer className="bg-gradient-to-b from-gray-50 to-gray-100 pt-16 pb-6">
       <div className="container mx-auto px-4 md:px-8">
@@ -16,7 +19,7 @@ const Footer = () => {
               />
             </Link>
             <p className="text-gray-600 max-w-xs">
-              We connect and automate your workflows using cutting-edge AI and automation tools to help you work smarter.
+              {t("footer.description")}
             </p>
             <div className="flex space-x-4 pt-4">
               <a href="#" className="h-10 w-10 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-automatizalo-blue hover:text-white transition-all">
@@ -43,73 +46,73 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-6">{t("footer.company")}</h3>
             <ul className="space-y-3">
               <li>
                 <Link to="/" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  Home
+                  {t("nav.home")}
                 </Link>
               </li>
               <li>
                 <Link to="/solutions" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  Solutions
+                  {t("nav.solutions")}
                 </Link>
               </li>
               <li>
                 <Link to="/blog" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  Blog
+                  {t("nav.blog")}
                 </Link>
               </li>
               <li>
                 <Link to="/contact" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  Contact
+                  {t("nav.contact")}
                 </Link>
               </li>
               <li>
                 <a href="#" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  Privacy Policy
+                  {t("footer.privacy")}
                 </a>
               </li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-6">Our Solutions</h3>
+            <h3 className="text-lg font-semibold mb-6">{t("solutions.title")}</h3>
             <ul className="space-y-3">
               <li>
                 <Link to="/solutions#chatbots" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  AI Chatbots
+                  {t("solutions.chatbots.title")}
                 </Link>
               </li>
               <li>
                 <Link to="/solutions#lead-generation" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  Lead Generation
+                  {t("solutions.leadGeneration.title")}
                 </Link>
               </li>
               <li>
                 <Link to="/solutions#social-media" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  Social Media Automation
+                  {t("solutions.socialMedia.title")}
                 </Link>
               </li>
               <li>
                 <Link to="/solutions#ai-agents" className="text-gray-600 hover:text-automatizalo-blue transition-colors flex items-center">
                   <ChevronRight size={16} className="mr-1" />
-                  Personal AI Agents
+                  {t("solutions.aiAgents.title")}
                 </Link>
               </li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-6">Contact Info</h3>
+            <h3 className="text-lg font-semibold mb-6">{t("contact.title")}</h3>
             <ul className="space-y-4">
               <li className="flex items-start">
                 <MapPin size={20} className="mr-3 text-automatizalo-blue shrink-0 mt-1" />
@@ -136,23 +139,23 @@ const Footer = () => {
         <div className="border-t border-gray-200 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm">
-              &copy; {new Date().getFullYear()} Automatízalo. All rights reserved.
+              {t("footer.copyright")}
             </p>
             <div className="mt-4 md:mt-0">
               <ul className="flex space-x-6">
                 <li>
                   <a href="#" className="text-gray-500 text-sm hover:text-automatizalo-blue transition-colors">
-                    Terms & Conditions
+                    {t("footer.terms")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-500 text-sm hover:text-automatizalo-blue transition-colors">
-                    Privacy Policy
+                    {t("footer.privacy")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-500 text-sm hover:text-automatizalo-blue transition-colors">
-                    Cookie Policy
+                    {t("footer.cookies")}
                   </a>
                 </li>
               </ul>

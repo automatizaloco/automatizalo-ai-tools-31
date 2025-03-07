@@ -18,6 +18,7 @@ import BlogAdmin from "@/pages/admin/BlogAdmin";
 import BlogPostForm from "@/pages/admin/BlogPostForm";
 import ContentManager from "@/pages/admin/ContentManager";
 import TestimonialManager from "@/pages/admin/TestimonialManager";
+import WhatsAppButton from "@/components/common/WhatsAppButton";
 
 import "./App.css";
 
@@ -52,6 +53,7 @@ function App() {
                   <Route path="/admin/testimonials" element={<TestimonialManager />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <WhatsAppButton phoneNumber="1234567890" message="Hello, I'm interested in your AI solutions" />
                 <Toaster position="bottom-right" />
               </Router>
             </TooltipProvider>

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 import Index from "@/pages/Index";
 import Blog from "@/pages/Blog";
@@ -32,23 +33,25 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LanguageProvider>
-          <TooltipProvider>
-            <Router>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/solutions" element={<Solutions />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/admin/blog" element={<BlogAdmin />} />
-                <Route path="/admin/blog/new" element={<BlogPostForm />} />
-                <Route path="/admin/blog/edit/:id" element={<BlogPostForm />} />
-                <Route path="/admin/content" element={<ContentManager />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster position="bottom-right" />
-            </Router>
-          </TooltipProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Router>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/solutions" element={<Solutions />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/admin/blog" element={<BlogAdmin />} />
+                  <Route path="/admin/blog/new" element={<BlogPostForm />} />
+                  <Route path="/admin/blog/edit/:id" element={<BlogPostForm />} />
+                  <Route path="/admin/content" element={<ContentManager />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster position="bottom-right" />
+              </Router>
+            </TooltipProvider>
+          </ThemeProvider>
         </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>

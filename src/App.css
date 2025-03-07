@@ -13,10 +13,11 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em rgba(100, 100, 100, 0.6));
 }
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+
+.dark .logo:hover {
+  filter: drop-shadow(0 0 2em rgba(180, 180, 180, 0.6));
 }
 
 @keyframes logo-spin {
@@ -44,10 +45,10 @@
 
 /* Dark mode specific adjustments */
 .dark .card {
-  background-color: #1e293b;
-  border-color: #334155;
+  background-color: #1a1a1a;
+  border-color: #333;
 }
 
 .dark .read-the-docs {
-  color: #94a3b8;
+  color: #aaa;
 }

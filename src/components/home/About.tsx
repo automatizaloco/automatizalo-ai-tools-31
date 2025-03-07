@@ -53,7 +53,7 @@ const About = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className={`transition-all duration-1000 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className={`inline-block py-1 px-3 mb-4 rounded-full text-sm font-medium ${
-              theme === 'dark' ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-50 text-automatizalo-blue'
+              theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'
             }`}>
               {t('home.about.tagline')}
             </span>
@@ -74,7 +74,7 @@ const About = () => {
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start">
                   <div className={`mt-1 p-1.5 rounded-full mr-4 ${
-                    theme === 'dark' ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-50 text-automatizalo-blue'
+                    theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'
                   }`}>
                     {feature.icon}
                   </div>
@@ -93,15 +93,15 @@ const About = () => {
             <div className="flex items-center gap-4 mt-6">
               <Button className={`transition-all duration-300 rounded-xl ${
                 theme === 'dark' 
-                  ? 'bg-blue-600 hover:bg-blue-700' 
-                  : 'bg-automatizalo-blue hover:bg-automatizalo-blue/90'
+                  ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                  : 'bg-gray-800 hover:bg-gray-700 text-white'
               }`}>
                 {t('home.about.learnMore')}
               </Button>
               <Button variant="ghost" className={
                 theme === 'dark' 
-                  ? 'text-gray-300 hover:text-blue-400 hover:bg-blue-950/50' 
-                  : 'text-gray-600 hover:text-automatizalo-blue hover:bg-blue-50'
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-800' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }>
                 {t('home.about.contactUs')}
               </Button>

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 type Language = "en" | "fr" | "es";
 
@@ -11,6 +11,10 @@ type LanguageContextType = {
 
 const translations = {
   en: {
+    // Theme
+    "theme.toggleDark": "Switch to Dark Mode",
+    "theme.toggleLight": "Switch to Light Mode",
+    
     // Navigation
     "nav.home": "Home",
     "nav.solutions": "Solutions",
@@ -73,6 +77,10 @@ const translations = {
     "home.about.reason3": "Always improving – New features & fine-tuned automations every month"
   },
   fr: {
+    // Theme
+    "theme.toggleDark": "Passer au Mode Sombre",
+    "theme.toggleLight": "Passer au Mode Clair",
+    
     // Navigation
     "nav.home": "Accueil",
     "nav.solutions": "Solutions",
@@ -135,6 +143,10 @@ const translations = {
     "home.about.reason3": "Toujours en amélioration – Nouvelles fonctionnalités et automatisations affinées chaque mois"
   },
   es: {
+    // Theme
+    "theme.toggleDark": "Cambiar a Modo Oscuro",
+    "theme.toggleLight": "Cambiar a Modo Claro",
+    
     // Navigation
     "nav.home": "Inicio",
     "nav.solutions": "Soluciones",
@@ -201,14 +213,25 @@ const translations = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>(() => {
+    // Get stored language preference or default to 'en'
+    const storedLanguage = localStorage.getItem('language');
+    return (storedLanguage as Language) || "en";
+  });
+
+  useEffect(() => {
+    // Store language preference when it changes
+    localStorage.setItem('language', language);
+  }, [language]);
 
   const t = (key: string): string => {
-    if (!translations[language][key as keyof typeof translations[typeof language]]) {
+    const currentTranslations = translations[language];
+    if (!currentTranslations || !currentTranslations[key as keyof typeof currentTranslations]) {
       console.warn(`Translation key not found: ${key} for language ${language}`);
-      return key;
+      // Fallback to English if translation not found
+      return translations.en[key as keyof typeof translations.en] || key;
     }
-    return translations[language][key as keyof typeof translations[typeof language]] || key;
+    return currentTranslations[key as keyof typeof currentTranslations];
   };
 
   return (

@@ -20,9 +20,9 @@ const ThemeSwitcher = () => {
             className="rounded-full w-9 h-9"
           >
             {theme === 'light' ? (
-              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all text-gray-700 dark:text-gray-200" />
             ) : (
-              <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+              <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all text-gray-200" />
             )}
             <span className="sr-only">
               {theme === 'light' ? t('theme.toggleDark') : t('theme.toggleLight')}

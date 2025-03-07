@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 
 import Index from "@/pages/Index";
 import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 import Solutions from "@/pages/Solutions";
 import Contact from "@/pages/Contact";
 import Login from "@/pages/Login";
@@ -39,11 +40,12 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:id" element={<BlogPost />} />
                   <Route path="/solutions" element={<Solutions />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/admin/blog" element={<BlogAdmin />} />
-                  <Route path="/admin/blog/new" element={<BlogPostForm />} />
+                  <Route path="/admin/blog/create" element={<BlogPostForm />} />
                   <Route path="/admin/blog/edit/:id" element={<BlogPostForm />} />
                   <Route path="/admin/content" element={<ContentManager />} />
                   <Route path="*" element={<NotFound />} />

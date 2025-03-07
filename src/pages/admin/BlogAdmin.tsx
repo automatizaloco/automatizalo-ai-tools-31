@@ -53,7 +53,7 @@ const BlogAdmin = () => {
             <h1 className="text-3xl font-bold">Blog Management</h1>
             <Button 
               onClick={handleCreate}
-              className="bg-automatizalo-blue hover:bg-automatizalo-blue/90"
+              className="bg-gray-900 hover:bg-gray-800"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Create New Post

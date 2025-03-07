@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 type Language = "en" | "fr" | "es";
@@ -30,6 +29,7 @@ const translations = {
     "blog.featured": "Featured Articles",
     "blog.all": "All Articles",
     "blog.readMore": "Read More",
+    "blog.backToBlog": "Back to Blog",
     "blog.newsletter.title": "Stay up to date with our latest insights",
     "blog.newsletter.subtitle": "Subscribe to our newsletter to receive the latest updates on AI, automation, and digital transformation.",
     "blog.newsletter.button": "Subscribe",
@@ -131,6 +131,7 @@ const translations = {
     "blog.featured": "Articles en Vedette",
     "blog.all": "Tous les Articles",
     "blog.readMore": "Lire Plus",
+    "blog.backToBlog": "Retour au Blog",
     "blog.newsletter.title": "Restez à jour avec nos dernières informations",
     "blog.newsletter.subtitle": "Abonnez-vous à notre newsletter pour recevoir les dernières mises à jour sur l'IA, l'automatisation et la transformation numérique.",
     "blog.newsletter.button": "S'abonner",
@@ -232,6 +233,7 @@ const translations = {
     "blog.featured": "Artículos Destacados",
     "blog.all": "Todos los Artículos",
     "blog.readMore": "Leer Más",
+    "blog.backToBlog": "Volver al Blog",
     "blog.newsletter.title": "Mantente al día con nuestras últimas novedades",
     "blog.newsletter.subtitle": "Suscríbete a nuestro boletín para recibir las últimas actualizaciones sobre IA, automatización y transformación digital.",
     "blog.newsletter.button": "Suscribirse",
@@ -294,7 +296,7 @@ const translations = {
     "testimonials.client2.text": "La automatización de flujo de trabajo que implementamos con Automatízalo ha reducido nuestro tiempo de procesamiento en un 60%. Su equipo entendió nuestras necesidades específicas y entregó una solución que se integró perfectamente con nuestros sistemas existentes.",
     "testimonials.client3.name": "Emma Thompson",
     "testimonials.client3.company": "Creative Solutions",
-    "testimonials.client3.text": "Como pequeña empresa, necesitábamos una automatización asequible que pudiera crecer con nosotros. Automatízalo entregó exactamente eso - herramientas poderosas que simplificaron nuestras operaciones sin arruinar el banco.",
+    "testimonials.client3.text": "Como pequeña empresa, necesitábamos una automatización asequible que pudiera crecer con nosotros. Automatízalo entregó exactamente eso - herramientas poderosas que simplificaron nuestras operaciones sin ruinar el banco.",
     
     // Footer
     "footer.company": "Empresa",

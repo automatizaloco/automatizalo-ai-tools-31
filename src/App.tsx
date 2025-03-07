@@ -17,6 +17,7 @@ import NotFound from "@/pages/NotFound";
 import BlogAdmin from "@/pages/admin/BlogAdmin";
 import BlogPostForm from "@/pages/admin/BlogPostForm";
 import ContentManager from "@/pages/admin/ContentManager";
+import TestimonialManager from "@/pages/admin/TestimonialManager";
 
 import "./App.css";
 
@@ -48,6 +49,7 @@ function App() {
                   <Route path="/admin/blog/create" element={<BlogPostForm />} />
                   <Route path="/admin/blog/edit/:id" element={<BlogPostForm />} />
                   <Route path="/admin/content" element={<ContentManager />} />
+                  <Route path="/admin/testimonials" element={<TestimonialManager />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <Toaster position="bottom-right" />

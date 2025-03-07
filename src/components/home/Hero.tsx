@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [animationStep, setAnimationStep] = useState(0);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -25,23 +25,96 @@ const Hero = () => {
     };
   }, []);
 
-  // Animation steps for the process automation
-  const automationSteps = [
-    { title: "Step 1: Voice Command", content: "User speaks prompt: 'Create a post about our new product launch'" },
-    { title: "Step 2: AI Processing", content: "AI analyzes request and generates optimized content for multiple platforms" },
-    { title: "Step 3: Content Creation", content: "Generates tailored content for Instagram, Twitter, LinkedIn and Facebook" },
-    { title: "Step 4: Preview & Approval", content: "User reviews and approves with a single click" },
-    { title: "Step 5: Multi-Platform Publishing", content: "Content automatically published across all social networks" }
+  // Animation steps for the process automation - localized
+  const getAutomationSteps = () => [
+    { 
+      title: language === 'en' ? "Step 1: Voice Command" : 
+             language === 'fr' ? "Étape 1: Commande Vocale" : 
+             "Paso 1: Comando de Voz", 
+      content: language === 'en' ? "User speaks prompt: 'Create a post about our new product launch'" :
+               language === 'fr' ? "L'utilisateur parle: 'Créer un post sur le lancement de notre nouveau produit'" : 
+               "El usuario habla: 'Crear una publicación sobre el lanzamiento de nuestro nuevo producto'"
+    },
+    { 
+      title: language === 'en' ? "Step 2: AI Processing" : 
+             language === 'fr' ? "Étape 2: Traitement IA" : 
+             "Paso 2: Procesamiento de IA", 
+      content: language === 'en' ? "AI analyzes request and generates optimized content for multiple platforms" :
+               language === 'fr' ? "L'IA analyse la demande et génère du contenu optimisé pour plusieurs plateformes" :
+               "La IA analiza la solicitud y genera contenido optimizado para múltiples plataformas"
+    },
+    { 
+      title: language === 'en' ? "Step 3: Content Creation" : 
+             language === 'fr' ? "Étape 3: Création de Contenu" : 
+             "Paso 3: Creación de Contenido", 
+      content: language === 'en' ? "Generates tailored content for Instagram, Twitter, LinkedIn and Facebook" :
+               language === 'fr' ? "Génère du contenu personnalisé pour Instagram, Twitter, LinkedIn et Facebook" :
+               "Genera contenido personalizado para Instagram, Twitter, LinkedIn y Facebook"
+    },
+    { 
+      title: language === 'en' ? "Step 4: Preview & Approval" : 
+             language === 'fr' ? "Étape 4: Aperçu et Approbation" : 
+             "Paso 4: Vista Previa y Aprobación", 
+      content: language === 'en' ? "User reviews and approves with a single click" :
+               language === 'fr' ? "L'utilisateur révise et approuve en un seul clic" :
+               "El usuario revisa y aprueba con un solo clic"
+    },
+    { 
+      title: language === 'en' ? "Step 5: Multi-Platform Publishing" : 
+             language === 'fr' ? "Étape 5: Publication Multi-Plateforme" : 
+             "Paso 5: Publicación en Múltiples Plataformas", 
+      content: language === 'en' ? "Content automatically published across all social networks" :
+               language === 'fr' ? "Contenu automatiquement publié sur tous les réseaux sociaux" :
+               "Contenido publicado automáticamente en todas las redes sociales"
+    }
   ];
 
-  // Animation steps for the AI assistant
-  const assistantSteps = [
-    { title: "Email Management", content: "AI reads and categorizes emails, drafting responses for review" },
-    { title: "Meeting Scheduling", content: "AI coordinates calendars and arranges meetings based on availability" },
-    { title: "Task Automation", content: "AI handles follow-ups and sends reminders for pending tasks" },
-    { title: "Research Assistant", content: "AI conducts research and prepares summaries on any topic" },
-    { title: "Document Creation", content: "AI creates reports, presentations and documents based on instructions" }
+  // Animation steps for the AI assistant - localized
+  const getAssistantSteps = () => [
+    { 
+      title: language === 'en' ? "Email Management" : 
+             language === 'fr' ? "Gestion des Emails" : 
+             "Gestión de Correos", 
+      content: language === 'en' ? "AI reads and categorizes emails, drafting responses for review" :
+               language === 'fr' ? "L'IA lit et catégorise les emails, rédigeant des réponses pour révision" :
+               "La IA lee y categoriza correos, redactando respuestas para revisión"
+    },
+    { 
+      title: language === 'en' ? "Meeting Scheduling" : 
+             language === 'fr' ? "Planification de Réunions" : 
+             "Programación de Reuniones", 
+      content: language === 'en' ? "AI coordinates calendars and arranges meetings based on availability" :
+               language === 'fr' ? "L'IA coordonne les calendriers et organise des réunions selon la disponibilité" :
+               "La IA coordina calendarios y organiza reuniones según disponibilidad"
+    },
+    { 
+      title: language === 'en' ? "Task Automation" : 
+             language === 'fr' ? "Automatisation des Tâches" : 
+             "Automatización de Tareas", 
+      content: language === 'en' ? "AI handles follow-ups and sends reminders for pending tasks" :
+               language === 'fr' ? "L'IA gère les suivis et envoie des rappels pour les tâches en attente" :
+               "La IA maneja seguimientos y envía recordatorios para tareas pendientes"
+    },
+    { 
+      title: language === 'en' ? "Research Assistant" : 
+             language === 'fr' ? "Assistant de Recherche" : 
+             "Asistente de Investigación", 
+      content: language === 'en' ? "AI conducts research and prepares summaries on any topic" :
+               language === 'fr' ? "L'IA mène des recherches et prépare des résumés sur n'importe quel sujet" :
+               "La IA realiza investigaciones y prepara resúmenes sobre cualquier tema"
+    },
+    { 
+      title: language === 'en' ? "Document Creation" : 
+             language === 'fr' ? "Création de Documents" : 
+             "Creación de Documentos", 
+      content: language === 'en' ? "AI creates reports, presentations and documents based on instructions" :
+               language === 'fr' ? "L'IA crée des rapports, des présentations et des documents selon les instructions" :
+               "La IA crea informes, presentaciones y documentos basados en instrucciones"
+    }
   ];
+
+  const automationSteps = getAutomationSteps();
+  const assistantSteps = getAssistantSteps();
 
   return (
     <section className="relative pt-28 pb-20 md:pt-40 md:pb-28 overflow-hidden">
@@ -99,7 +172,11 @@ const Hero = () => {
             {/* Animation Card 1: Process Automation */}
             <div className="absolute -bottom-12 -right-8 bg-white rounded-2xl shadow-xl overflow-hidden p-1 border border-gray-200 w-[280px] z-10">
               <div className="p-4 rounded-xl bg-gray-50">
-                <h3 className="text-md font-semibold mb-3 text-gray-900">Automation Process</h3>
+                <h3 className="text-md font-semibold mb-3 text-gray-900">
+                  {language === 'en' ? 'Automation Process' : 
+                   language === 'fr' ? 'Processus d\'Automatisation' : 
+                   'Proceso de Automatización'}
+                </h3>
                 
                 <div className="bg-white rounded-xl p-3 border border-gray-200 min-h-[120px] relative">
                   {automationSteps.map((step, index) => (
@@ -132,7 +209,11 @@ const Hero = () => {
             
             {/* Animation Card 2: AI Assistant */}
             <div className="absolute -top-8 -left-8 bg-white/90 backdrop-blur-xl rounded-xl p-4 shadow-lg border border-gray-200 w-64 z-20">
-              <h3 className="text-md font-semibold mb-2 text-gray-900">Personal AI Assistant</h3>
+              <h3 className="text-md font-semibold mb-2 text-gray-900">
+                {language === 'en' ? 'Personal AI Assistant' : 
+                 language === 'fr' ? 'Assistant IA Personnel' : 
+                 'Asistente Personal de IA'}
+              </h3>
               <div className="flex items-start gap-3 mb-2">
                 <div className="bg-gray-200 h-10 w-10 rounded-full flex items-center justify-center text-gray-600 mt-1 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -157,8 +238,16 @@ const Hero = () => {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Save 30+ hours</p>
-                  <p className="text-xs text-gray-600">per week with automation</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {language === 'en' ? 'Save 30+ hours' : 
+                     language === 'fr' ? 'Économisez 30+ heures' : 
+                     'Ahorra 30+ horas'}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {language === 'en' ? 'per week with automation' : 
+                     language === 'fr' ? 'par semaine avec l\'automatisation' : 
+                     'por semana con automatización'}
+                  </p>
                 </div>
               </div>
             </div>

@@ -16,10 +16,6 @@
   filter: drop-shadow(0 0 2em rgba(100, 100, 100, 0.6));
 }
 
-.dark .logo:hover {
-  filter: drop-shadow(0 0 2em rgba(180, 180, 180, 0.6));
-}
-
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -41,14 +37,4 @@
 
 .read-the-docs {
   color: #888;
-}
-
-/* Dark mode specific adjustments */
-.dark .card {
-  background-color: #1a1a1a;
-  border-color: #333;
-}
-
-.dark .read-the-docs {
-  color: #aaa;
 }

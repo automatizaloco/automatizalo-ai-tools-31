@@ -13,6 +13,7 @@ import Footer from "@/components/layout/Footer";
 import { BlogPost } from "@/types/blog";
 import { createBlogPost, updateBlogPost, getBlogPostById } from "@/services/blogService";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 const categories = ["AI", "Automation", "Technology", "Business"];
 
@@ -21,6 +22,7 @@ const BlogPostForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  const { t } = useLanguage();
   
   const [formData, setFormData] = useState<Omit<BlogPost, "id">>({
     title: "",
@@ -69,13 +71,22 @@ const BlogPostForm = () => {
     
     try {
       if (isEditMode && id) {
-        updateBlogPost({ ...formData, id: parseInt(id) });
-        toast.success("Post updated successfully");
+        const updatedPost = updateBlogPost({ ...formData, id: parseInt(id) });
+        if (updatedPost) {
+          toast.success("Post updated successfully");
+          navigate("/admin/blog");
+        } else {
+          toast.error("Failed to update post");
+        }
       } else {
-        createBlogPost(formData);
-        toast.success("Post created successfully");
+        const newPost = createBlogPost(formData);
+        if (newPost) {
+          toast.success("Post created successfully");
+          navigate("/admin/blog");
+        } else {
+          toast.error("Failed to create post");
+        }
       }
-      navigate("/admin/blog");
     } catch (error) {
       toast.error("Failed to save post");
       console.error(error);
@@ -210,7 +221,7 @@ const BlogPostForm = () => {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="bg-automatizalo-blue hover:bg-automatizalo-blue/90"
+                  className="bg-gray-900 hover:bg-gray-800"
                 >
                   {isEditMode ? "Update Post" : "Create Post"}
                 </Button>

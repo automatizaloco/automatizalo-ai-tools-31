@@ -65,6 +65,24 @@ let blogPosts: BlogPost[] = [
   }
 ];
 
+// Initialize from localStorage if available
+const init = () => {
+  const savedPosts = localStorage.getItem("blogPosts");
+  if (savedPosts) {
+    try {
+      blogPosts = JSON.parse(savedPosts);
+    } catch (e) {
+      console.error("Failed to parse saved blog posts", e);
+    }
+  } else {
+    // If no posts in localStorage, save the default ones
+    localStorage.setItem("blogPosts", JSON.stringify(blogPosts));
+  }
+};
+
+// Run initialization
+init();
+
 export const getBlogPosts = (): BlogPost[] => {
   return [...blogPosts];
 };
@@ -74,10 +92,12 @@ export const getBlogPostById = (id: number): BlogPost | undefined => {
 };
 
 export const createBlogPost = (post: Omit<BlogPost, "id">): BlogPost => {
+  const newId = Math.max(0, ...blogPosts.map(p => p.id)) + 1;
   const newPost = {
     ...post,
-    id: Math.max(0, ...blogPosts.map(p => p.id)) + 1
+    id: newId
   };
+  
   blogPosts = [...blogPosts, newPost];
   
   // Save to localStorage for persistence
@@ -104,17 +124,3 @@ export const deleteBlogPost = (id: number): boolean => {
   
   return initialLength > blogPosts.length;
 };
-
-// Initialize from localStorage if available
-const init = () => {
-  const savedPosts = localStorage.getItem("blogPosts");
-  if (savedPosts) {
-    try {
-      blogPosts = JSON.parse(savedPosts);
-    } catch (e) {
-      console.error("Failed to parse saved blog posts", e);
-    }
-  }
-};
-
-init();

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Phone, Mail, MapPin, Globe, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
@@ -16,6 +16,24 @@ const Contact = () => {
     subject: "",
     message: "",
   });
+  const [contactInfo, setContactInfo] = useState({
+    phone: "+1 (555) 123-4567",
+    email: "contact@automatizalo.co",
+    address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
+    website: "https://automatizalo.co"
+  });
+
+  // Fetch contact information from localStorage (saved from ContentManager)
+  useEffect(() => {
+    try {
+      const savedContactContent = localStorage.getItem('contactContent');
+      if (savedContactContent) {
+        setContactInfo(JSON.parse(savedContactContent));
+      }
+    } catch (error) {
+      console.error("Error loading contact information:", error);
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -56,7 +74,7 @@ const Contact = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Contact Information */}
             <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-              <h2 className={`text-2xl font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{t('contact.title')}</h2>
+              <h2 className={`text-2xl font-heading font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{t('contact.title')}</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start">
@@ -65,7 +83,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.phone')}</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>+1 (555) 123-4567</p>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{contactInfo.phone}</p>
                   </div>
                 </div>
                 
@@ -75,7 +93,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.email')}</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>contact@automatizalo.com</p>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{contactInfo.email}</p>
                   </div>
                 </div>
                 
@@ -85,7 +103,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.address')}</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>123 AI Boulevard, Tech District<br />San Francisco, CA 94105</p>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{contactInfo.address}</p>
                   </div>
                 </div>
                 
@@ -95,7 +113,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Website</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>www.automatizalo.com</p>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{contactInfo.website}</p>
                   </div>
                 </div>
               </div>
@@ -104,7 +122,7 @@ const Contact = () => {
                 <h3 className={`text-lg font-medium mb-4 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Connect with us</h3>
                 <div className="flex space-x-4">
                   <a 
-                    href="https://wa.me/15551234567" 
+                    href={`https://wa.me/${contactInfo.phone.replace(/[^0-9]/g, '')}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="inline-flex"
@@ -120,7 +138,7 @@ const Contact = () => {
             
             {/* Contact Form */}
             <div className={`p-8 rounded-2xl shadow-sm border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-              <h2 className={`text-2xl font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{t('contact.form.submit')}</h2>
+              <h2 className={`text-2xl font-heading font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>{t('contact.form.submit')}</h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>

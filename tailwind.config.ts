@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -139,8 +140,8 @@ export default {
 				'pulse-slow': 'pulse-slow 4s infinite ease-in-out'
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
-				heading: ['Poppins', 'sans-serif']
+				sans: ['Noto Sans', 'sans-serif'],
+				heading: ['Open Sans', 'sans-serif']
 			}
 		}
 	},

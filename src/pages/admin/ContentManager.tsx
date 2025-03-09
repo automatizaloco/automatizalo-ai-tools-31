@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,10 +40,33 @@ const ContentManager = () => {
 
   const [contactContent, setContactContent] = useState({
     phone: "+1 (555) 123-4567",
-    email: "contact@automatizalo.com",
+    email: "contact@automatizalo.co",
     address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
-    website: "www.automatizalo.com"
+    website: "https://automatizalo.co"
   });
+
+  // Load saved content from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedHomeContent = localStorage.getItem('homeContent');
+      const savedSolutionsContent = localStorage.getItem('solutionsContent');
+      const savedContactContent = localStorage.getItem('contactContent');
+      
+      if (savedHomeContent) {
+        setHomeContent(JSON.parse(savedHomeContent));
+      }
+      
+      if (savedSolutionsContent) {
+        setSolutionsContent(JSON.parse(savedSolutionsContent));
+      }
+      
+      if (savedContactContent) {
+        setContactContent(JSON.parse(savedContactContent));
+      }
+    } catch (error) {
+      console.error("Error loading saved content:", error);
+    }
+  }, []);
 
   const handleHomeContentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -93,8 +116,22 @@ const ContentManager = () => {
   };
 
   const handleSaveContent = (section: string) => {
-    // In a real application, you would save the content to your backend
-    toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} content updated successfully!`);
+    try {
+      // Save to localStorage based on section
+      if (section === "home") {
+        localStorage.setItem('homeContent', JSON.stringify(homeContent));
+      } else if (section === "solutions") {
+        localStorage.setItem('solutionsContent', JSON.stringify(solutionsContent));
+      } else if (section === "contact") {
+        localStorage.setItem('contactContent', JSON.stringify(contactContent));
+      }
+      
+      // Show success notification
+      toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} content updated successfully!`);
+    } catch (error) {
+      console.error(`Error saving ${section} content:`, error);
+      toast.error(`Failed to save ${section} content. Please try again.`);
+    }
   };
 
   // Redirect if not authenticated
@@ -116,7 +153,7 @@ const ContentManager = () => {
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold">Content Manager</h1>
+            <h1 className="text-3xl font-heading font-bold">Content Manager</h1>
             <p className="text-gray-600 mt-2">Edit website content and images</p>
           </div>
           

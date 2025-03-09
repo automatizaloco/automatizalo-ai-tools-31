@@ -24,7 +24,7 @@ const Footer = () => {
           <div className="md:col-span-4">
             <Link to="/" className="inline-block mb-4">
               <img 
-                src="/lovable-uploads/a8d9fdf8-e441-4048-ba30-f92269be3e04.png"
+                src="/lovable-uploads/d2b2a72c-6cfe-4670-8019-000ed70ff370.png"
                 alt="Automatízalo Logo"
                 className="h-10 mb-4"
               />
@@ -37,7 +37,7 @@ const Footer = () => {
                 href="https://www.facebook.com/automatizalo.co" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
+                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}
                 aria-label="Facebook"
               >
                 <Facebook size={20} />
@@ -46,7 +46,7 @@ const Footer = () => {
                 href="https://x.com/Automatizalo_co" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
+                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}
                 aria-label="X (Twitter)"
               >
                 <XLogo />
@@ -55,7 +55,7 @@ const Footer = () => {
                 href="https://www.instagram.com/automatizalo.co/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
+                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors p-2 rounded-full ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}
                 aria-label="Instagram"
               >
                 <Instagram size={20} />

@@ -1,150 +1,213 @@
 
-import { CheckCircle2, Zap, Brain, Bot } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import EditableText from '@/components/admin/EditableText';
 
 const About = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const { t } = useLanguage();
-  const { theme } = useTheme();
+  const { isAuthenticated } = useAuth();
   
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
+    const handleScroll = () => {
+      const element = document.getElementById('about-section');
+      if (element) {
+        const position = element.getBoundingClientRect();
+        // If element is in viewport
+        if (position.top < window.innerHeight && position.bottom >= 0) {
           setIsVisible(true);
-          observer.disconnect();
         }
-      },
-      { threshold: 0.1 }
-    );
+      }
+    };
     
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check on initial load
     
-    return () => observer.disconnect();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const features = [
-    { 
-      icon: <Zap size={20} />, 
-      title: t('home.about.feature1.title'), 
-      description: t('home.about.feature1.description')
-    },
-    { 
-      icon: <Bot size={20} />, 
-      title: t('home.about.feature2.title'), 
-      description: t('home.about.feature2.description')
-    },
-    { 
-      icon: <Brain size={20} />, 
-      title: t('home.about.feature3.title'), 
-      description: t('home.about.feature3.description')
-    },
-  ];
-
   return (
-    <section ref={sectionRef} className="py-16 md:py-24">
+    <section id="about-section" className="py-20 md:py-28 overflow-hidden">
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className={`transition-all duration-1000 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <span className={`inline-block py-1 px-3 mb-4 rounded-full text-sm font-medium ${
-              theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'
-            }`}>
-              {t('home.about.tagline')}
+          <div className={`order-2 lg:order-1 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <span className="inline-block py-1 px-3 mb-4 bg-blue-100 text-automatizalo-blue rounded-full text-sm font-medium">
+              {isAuthenticated ? (
+                <EditableText 
+                  id="about-section-tag"
+                  defaultText={t("about.sectionTag")}
+                />
+              ) : (
+                t("about.sectionTag")
+              )}
             </span>
             
-            <h2 className={`text-3xl md:text-4xl font-heading font-bold mb-6 ${
-              theme === 'dark' ? 'text-white' : ''
-            }`}>
-              {t('home.about.title')}
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6">
+              {isAuthenticated ? (
+                <EditableText 
+                  id="about-section-title"
+                  defaultText={t("about.title")}
+                />
+              ) : (
+                t("about.title")
+              )}
             </h2>
             
-            <p className={`mb-8 ${
-              theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              {t('home.about.description')}
+            <p className="text-gray-600 mb-6">
+              {isAuthenticated ? (
+                <EditableText 
+                  id="about-section-paragraph1"
+                  defaultText={t("about.paragraph1")}
+                />
+              ) : (
+                t("about.paragraph1")
+              )}
             </p>
             
-            <div className="space-y-4 mb-8">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-start">
-                  <div className={`mt-1 p-1.5 rounded-full mr-4 ${
-                    theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {feature.icon}
-                  </div>
-                  <div>
-                    <h3 className={`font-medium mb-1 ${
-                      theme === 'dark' ? 'text-white' : ''
-                    }`}>{feature.title}</h3>
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                    }`}>{feature.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-gray-600 mb-8">
+              {isAuthenticated ? (
+                <EditableText 
+                  id="about-section-paragraph2"
+                  defaultText={t("about.paragraph2")}
+                />
+              ) : (
+                t("about.paragraph2")
+              )}
+            </p>
             
-            <div className="flex items-center gap-4 mt-6">
-              <Button className={`transition-all duration-300 rounded-xl ${
-                theme === 'dark' 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-                  : 'bg-gray-800 hover:bg-gray-700 text-white'
-              }`}>
-                {t('home.about.learnMore')}
-              </Button>
-              <Button variant="ghost" className={
-                theme === 'dark' 
-                  ? 'text-gray-300 hover:text-white hover:bg-gray-800' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }>
-                {t('home.about.contactUs')}
-              </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="flex items-start">
+                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-automatizalo-blue mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-1">
+                    {isAuthenticated ? (
+                      <EditableText 
+                        id="about-feature1-title"
+                        defaultText={t("about.features.feature1.title")}
+                      />
+                    ) : (
+                      t("about.features.feature1.title")
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {isAuthenticated ? (
+                      <EditableText 
+                        id="about-feature1-description"
+                        defaultText={t("about.features.feature1.description")}
+                      />
+                    ) : (
+                      t("about.features.feature1.description")
+                    )}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-automatizalo-blue mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-1">
+                    {isAuthenticated ? (
+                      <EditableText 
+                        id="about-feature2-title"
+                        defaultText={t("about.features.feature2.title")}
+                      />
+                    ) : (
+                      t("about.features.feature2.title")
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {isAuthenticated ? (
+                      <EditableText 
+                        id="about-feature2-description"
+                        defaultText={t("about.features.feature2.description")}
+                      />
+                    ) : (
+                      t("about.features.feature2.description")
+                    )}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-automatizalo-blue mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-1">
+                    {isAuthenticated ? (
+                      <EditableText 
+                        id="about-feature3-title"
+                        defaultText={t("about.features.feature3.title")}
+                      />
+                    ) : (
+                      t("about.features.feature3.title")
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {isAuthenticated ? (
+                      <EditableText 
+                        id="about-feature3-description"
+                        defaultText={t("about.features.feature3.description")}
+                      />
+                    ) : (
+                      t("about.features.feature3.description")
+                    )}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-automatizalo-blue mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-1">
+                    {isAuthenticated ? (
+                      <EditableText 
+                        id="about-feature4-title"
+                        defaultText={t("about.features.feature4.title")}
+                      />
+                    ) : (
+                      t("about.features.feature4.title")
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {isAuthenticated ? (
+                      <EditableText 
+                        id="about-feature4-description"
+                        defaultText={t("about.features.feature4.description")}
+                      />
+                    ) : (
+                      t("about.features.feature4.description")
+                    )}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div className={`relative transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="relative rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-700">
-              <img 
-                src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800" 
-                alt="Our Team" 
-                className="w-full object-cover rounded-2xl"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-            </div>
-            
-            <div className={`absolute -bottom-6 right-6 md:right-8 rounded-xl p-5 shadow-lg max-w-xs ${
-              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-            }`}>
-              <div className="flex flex-col">
-                <h3 className={`font-medium text-lg mb-2 ${
-                  theme === 'dark' ? 'text-white' : ''
-                }`}>{t('home.about.whyWorkWithUs')}</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-start">
-                    <CheckCircle2 size={18} className="text-green-500 mr-2 mt-0.5 shrink-0" />
-                    <span className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>{t('home.about.reason1')}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle2 size={18} className="text-green-500 mr-2 mt-0.5 shrink-0" />
-                    <span className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>{t('home.about.reason2')}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle2 size={18} className="text-green-500 mr-2 mt-0.5 shrink-0" />
-                    <span className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>{t('home.about.reason3')}</span>
-                  </li>
-                </ul>
+          <div className={`order-1 lg:order-2 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="relative">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-xl"></div>
+              <div className="relative rounded-3xl overflow-hidden shadow-xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&q=80&w=800" 
+                  alt="Team collaboration on AI project" 
+                  className="w-full h-auto"
+                />
               </div>
             </div>
           </div>

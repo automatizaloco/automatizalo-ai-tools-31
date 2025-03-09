@@ -149,13 +149,15 @@ const Hero = () => {
                 <ArrowRight size={18} className="ml-2" />
               </Button>
               
-              <Button 
-                variant="outline" 
-                className="border-gray-300 text-gray-800 hover:bg-gray-100 px-6 text-base transition-all duration-300 rounded-xl h-12" 
-                size="lg"
-              >
-                {t('home.hero.learnMore')}
-              </Button>
+              <a href="#about-section">
+                <Button 
+                  variant="outline" 
+                  className="border-gray-300 text-gray-800 hover:bg-gray-100 px-6 text-base transition-all duration-300 rounded-xl h-12" 
+                  size="lg"
+                >
+                  {t('home.hero.learnMore')}
+                </Button>
+              </a>
             </div>
           </div>
           

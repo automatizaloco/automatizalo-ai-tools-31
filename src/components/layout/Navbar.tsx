@@ -42,7 +42,8 @@ const Navbar = () => {
   // Admin items only visible when authenticated
   const adminItems = [
     { title: 'Blog Admin', path: '/admin/blog' },
-    { title: 'Content Manager', path: '/admin/content' }
+    { title: 'Content Manager', path: '/admin/content' },
+    { title: 'Testimonial Manager', path: '/admin/testimonials' }
   ];
 
   const isActive = (path: string) => {
@@ -59,9 +60,9 @@ const Navbar = () => {
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/d2b2a72c-6cfe-4670-8019-000ed70ff370.png"
+              src="/lovable-uploads/a8d9fdf8-e441-4048-ba30-f92269be3e04.png"
               alt="Automatízalo Logo" 
-              className="h-8 md:h-10"
+              className="h-10 md:h-12"
             />
           </Link>
 

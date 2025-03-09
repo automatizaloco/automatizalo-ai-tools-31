@@ -11,6 +11,7 @@ import SolutionCard from '@/components/ui/SolutionCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
+import { toast } from 'sonner';
 
 const Index = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -24,6 +25,23 @@ const Index = () => {
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Effect to handle editable text changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      const handleEditableTextChange = (event: CustomEvent) => {
+        const { id, newText } = event.detail;
+        console.log(`Content edited: ${id} = ${newText}`);
+        toast.success('Content updated successfully');
+      };
+
+      window.addEventListener('editableTextChanged', handleEditableTextChange as EventListener);
+      
+      return () => {
+        window.removeEventListener('editableTextChanged', handleEditableTextChange as EventListener);
+      };
+    }
+  }, [isAuthenticated]);
 
   const solutions = [
     {

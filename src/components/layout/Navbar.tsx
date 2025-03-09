@@ -60,7 +60,7 @@ const Navbar = () => {
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/d2b2a72c-6cfe-4670-8019-000ed70ff370.png"
+              src="/lovable-uploads/cee7d990-3366-4a2e-9120-691c1267c62c.png"
               alt="Automatízalo Logo" 
               className="h-10 md:h-12"
             />
@@ -73,7 +73,7 @@ const Navbar = () => {
                 key={item.path}
                 to={item.path}
                 className={`
-                  text-sm font-medium transition-colors py-1.5 px-1 link-underline font-heading
+                  text-sm font-medium transition-colors py-1.5 px-1 link-underline 
                   ${isActive(item.path) 
                     ? 'text-gray-900' 
                     : 'text-slate-700 hover:text-gray-900'
@@ -89,7 +89,7 @@ const Navbar = () => {
                 key={item.path}
                 to={item.path}
                 className={`
-                  text-sm font-medium transition-colors py-1.5 px-1 link-underline font-heading
+                  text-sm font-medium transition-colors py-1.5 px-1 link-underline
                   ${isActive(item.path) 
                     ? 'text-gray-900' 
                     : 'text-slate-700 hover:text-gray-900'
@@ -105,7 +105,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <Button 
                 variant="outline" 
-                className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 font-heading"
+                className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
                 onClick={logout}
               >
                 {t('nav.logout')}
@@ -113,13 +113,13 @@ const Navbar = () => {
             ) : (
               <div className="flex items-center gap-2">
                 <Link to="/login">
-                  <Button variant="outline" className="flex items-center gap-1 font-heading">
+                  <Button variant="outline" className="flex items-center gap-1">
                     <LogIn className="h-4 w-4" />
                     {t('nav.login')}
                   </Button>
                 </Link>
                 <Link to="/contact">
-                  <Button className="bg-gray-900 hover:bg-gray-800 transition-all duration-300 rounded-xl font-heading">
+                  <Button className="bg-gray-900 hover:bg-gray-800 transition-all duration-300 rounded-xl">
                     {t('nav.getStarted')}
                   </Button>
                 </Link>
@@ -149,7 +149,7 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`
-                    py-2 text-base font-medium transition-colors font-heading
+                    py-2 text-base font-medium transition-colors
                     ${isActive(item.path) 
                       ? 'text-gray-900' 
                       : 'text-slate-700 hover:text-gray-900'
@@ -165,7 +165,7 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`
-                    py-2 text-base font-medium transition-colors font-heading
+                    py-2 text-base font-medium transition-colors
                     ${isActive(item.path) 
                       ? 'text-gray-900' 
                       : 'text-slate-700 hover:text-gray-900'
@@ -179,7 +179,7 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <Button 
                   variant="outline" 
-                  className="w-full mt-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 font-heading"
+                  className="w-full mt-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
                   onClick={logout}
                 >
                   {t('nav.logout')}
@@ -187,13 +187,13 @@ const Navbar = () => {
               ) : (
                 <div className="flex flex-col gap-2 mt-2">
                   <Link to="/login" className="w-full">
-                    <Button variant="outline" className="w-full flex items-center justify-center gap-1 font-heading">
+                    <Button variant="outline" className="w-full flex items-center justify-center gap-1">
                       <LogIn className="h-4 w-4" />
                       {t('nav.login')}
                     </Button>
                   </Link>
                   <Link to="/contact" className="w-full">
-                    <Button className="bg-gray-900 hover:bg-gray-800 w-full transition-all duration-300 rounded-xl font-heading">
+                    <Button className="bg-gray-900 hover:bg-gray-800 w-full transition-all duration-300 rounded-xl">
                       {t('nav.getStarted')}
                     </Button>
                   </Link>

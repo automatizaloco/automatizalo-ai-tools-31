@@ -37,21 +37,3 @@
 .read-the-docs {
   color: #888;
 }
-
-/* Font styling */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Open Sans', sans-serif;
-}
-
-body, p, span, div, button, input, textarea, select {
-  font-family: 'Noto Sans', sans-serif;
-}
-
-.font-heading {
-  font-family: 'Open Sans', sans-serif !important;
-}
-
-.font-body {
-  font-family: 'Noto Sans', sans-serif !important;
-}
-

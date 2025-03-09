@@ -170,12 +170,9 @@ const Solutions = () => {
                 <p className="text-gray-600 mb-6">
                   {t("solutions.chatbots.description")}
                 </p>
-                <p className="text-gray-600 mb-8">
+                <p className="text-gray-600">
                   {t("solutions.futureproof.description")}
                 </p>
-                <Button className="bg-gray-900 hover:bg-gray-800">
-                  {t("blog.readMore")}
-                </Button>
               </div>
               <div className="lg:w-1/2">
                 <img 
@@ -209,12 +206,9 @@ const Solutions = () => {
                 <p className="text-gray-600 mb-6">
                   {t("solutions.socialMedia.description")}
                 </p>
-                <p className="text-gray-600 mb-8">
+                <p className="text-gray-600">
                   {t("solutions.futureproof.subtitle")}
                 </p>
-                <Button className="bg-gray-900 hover:bg-gray-800">
-                  {t("blog.readMore")}
-                </Button>
               </div>
               <div className="lg:w-1/2">
                 <img 
@@ -248,12 +242,9 @@ const Solutions = () => {
                 <p className="text-gray-600 mb-6">
                   {t("solutions.aiAgents.description")}
                 </p>
-                <p className="text-gray-600 mb-8">
+                <p className="text-gray-600">
                   {t("solutions.futureproof.title")}
                 </p>
-                <Button className="bg-gray-900 hover:bg-gray-800">
-                  {t("blog.readMore")}
-                </Button>
               </div>
               <div className="lg:w-1/2">
                 <img 

@@ -1,7 +1,5 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface SolutionCardProps {
@@ -74,7 +72,7 @@ const SolutionCard = ({
 
         <p className="text-gray-600 mb-5">{description}</p>
 
-        <ul className="space-y-2 mb-6">
+        <ul className="space-y-2">
           {features.map((feature, idx) => (
             <li key={idx} className="flex items-start">
               <svg
@@ -93,14 +91,6 @@ const SolutionCard = ({
             </li>
           ))}
         </ul>
-
-        <Button
-          variant="ghost"
-          className="w-full justify-between px-4 py-2 border border-gray-200 hover:bg-gray-100 hover:text-gray-800 hover:border-gray-300 transition-colors"
-        >
-          <span>Learn More</span>
-          <ArrowRight size={16} />
-        </Button>
       </div>
     </div>
   );

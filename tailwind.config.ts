@@ -140,8 +140,8 @@ export default {
 				'pulse-slow': 'pulse-slow 4s infinite ease-in-out'
 			},
 			fontFamily: {
-				sans: ['Noto Sans', 'sans-serif'],
-				heading: ['Open Sans', 'sans-serif']
+				sans: ['Inter', 'sans-serif'],
+				heading: ['Poppins', 'sans-serif']
 			}
 		}
 	},

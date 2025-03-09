@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,12 +44,31 @@ const ContentManager = () => {
     website: "https://automatizalo.co"
   });
 
-  // Load saved content from localStorage on component mount
+  const [footerContent, setFooterContent] = useState({
+    description: "We help businesses leverage automation technologies to grow and scale efficiently.",
+    company: "Company",
+    about: "About Us",
+    blog: "Blog",
+    contact: "Contact",
+    solutions: "Solutions",
+    chatbots: "Chatbots",
+    leadGeneration: "Lead Generation",
+    socialMedia: "Social Media",
+    aiAgents: "AI Agents",
+    contactUs: "Contact Us",
+    phone: "+1 (555) 123-4567",
+    email: "contact@automatizalo.co",
+    address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
+    website: "https://automatizalo.co",
+    allRightsReserved: "All rights reserved."
+  });
+
   useEffect(() => {
     try {
       const savedHomeContent = localStorage.getItem('homeContent');
       const savedSolutionsContent = localStorage.getItem('solutionsContent');
       const savedContactContent = localStorage.getItem('contactContent');
+      const savedFooterContent = localStorage.getItem('footerContent');
       
       if (savedHomeContent) {
         setHomeContent(JSON.parse(savedHomeContent));
@@ -62,6 +80,10 @@ const ContentManager = () => {
       
       if (savedContactContent) {
         setContactContent(JSON.parse(savedContactContent));
+      }
+
+      if (savedFooterContent) {
+        setFooterContent(JSON.parse(savedFooterContent));
       }
     } catch (error) {
       console.error("Error loading saved content:", error);
@@ -92,6 +114,14 @@ const ContentManager = () => {
     }));
   };
 
+  const handleFooterContentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFooterContent(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, section: string, field: string) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -108,6 +138,11 @@ const ContentManager = () => {
             ...prev,
             [field]: reader.result as string
           }));
+        } else if (section === "contact") {
+          setContactContent(prev => ({
+            ...prev,
+            [field]: reader.result as string
+          }));
         }
       };
       
@@ -117,16 +152,16 @@ const ContentManager = () => {
 
   const handleSaveContent = (section: string) => {
     try {
-      // Save to localStorage based on section
       if (section === "home") {
         localStorage.setItem('homeContent', JSON.stringify(homeContent));
       } else if (section === "solutions") {
         localStorage.setItem('solutionsContent', JSON.stringify(solutionsContent));
       } else if (section === "contact") {
         localStorage.setItem('contactContent', JSON.stringify(contactContent));
+      } else if (section === "footer") {
+        localStorage.setItem('footerContent', JSON.stringify(footerContent));
       }
       
-      // Show success notification
       toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} content updated successfully!`);
     } catch (error) {
       console.error(`Error saving ${section} content:`, error);
@@ -134,7 +169,6 @@ const ContentManager = () => {
     }
   };
 
-  // Redirect if not authenticated
   React.useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -158,13 +192,13 @@ const ContentManager = () => {
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-5xl mx-auto">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="home">Home Page</TabsTrigger>
               <TabsTrigger value="solutions">Solutions Page</TabsTrigger>
               <TabsTrigger value="contact">Contact Page</TabsTrigger>
+              <TabsTrigger value="footer">Footer</TabsTrigger>
             </TabsList>
             
-            {/* Home Page Content */}
             <TabsContent value="home">
               <Card>
                 <CardHeader>
@@ -266,7 +300,6 @@ const ContentManager = () => {
               </Card>
             </TabsContent>
             
-            {/* Solutions Page Content */}
             <TabsContent value="solutions">
               <Card>
                 <CardHeader>
@@ -316,7 +349,6 @@ const ContentManager = () => {
                       />
                     </div>
                     
-                    {/* Solution 1 */}
                     <div className="border-t pt-4">
                       <h3 className="font-medium mb-3">Solution 1</h3>
                       <div className="space-y-3">
@@ -364,7 +396,6 @@ const ContentManager = () => {
                       </div>
                     </div>
                     
-                    {/* Solution 2 */}
                     <div className="border-t pt-4">
                       <h3 className="font-medium mb-3">Solution 2</h3>
                       <div className="space-y-3">
@@ -421,7 +452,6 @@ const ContentManager = () => {
               </Card>
             </TabsContent>
             
-            {/* Contact Page Content */}
             <TabsContent value="contact">
               <Card>
                 <CardHeader>
@@ -474,6 +504,195 @@ const ContentManager = () => {
                 </CardContent>
                 <CardFooter>
                   <Button onClick={() => handleSaveContent("contact")} className="ml-auto">
+                    Save Changes
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="footer">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Footer Content</CardTitle>
+                  <CardDescription>Update the content that appears in the footer across all pages</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="description">Footer Description</Label>
+                      <Textarea
+                        id="description"
+                        name="description"
+                        value={footerContent.description}
+                        rows={3}
+                        onChange={handleFooterContentChange}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="company">Company Section Title</Label>
+                        <Input
+                          id="company"
+                          name="company"
+                          value={footerContent.company}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="solutions">Solutions Section Title</Label>
+                        <Input
+                          id="solutions"
+                          name="solutions"
+                          value={footerContent.solutions}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="about">About Link Text</Label>
+                        <Input
+                          id="about"
+                          name="about"
+                          value={footerContent.about}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="blog">Blog Link Text</Label>
+                        <Input
+                          id="blog"
+                          name="blog"
+                          value={footerContent.blog}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="contact">Contact Link Text</Label>
+                        <Input
+                          id="contact"
+                          name="contact"
+                          value={footerContent.contact}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="chatbots">Chatbots Link Text</Label>
+                        <Input
+                          id="chatbots"
+                          name="chatbots"
+                          value={footerContent.chatbots}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="leadGeneration">Lead Generation Link Text</Label>
+                        <Input
+                          id="leadGeneration"
+                          name="leadGeneration"
+                          value={footerContent.leadGeneration}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="socialMedia">Social Media Link Text</Label>
+                        <Input
+                          id="socialMedia"
+                          name="socialMedia"
+                          value={footerContent.socialMedia}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="aiAgents">AI Agents Link Text</Label>
+                        <Input
+                          id="aiAgents"
+                          name="aiAgents"
+                          value={footerContent.aiAgents}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="contactUs">Contact Us Section Title</Label>
+                      <Input
+                        id="contactUs"
+                        name="contactUs"
+                        value={footerContent.contactUs}
+                        onChange={handleFooterContentChange}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          name="phone"
+                          value={footerContent.phone}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          value={footerContent.email}
+                          onChange={handleFooterContentChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="address">Address</Label>
+                      <Textarea
+                        id="address"
+                        name="address"
+                        value={footerContent.address}
+                        rows={2}
+                        onChange={handleFooterContentChange}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="website">Website URL</Label>
+                      <Input
+                        id="website"
+                        name="website"
+                        value={footerContent.website}
+                        onChange={handleFooterContentChange}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="allRightsReserved">Copyright Text</Label>
+                      <Input
+                        id="allRightsReserved"
+                        name="allRightsReserved"
+                        value={footerContent.allRightsReserved}
+                        onChange={handleFooterContentChange}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={() => handleSaveContent("footer")} className="ml-auto">
                     Save Changes
                   </Button>
                 </CardFooter>

@@ -2,11 +2,44 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
+import EditableText from '@/components/admin/EditableText';
+import { useState, useEffect } from 'react';
 
 const Footer = () => {
   const { t } = useLanguage();
   const { theme } = useTheme();
   const currentYear = new Date().getFullYear();
+  
+  const [footerContent, setFooterContent] = useState({
+    description: "We help businesses leverage automation technologies to grow and scale efficiently.",
+    company: "Company",
+    about: "About Us",
+    blog: "Blog",
+    contact: "Contact",
+    solutions: "Solutions",
+    chatbots: "Chatbots",
+    leadGeneration: "Lead Generation",
+    socialMedia: "Social Media",
+    aiAgents: "AI Agents",
+    contactUs: "Contact Us",
+    phone: "+1 (555) 123-4567",
+    email: "contact@automatizalo.co",
+    address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
+    website: "https://automatizalo.co",
+    allRightsReserved: "All rights reserved."
+  });
+
+  // Load saved footer content from localStorage
+  useEffect(() => {
+    try {
+      const savedFooterContent = localStorage.getItem('footerContent');
+      if (savedFooterContent) {
+        setFooterContent(JSON.parse(savedFooterContent));
+      }
+    } catch (error) {
+      console.error("Error loading footer content:", error);
+    }
+  }, []);
 
   return (
     <footer className={theme === 'dark' ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-700'}>
@@ -21,9 +54,13 @@ const Footer = () => {
               />
             </Link>
             <p className={theme === 'dark' ? 'text-gray-400 mb-6' : 'text-gray-600 mb-6'}>
-              {t('footer.description')}
+              <EditableText 
+                id="footer-description" 
+                defaultText={footerContent.description} 
+                multiline={true} 
+              />
             </p>
-            <div className="flex space-x-4 justify-start">
+            <div className="flex space-x-4 justify-center">
               <a 
                 href="https://www.facebook.com/automatizalo.co" 
                 target="_blank" 
@@ -62,7 +99,10 @@ const Footer = () => {
 
           <div className="md:col-span-2">
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {t('footer.company')}
+              <EditableText 
+                id="footer-company" 
+                defaultText={footerContent.company}
+              />
             </h3>
             <ul className="space-y-2">
               <li>
@@ -70,7 +110,10 @@ const Footer = () => {
                   to="/about" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  {t('footer.about')}
+                  <EditableText 
+                    id="footer-about" 
+                    defaultText={footerContent.about}
+                  />
                 </Link>
               </li>
               <li>
@@ -78,7 +121,10 @@ const Footer = () => {
                   to="/blog" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  {t('footer.blog')}
+                  <EditableText 
+                    id="footer-blog" 
+                    defaultText={footerContent.blog}
+                  />
                 </Link>
               </li>
               <li>
@@ -86,7 +132,10 @@ const Footer = () => {
                   to="/contact" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  {t('footer.contact')}
+                  <EditableText 
+                    id="footer-contact" 
+                    defaultText={footerContent.contact}
+                  />
                 </Link>
               </li>
             </ul>
@@ -94,7 +143,10 @@ const Footer = () => {
 
           <div className="md:col-span-2">
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {t('footer.solutions')}
+              <EditableText 
+                id="footer-solutions" 
+                defaultText={footerContent.solutions}
+              />
             </h3>
             <ul className="space-y-2">
               <li>
@@ -102,7 +154,10 @@ const Footer = () => {
                   to="/solutions#chatbots" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  {t('solutions.chatbots.title')}
+                  <EditableText 
+                    id="footer-chatbots" 
+                    defaultText={footerContent.chatbots}
+                  />
                 </Link>
               </li>
               <li>
@@ -110,7 +165,10 @@ const Footer = () => {
                   to="/solutions#lead-generation" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  {t('solutions.leadGeneration.title')}
+                  <EditableText 
+                    id="footer-lead-generation" 
+                    defaultText={footerContent.leadGeneration}
+                  />
                 </Link>
               </li>
               <li>
@@ -118,7 +176,10 @@ const Footer = () => {
                   to="/solutions#social-media" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  {t('solutions.socialMedia.title')}
+                  <EditableText 
+                    id="footer-social-media" 
+                    defaultText={footerContent.socialMedia}
+                  />
                 </Link>
               </li>
               <li>
@@ -126,7 +187,10 @@ const Footer = () => {
                   to="/solutions#ai-agents" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  {t('solutions.aiAgents.title')}
+                  <EditableText 
+                    id="footer-ai-agents" 
+                    defaultText={footerContent.aiAgents}
+                  />
                 </Link>
               </li>
             </ul>
@@ -134,17 +198,20 @@ const Footer = () => {
 
           <div className="md:col-span-4">
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
-              {t('footer.contactUs')}
+              <EditableText 
+                id="footer-contact-us" 
+                defaultText={footerContent.contactUs}
+              />
             </h3>
             <div className="text-left">
               <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
-                <span className="font-medium">Phone:</span> contact@automatizalo.co
+                <span className="font-medium">Phone:</span> <EditableText id="footer-phone" defaultText={footerContent.phone} />
               </p>
               <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
-                <span className="font-medium">Email:</span> +1 (555) 123-4567
+                <span className="font-medium">Email:</span> <EditableText id="footer-email" defaultText={footerContent.email} />
               </p>
               <p className={theme === 'dark' ? 'text-gray-400 mb-4' : 'text-gray-600 mb-4'}>
-                <span className="font-medium">Address:</span> 123 AI Boulevard, Tech District, San Francisco, CA 94105
+                <span className="font-medium">Address:</span> <EditableText id="footer-address" defaultText={footerContent.address} multiline={true} />
               </p>
               <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
                 <a 
@@ -153,7 +220,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'} transition-colors`}
                 >
-                  https://automatizalo.co
+                  <EditableText id="footer-website" defaultText={footerContent.website} />
                 </a>
               </p>
             </div>
@@ -162,7 +229,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-center">
           <p className={theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}>
-            &copy; {currentYear} Automatízalo. {t('footer.allRightsReserved')}
+            &copy; {currentYear} Automatízalo. <EditableText id="footer-rights" defaultText={footerContent.allRightsReserved} />
           </p>
         </div>
       </div>

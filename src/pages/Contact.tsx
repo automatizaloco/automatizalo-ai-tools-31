@@ -81,9 +81,9 @@ const Contact = () => {
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <Phone className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
-                  <div>
-                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.phone')}</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{contactInfo.phone}</p>
+                  <div className="flex-grow">
+                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'} text-right`}>{t('contact.phone')}</h3>
+                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-right`}>{contactInfo.phone}</p>
                   </div>
                 </div>
                 
@@ -91,9 +91,9 @@ const Contact = () => {
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <Mail className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
-                  <div>
-                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.email')}</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{contactInfo.email}</p>
+                  <div className="flex-grow">
+                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'} text-right`}>{t('contact.email')}</h3>
+                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-right`}>{contactInfo.email}</p>
                   </div>
                 </div>
                 
@@ -101,9 +101,9 @@ const Contact = () => {
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <MapPin className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
-                  <div>
-                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('contact.address')}</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{contactInfo.address}</p>
+                  <div className="flex-grow">
+                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'} text-right`}>{t('contact.address')}</h3>
+                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-right`}>{contactInfo.address}</p>
                   </div>
                 </div>
                 
@@ -111,9 +111,9 @@ const Contact = () => {
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <Globe className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
-                  <div>
-                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Website</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{contactInfo.website}</p>
+                  <div className="flex-grow">
+                    <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'} text-right`}>Website</h3>
+                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-right`}>{contactInfo.website}</p>
                   </div>
                 </div>
               </div>

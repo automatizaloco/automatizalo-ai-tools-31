@@ -23,7 +23,7 @@ const Footer = () => {
             <p className={theme === 'dark' ? 'text-gray-400 mb-6' : 'text-gray-600 mb-6'}>
               {t('footer.description')}
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 justify-start">
               <a 
                 href="https://www.facebook.com/automatizalo.co" 
                 target="_blank" 
@@ -133,28 +133,30 @@ const Footer = () => {
           </div>
 
           <div className="md:col-span-4">
-            <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
               {t('footer.contactUs')}
             </h3>
-            <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
-              <span className="font-medium">{t('footer.email')}:</span> contact@automatizalo.co
-            </p>
-            <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
-              <span className="font-medium">{t('footer.phone')}:</span> +1 (555) 123-4567
-            </p>
-            <p className={theme === 'dark' ? 'text-gray-400 mb-4' : 'text-gray-600 mb-4'}>
-              <span className="font-medium">{t('footer.address')}:</span> 123 AI Boulevard, Tech District, San Francisco, CA 94105
-            </p>
-            <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-              <a 
-                href="https://automatizalo.co"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} transition-colors`}
-              >
-                https://automatizalo.co
-              </a>
-            </p>
+            <div className="text-left">
+              <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
+                <span className="font-medium">Phone:</span> contact@automatizalo.co
+              </p>
+              <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
+                <span className="font-medium">Email:</span> +1 (555) 123-4567
+              </p>
+              <p className={theme === 'dark' ? 'text-gray-400 mb-4' : 'text-gray-600 mb-4'}>
+                <span className="font-medium">Address:</span> 123 AI Boulevard, Tech District, San Francisco, CA 94105
+              </p>
+              <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+                <a 
+                  href="https://automatizalo.co"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'} transition-colors`}
+                >
+                  https://automatizalo.co
+                </a>
+              </p>
+            </div>
           </div>
         </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ interface Testimonial {
   name: string;
   company: string;
   text: string;
-  rating: number;
 }
 
 const TestimonialManager = () => {
@@ -30,34 +30,31 @@ const TestimonialManager = () => {
       id: 1,
       name: t("testimonials.client1.name"),
       company: "",
-      text: t("testimonials.client1.text"),
-      rating: 5
+      text: t("testimonials.client1.text")
     },
     {
       id: 2,
       name: t("testimonials.client2.name"),
       company: "",
-      text: t("testimonials.client2.text"),
-      rating: 5
+      text: t("testimonials.client2.text")
     }
   ]);
   
   const [newTestimonial, setNewTestimonial] = useState<Omit<Testimonial, 'id'>>({
     name: "",
     company: "",
-    text: "",
-    rating: 5
+    text: ""
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewTestimonial(prev => ({
       ...prev,
-      [name]: name === 'rating' ? parseInt(value) : value
+      [name]: value
     }));
   };
 
-  const handleTestimonialChange = (id: number, field: keyof Testimonial, value: string | number) => {
+  const handleTestimonialChange = (id: number, field: keyof Testimonial, value: string) => {
     setTestimonials(prev => 
       prev.map(testimonial => 
         testimonial.id === id ? { ...testimonial, [field]: value } : testimonial
@@ -66,8 +63,8 @@ const TestimonialManager = () => {
   };
 
   const handleAddTestimonial = () => {
-    if (!newTestimonial.name || !newTestimonial.company || !newTestimonial.text) {
-      toast.error("Please fill in all fields");
+    if (!newTestimonial.name || !newTestimonial.text) {
+      toast.error("Please fill in at least name and testimonial text");
       return;
     }
     
@@ -81,8 +78,7 @@ const TestimonialManager = () => {
     setNewTestimonial({
       name: "",
       company: "",
-      text: "",
-      rating: 5
+      text: ""
     });
     
     toast.success("Testimonial added successfully!");
@@ -101,7 +97,13 @@ const TestimonialManager = () => {
   React.useEffect(() => {
     const savedTestimonials = localStorage.getItem('testimonials');
     if (savedTestimonials) {
-      setTestimonials(JSON.parse(savedTestimonials));
+      // Convert old testimonials format if needed (remove rating)
+      const parsedTestimonials = JSON.parse(savedTestimonials);
+      const cleanedTestimonials = parsedTestimonials.map(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        ({ rating, ...rest }: { rating?: number, [key: string]: any }) => rest
+      );
+      setTestimonials(cleanedTestimonials);
     }
   }, []);
 
@@ -146,7 +148,7 @@ const TestimonialManager = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="company">Company</Label>
+                  <Label htmlFor="company">Company (Optional)</Label>
                   <Input
                     id="company"
                     name="company"
@@ -165,19 +167,6 @@ const TestimonialManager = () => {
                     onChange={handleInputChange}
                     rows={4}
                     placeholder="What did the client say about your service?"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="rating">Rating (1-5)</Label>
-                  <Input
-                    id="rating"
-                    name="rating"
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={newTestimonial.rating}
-                    onChange={handleInputChange}
                   />
                 </div>
               </CardContent>
@@ -208,7 +197,7 @@ const TestimonialManager = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor={`company-${testimonial.id}`}>Company</Label>
+                          <Label htmlFor={`company-${testimonial.id}`}>Company (Optional)</Label>
                           <Input
                             id={`company-${testimonial.id}`}
                             value={testimonial.company}
@@ -223,18 +212,6 @@ const TestimonialManager = () => {
                             value={testimonial.text}
                             onChange={(e) => handleTestimonialChange(testimonial.id, 'text', e.target.value)}
                             rows={3}
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor={`rating-${testimonial.id}`}>Rating (1-5)</Label>
-                          <Input
-                            id={`rating-${testimonial.id}`}
-                            type="number"
-                            min="1"
-                            max="5"
-                            value={testimonial.rating}
-                            onChange={(e) => handleTestimonialChange(testimonial.id, 'rating', parseInt(e.target.value))}
                           />
                         </div>
                       </div>

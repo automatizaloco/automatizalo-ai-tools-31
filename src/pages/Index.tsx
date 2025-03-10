@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -50,8 +51,36 @@ const Index = () => {
       const loadedTestimonials = JSON.parse(savedTestimonials);
       setTestimonials(loadedTestimonials);
       setMaxSlides(Math.max(0, Math.ceil(loadedTestimonials.length / 3) - 1));
+    } else {
+      // Default testimonials if none in localStorage
+      const defaultTestimonials = [
+        {
+          id: 1,
+          name: t("testimonials.client1.name"),
+          company: "Company A",
+          text: t("testimonials.client1.text"),
+          rating: 5
+        },
+        {
+          id: 2,
+          name: t("testimonials.client2.name"),
+          company: "Company B",
+          text: t("testimonials.client2.text"),
+          rating: 5
+        },
+        {
+          id: 3,
+          name: "John Smith",
+          company: "Company C",
+          text: "Their AI solutions have completely transformed how we operate our business. Highly recommended!",
+          rating: 5
+        }
+      ];
+      setTestimonials(defaultTestimonials);
+      localStorage.setItem('testimonials', JSON.stringify(defaultTestimonials));
+      setMaxSlides(0); // Only one slide with 3 testimonials
     }
-  }, []);
+  }, [t]);
 
   const handleSliderChange = (values: number[]) => {
     setCurrentSlide(values[0]);
@@ -271,7 +300,7 @@ const Index = () => {
                     style={{ transform: `translateX(-${currentSlide * 100}%)` }}
                   >
                     {Array.from({ length: Math.ceil(testimonials.length / 3) }).map((_, slideIndex) => (
-                      <div key={slideIndex} className="min-w-full flex flex-col md:flex-row gap-6 flex-shrink-0">
+                      <div key={slideIndex} className="min-w-full grid grid-cols-1 md:grid-cols-3 gap-6 flex-shrink-0">
                         {testimonials.slice(slideIndex * 3, slideIndex * 3 + 3).map((testimonial) => (
                           <div 
                             key={testimonial.id} 
@@ -308,6 +337,7 @@ const Index = () => {
                                 <EditableText 
                                   id={`testimonial-text-${testimonial.id}`}
                                   defaultText={testimonial.text}
+                                  multiline={true}
                                 />
                               ) : testimonial.text}
                             </p>

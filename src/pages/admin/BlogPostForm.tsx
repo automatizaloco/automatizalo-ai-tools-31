@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -31,7 +30,11 @@ const BlogPostForm = () => {
     date: new Date().toISOString().split('T')[0],
     readTime: "",
     image: "",
-    featured: false
+    featured: false,
+    translations: {
+      fr: { title: "", excerpt: "", content: "" },
+      es: { title: "", excerpt: "", content: "" }
+    }
   });
   const [currentTab, setCurrentTab] = useState("en");
   const [editingTranslation, setEditingTranslation] = useState(false);
@@ -61,7 +64,11 @@ const BlogPostForm = () => {
           date: post.date,
           readTime: post.readTime,
           image: post.image,
-          featured: post.featured || false
+          featured: post.featured || false,
+          translations: post.translations || {
+            fr: { title: "", excerpt: "", content: "" },
+            es: { title: "", excerpt: "", content: "" }
+          }
         });
         
         // Initialize translation data if it exists

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MessageSquare, PieChart, Smartphone, Brain, Users } from 'lucide-react';
@@ -15,6 +14,7 @@ import { toast } from 'sonner';
 
 const Index = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [testimonials, setTestimonials] = React.useState<any[]>([]);
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
   
@@ -26,22 +26,26 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Effect to handle editable text changes
   useEffect(() => {
-    if (isAuthenticated) {
-      const handleEditableTextChange = (event: CustomEvent) => {
-        const { id, newText } = event.detail;
-        console.log(`Content edited: ${id} = ${newText}`);
-        toast.success('Content updated successfully');
-      };
+    const handleEditableTextChange = (event: CustomEvent) => {
+      const { id, newText } = event.detail;
+      console.log(`Content edited: ${id} = ${newText}`);
+      toast.success('Content updated successfully');
+    };
 
-      window.addEventListener('editableTextChanged', handleEditableTextChange as EventListener);
-      
-      return () => {
-        window.removeEventListener('editableTextChanged', handleEditableTextChange as EventListener);
-      };
+    window.addEventListener('editableTextChanged', handleEditableTextChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('editableTextChanged', handleEditableTextChange as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    const savedTestimonials = localStorage.getItem('testimonials');
+    if (savedTestimonials) {
+      setTestimonials(JSON.parse(savedTestimonials));
     }
-  }, [isAuthenticated]);
+  }, []);
 
   const solutions = [
     {
@@ -102,7 +106,6 @@ const Index = () => {
         <Hero />
         <About />
         
-        {/* Solutions Section */}
         <section className="py-16 md:py-24 bg-blue-50/50">
           <div className="container mx-auto px-4 md:px-8">
             <div className={`text-center max-w-2xl mx-auto mb-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
@@ -164,7 +167,6 @@ const Index = () => {
           </div>
         </section>
         
-        {/* CTA Section */}
         <section className="py-20 md:py-32 relative overflow-hidden">
           <div className="absolute inset-0 z-0 opacity-10">
             <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-automatizalo-blue/20 to-transparent"></div>
@@ -208,7 +210,6 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Testimonials Section */}
         <section className="py-16 md:py-24 bg-gray-50">
           <div className="container mx-auto px-4 md:px-8">
             <div className="text-center max-w-2xl mx-auto mb-12">
@@ -244,34 +245,19 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((item) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {testimonials.map((testimonial) => (
                 <div 
-                  key={item} 
+                  key={testimonial.id} 
                   className="bg-white rounded-xl p-6 shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
                 >
-                  <div className="flex items-center mb-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg
-                        key={star}
-                        className="w-5 h-5 text-yellow-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  
                   <p className="text-gray-600 mb-6 italic">
                     {isAuthenticated ? (
                       <EditableText 
-                        id={`testimonial-text-${item}`}
-                        defaultText={t(`testimonials.client${item}.text`)}
+                        id={`testimonial-text-${testimonial.id}`}
+                        defaultText={testimonial.text}
                       />
-                    ) : (
-                      t(`testimonials.client${item}.text`)
-                    )}
+                    ) : testimonial.text}
                   </p>
                   
                   <div className="flex items-center">
@@ -282,23 +268,21 @@ const Index = () => {
                       <h4 className="font-medium">
                         {isAuthenticated ? (
                           <EditableText 
-                            id={`testimonial-name-${item}`}
-                            defaultText={t(`testimonials.client${item}.name`)}
+                            id={`testimonial-name-${testimonial.id}`}
+                            defaultText={testimonial.name}
                           />
-                        ) : (
-                          t(`testimonials.client${item}.name`)
-                        )}
+                        ) : testimonial.name}
                       </h4>
-                      <p className="text-sm text-gray-500">
-                        {isAuthenticated ? (
-                          <EditableText 
-                            id={`testimonial-company-${item}`}
-                            defaultText={t(`testimonials.client${item}.company`)}
-                          />
-                        ) : (
-                          t(`testimonials.client${item}.company`)
-                        )}
-                      </p>
+                      {testimonial.company && (
+                        <p className="text-sm text-gray-500">
+                          {isAuthenticated ? (
+                            <EditableText 
+                              id={`testimonial-company-${testimonial.id}`}
+                              defaultText={testimonial.company}
+                            />
+                          ) : testimonial.company}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,22 +29,15 @@ const TestimonialManager = () => {
     {
       id: 1,
       name: t("testimonials.client1.name"),
-      company: t("testimonials.client1.company"),
+      company: "",
       text: t("testimonials.client1.text"),
       rating: 5
     },
     {
       id: 2,
       name: t("testimonials.client2.name"),
-      company: t("testimonials.client2.company"),
+      company: "",
       text: t("testimonials.client2.text"),
-      rating: 5
-    },
-    {
-      id: 3,
-      name: t("testimonials.client3.name"),
-      company: t("testimonials.client3.company"),
-      text: t("testimonials.client3.text"),
       rating: 5
     }
   ]);
@@ -101,11 +94,17 @@ const TestimonialManager = () => {
   };
 
   const handleSaveAllTestimonials = () => {
-    // In a real app, this would save to your backend
+    localStorage.setItem('testimonials', JSON.stringify(testimonials));
     toast.success("All testimonials saved successfully!");
   };
 
-  // Redirect if not authenticated
+  React.useEffect(() => {
+    const savedTestimonials = localStorage.getItem('testimonials');
+    if (savedTestimonials) {
+      setTestimonials(JSON.parse(savedTestimonials));
+    }
+  }, []);
+
   React.useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -129,7 +128,6 @@ const TestimonialManager = () => {
           </div>
           
           <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
-            {/* Add New Testimonial */}
             <Card>
               <CardHeader>
                 <CardTitle>Add New Testimonial</CardTitle>
@@ -190,7 +188,6 @@ const TestimonialManager = () => {
               </CardFooter>
             </Card>
             
-            {/* Existing Testimonials */}
             <Card>
               <CardHeader>
                 <CardTitle>Existing Testimonials</CardTitle>

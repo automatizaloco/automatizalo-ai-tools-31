@@ -1,4 +1,3 @@
-
 import { BlogPost } from "@/types/blog";
 import { generateTranslations } from "./translationService";
 
@@ -90,8 +89,8 @@ export const getFeaturedBlogPosts = (): BlogPost[] => {
   return blogPosts.filter(post => post.featured);
 };
 
-// Create a new blog post
-export const createBlogPost = async (postData: Omit<BlogPost, "id" | "slug" | "translations">): Promise<BlogPost> => {
+// Create a new blog post - Fixed the TypeScript error by removing 'slug' from the Omit type
+export const createBlogPost = async (postData: Omit<BlogPost, "id" | "translations">): Promise<BlogPost> => {
   // Generate a slug from the title
   const slug = postData.slug || postData.title
     .toLowerCase()

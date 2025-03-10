@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -9,7 +10,8 @@ import { BlogPost } from "@/types/blog";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Check, Bold, Italic, Underline, List, ListOrdered, Link as LinkIcon, Image, Smile, Code, Quote } from "lucide-react";
+import { Globe, Check } from "lucide-react";
+import { RichTextEditor } from "@/components/editor/RichTextEditor";
 
 const BlogPostForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,8 +34,6 @@ const BlogPostForm = () => {
     featured: false
   });
   const [currentTab, setCurrentTab] = useState("en");
-  // Editor state
-  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -68,6 +68,13 @@ const BlogPostForm = () => {
     setFormData(prev => ({
       ...prev,
       [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
+    }));
+  };
+
+  const handleContentChange = (content: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content
     }));
   };
 
@@ -120,66 +127,6 @@ const BlogPostForm = () => {
     }
     
     return translation[field as keyof typeof translation] || "";
-  };
-
-  // Insert formatting at cursor position in the text editor
-  const insertFormatting = (format: string) => {
-    const textarea = document.getElementById("content") as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    let formattedText = "";
-    
-    switch (format) {
-      case 'bold':
-        formattedText = `<b>${selectedText}</b>`;
-        break;
-      case 'italic':
-        formattedText = `<i>${selectedText}</i>`;
-        break;
-      case 'underline':
-        formattedText = `<u>${selectedText}</u>`;
-        break;
-      case 'ul':
-        formattedText = `<ul>\n  <li>${selectedText}</li>\n</ul>`;
-        break;
-      case 'ol':
-        formattedText = `<ol>\n  <li>${selectedText}</li>\n</ol>`;
-        break;
-      case 'link':
-        formattedText = `<a href="https://example.com" target="_blank">${selectedText || 'Link text'}</a>`;
-        break;
-      case 'image':
-        formattedText = `<img src="https://example.com/image.jpg" alt="${selectedText || 'Image description'}" class="w-full h-auto rounded-lg" />`;
-        break;
-      case 'emoji':
-        formattedText = `${selectedText}😊`;
-        break;
-      case 'code':
-        formattedText = `<code>${selectedText}</code>`;
-        break;
-      case 'quote':
-        formattedText = `<blockquote class="border-l-4 border-gray-300 pl-4 italic">${selectedText}</blockquote>`;
-        break;
-      default:
-        formattedText = selectedText;
-    }
-    
-    const newContent = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
-    
-    setFormData(prev => ({
-      ...prev,
-      content: newContent
-    }));
-    
-    // Set focus back to textarea and update cursor position
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + formattedText.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
   };
 
   return (
@@ -316,133 +263,13 @@ const BlogPostForm = () => {
                   <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
                     Content
                   </label>
-                  
-                  <div className="border border-gray-300 rounded-md overflow-hidden">
-                    <div className="bg-gray-50 border-b border-gray-300 p-2 flex flex-wrap gap-1">
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('bold')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <Bold size={16} />
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('italic')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <Italic size={16} />
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('underline')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <Underline size={16} />
-                      </Button>
-                      <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('ul')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <List size={16} />
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('ol')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <ListOrdered size={16} />
-                      </Button>
-                      <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('link')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <LinkIcon size={16} />
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('image')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <Image size={16} />
-                      </Button>
-                      <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('emoji')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <Smile size={16} />
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('code')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <Code size={16} />
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => insertFormatting('quote')}
-                        className="h-8 w-8 p-1"
-                      >
-                        <Quote size={16} />
-                      </Button>
-                      <div className="flex-grow"></div>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setShowPreview(!showPreview)}
-                        className="text-xs"
-                      >
-                        {showPreview ? "Edit HTML" : "Preview"}
-                      </Button>
-                    </div>
-                    
-                    {showPreview ? (
-                      <div className="prose prose-lg max-w-none p-4 min-h-[300px] bg-white">
-                        <div dangerouslySetInnerHTML={{ __html: formData.content }} />
-                      </div>
-                    ) : (
-                      <textarea
-                        id="content"
-                        name="content"
-                        value={formData.content}
-                        onChange={handleChange}
-                        rows={12}
-                        className="w-full px-4 py-2 border-0 focus:ring-0 font-mono text-sm"
-                        placeholder="<p>Your content here...</p>&#10;<p>Use the formatting tools above or write HTML directly</p>"
-                        required
-                      ></textarea>
-                    )}
-                  </div>
+                  <RichTextEditor 
+                    value={formData.content}
+                    onChange={handleContentChange}
+                    placeholder="Write your content here..."
+                  />
                   <p className="text-xs text-gray-500 mt-1">
-                    Use the formatting toolbar above or write HTML directly. Click Preview to see how your content will look.
+                    Use the formatting toolbar above to style your content. You can also switch to HTML view to edit the code directly.
                   </p>
                 </div>
                 

@@ -429,13 +429,13 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
           
           <div
             ref={editorRef}
-            className="min-h-[300px] p-4 focus:outline-none"
+            className="min-h-[300px] p-4 focus:outline-none editor-placeholder"
             contentEditable
             suppressContentEditableWarning
             onKeyUp={handleKeyUp}
             onBlur={handleKeyUp}
             dangerouslySetInnerHTML={{ __html: value }}
-            placeholder={placeholder}
+            data-placeholder={placeholder || "Write your content here..."}
           />
         </TabsContent>
         

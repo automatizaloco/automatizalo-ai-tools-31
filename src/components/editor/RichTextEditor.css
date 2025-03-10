@@ -1,6 +1,6 @@
 
-[contenteditable]:empty:before {
-  content: attr(placeholder);
+.editor-placeholder:empty:before {
+  content: attr(data-placeholder);
   color: #aaa;
   font-style: italic;
 }

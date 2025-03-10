@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MessageSquare, PieChart, Smartphone, Brain, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';

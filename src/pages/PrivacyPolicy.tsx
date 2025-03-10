@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -77,6 +78,18 @@ const PrivacyPolicy = () => {
     }
   };
 
+  // Render email link safely
+  const renderEmailLink = () => {
+    return (
+      <>
+        If you have questions about our Privacy Policy, please contact us at{' '}
+        <a href={`mailto:${t('contact.email')}`} className="text-blue-500 hover:underline">
+          {t('contact.email')}
+        </a>.
+      </>
+    );
+  };
+
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-800'}`}>
       <Navbar />
@@ -144,6 +157,7 @@ const PrivacyPolicy = () => {
               <p className="mb-4">Last updated: {new Date().toLocaleDateString()}</p>
               
               <div className="space-y-6">
+                {/* Introduction Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -168,6 +182,7 @@ const PrivacyPolicy = () => {
                   </div>
                 </div>
                 
+                {/* Information We Collect Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -234,6 +249,7 @@ const PrivacyPolicy = () => {
                   </ul>
                 </div>
                 
+                {/* How We Use Your Information Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -300,6 +316,7 @@ const PrivacyPolicy = () => {
                   </ul>
                 </div>
                 
+                {/* Information Sharing Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -324,6 +341,7 @@ const PrivacyPolicy = () => {
                   </div>
                 </div>
                 
+                {/* Your Rights Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -400,6 +418,7 @@ const PrivacyPolicy = () => {
                   </ul>
                 </div>
                 
+                {/* Contact Us Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -415,11 +434,11 @@ const PrivacyPolicy = () => {
                     {isAuthenticated ? (
                       <EditableText 
                         id="privacy-section-6-content"
-                        defaultText="If you have questions about our Privacy Policy, please contact us at <a href={`mailto:${t('contact.email')}`} className="text-blue-500 hover:underline">{t('contact.email')}</a>."
+                        defaultText="If you have questions about our Privacy Policy, please contact us at support@automatizalo.com."
                         multiline={true}
                       />
                     ) : (
-                      "If you have questions about our Privacy Policy, please contact us at <a href={`mailto:${t('contact.email')}`} className="text-blue-500 hover:underline">{t('contact.email')}</a>."
+                      <>{renderEmailLink()}</>
                     )}
                   </div>
                 </div>
@@ -442,6 +461,7 @@ const PrivacyPolicy = () => {
               <p className="mb-4">Last updated: {new Date().toLocaleDateString()}</p>
               
               <div className="space-y-6">
+                {/* Acceptance of Terms Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -466,6 +486,7 @@ const PrivacyPolicy = () => {
                   </div>
                 </div>
                 
+                {/* Use of Services Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -532,6 +553,7 @@ const PrivacyPolicy = () => {
                   </ul>
                 </div>
                 
+                {/* Intellectual Property Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -556,6 +578,7 @@ const PrivacyPolicy = () => {
                   </div>
                 </div>
                 
+                {/* Limitation of Liability Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -580,6 +603,7 @@ const PrivacyPolicy = () => {
                   </div>
                 </div>
                 
+                {/* Changes to Terms Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (
@@ -604,6 +628,7 @@ const PrivacyPolicy = () => {
                   </div>
                 </div>
                 
+                {/* Governing Law Section */}
                 <div>
                   <h3 className="text-xl font-medium mb-2">
                     {isAuthenticated ? (

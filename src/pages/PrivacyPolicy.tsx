@@ -80,7 +80,7 @@ const PrivacyPolicy = () => {
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-800'}`}>
       <Navbar />
-      <main className="flex-grow container mx-auto px-4 pt-28 pb-16">
+      <main className="flex-grow container mx-auto px-4 pt-36 pb-16">
         <h1 className="text-3xl font-bold mb-10">
           {isAuthenticated ? (
             <EditableText 

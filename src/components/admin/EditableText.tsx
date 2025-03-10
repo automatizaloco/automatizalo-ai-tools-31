@@ -10,9 +10,10 @@ interface EditableTextProps {
   id: string;
   defaultText: string;
   multiline?: boolean;
+  onSave?: (value: string) => void;
 }
 
-const EditableText = ({ id, defaultText, multiline = false }: EditableTextProps) => {
+const EditableText = ({ id, defaultText, multiline = false, onSave }: EditableTextProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(defaultText);
   const [pendingText, setPendingText] = useState(defaultText);
@@ -31,8 +32,12 @@ const EditableText = ({ id, defaultText, multiline = false }: EditableTextProps)
     setText(pendingText);
     setIsEditing(false);
     
-    // Here you would typically save this to your backend
-    // For now, we'll just show a toast success message
+    // Call the onSave callback if provided
+    if (onSave) {
+      onSave(pendingText);
+    }
+    
+    // Show a toast success message
     toast.success('Content updated successfully!');
   };
 

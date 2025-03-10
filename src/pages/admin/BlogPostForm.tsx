@@ -26,15 +26,19 @@ const BlogPostForm = () => {
   
   const [formData, setFormData] = useState<Omit<BlogPost, "id">>({
     title: "",
+    slug: "",
     excerpt: "",
     content: "",
     category: "AI",
+    tags: [],
     author: "",
     date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
     readTime: "5 min read",
     image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
     featured: false
   });
+
+  const [tagInput, setTagInput] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -43,7 +47,7 @@ const BlogPostForm = () => {
     }
     
     if (isEditMode && id) {
-      const post = getBlogPostById(parseInt(id));
+      const post = getBlogPostById(id);
       if (post) {
         setFormData(post);
       } else {
@@ -66,12 +70,38 @@ const BlogPostForm = () => {
     setFormData(prev => ({ ...prev, category: value }));
   };
 
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const title = e.target.value;
+    let slug = title.toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-');
+    
+    setFormData(prev => ({ ...prev, title, slug }));
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tagInput.trim()]
+      }));
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       if (isEditMode && id) {
-        const updatedPost = updateBlogPost({ ...formData, id: parseInt(id) });
+        const updatedPost = updateBlogPost({ ...formData, id });
         if (updatedPost) {
           toast.success("Post updated successfully");
           navigate("/admin/blog");
@@ -111,10 +141,25 @@ const BlogPostForm = () => {
                   id="title" 
                   name="title"
                   value={formData.title}
-                  onChange={handleChange}
+                  onChange={handleTitleChange}
                   placeholder="Enter post title"
                   required
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="slug">Slug</Label>
+                <Input 
+                  id="slug" 
+                  name="slug"
+                  value={formData.slug}
+                  onChange={handleChange}
+                  placeholder="Enter URL slug"
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  This will be used in the URL, e.g., /blog/your-slug
+                </p>
               </div>
               
               <div className="space-y-2">
@@ -173,6 +218,46 @@ const BlogPostForm = () => {
                     placeholder="Author name"
                     required
                   />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="tagInput"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    placeholder="Add a tag"
+                    className="flex-grow"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleAddTag}
+                    variant="outline"
+                  >
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.tags.map(tag => (
+                    <div key={tag} className="bg-gray-100 rounded-full px-3 py-1 text-sm flex items-center">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="ml-2 text-gray-500 hover:text-red-500"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
               

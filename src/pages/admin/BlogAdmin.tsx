@@ -24,7 +24,7 @@ const BlogAdmin = () => {
     setPosts(getBlogPosts());
   }, [isAuthenticated, navigate]);
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
       if (deleteBlogPost(id)) {
         setPosts(posts.filter(post => post.id !== id));
@@ -35,7 +35,7 @@ const BlogAdmin = () => {
     }
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     navigate(`/admin/blog/edit/${id}`);
   };
 

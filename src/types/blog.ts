@@ -13,10 +13,15 @@ export interface BlogPost {
   author: string;
   featured?: boolean;
   translations?: {
-    [key: string]: {
+    fr?: {
       title?: string;
       excerpt?: string;
       content?: string;
-    }
+    };
+    es?: {
+      title?: string;
+      excerpt?: string;
+      content?: string;
+    };
   };
 }

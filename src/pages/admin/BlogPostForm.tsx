@@ -66,7 +66,18 @@ const BlogPostForm = () => {
           readTime: post.readTime,
           image: post.image,
           featured: post.featured || false,
-          translations: post.translations || {
+          translations: post.translations ? {
+            fr: {
+              title: post.translations.fr?.title || "",
+              excerpt: post.translations.fr?.excerpt || "",
+              content: post.translations.fr?.content || ""
+            },
+            es: {
+              title: post.translations.es?.title || "",
+              excerpt: post.translations.es?.excerpt || "",
+              content: post.translations.es?.content || ""
+            }
+          } : {
             fr: { title: "", excerpt: "", content: "" },
             es: { title: "", excerpt: "", content: "" }
           }
@@ -140,7 +151,7 @@ const BlogPostForm = () => {
     try {
       const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
       
-      const postData = {
+      const postData: any = {
         title: formData.title,
         excerpt: formData.excerpt,
         content: formData.content,
@@ -151,13 +162,9 @@ const BlogPostForm = () => {
         readTime: formData.readTime,
         image: formData.image,
         featured: formData.featured,
-        slug: formData.slug || formData.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+        slug: formData.slug || formData.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-'),
+        translations: editingTranslation ? translationData : formData.translations
       };
-
-      // Add manual translations if we're editing an existing post
-      if (id && editingTranslation) {
-        postData.translations = translationData;
-      }
 
       if (id) {
         await updateBlogPost(id, postData);

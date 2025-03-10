@@ -1,3 +1,4 @@
+
 import { BlogPost } from "@/types/blog";
 import { generateTranslations } from "./translationService";
 
@@ -89,7 +90,7 @@ export const getFeaturedBlogPosts = (): BlogPost[] => {
   return blogPosts.filter(post => post.featured);
 };
 
-// Create a new blog post - Fixed the TypeScript error by removing 'slug' from the Omit type
+// Create a new blog post
 export const createBlogPost = async (postData: Omit<BlogPost, "id" | "translations">): Promise<BlogPost> => {
   // Generate a slug from the title
   const slug = postData.slug || postData.title
@@ -97,12 +98,14 @@ export const createBlogPost = async (postData: Omit<BlogPost, "id" | "translatio
     .replace(/[^\w\s]/gi, '')
     .replace(/\s+/g, '-');
   
-  // Generate translations for title, excerpt, and content
-  const translations = await generateTranslations(
-    postData.title,
-    postData.excerpt,
-    postData.content
-  );
+  // Generate translations for title, excerpt, and content if not provided
+  const translations = 'translations' in postData 
+    ? postData.translations
+    : await generateTranslations(
+        postData.title,
+        postData.excerpt,
+        postData.content
+      );
   
   // Create new blog post with a unique ID
   const newPost: BlogPost = {
@@ -125,11 +128,13 @@ export const updateBlogPost = async (id: string, postData: Partial<BlogPost>): P
   
   const updatedPost = { ...blogPosts[index], ...postData };
   
-  // If title, excerpt, or content was updated, regenerate translations
+  // If title, excerpt, or content was updated, and we don't have manual translations,
+  // regenerate translations
   if (
-    postData.title !== blogPosts[index].title ||
+    !('translations' in postData) &&
+    (postData.title !== blogPosts[index].title ||
     postData.excerpt !== blogPosts[index].excerpt ||
-    postData.content !== blogPosts[index].content
+    postData.content !== blogPosts[index].content)
   ) {
     const translations = await generateTranslations(
       updatedPost.title,

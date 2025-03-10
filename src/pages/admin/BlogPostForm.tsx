@@ -10,7 +10,7 @@ import { BlogPost } from "@/types/blog";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Check } from "lucide-react";
+import { Globe, Check, Edit } from "lucide-react";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 
 const BlogPostForm = () => {
@@ -34,6 +34,11 @@ const BlogPostForm = () => {
     featured: false
   });
   const [currentTab, setCurrentTab] = useState("en");
+  const [editingTranslation, setEditingTranslation] = useState(false);
+  const [translationData, setTranslationData] = useState({
+    fr: { title: "", excerpt: "", content: "" },
+    es: { title: "", excerpt: "", content: "" }
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -58,6 +63,22 @@ const BlogPostForm = () => {
           image: post.image,
           featured: post.featured || false
         });
+        
+        // Initialize translation data if it exists
+        if (post.translations) {
+          setTranslationData({
+            fr: {
+              title: post.translations.fr?.title || "",
+              excerpt: post.translations.fr?.excerpt || "",
+              content: post.translations.fr?.content || ""
+            },
+            es: {
+              title: post.translations.es?.title || "",
+              excerpt: post.translations.es?.excerpt || "",
+              content: post.translations.es?.content || ""
+            }
+          });
+        }
       }
     }
   }, [id, isAuthenticated, navigate]);
@@ -76,6 +97,32 @@ const BlogPostForm = () => {
       ...prev,
       content
     }));
+  };
+
+  const handleTranslationChange = (
+    lang: "fr" | "es", 
+    field: "title" | "excerpt" | "content", 
+    value: string
+  ) => {
+    setTranslationData(prev => ({
+      ...prev,
+      [lang]: {
+        ...prev[lang],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleTranslationContentChange = (content: string) => {
+    handleTranslationChange(
+      currentTab as "fr" | "es", 
+      "content", 
+      content
+    );
+  };
+
+  const toggleTranslationEditing = () => {
+    setEditingTranslation(!editingTranslation);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,6 +146,11 @@ const BlogPostForm = () => {
         slug: formData.slug || formData.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
       };
 
+      // Add manual translations if we're editing an existing post
+      if (id && editingTranslation) {
+        postData.translations = translationData;
+      }
+
       if (id) {
         await updateBlogPost(id, postData);
         toast.success("Post updated successfully");
@@ -116,19 +168,6 @@ const BlogPostForm = () => {
     }
   };
 
-  const getTranslatedValue = (field: keyof BlogPost) => {
-    if (!post || !post.translations || !post.translations[currentTab as keyof typeof post.translations]) {
-      return "";
-    }
-    
-    const translation = post.translations[currentTab as keyof typeof post.translations];
-    if (!translation || !(field in translation)) {
-      return "";
-    }
-    
-    return translation[field as keyof typeof translation] || "";
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
@@ -143,12 +182,24 @@ const BlogPostForm = () => {
           
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             {post && post.translations && (
-              
               <div className="mb-6">
-                <h2 className="text-lg font-medium mb-3 flex items-center">
-                  <Globe className="mr-2 h-5 w-5 text-gray-500" />
-                  Translation Preview
-                </h2>
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="text-lg font-medium flex items-center">
+                    <Globe className="mr-2 h-5 w-5 text-gray-500" />
+                    Translation Preview
+                  </h2>
+                  {id && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={toggleTranslationEditing}
+                      className="flex items-center gap-1"
+                    >
+                      <Edit className="h-4 w-4" />
+                      {editingTranslation ? "Auto-translate" : "Edit Translations"}
+                    </Button>
+                  )}
+                </div>
                 <Tabs
                   defaultValue="en"
                   value={currentTab}
@@ -177,38 +228,120 @@ const BlogPostForm = () => {
                     <h3 className="font-medium">English (Original)</h3>
                     <p className="text-sm text-gray-500">This is the original content you created</p>
                   </TabsContent>
+                  
                   <TabsContent value="fr" className="p-4 border rounded-md mt-2">
                     <h3 className="font-medium">French Translation</h3>
-                    <p className="text-sm text-gray-500">
-                      {post.translations.fr 
-                        ? "Content has been automatically translated to French"
-                        : "Content will be automatically translated when you save"}
-                    </p>
-                    {post.translations.fr && (
-                      <div className="mt-3">
-                        <p><strong>Title:</strong> {post.translations.fr.title}</p>
-                        <p><strong>Excerpt:</strong> {post.translations.fr.excerpt}</p>
+                    {editingTranslation ? (
+                      <div className="space-y-4 mt-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Title (French)
+                          </label>
+                          <input
+                            type="text"
+                            value={translationData.fr.title}
+                            onChange={(e) => handleTranslationChange("fr", "title", e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Excerpt (French)
+                          </label>
+                          <textarea
+                            value={translationData.fr.excerpt}
+                            onChange={(e) => handleTranslationChange("fr", "excerpt", e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                            rows={3}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Content (French)
+                          </label>
+                          <RichTextEditor 
+                            value={translationData.fr.content}
+                            onChange={handleTranslationContentChange}
+                            placeholder="Write your French content here..."
+                          />
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        <p className="text-sm text-gray-500">
+                          {post.translations.fr 
+                            ? "Content has been automatically translated to French"
+                            : "Content will be automatically translated when you save"}
+                        </p>
+                        {post.translations.fr && (
+                          <div className="mt-3">
+                            <p><strong>Title:</strong> {post.translations.fr.title}</p>
+                            <p><strong>Excerpt:</strong> {post.translations.fr.excerpt}</p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </TabsContent>
+                  
                   <TabsContent value="es" className="p-4 border rounded-md mt-2">
                     <h3 className="font-medium">Spanish Translation</h3>
-                    <p className="text-sm text-gray-500">
-                      {post.translations.es 
-                        ? "Content has been automatically translated to Spanish"
-                        : "Content will be automatically translated when you save"}
-                    </p>
-                    {post.translations.es && (
-                      <div className="mt-3">
-                        <p><strong>Title:</strong> {post.translations.es.title}</p>
-                        <p><strong>Excerpt:</strong> {post.translations.es.excerpt}</p>
+                    {editingTranslation ? (
+                      <div className="space-y-4 mt-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Title (Spanish)
+                          </label>
+                          <input
+                            type="text"
+                            value={translationData.es.title}
+                            onChange={(e) => handleTranslationChange("es", "title", e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Excerpt (Spanish)
+                          </label>
+                          <textarea
+                            value={translationData.es.excerpt}
+                            onChange={(e) => handleTranslationChange("es", "excerpt", e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                            rows={3}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Content (Spanish)
+                          </label>
+                          <RichTextEditor 
+                            value={translationData.es.content}
+                            onChange={handleTranslationContentChange}
+                            placeholder="Write your Spanish content here..."
+                          />
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        <p className="text-sm text-gray-500">
+                          {post.translations.es 
+                            ? "Content has been automatically translated to Spanish"
+                            : "Content will be automatically translated when you save"}
+                        </p>
+                        {post.translations.es && (
+                          <div className="mt-3">
+                            <p><strong>Title:</strong> {post.translations.es.title}</p>
+                            <p><strong>Excerpt:</strong> {post.translations.es.excerpt}</p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </TabsContent>
                 </Tabs>
                 <p className="text-sm text-gray-500 mt-3">
                   <Globe className="inline-block mr-1 h-4 w-4" />
-                  Content is automatically translated to French and Spanish when you save the post.
+                  {editingTranslation 
+                    ? "You're manually editing translations. Your changes will override automatic translations."
+                    : "Content is automatically translated to French and Spanish when you save the post."}
                 </p>
               </div>
             )}

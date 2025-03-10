@@ -1,60 +1,77 @@
 
 import { Translation, Translations } from "@/context/LanguageContext";
 
-// Example implementation using a mock translation service
-// In a real app, this would use a translation API like Google Translate, DeepL, etc.
+// Translation map for common phrases and terms
+const commonTranslations: Record<string, Record<string, string>> = {
+  fr: {
+    "Hello": "Bonjour",
+    "Welcome": "Bienvenue",
+    "Contact": "Contacter",
+    "About": "À propos",
+    "Services": "Services",
+    "Products": "Produits",
+    "Blog": "Blog",
+    "Home": "Accueil",
+  },
+  es: {
+    "Hello": "Hola",
+    "Welcome": "Bienvenido",
+    "Contact": "Contacto",
+    "About": "Acerca de",
+    "Services": "Servicios",
+    "Products": "Productos",
+    "Blog": "Blog",
+    "Home": "Inicio",
+  }
+};
+
+// Function to translate individual phrases using a dictionary approach
 export const translateContent = async (
   text: string,
   sourceLanguage: string = "en",
   targetLanguage: string
 ): Promise<string> => {
-  // This is a mock implementation. In a real app, you would call an API
-  // For demo purposes, we'll add a language prefix to show it's "translated"
   if (sourceLanguage === targetLanguage) {
     return text;
   }
-  
-  // Simple mock translation to demonstrate functionality
-  // In a real implementation, you would call a translation API here
-  const mockTranslations: Record<string, Record<string, string>> = {
-    fr: {
-      "Hello": "Bonjour",
-      "Welcome": "Bienvenue",
-      "Contact": "Contacter",
-      "About": "À propos",
-      "Services": "Services",
-      "Products": "Produits",
-      "Blog": "Blog",
-      "Home": "Accueil",
-    },
-    es: {
-      "Hello": "Hola",
-      "Welcome": "Bienvenido",
-      "Contact": "Contacto",
-      "About": "Acerca de",
-      "Services": "Servicios",
-      "Products": "Productos",
-      "Blog": "Blog",
-      "Home": "Inicio",
-    }
-  };
-  
-  // Very simple mock translation - in a real app, use an actual translation API
+
   try {
-    if (targetLanguage in mockTranslations) {
-      // Apply simple word replacements as a demonstration
-      let translatedText = text;
-      Object.entries(mockTranslations[targetLanguage]).forEach(([english, translated]) => {
-        translatedText = translatedText.replace(new RegExp(`\\b${english}\\b`, 'gi'), translated);
-      });
-      
-      return translatedText;
+    const translations = commonTranslations[targetLanguage] || {};
+    let translatedText = text;
+
+    // Process HTML content
+    if (text.includes('<')) {
+      // Split by HTML tags and translate text nodes
+      const parts = text.split(/(<[^>]*>)/);
+      translatedText = parts.map(part => {
+        // Skip HTML tags
+        if (part.startsWith('<')) {
+          return part;
+        }
+        // Translate text content
+        return translatePhrase(part.trim(), targetLanguage, translations);
+      }).join('');
+    } else {
+      // Translate plain text
+      translatedText = translatePhrase(text, targetLanguage, translations);
     }
-    return text; // Fallback to original text
+
+    return translatedText;
   } catch (error) {
     console.error("Translation error:", error);
     return text; // Fallback to original text on error
   }
+};
+
+// Helper function to translate a phrase
+const translatePhrase = (phrase: string, targetLanguage: string, translations: Record<string, string>): string => {
+  // Split into sentences and words
+  return phrase.split(/([.!?]+)/).map(sentence => {
+    return sentence.split(/\b/).map(word => {
+      const translation = translations[word.trim()];
+      return translation || word;
+    }).join('');
+  }).join('');
 };
 
 // Function to generate translations for a blog post
@@ -65,14 +82,16 @@ export const generateTranslations = async (
 ): Promise<Translations> => {
   try {
     // Create translations for French and Spanish
-    const frTitle = await translateContent(title, 'en', 'fr');
-    const frExcerpt = await translateContent(excerpt, 'en', 'fr');
-    const frContent = await translateContent(content, 'en', 'fr');
-    
-    const esTitle = await translateContent(title, 'en', 'es');
-    const esExcerpt = await translateContent(excerpt, 'en', 'es');
-    const esContent = await translateContent(content, 'en', 'es');
+    const [frTitle, frExcerpt, frContent, esTitle, esExcerpt, esContent] = await Promise.all([
+      translateContent(title, 'en', 'fr'),
+      translateContent(excerpt, 'en', 'fr'),
+      translateContent(content, 'en', 'fr'),
+      translateContent(title, 'en', 'es'),
+      translateContent(excerpt, 'en', 'es'),
+      translateContent(content, 'en', 'es')
+    ]);
 
+    // Return translations object
     return {
       fr: {
         title: frTitle,
@@ -87,6 +106,18 @@ export const generateTranslations = async (
     };
   } catch (error) {
     console.error("Error generating translations:", error);
-    return {};
+    return {
+      fr: {
+        title: "",
+        excerpt: "",
+        content: ""
+      },
+      es: {
+        title: "",
+        excerpt: "",
+        content: ""
+      }
+    };
   }
 };
+

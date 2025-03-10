@@ -18,6 +18,7 @@ import BlogAdmin from "@/pages/admin/BlogAdmin";
 import BlogPostForm from "@/pages/admin/BlogPostForm";
 import ContentManager from "@/pages/admin/ContentManager";
 import TestimonialManager from "@/pages/admin/TestimonialManager";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 
 import "./App.css";
@@ -46,6 +47,7 @@ function App() {
                   <Route path="/solutions" element={<Solutions />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/admin/blog" element={<BlogAdmin />} />
                   <Route path="/admin/blog/create" element={<BlogPostForm />} />
                   <Route path="/admin/blog/edit/:id" element={<BlogPostForm />} />

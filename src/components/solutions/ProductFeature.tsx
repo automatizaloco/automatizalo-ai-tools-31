@@ -1,15 +1,17 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import EditableText from "@/components/admin/EditableText";
 
 interface ProductFeatureProps {
   icon: React.ReactNode;
   title: string;
   description: string;
   index: number;
+  isEditable?: boolean;
 }
 
-const ProductFeature = ({ icon, title, description, index }: ProductFeatureProps) => {
+const ProductFeature = ({ icon, title, description, index, isEditable = false }: ProductFeatureProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -24,9 +26,27 @@ const ProductFeature = ({ icon, title, description, index }: ProductFeatureProps
         <div className="bg-gray-100 p-3 rounded-lg mr-4">
           {icon}
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          {isEditable ? (
+            <EditableText 
+              id={`feature-title-${index}`}
+              defaultText={title}
+            />
+          ) : (
+            title
+          )}
+        </h3>
       </div>
-      <p className="text-gray-600">{description}</p>
+      <p className="text-gray-600">
+        {isEditable ? (
+          <EditableText 
+            id={`feature-description-${index}`}
+            defaultText={description}
+          />
+        ) : (
+          description
+        )}
+      </p>
     </motion.div>
   );
 };

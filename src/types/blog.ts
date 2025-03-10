@@ -1,13 +1,22 @@
 
 export interface BlogPost {
-  id: number;
+  id: string;
   title: string;
+  slug: string;
   excerpt: string;
   content: string;
+  image: string;
   category: string;
-  author: string;
+  tags: string[];
   date: string;
   readTime: string;
-  image: string;
-  featured: boolean;
+  author: string;
+  featured?: boolean;
+  translations?: {
+    [key: string]: {
+      title?: string;
+      excerpt?: string;
+      content?: string;
+    }
+  };
 }

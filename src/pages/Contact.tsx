@@ -109,7 +109,7 @@ const Contact = () => {
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <Phone className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
-                  <div className="flex-grow text-right">
+                  <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
                       {isAuthenticated ? (
                         <EditableText 
@@ -137,7 +137,7 @@ const Contact = () => {
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <Mail className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
-                  <div className="flex-grow text-right">
+                  <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
                       {isAuthenticated ? (
                         <EditableText 
@@ -165,7 +165,7 @@ const Contact = () => {
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <MapPin className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
-                  <div className="flex-grow text-right">
+                  <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
                       {isAuthenticated ? (
                         <EditableText 
@@ -193,7 +193,7 @@ const Contact = () => {
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <Globe className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
-                  <div className="flex-grow text-right">
+                  <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
                       {isAuthenticated ? (
                         <EditableText 

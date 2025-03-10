@@ -6,9 +6,12 @@ import SolutionCard from "@/components/ui/SolutionCard";
 import ProductFeature from "@/components/solutions/ProductFeature";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
+import EditableText from "@/components/admin/EditableText";
 
 const Solutions = () => {
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
   
   // Solution Cards Data
   const solutionCards = [
@@ -129,20 +132,48 @@ const Solutions = () => {
           {/* Hero Section */}
           <div className="text-center mb-20">
             <h1 className="text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-6">
-              {t("solutions.title")}
+              {isAuthenticated ? (
+                <EditableText 
+                  id="solutions-title"
+                  defaultText={t("solutions.title")}
+                />
+              ) : (
+                t("solutions.title")
+              )}
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-10">
-              {t("solutions.subtitle")}
+              {isAuthenticated ? (
+                <EditableText 
+                  id="solutions-subtitle"
+                  defaultText={t("solutions.subtitle")}
+                />
+              ) : (
+                t("solutions.subtitle")
+              )}
             </p>
             <Button className="bg-gray-900 hover:bg-gray-800 py-6 px-8 rounded-xl text-base">
-              {t("solutions.viewAllButton")}
+              {isAuthenticated ? (
+                <EditableText 
+                  id="solutions-viewall-button"
+                  defaultText={t("solutions.viewAllButton")}
+                />
+              ) : (
+                t("solutions.viewAllButton")
+              )}
             </Button>
           </div>
           
           {/* Main Solutions */}
           <div className="mb-24">
             <h2 className="text-3xl font-semibold text-gray-900 text-center mb-12">
-              {t("solutions.sectionTitle")}
+              {isAuthenticated ? (
+                <EditableText 
+                  id="solutions-section-title"
+                  defaultText={t("solutions.sectionTitle")}
+                />
+              ) : (
+                t("solutions.sectionTitle")
+              )}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {solutionCards.map((solution, index) => (
@@ -155,6 +186,7 @@ const Solutions = () => {
                   imageUrl={solution.imageUrl}
                   delay={index * 100}
                   index={index}
+                  isEditable={isAuthenticated}
                 />
               ))}
             </div>
@@ -165,13 +197,34 @@ const Solutions = () => {
             <div className="flex flex-col lg:flex-row items-center gap-12 mb-16">
               <div className="lg:w-1/2">
                 <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-                  {t("solutions.chatbots.title")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-chatbots-title"
+                      defaultText={t("solutions.chatbots.title")}
+                    />
+                  ) : (
+                    t("solutions.chatbots.title")
+                  )}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  {t("solutions.chatbots.description")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-chatbots-description"
+                      defaultText={t("solutions.chatbots.description")}
+                    />
+                  ) : (
+                    t("solutions.chatbots.description")
+                  )}
                 </p>
                 <p className="text-gray-600">
-                  {t("solutions.futureproof.description")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-futureproof-description"
+                      defaultText={t("solutions.futureproof.description")}
+                    />
+                  ) : (
+                    t("solutions.futureproof.description")
+                  )}
                 </p>
               </div>
               <div className="lg:w-1/2">
@@ -191,6 +244,7 @@ const Solutions = () => {
                   title={feature.title}
                   description={feature.description}
                   index={index}
+                  isEditable={isAuthenticated}
                 />
               ))}
             </div>
@@ -201,13 +255,34 @@ const Solutions = () => {
             <div className="flex flex-col lg:flex-row-reverse items-center gap-12 mb-16">
               <div className="lg:w-1/2">
                 <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-                  {t("solutions.socialMedia.title")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-socialmedia-title"
+                      defaultText={t("solutions.socialMedia.title")}
+                    />
+                  ) : (
+                    t("solutions.socialMedia.title")
+                  )}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  {t("solutions.socialMedia.description")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-socialmedia-description"
+                      defaultText={t("solutions.socialMedia.description")}
+                    />
+                  ) : (
+                    t("solutions.socialMedia.description")
+                  )}
                 </p>
                 <p className="text-gray-600">
-                  {t("solutions.futureproof.subtitle")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-futureproof-subtitle"
+                      defaultText={t("solutions.futureproof.subtitle")}
+                    />
+                  ) : (
+                    t("solutions.futureproof.subtitle")
+                  )}
                 </p>
               </div>
               <div className="lg:w-1/2">
@@ -227,6 +302,7 @@ const Solutions = () => {
                   title={feature.title}
                   description={feature.description}
                   index={index}
+                  isEditable={isAuthenticated}
                 />
               ))}
             </div>
@@ -237,13 +313,34 @@ const Solutions = () => {
             <div className="flex flex-col lg:flex-row items-center gap-12 mb-16">
               <div className="lg:w-1/2">
                 <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-                  {t("solutions.aiAgents.title")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-aiagents-title"
+                      defaultText={t("solutions.aiAgents.title")}
+                    />
+                  ) : (
+                    t("solutions.aiAgents.title")
+                  )}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  {t("solutions.aiAgents.description")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-aiagents-description"
+                      defaultText={t("solutions.aiAgents.description")}
+                    />
+                  ) : (
+                    t("solutions.aiAgents.description")
+                  )}
                 </p>
                 <p className="text-gray-600">
-                  {t("solutions.futureproof.title")}
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="solutions-futureproof-title"
+                      defaultText={t("solutions.futureproof.title")}
+                    />
+                  ) : (
+                    t("solutions.futureproof.title")
+                  )}
                 </p>
               </div>
               <div className="lg:w-1/2">
@@ -263,6 +360,7 @@ const Solutions = () => {
                   title={feature.title}
                   description={feature.description}
                   index={index}
+                  isEditable={isAuthenticated}
                 />
               ))}
             </div>
@@ -271,17 +369,45 @@ const Solutions = () => {
           {/* CTA Section */}
           <div className="bg-gray-50 rounded-2xl p-10 lg:p-16 text-center">
             <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-              {t("solutions.cta.title")}
+              {isAuthenticated ? (
+                <EditableText 
+                  id="solutions-cta-title"
+                  defaultText={t("solutions.cta.title")}
+                />
+              ) : (
+                t("solutions.cta.title")
+              )}
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-              {t("solutions.cta.subtitle")}
+              {isAuthenticated ? (
+                <EditableText 
+                  id="solutions-cta-subtitle"
+                  defaultText={t("solutions.cta.subtitle")}
+                />
+              ) : (
+                t("solutions.cta.subtitle")
+              )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button className="bg-gray-900 hover:bg-gray-800 py-6 px-8 rounded-xl text-base">
-                {t("solutions.cta.button")}
+                {isAuthenticated ? (
+                  <EditableText 
+                    id="solutions-cta-button"
+                    defaultText={t("solutions.cta.button")}
+                  />
+                ) : (
+                  t("solutions.cta.button")
+                )}
               </Button>
               <Button variant="outline" className="border-gray-300 py-6 px-8 rounded-xl text-base">
-                {t("contact.form.submit")}
+                {isAuthenticated ? (
+                  <EditableText 
+                    id="solutions-contact-button"
+                    defaultText={t("contact.form.submit")}
+                  />
+                ) : (
+                  t("contact.form.submit")
+                )}
               </Button>
             </div>
           </div>

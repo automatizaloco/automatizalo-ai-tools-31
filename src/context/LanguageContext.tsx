@@ -6,7 +6,19 @@ type LanguageContextType = {
   language: Language;
   setLanguage: (language: Language) => void;
   t: (key: string) => string;
+  translateContent: (content: any, field: string, language: Language) => string;
 };
+
+// For blog post translations
+export interface Translation {
+  title?: string;
+  excerpt?: string;
+  content?: string;
+}
+
+export interface Translations {
+  [key: string]: Translation;
+}
 
 const translations = {
   en: {
@@ -431,8 +443,16 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     return currentTranslations[key as keyof typeof currentTranslations];
   };
 
+  // Function to translate blog content and other dynamic content
+  const translateContent = (content: any, field: string, lang: Language): string => {
+    if (!content || !content.translations || !content.translations[lang] || !content.translations[lang][field]) {
+      return content[field] || '';
+    }
+    return content.translations[lang][field];
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, translateContent }}>
       {children}
     </LanguageContext.Provider>
   );

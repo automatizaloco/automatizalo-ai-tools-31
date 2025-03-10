@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import EditableText from "@/components/admin/EditableText";
 
 interface SolutionCardProps {
   title: string;
@@ -10,6 +11,7 @@ interface SolutionCardProps {
   imageUrl: string;
   delay?: number;
   index?: number;
+  isEditable?: boolean;
 }
 
 const SolutionCard = ({
@@ -20,6 +22,7 @@ const SolutionCard = ({
   imageUrl,
   delay = 0,
   index = 0,
+  isEditable = false,
 }: SolutionCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -67,10 +70,28 @@ const SolutionCard = ({
           <div className="bg-gray-100 p-2 rounded-lg text-gray-800 mr-3">
             {icon}
           </div>
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <h3 className="text-lg font-semibold">
+            {isEditable ? (
+              <EditableText 
+                id={`solution-title-${index}`}
+                defaultText={title}
+              />
+            ) : (
+              title
+            )}
+          </h3>
         </div>
 
-        <p className="text-gray-600 mb-5">{description}</p>
+        <p className="text-gray-600 mb-5">
+          {isEditable ? (
+            <EditableText 
+              id={`solution-description-${index}`}
+              defaultText={description}
+            />
+          ) : (
+            description
+          )}
+        </p>
 
         <ul className="space-y-2">
           {features.map((feature, idx) => (
@@ -87,7 +108,16 @@ const SolutionCard = ({
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-sm text-gray-700">{feature}</span>
+              <span className="text-sm text-gray-700">
+                {isEditable ? (
+                  <EditableText 
+                    id={`solution-feature-${index}-${idx}`}
+                    defaultText={feature}
+                  />
+                ) : (
+                  feature
+                )}
+              </span>
             </li>
           ))}
         </ul>

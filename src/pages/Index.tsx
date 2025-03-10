@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -319,7 +320,7 @@ const Index = () => {
                     style={{ transform: `translateX(-${currentSlide * 100}%)` }}
                   >
                     {Array.from({ length: Math.ceil(testimonials.length / 3) }).map((_, slideIndex) => (
-                      <div key={slideIndex} className="min-w-full grid grid-cols-1 md:grid-cols-3 gap-6 flex-shrink-0">
+                      <div key={slideIndex} className="min-w-full w-full grid grid-cols-1 md:grid-cols-3 gap-6">
                         {testimonials.slice(slideIndex * 3, slideIndex * 3 + 3).map((testimonial) => (
                           <div 
                             key={testimonial.id} 
@@ -429,3 +430,4 @@ const Index = () => {
 };
 
 export default Index;
+

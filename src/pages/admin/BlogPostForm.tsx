@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -92,11 +91,9 @@ const BlogPostForm = () => {
       };
 
       if (id) {
-        // Update existing post
         await updateBlogPost(id, postData);
         toast.success("Post updated successfully");
       } else {
-        // Create new post
         await createBlogPost(postData);
         toast.success("Post created successfully");
       }
@@ -256,6 +253,9 @@ const BlogPostForm = () => {
                   <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
                     Content (HTML)
                   </label>
+                  <p className="text-sm text-gray-500 mb-2">
+                    You can use HTML tags for formatting: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;em&gt;emphasis&lt;/em&gt;, &lt;strong&gt;strong&lt;/strong&gt;
+                  </p>
                   <textarea
                     id="content"
                     name="content"
@@ -263,6 +263,7 @@ const BlogPostForm = () => {
                     onChange={handleChange}
                     rows={12}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent font-mono text-sm"
+                    placeholder="<p>Your content here...</p>&#10;<p>You can use HTML tags for formatting:</p>&#10;• <b>Bold text</b>&#10;• <i>Italic text</i>&#10;• 🎉 Emojis work too!"
                     required
                   ></textarea>
                 </div>

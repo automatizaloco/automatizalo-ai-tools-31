@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getBlogPostById } from "@/services/blogService";
 import { BlogPost as BlogPostType } from "@/types/blog";
 import { useLanguage } from "@/context/LanguageContext";
@@ -28,7 +26,6 @@ const BlogPost = () => {
     return <div>Loading...</div>;
   }
 
-  // Get translated content or fallback to English
   const title = translateContent(post, 'title', language);
   const content = translateContent(post, 'content', language);
 
@@ -47,18 +44,12 @@ const BlogPost = () => {
           
           <div className="max-w-3xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold font-heading mb-6">{title}</h1>
+              <h1 className="text-4xl md:text-5xl font-bold font-heading mb-6 text-justify">{title}</h1>
               
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center">
-                  <Avatar className="h-10 w-10 mr-3">
-                    <AvatarImage src="https://github.com/shadcn.png" alt="Author" />
-                    <AvatarFallback>{post.author[0]}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{post.author}</p>
-                    <p className="text-sm text-gray-500">{post.date} · {post.readTime}</p>
-                  </div>
+                <div>
+                  <p className="font-medium">{post.author}</p>
+                  <p className="text-sm text-gray-500">{post.date} · {post.readTime}</p>
                 </div>
                 
                 <div>
@@ -79,7 +70,7 @@ const BlogPost = () => {
               )}
             </div>
             
-            <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg max-w-none text-justify">
               <div dangerouslySetInnerHTML={{ __html: content }} />
             </div>
             

@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogIn } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -28,7 +27,6 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    // Close mobile menu when route changes
     setIsMenuOpen(false);
   }, [location]);
 
@@ -39,7 +37,6 @@ const Navbar = () => {
     { title: t('nav.contact'), path: '/contact' },
   ];
 
-  // Admin items only visible when authenticated
   const adminItems = [
     { title: 'Blog Admin', path: '/admin/blog' },
     { title: 'Content Manager', path: '/admin/content' },
@@ -66,7 +63,6 @@ const Navbar = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
               <Link 
@@ -102,7 +98,7 @@ const Navbar = () => {
             
             <LanguageSwitcher />
             
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <Button 
                 variant="outline" 
                 className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
@@ -110,24 +106,9 @@ const Navbar = () => {
               >
                 {t('nav.logout')}
               </Button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/login">
-                  <Button variant="outline" className="flex items-center gap-1">
-                    <LogIn className="h-4 w-4" />
-                    {t('nav.login')}
-                  </Button>
-                </Link>
-                <Link to="/contact">
-                  <Button className="bg-gray-900 hover:bg-gray-800 transition-all duration-300 rounded-xl">
-                    {t('nav.getStarted')}
-                  </Button>
-                </Link>
-              </div>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <LanguageSwitcher />
             <button
@@ -140,7 +121,6 @@ const Navbar = () => {
           </div>
         </nav>
 
-        {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden pt-5 pb-4 absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md shadow-lg animate-fade-in">
             <div className="flex flex-col space-y-4 px-6">
@@ -176,7 +156,7 @@ const Navbar = () => {
                 </Link>
               ))}
               
-              {isAuthenticated ? (
+              {isAuthenticated && (
                 <Button 
                   variant="outline" 
                   className="w-full mt-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
@@ -184,20 +164,6 @@ const Navbar = () => {
                 >
                   {t('nav.logout')}
                 </Button>
-              ) : (
-                <div className="flex flex-col gap-2 mt-2">
-                  <Link to="/login" className="w-full">
-                    <Button variant="outline" className="w-full flex items-center justify-center gap-1">
-                      <LogIn className="h-4 w-4" />
-                      {t('nav.login')}
-                    </Button>
-                  </Link>
-                  <Link to="/contact" className="w-full">
-                    <Button className="bg-gray-900 hover:bg-gray-800 w-full transition-all duration-300 rounded-xl">
-                      {t('nav.getStarted')}
-                    </Button>
-                  </Link>
-                </div>
               )}
             </div>
           </div>

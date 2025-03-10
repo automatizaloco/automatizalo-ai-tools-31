@@ -8,35 +8,33 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import EditableText from "@/components/admin/EditableText";
+import { useContactInfo } from "@/stores/contactInfoStore";
 
 const Contact = () => {
   const { t } = useLanguage();
   const { theme } = useTheme();
   const { isAuthenticated } = useAuth();
+  const { contactInfo, updateContactInfo } = useContactInfo();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: "",
   });
-  const [contactInfo, setContactInfo] = useState({
-    phone: "+1 (555) 123-4567",
-    email: "contact@automatizalo.co",
-    address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
-    website: "https://automatizalo.co"
-  });
 
-  // Fetch contact information from localStorage (saved from ContentManager)
-  useEffect(() => {
-    try {
-      const savedContactContent = localStorage.getItem('contactContent');
-      if (savedContactContent) {
-        setContactInfo(JSON.parse(savedContactContent));
-      }
-    } catch (error) {
-      console.error("Error loading contact information:", error);
+  // Handle contact info updates
+  const handleContactInfoChange = (id: string, value: string) => {
+    const fieldMap: Record<string, keyof typeof contactInfo> = {
+      'contact-phone-value': 'phone',
+      'contact-email-value': 'email',
+      'contact-address-value': 'address',
+      'contact-website-value': 'website'
+    };
+    
+    if (id in fieldMap) {
+      updateContactInfo({ [fieldMap[id]]: value });
     }
-  }, []);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -125,6 +123,7 @@ const Contact = () => {
                         <EditableText 
                           id="contact-phone-value"
                           defaultText={contactInfo.phone}
+                          onSave={(value) => handleContactInfoChange('contact-phone-value', value)}
                         />
                       ) : (
                         contactInfo.phone
@@ -153,6 +152,7 @@ const Contact = () => {
                         <EditableText 
                           id="contact-email-value"
                           defaultText={contactInfo.email}
+                          onSave={(value) => handleContactInfoChange('contact-email-value', value)}
                         />
                       ) : (
                         contactInfo.email
@@ -181,6 +181,8 @@ const Contact = () => {
                         <EditableText 
                           id="contact-address-value"
                           defaultText={contactInfo.address}
+                          onSave={(value) => handleContactInfoChange('contact-address-value', value)}
+                          multiline={true}
                         />
                       ) : (
                         contactInfo.address
@@ -209,6 +211,7 @@ const Contact = () => {
                         <EditableText 
                           id="contact-website-value"
                           defaultText={contactInfo.website}
+                          onSave={(value) => handleContactInfoChange('contact-website-value', value)}
                         />
                       ) : (
                         contactInfo.website
@@ -241,10 +244,10 @@ const Contact = () => {
                       {isAuthenticated ? (
                         <EditableText 
                           id="contact-whatsapp-button"
-                          defaultText="WhatsApp"
+                          defaultText={t('contact.whatsapp')}
                         />
                       ) : (
-                        "WhatsApp"
+                        t('contact.whatsapp')
                       )}
                     </Button>
                   </a>

@@ -1,126 +1,126 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { createBlogPost, getBlogPostById, updateBlogPost } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
-import { createBlogPost, updateBlogPost, getBlogPostById } from "@/services/blogService";
-import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
-
-const categories = ["AI", "Automation", "Technology", "Business"];
+import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Globe, Check } from "lucide-react";
 
 const BlogPostForm = () => {
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const isEditMode = !!id;
-  const { t } = useLanguage();
-  
-  const [formData, setFormData] = useState<Omit<BlogPost, "id">>({
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { language } = useLanguage();
+  const [isLoading, setIsLoading] = useState(false);
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [formData, setFormData] = useState({
     title: "",
     slug: "",
     excerpt: "",
     content: "",
-    category: "AI",
-    tags: [],
+    category: "",
+    tags: "",
     author: "",
-    date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+    date: new Date().toISOString().split('T')[0],
+    readTime: "",
+    image: "",
     featured: false
   });
-
-  const [tagInput, setTagInput] = useState("");
+  const [currentTab, setCurrentTab] = useState("en");
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
-    
-    if (isEditMode && id) {
+
+    if (id) {
       const post = getBlogPostById(id);
       if (post) {
-        setFormData(post);
-      } else {
-        toast.error("Post not found");
-        navigate("/admin/blog");
+        setPost(post);
+        setFormData({
+          title: post.title,
+          slug: post.slug,
+          excerpt: post.excerpt,
+          content: post.content,
+          category: post.category,
+          tags: post.tags.join(", "),
+          author: post.author,
+          date: post.date,
+          readTime: post.readTime,
+          image: post.image,
+          featured: post.featured || false
+        });
       }
     }
-  }, [isAuthenticated, isEditMode, id, navigate]);
+  }, [id, isAuthenticated, navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, featured: checked }));
-  };
-
-  const handleSelectChange = (value: string) => {
-    setFormData(prev => ({ ...prev, category: value }));
-  };
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const title = e.target.value;
-    let slug = title.toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
     
-    setFormData(prev => ({ ...prev, title, slug }));
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }));
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setIsLoading(true);
+
     try {
-      if (isEditMode && id) {
-        const updatedPost = updateBlogPost({ ...formData, id });
-        if (updatedPost) {
-          toast.success("Post updated successfully");
-          navigate("/admin/blog");
-        } else {
-          toast.error("Failed to update post");
-        }
+      const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
+      
+      const postData = {
+        title: formData.title,
+        excerpt: formData.excerpt,
+        content: formData.content,
+        category: formData.category,
+        tags: tagsArray,
+        author: formData.author,
+        date: formData.date,
+        readTime: formData.readTime,
+        image: formData.image,
+        featured: formData.featured,
+        slug: formData.slug || formData.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+      };
+
+      if (id) {
+        // Update existing post
+        await updateBlogPost(id, postData);
+        toast.success("Post updated successfully");
       } else {
-        const newPost = createBlogPost(formData);
-        if (newPost) {
-          toast.success("Post created successfully");
-          navigate("/admin/blog");
-        } else {
-          toast.error("Failed to create post");
-        }
+        // Create new post
+        await createBlogPost(postData);
+        toast.success("Post created successfully");
       }
+      
+      navigate("/admin/blog");
     } catch (error) {
+      console.error("Error saving post:", error);
       toast.error("Failed to save post");
-      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const getTranslatedValue = (field: keyof BlogPost) => {
+    if (!post || !post.translations || !post.translations[currentTab as keyof typeof post.translations]) {
+      return "";
+    }
+    
+    const translation = post.translations[currentTab as keyof typeof post.translations];
+    if (!translation || !(field in translation)) {
+      return "";
+    }
+    
+    return translation[field as keyof typeof translation] || "";
   };
 
   return (
@@ -128,188 +128,268 @@ const BlogPostForm = () => {
       <Navbar />
       
       <main className="flex-grow pt-32 pb-16">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <h1 className="text-3xl font-bold mb-8">
-            {isEditMode ? "Edit Post" : "Create New Post"}
-          </h1>
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">
+              {id ? "Edit Blog Post" : "Create New Blog Post"}
+            </h1>
+          </div>
           
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input 
-                  id="title" 
-                  name="title"
-                  value={formData.title}
-                  onChange={handleTitleChange}
-                  placeholder="Enter post title"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="slug">Slug</Label>
-                <Input 
-                  id="slug" 
-                  name="slug"
-                  value={formData.slug}
-                  onChange={handleChange}
-                  placeholder="Enter URL slug"
-                  required
-                />
-                <p className="text-xs text-gray-500">
-                  This will be used in the URL, e.g., /blog/your-slug
+            {post && post.translations && (
+              <div className="mb-6">
+                <h2 className="text-lg font-medium mb-3 flex items-center">
+                  <Globe className="mr-2 h-5 w-5 text-gray-500" />
+                  Translation Preview
+                </h2>
+                <Tabs
+                  defaultValue="en"
+                  value={currentTab}
+                  onValueChange={setCurrentTab}
+                  className="w-full"
+                >
+                  <TabsList>
+                    <TabsTrigger value="en" className="flex items-center">
+                      🇺🇸 English
+                      <Check className="ml-1 h-3 w-3 text-green-500" />
+                    </TabsTrigger>
+                    <TabsTrigger value="fr" className="flex items-center">
+                      🇫🇷 French
+                      {post.translations.fr ? (
+                        <Check className="ml-1 h-3 w-3 text-green-500" />
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="es" className="flex items-center">
+                      🇨🇴 Spanish
+                      {post.translations.es ? (
+                        <Check className="ml-1 h-3 w-3 text-green-500" />
+                      ) : null}
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="en" className="p-4 border rounded-md mt-2">
+                    <h3 className="font-medium">English (Original)</h3>
+                    <p className="text-sm text-gray-500">This is the original content you created</p>
+                  </TabsContent>
+                  <TabsContent value="fr" className="p-4 border rounded-md mt-2">
+                    <h3 className="font-medium">French Translation</h3>
+                    <p className="text-sm text-gray-500">
+                      {post.translations.fr 
+                        ? "Content has been automatically translated to French"
+                        : "Content will be automatically translated when you save"}
+                    </p>
+                    {post.translations.fr && (
+                      <div className="mt-3">
+                        <p><strong>Title:</strong> {post.translations.fr.title}</p>
+                        <p><strong>Excerpt:</strong> {post.translations.fr.excerpt}</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="es" className="p-4 border rounded-md mt-2">
+                    <h3 className="font-medium">Spanish Translation</h3>
+                    <p className="text-sm text-gray-500">
+                      {post.translations.es 
+                        ? "Content has been automatically translated to Spanish"
+                        : "Content will be automatically translated when you save"}
+                    </p>
+                    {post.translations.es && (
+                      <div className="mt-3">
+                        <p><strong>Title:</strong> {post.translations.es.title}</p>
+                        <p><strong>Excerpt:</strong> {post.translations.es.excerpt}</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+                <p className="text-sm text-gray-500 mt-3">
+                  <Globe className="inline-block mr-1 h-4 w-4" />
+                  Content is automatically translated to French and Spanish when you save the post.
                 </p>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="excerpt">Excerpt</Label>
-                <Textarea 
-                  id="excerpt" 
-                  name="excerpt"
-                  value={formData.excerpt}
-                  onChange={handleChange}
-                  placeholder="Enter a short excerpt"
-                  required
-                  rows={3}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="content">Content</Label>
-                <Textarea 
-                  id="content" 
-                  name="content"
-                  value={formData.content}
-                  onChange={handleChange}
-                  placeholder="Write your blog post content here"
-                  required
-                  rows={10}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select 
-                    value={formData.category} 
-                    onValueChange={handleSelectChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="author">Author</Label>
-                  <Input 
-                    id="author" 
-                    name="author"
-                    value={formData.author}
+            )}
+            
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-6">
+                <div>
+                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={formData.title}
                     onChange={handleChange}
-                    placeholder="Author name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                     required
                   />
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="tagInput"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    placeholder="Add a tag"
-                    className="flex-grow"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
+                
+                <div>
+                  <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">
+                    Slug (leave empty to generate from title)
+                  </label>
+                  <input
+                    type="text"
+                    id="slug"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   />
+                </div>
+                
+                <div>
+                  <label htmlFor="excerpt" className="block text-sm font-medium text-gray-700 mb-1">
+                    Excerpt
+                  </label>
+                  <textarea
+                    id="excerpt"
+                    name="excerpt"
+                    value={formData.excerpt}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    required
+                  ></textarea>
+                </div>
+                
+                <div>
+                  <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
+                    Content (HTML)
+                  </label>
+                  <textarea
+                    id="content"
+                    name="content"
+                    value={formData.content}
+                    onChange={handleChange}
+                    rows={12}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent font-mono text-sm"
+                    required
+                  ></textarea>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                      Category
+                    </label>
+                    <input
+                      type="text"
+                      id="category"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
+                      Tags (comma separated)
+                    </label>
+                    <input
+                      type="text"
+                      id="tags"
+                      name="tags"
+                      value={formData.tags}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-1">
+                      Author
+                    </label>
+                    <input
+                      type="text"
+                      id="author"
+                      name="author"
+                      value={formData.author}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      id="date"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="readTime" className="block text-sm font-medium text-gray-700 mb-1">
+                      Read Time
+                    </label>
+                    <input
+                      type="text"
+                      id="readTime"
+                      name="readTime"
+                      value={formData.readTime}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                      placeholder="e.g. 5 min read"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
+                      Image URL
+                    </label>
+                    <input
+                      type="text"
+                      id="image"
+                      name="image"
+                      value={formData.image}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="featured"
+                    name="featured"
+                    checked={formData.featured}
+                    onChange={handleChange}
+                    className="h-5 w-5 text-gray-900 focus:ring-gray-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="featured" className="ml-2 block text-sm text-gray-900">
+                    Feature this post
+                  </label>
+                </div>
+                
+                <div className="flex justify-end space-x-4">
                   <Button
                     type="button"
-                    onClick={handleAddTag}
                     variant="outline"
+                    onClick={() => navigate("/admin/blog")}
                   >
-                    Add
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    className="bg-gray-900 hover:bg-gray-800"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Saving..." : (id ? "Update Post" : "Create Post")}
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.tags.map(tag => (
-                    <div key={tag} className="bg-gray-100 rounded-full px-3 py-1 text-sm flex items-center">
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="ml-2 text-gray-500 hover:text-red-500"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="readTime">Read Time</Label>
-                  <Input 
-                    id="readTime" 
-                    name="readTime"
-                    value={formData.readTime}
-                    onChange={handleChange}
-                    placeholder="e.g. 5 min read"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="image">Image URL</Label>
-                  <Input 
-                    id="image" 
-                    name="image"
-                    value={formData.image}
-                    onChange={handleChange}
-                    placeholder="https://example.com/image.jpg"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="featured" 
-                  checked={formData.featured}
-                  onCheckedChange={handleCheckboxChange}
-                />
-                <Label htmlFor="featured">Featured Post</Label>
-              </div>
-              
-              <div className="pt-4 flex justify-end space-x-4">
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => navigate("/admin/blog")}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-gray-900 hover:bg-gray-800"
-                >
-                  {isEditMode ? "Update Post" : "Create Post"}
-                </Button>
               </div>
             </form>
           </div>

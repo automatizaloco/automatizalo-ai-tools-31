@@ -3,43 +3,29 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import EditableText from '@/components/admin/EditableText';
-import { useState, useEffect } from 'react';
+import { useContactInfo } from '@/stores/contactInfoStore';
+import { useAuth } from '@/context/AuthContext';
 
 const Footer = () => {
   const { t } = useLanguage();
   const { theme } = useTheme();
+  const { isAuthenticated } = useAuth();
+  const { contactInfo, updateContactInfo } = useContactInfo();
   const currentYear = new Date().getFullYear();
   
-  const [footerContent, setFooterContent] = useState({
-    description: "We help businesses leverage automation technologies to grow and scale efficiently.",
-    company: "Company",
-    about: "About Us",
-    blog: "Blog",
-    contact: "Contact",
-    solutions: "Solutions",
-    chatbots: "Chatbots",
-    leadGeneration: "Lead Generation",
-    socialMedia: "Social Media",
-    aiAgents: "AI Agents",
-    contactUs: "Contact Us",
-    phone: "+1 (555) 123-4567",
-    email: "contact@automatizalo.co",
-    address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
-    website: "https://automatizalo.co",
-    allRightsReserved: "All rights reserved."
-  });
-
-  // Load saved footer content from localStorage
-  useEffect(() => {
-    try {
-      const savedFooterContent = localStorage.getItem('footerContent');
-      if (savedFooterContent) {
-        setFooterContent(JSON.parse(savedFooterContent));
-      }
-    } catch (error) {
-      console.error("Error loading footer content:", error);
+  // Handle contact info updates
+  const handleContactInfoChange = (id: string, value: string) => {
+    const fieldMap: Record<string, keyof typeof contactInfo> = {
+      'footer-phone': 'phone',
+      'footer-email': 'email',
+      'footer-address': 'address',
+      'footer-website': 'website'
+    };
+    
+    if (id in fieldMap) {
+      updateContactInfo({ [fieldMap[id]]: value });
     }
-  }, []);
+  };
 
   return (
     <footer className={theme === 'dark' ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-700'}>
@@ -56,7 +42,7 @@ const Footer = () => {
             <p className={theme === 'dark' ? 'text-gray-400 mb-6' : 'text-gray-600 mb-6'}>
               <EditableText 
                 id="footer-description" 
-                defaultText={footerContent.description} 
+                defaultText={t("footer.description")} 
                 multiline={true} 
               />
             </p>
@@ -101,7 +87,7 @@ const Footer = () => {
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               <EditableText 
                 id="footer-company" 
-                defaultText={footerContent.company}
+                defaultText={t("footer.company")}
               />
             </h3>
             <ul className="space-y-2">
@@ -112,7 +98,7 @@ const Footer = () => {
                 >
                   <EditableText 
                     id="footer-about" 
-                    defaultText={footerContent.about}
+                    defaultText={t("footer.about")}
                   />
                 </Link>
               </li>
@@ -123,7 +109,7 @@ const Footer = () => {
                 >
                   <EditableText 
                     id="footer-blog" 
-                    defaultText={footerContent.blog}
+                    defaultText={t("footer.blog")}
                   />
                 </Link>
               </li>
@@ -134,7 +120,7 @@ const Footer = () => {
                 >
                   <EditableText 
                     id="footer-contact" 
-                    defaultText={footerContent.contact}
+                    defaultText={t("footer.contact")}
                   />
                 </Link>
               </li>
@@ -145,7 +131,7 @@ const Footer = () => {
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               <EditableText 
                 id="footer-solutions" 
-                defaultText={footerContent.solutions}
+                defaultText={t("footer.resources")}
               />
             </h3>
             <ul className="space-y-2">
@@ -156,7 +142,7 @@ const Footer = () => {
                 >
                   <EditableText 
                     id="footer-chatbots" 
-                    defaultText={footerContent.chatbots}
+                    defaultText={t("solutions.chatbots.title")}
                   />
                 </Link>
               </li>
@@ -167,7 +153,7 @@ const Footer = () => {
                 >
                   <EditableText 
                     id="footer-lead-generation" 
-                    defaultText={footerContent.leadGeneration}
+                    defaultText={t("solutions.leadGeneration.title")}
                   />
                 </Link>
               </li>
@@ -178,7 +164,7 @@ const Footer = () => {
                 >
                   <EditableText 
                     id="footer-social-media" 
-                    defaultText={footerContent.socialMedia}
+                    defaultText={t("solutions.socialMedia.title")}
                   />
                 </Link>
               </li>
@@ -189,7 +175,7 @@ const Footer = () => {
                 >
                   <EditableText 
                     id="footer-ai-agents" 
-                    defaultText={footerContent.aiAgents}
+                    defaultText={t("solutions.aiAgents.title")}
                   />
                 </Link>
               </li>
@@ -200,27 +186,63 @@ const Footer = () => {
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
               <EditableText 
                 id="footer-contact-us" 
-                defaultText={footerContent.contactUs}
+                defaultText={t("contact.title")}
               />
             </h3>
             <div className="text-left">
               <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
-                <span className="font-medium">Phone:</span> <EditableText id="footer-phone" defaultText={footerContent.phone} />
+                <span className="font-medium">Phone:</span> 
+                {isAuthenticated ? (
+                  <EditableText 
+                    id="footer-phone" 
+                    defaultText={contactInfo.phone}
+                    onSave={(value) => handleContactInfoChange('footer-phone', value)}
+                  />
+                ) : (
+                  <span> {contactInfo.phone}</span>
+                )}
               </p>
               <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
-                <span className="font-medium">Email:</span> <EditableText id="footer-email" defaultText={footerContent.email} />
+                <span className="font-medium">Email:</span> 
+                {isAuthenticated ? (
+                  <EditableText 
+                    id="footer-email" 
+                    defaultText={contactInfo.email}
+                    onSave={(value) => handleContactInfoChange('footer-email', value)}
+                  />
+                ) : (
+                  <span> {contactInfo.email}</span>
+                )}
               </p>
               <p className={theme === 'dark' ? 'text-gray-400 mb-4' : 'text-gray-600 mb-4'}>
-                <span className="font-medium">Address:</span> <EditableText id="footer-address" defaultText={footerContent.address} multiline={true} />
+                <span className="font-medium">Address:</span> 
+                {isAuthenticated ? (
+                  <EditableText 
+                    id="footer-address" 
+                    defaultText={contactInfo.address}
+                    multiline={true}
+                    onSave={(value) => handleContactInfoChange('footer-address', value)}
+                  />
+                ) : (
+                  <span> {contactInfo.address}</span>
+                )}
               </p>
               <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
                 <a 
-                  href="https://automatizalo.co"
+                  href={contactInfo.website}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'} transition-colors`}
                 >
-                  <EditableText id="footer-website" defaultText={footerContent.website} />
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-website" 
+                      defaultText={contactInfo.website}
+                      onSave={(value) => handleContactInfoChange('footer-website', value)}
+                    />
+                  ) : (
+                    contactInfo.website
+                  )}
                 </a>
               </p>
             </div>
@@ -229,7 +251,11 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-center">
           <p className={theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}>
-            &copy; {currentYear} Automatízalo. <EditableText id="footer-rights" defaultText={footerContent.allRightsReserved} />
+            &copy; {currentYear} Automatízalo. 
+            <EditableText 
+              id="footer-rights" 
+              defaultText={t("footer.copyright")}
+            />
           </p>
         </div>
       </div>

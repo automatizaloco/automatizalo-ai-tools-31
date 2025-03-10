@@ -5,15 +5,17 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Globe } from "lucide-react";
 import { getBlogPosts, deleteBlogPost } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 const BlogAdmin = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const { language } = useLanguage();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -43,6 +45,10 @@ const BlogAdmin = () => {
     navigate("/admin/blog/create");
   };
 
+  const hasTranslations = (post: BlogPost) => {
+    return post.translations && Object.keys(post.translations).length > 0;
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
@@ -69,6 +75,7 @@ const BlogAdmin = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Featured</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Translations</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -80,6 +87,21 @@ const BlogAdmin = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{post.date}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {post.featured ? "Yes" : "No"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          {hasTranslations(post) ? (
+                            <>
+                              <Globe className="h-4 w-4 text-green-500" />
+                              <span className="text-green-500">Translated</span>
+                            </>
+                          ) : (
+                            <>
+                              <Globe className="h-4 w-4 text-gray-400" />
+                              <span className="text-gray-400">English Only</span>
+                            </>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">

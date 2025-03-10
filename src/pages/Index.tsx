@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -52,35 +51,55 @@ const Index = () => {
       setTestimonials(loadedTestimonials);
       setMaxSlides(Math.max(0, Math.ceil(loadedTestimonials.length / 3) - 1));
     } else {
-      // Default testimonials if none in localStorage
       const defaultTestimonials = [
         {
           id: 1,
           name: t("testimonials.client1.name"),
           company: "Company A",
-          text: t("testimonials.client1.text"),
-          rating: 5
+          text: t("testimonials.client1.text")
         },
         {
           id: 2,
           name: t("testimonials.client2.name"),
           company: "Company B",
-          text: t("testimonials.client2.text"),
-          rating: 5
+          text: t("testimonials.client2.text")
         },
         {
           id: 3,
           name: "John Smith",
           company: "Company C",
-          text: "Their AI solutions have completely transformed how we operate our business. Highly recommended!",
-          rating: 5
+          text: "Their AI solutions have completely transformed how we operate our business. Highly recommended!"
+        },
+        {
+          id: 4,
+          name: "Sarah Johnson",
+          company: "Company D",
+          text: "Outstanding service and exceptional results. Would definitely recommend!"
+        },
+        {
+          id: 5,
+          name: "Michael Brown",
+          company: "Company E",
+          text: "The team's expertise in AI implementation is unmatched. Great experience working with them!"
         }
       ];
       setTestimonials(defaultTestimonials);
       localStorage.setItem('testimonials', JSON.stringify(defaultTestimonials));
-      setMaxSlides(0); // Only one slide with 3 testimonials
+      setMaxSlides(Math.max(0, Math.ceil(defaultTestimonials.length / 3) - 1));
     }
   }, [t]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (currentSlide < maxSlides) {
+        setCurrentSlide(prev => prev + 1);
+      } else {
+        setCurrentSlide(0);
+      }
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [currentSlide, maxSlides]);
 
   const handleSliderChange = (values: number[]) => {
     setCurrentSlide(values[0]);
@@ -304,7 +323,7 @@ const Index = () => {
                         {testimonials.slice(slideIndex * 3, slideIndex * 3 + 3).map((testimonial) => (
                           <div 
                             key={testimonial.id} 
-                            className="bg-white rounded-xl p-6 shadow-md border border-gray-100 hover:shadow-lg transition-shadow flex-1"
+                            className="bg-white rounded-xl p-6 shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
                           >
                             <div className="flex items-center mb-4">
                               <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mr-3">
@@ -348,7 +367,7 @@ const Index = () => {
                   </div>
                 </div>
                 
-                {testimonials.length > 3 && (
+                {maxSlides > 0 && (
                   <>
                     <Button 
                       variant="outline" 

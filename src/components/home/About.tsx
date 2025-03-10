@@ -36,10 +36,10 @@ const About = () => {
               {isAuthenticated ? (
                 <EditableText 
                   id="about-section-tag"
-                  defaultText={t("about.sectionTag")}
+                  defaultText="About Us"
                 />
               ) : (
-                t("about.sectionTag")
+                t("home.about.tagline")
               )}
             </span>
             
@@ -47,10 +47,10 @@ const About = () => {
               {isAuthenticated ? (
                 <EditableText 
                   id="about-section-title"
-                  defaultText={t("about.title")}
+                  defaultText="We're Building the Future of AI Automation"
                 />
               ) : (
-                t("about.title")
+                t("home.about.title")
               )}
             </h2>
             
@@ -58,10 +58,11 @@ const About = () => {
               {isAuthenticated ? (
                 <EditableText 
                   id="about-section-paragraph1"
-                  defaultText={t("about.paragraph1")}
+                  defaultText="At Automatízalo, we're a team of young, passionate AI specialists and automation experts. We connect, fine-tune, and optimize automation tools like Make.com, N8N, AI chatbots, and custom workflows to help businesses and individuals become more efficient, scalable, and future-ready."
+                  multiline={true}
                 />
               ) : (
-                t("about.paragraph1")
+                t("home.about.description")
               )}
             </p>
             
@@ -69,10 +70,11 @@ const About = () => {
               {isAuthenticated ? (
                 <EditableText 
                   id="about-section-paragraph2"
-                  defaultText={t("about.paragraph2")}
+                  defaultText="Our mission is to empower businesses of all sizes with cutting-edge AI solutions that are affordable, scalable, and easy to implement. We believe that automation should be accessible to everyone, not just tech giants."
+                  multiline={true}
                 />
               ) : (
-                t("about.paragraph2")
+                "Our mission is to empower businesses of all sizes with cutting-edge AI solutions that are affordable, scalable, and easy to implement. We believe that automation should be accessible to everyone, not just tech giants."
               )}
             </p>
             
@@ -88,20 +90,20 @@ const About = () => {
                     {isAuthenticated ? (
                       <EditableText 
                         id="about-feature1-title"
-                        defaultText={t("about.features.feature1.title")}
+                        defaultText="Automated Workflows"
                       />
                     ) : (
-                      t("about.features.feature1.title")
+                      t("home.about.feature1.title")
                     )}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {isAuthenticated ? (
                       <EditableText 
                         id="about-feature1-description"
-                        defaultText={t("about.features.feature1.description")}
+                        defaultText="Connect and automate your workflows using cutting-edge AI and Make.com/N8N tools."
                       />
                     ) : (
-                      t("about.features.feature1.description")
+                      t("home.about.feature1.description")
                     )}
                   </p>
                 </div>
@@ -118,20 +120,20 @@ const About = () => {
                     {isAuthenticated ? (
                       <EditableText 
                         id="about-feature2-title"
-                        defaultText={t("about.features.feature2.title")}
+                        defaultText="AI Chatbots"
                       />
                     ) : (
-                      t("about.features.feature2.title")
+                      t("home.about.feature2.title")
                     )}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {isAuthenticated ? (
                       <EditableText 
                         id="about-feature2-description"
-                        defaultText={t("about.features.feature2.description")}
+                        defaultText="Personalized chatbots to handle customer service, scheduling, and lead engagement."
                       />
                     ) : (
-                      t("about.features.feature2.description")
+                      t("home.about.feature2.description")
                     )}
                   </p>
                 </div>
@@ -148,20 +150,20 @@ const About = () => {
                     {isAuthenticated ? (
                       <EditableText 
                         id="about-feature3-title"
-                        defaultText={t("about.features.feature3.title")}
+                        defaultText="Smart Systems"
                       />
                     ) : (
-                      t("about.features.feature3.title")
+                      t("home.about.feature3.title")
                     )}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {isAuthenticated ? (
                       <EditableText 
                         id="about-feature3-description"
-                        defaultText={t("about.features.feature3.description")}
+                        defaultText="AI-driven systems that learn and adapt to your business needs over time."
                       />
                     ) : (
-                      t("about.features.feature3.description")
+                      t("home.about.feature3.description")
                     )}
                   </p>
                 </div>
@@ -178,20 +180,20 @@ const About = () => {
                     {isAuthenticated ? (
                       <EditableText 
                         id="about-feature4-title"
-                        defaultText={t("about.features.feature4.title")}
+                        defaultText="Customized Solutions"
                       />
                     ) : (
-                      t("about.features.feature4.title")
+                      "Customized Solutions"
                     )}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {isAuthenticated ? (
                       <EditableText 
                         id="about-feature4-description"
-                        defaultText={t("about.features.feature4.description")}
+                        defaultText="Tailored AI solutions designed specifically for your business challenges and goals."
                       />
                     ) : (
-                      t("about.features.feature4.description")
+                      "Tailored AI solutions designed specifically for your business challenges and goals."
                     )}
                   </p>
                 </div>
@@ -204,8 +206,8 @@ const About = () => {
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-xl"></div>
               <div className="relative rounded-3xl overflow-hidden shadow-xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&q=80&w=800" 
-                  alt="Team collaboration on AI project" 
+                  src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800" 
+                  alt="Team working with AI and automation" 
                   className="w-full h-auto"
                 />
               </div>

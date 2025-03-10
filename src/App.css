@@ -37,3 +37,12 @@
 .read-the-docs {
   color: #888;
 }
+
+.editable-text:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 0.25rem;
+}
+
+.text-automatizalo-blue {
+  color: #3B82F6;
+}

@@ -38,11 +38,15 @@ const Footer = () => {
               />
             </Link>
             <p className={theme === 'dark' ? 'text-gray-400 mb-6' : 'text-gray-600 mb-6'}>
-              <EditableText 
-                id="footer-description" 
-                defaultText={t("footer.description")} 
-                multiline={true} 
-              />
+              {isAuthenticated ? (
+                <EditableText 
+                  id="footer-description" 
+                  defaultText={t("footer.description")} 
+                  multiline={true} 
+                />
+              ) : (
+                t("footer.description")
+              )}
             </p>
             <div className="flex space-x-4 justify-center">
               <a 
@@ -83,10 +87,14 @@ const Footer = () => {
 
           <div className="md:col-span-2">
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              <EditableText 
-                id="footer-company" 
-                defaultText={t("footer.company")}
-              />
+              {isAuthenticated ? (
+                <EditableText 
+                  id="footer-company" 
+                  defaultText={t("footer.company")}
+                />
+              ) : (
+                t("footer.company")
+              )}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -94,10 +102,14 @@ const Footer = () => {
                   to="/about" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  <EditableText 
-                    id="footer-about" 
-                    defaultText={t("footer.about")}
-                  />
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-about" 
+                      defaultText={t("footer.about")}
+                    />
+                  ) : (
+                    t("footer.about")
+                  )}
                 </Link>
               </li>
               <li>
@@ -105,10 +117,14 @@ const Footer = () => {
                   to="/blog" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  <EditableText 
-                    id="footer-blog" 
-                    defaultText={t("footer.blog")}
-                  />
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-blog" 
+                      defaultText={t("footer.blog")}
+                    />
+                  ) : (
+                    t("footer.blog")
+                  )}
                 </Link>
               </li>
               <li>
@@ -116,10 +132,14 @@ const Footer = () => {
                   to="/contact" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  <EditableText 
-                    id="footer-contact" 
-                    defaultText={t("footer.contact")}
-                  />
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-contact" 
+                      defaultText={t("footer.contact")}
+                    />
+                  ) : (
+                    t("footer.contact")
+                  )}
                 </Link>
               </li>
               {!isAuthenticated && (
@@ -137,10 +157,14 @@ const Footer = () => {
 
           <div className="md:col-span-2">
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              <EditableText 
-                id="footer-solutions" 
-                defaultText={t("footer.resources")}
-              />
+              {isAuthenticated ? (
+                <EditableText 
+                  id="footer-solutions" 
+                  defaultText={t("footer.resources")}
+                />
+              ) : (
+                t("footer.resources")
+              )}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -148,10 +172,14 @@ const Footer = () => {
                   to="/solutions#chatbots" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  <EditableText 
-                    id="footer-chatbots" 
-                    defaultText={t("solutions.chatbots.title")}
-                  />
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-chatbots" 
+                      defaultText={t("solutions.chatbots.title")}
+                    />
+                  ) : (
+                    t("solutions.chatbots.title")
+                  )}
                 </Link>
               </li>
               <li>
@@ -159,10 +187,14 @@ const Footer = () => {
                   to="/solutions#lead-generation" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  <EditableText 
-                    id="footer-lead-generation" 
-                    defaultText={t("solutions.leadGeneration.title")}
-                  />
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-lead-generation" 
+                      defaultText={t("solutions.leadGeneration.title")}
+                    />
+                  ) : (
+                    t("solutions.leadGeneration.title")
+                  )}
                 </Link>
               </li>
               <li>
@@ -170,10 +202,14 @@ const Footer = () => {
                   to="/solutions#social-media" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  <EditableText 
-                    id="footer-social-media" 
-                    defaultText={t("solutions.socialMedia.title")}
-                  />
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-social-media" 
+                      defaultText={t("solutions.socialMedia.title")}
+                    />
+                  ) : (
+                    t("solutions.socialMedia.title")
+                  )}
                 </Link>
               </li>
               <li>
@@ -181,10 +217,14 @@ const Footer = () => {
                   to="/solutions#ai-agents" 
                   className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
                 >
-                  <EditableText 
-                    id="footer-ai-agents" 
-                    defaultText={t("solutions.aiAgents.title")}
-                  />
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-ai-agents" 
+                      defaultText={t("solutions.aiAgents.title")}
+                    />
+                  ) : (
+                    t("solutions.aiAgents.title")
+                  )}
                 </Link>
               </li>
             </ul>
@@ -192,10 +232,14 @@ const Footer = () => {
 
           <div className="md:col-span-4">
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
-              <EditableText 
-                id="footer-contact-us" 
-                defaultText={t("contact.title")}
-              />
+              {isAuthenticated ? (
+                <EditableText 
+                  id="footer-contact-us" 
+                  defaultText={t("contact.title")}
+                />
+              ) : (
+                t("contact.title")
+              )}
             </h3>
             <div className="text-left">
               <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>

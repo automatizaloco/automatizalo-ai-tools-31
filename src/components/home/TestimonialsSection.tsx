@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
@@ -6,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchTestimonials } from '@/services/supabaseService';
 import { useQuery } from '@tanstack/react-query';
 
 interface Testimonial {
@@ -22,16 +23,9 @@ const TestimonialsSection: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [maxSlides, setMaxSlides] = useState(0);
 
-  const { data: testimonials = [] } = useQuery({
+  const { data: testimonials = [], isLoading } = useQuery({
     queryKey: ['testimonials'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('testimonials')
-        .select('*');
-      
-      if (error) throw error;
-      return data;
-    }
+    queryFn: fetchTestimonials
   });
 
   useEffect(() => {
@@ -61,6 +55,18 @@ const TestimonialsSection: React.FC = () => {
   const goNextSlide = () => {
     setCurrentSlide(prev => Math.min(maxSlides, prev + 1));
   };
+
+  if (isLoading) {
+    return (
+      <section className="py-16 md:py-24 bg-gray-50">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="text-center">
+            <p>Loading testimonials...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 md:py-24 bg-gray-50">

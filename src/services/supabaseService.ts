@@ -65,8 +65,56 @@ export const updateContactInfo = async (updates: {
 export const fetchTestimonials = async () => {
   const { data, error } = await supabase
     .from('testimonials')
-    .select('*');
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching testimonials:', error);
+    throw error;
+  }
+  
+  return data;
+};
+
+export const createTestimonial = async (testimonial: {
+  name: string;
+  company?: string;
+  text: string;
+}) => {
+  const { data, error } = await supabase
+    .from('testimonials')
+    .insert(testimonial)
+    .select()
+    .single();
   
   if (error) throw error;
   return data;
+};
+
+export const updateTestimonial = async (
+  id: string,
+  updates: {
+    name?: string;
+    company?: string;
+    text?: string;
+  }
+) => {
+  const { data, error } = await supabase
+    .from('testimonials')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const deleteTestimonial = async (id: string) => {
+  const { error } = await supabase
+    .from('testimonials')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
 };

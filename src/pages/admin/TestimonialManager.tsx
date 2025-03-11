@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +29,7 @@ interface Testimonial {
 
 const TestimonialManager = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   
@@ -99,7 +99,6 @@ const TestimonialManager = () => {
   };
 
   const handleTestimonialChange = (id: string, field: keyof Testimonial, value: string) => {
-    // We're not updating state locally anymore, the mutation will handle refreshing data
     updateMutation.mutate({ 
       id, 
       updates: { [field]: value } 
@@ -212,57 +211,57 @@ const TestimonialManager = () => {
                   </div>
                 ) : (
                   <>
-                    {testimonials.map((testimonial) => (
-                      <div key={testimonial.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-2 w-full">
-                            <div>
-                              <Label htmlFor={`name-${testimonial.id}`}>Client Name</Label>
-                              <Input
-                                id={`name-${testimonial.id}`}
-                                value={testimonial.name}
-                                onChange={(e) => handleTestimonialChange(testimonial.id, 'name', e.target.value)}
-                              />
+                    {testimonials.length > 0 ? (
+                      testimonials.map((testimonial) => (
+                        <div key={testimonial.id} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-2 w-full">
+                              <div>
+                                <Label htmlFor={`name-${testimonial.id}`}>Client Name</Label>
+                                <Input
+                                  id={`name-${testimonial.id}`}
+                                  value={testimonial.name}
+                                  onChange={(e) => handleTestimonialChange(testimonial.id, 'name', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor={`company-${testimonial.id}`}>Company (Optional)</Label>
+                                <Input
+                                  id={`company-${testimonial.id}`}
+                                  value={testimonial.company || ""}
+                                  onChange={(e) => handleTestimonialChange(testimonial.id, 'company', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor={`text-${testimonial.id}`}>Testimonial Text</Label>
+                                <Textarea
+                                  id={`text-${testimonial.id}`}
+                                  value={testimonial.text}
+                                  onChange={(e) => handleTestimonialChange(testimonial.id, 'text', e.target.value)}
+                                  rows={3}
+                                />
+                              </div>
                             </div>
                             
-                            <div>
-                              <Label htmlFor={`company-${testimonial.id}`}>Company (Optional)</Label>
-                              <Input
-                                id={`company-${testimonial.id}`}
-                                value={testimonial.company || ""}
-                                onChange={(e) => handleTestimonialChange(testimonial.id, 'company', e.target.value)}
-                              />
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor={`text-${testimonial.id}`}>Testimonial Text</Label>
-                              <Textarea
-                                id={`text-${testimonial.id}`}
-                                value={testimonial.text}
-                                onChange={(e) => handleTestimonialChange(testimonial.id, 'text', e.target.value)}
-                                rows={3}
-                              />
-                            </div>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="ml-4"
+                              onClick={() => handleDeleteTestimonial(testimonial.id)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              {deleteMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
                           </div>
-                          
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="ml-4"
-                            onClick={() => handleDeleteTestimonial(testimonial.id)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            {deleteMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
                         </div>
-                      </div>
-                    ))}
-                    
-                    {testimonials.length === 0 && (
+                      ))
+                    ) : (
                       <div className="text-center p-8 text-gray-500">
                         No testimonials yet. Add your first one above.
                       </div>

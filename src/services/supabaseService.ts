@@ -78,16 +78,23 @@ export const fetchTestimonials = async () => {
 
 export const createTestimonial = async (testimonial: {
   name: string;
-  company?: string;
+  company?: string | null;
   text: string;
 }) => {
+  console.log('Creating testimonial:', testimonial);
+  
   const { data, error } = await supabase
     .from('testimonials')
     .insert(testimonial)
     .select()
     .single();
   
-  if (error) throw error;
+  if (error) {
+    console.error('Error creating testimonial:', error);
+    throw error;
+  }
+  
+  console.log('Testimonial created successfully:', data);
   return data;
 };
 
@@ -95,10 +102,12 @@ export const updateTestimonial = async (
   id: string,
   updates: {
     name?: string;
-    company?: string;
+    company?: string | null;
     text?: string;
   }
 ) => {
+  console.log('Updating testimonial:', id, updates);
+  
   const { data, error } = await supabase
     .from('testimonials')
     .update(updates)
@@ -106,15 +115,27 @@ export const updateTestimonial = async (
     .select()
     .single();
   
-  if (error) throw error;
+  if (error) {
+    console.error('Error updating testimonial:', error);
+    throw error;
+  }
+  
+  console.log('Testimonial updated successfully:', data);
   return data;
 };
 
 export const deleteTestimonial = async (id: string) => {
+  console.log('Deleting testimonial:', id);
+  
   const { error } = await supabase
     .from('testimonials')
     .delete()
     .eq('id', id);
   
-  if (error) throw error;
+  if (error) {
+    console.error('Error deleting testimonial:', error);
+    throw error;
+  }
+  
+  console.log('Testimonial deleted successfully');
 };

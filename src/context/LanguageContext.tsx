@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 type Language = "en" | "fr" | "es";
@@ -109,6 +110,7 @@ const translations = {
     "home.about.tagline": "About Us",
     "home.about.title": "We're Building the Future of AI Automation",
     "home.about.description": "At Automatízalo, we're a team of young, passionate AI specialists and automation experts. We connect, fine-tune, and optimize automation tools like Make.com, N8N, AI chatbots, and custom workflows to help businesses and individuals become more efficient, scalable, and future-ready.",
+    "home.about.mission": "Our mission is to empower businesses of all sizes with cutting-edge AI solutions that are affordable, scalable, and easy to implement. We believe that automation should be accessible to everyone, not just tech giants.",
     "home.about.feature1.title": "Automated Workflows",
     "home.about.feature1.description": "Connect and automate your workflows using cutting-edge AI and Make.com/N8N tools.",
     "home.about.feature2.title": "AI Chatbots",
@@ -241,6 +243,7 @@ const translations = {
     "home.about.tagline": "À Propos de Nous",
     "home.about.title": "Nous Construisons le Futur de l'Automatisation par l'IA",
     "home.about.description": "Chez Automatízalo, nous sommes une équipe de jeunes spécialistes passionnés par l'IA et d'experts en automatisation. Nous connectons, affinons et optimisons des outils d'automatisation comme Make.com, N8N, des chatbots IA et des flux de travail personnalisés pour aider les entreprises et les particuliers à devenir plus efficaces, évolutifs et prêts pour l'avenir.",
+    "home.about.mission": "Notre mission est de permettre aux entreprises de toutes tailles d'accéder à des solutions d'IA de pointe qui sont abordables, évolutives et faciles à mettre en œuvre. Nous croyons que l'automatisation devrait être accessible à tous, pas seulement aux géants de la technologie.",
     "home.about.feature1.title": "Flux de Travail Automatisés",
     "home.about.feature1.description": "Connectez et automatisez vos flux de travail à l'aide d'IA de pointe et d'outils Make.com/N8N.",
     "home.about.feature2.title": "Chatbots IA",
@@ -373,6 +376,7 @@ const translations = {
     "home.about.tagline": "Sobre Nosotros",
     "home.about.title": "Estamos Construyendo el Futuro de la Automatización con IA",
     "home.about.description": "En Automatízalo, somos un equipo de jóvenes especialistas apasionados por la IA y expertos en automatización. Conectamos, afinamos y optimizamos herramientas de automatización como Make.com, N8N, chatbots de IA y flujos de trabajo personalizados para ayudar a empresas e individuos a ser más eficientes, escalables y estar preparados para el futuro.",
+    "home.about.mission": "Nuestra misión es capacitar a empresas de todos los tamaños con soluciones de IA de vanguardia que sean asequibles, escalables y fáciles de implementar. Creemos que la automatización debe ser accesible para todos, no solo para los gigantes tecnológicos.",
     "home.about.feature1.title": "Flujos de Trabajo Automatizados",
     "home.about.feature1.description": "Conecta y automatiza tus flujos de trabajo usando IA de vanguardia y herramientas Make.com/N8N.",
     "home.about.feature2.title": "Chatbots de IA",

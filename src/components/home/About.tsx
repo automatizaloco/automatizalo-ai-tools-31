@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -14,7 +13,6 @@ const About = () => {
       const element = document.getElementById('about-section');
       if (element) {
         const position = element.getBoundingClientRect();
-        // If element is in viewport
         if (position.top < window.innerHeight && position.bottom >= 0) {
           setIsVisible(true);
         }
@@ -22,7 +20,7 @@ const About = () => {
     };
     
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Check on initial load
+    handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -74,7 +72,7 @@ const About = () => {
                   multiline={true}
                 />
               ) : (
-                "Our mission is to empower businesses of all sizes with cutting-edge AI solutions that are affordable, scalable, and easy to implement. We believe that automation should be accessible to everyone, not just tech giants."
+                t("home.about.mission")
               )}
             </p>
             

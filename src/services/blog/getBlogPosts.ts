@@ -16,7 +16,11 @@ export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
     throw new Error(`Failed to fetch blog posts: ${error.message}`);
   }
 
-  return data || [];
+  // Map the database field read_time to readTime in our BlogPost type
+  return (data || []).map(post => ({
+    ...post,
+    readTime: post.read_time
+  })) as BlogPost[];
 };
 
 /**
@@ -34,7 +38,12 @@ export const fetchBlogPostById = async (id: string): Promise<BlogPost | null> =>
     throw new Error(`Failed to fetch blog post: ${error.message}`);
   }
 
-  return data;
+  if (!data) return null;
+  
+  return {
+    ...data,
+    readTime: data.read_time
+  } as BlogPost;
 };
 
 /**
@@ -52,7 +61,12 @@ export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null
     throw new Error(`Failed to fetch blog post: ${error.message}`);
   }
 
-  return data;
+  if (!data) return null;
+  
+  return {
+    ...data,
+    readTime: data.read_time
+  } as BlogPost;
 };
 
 /**
@@ -109,5 +123,14 @@ export const fetchFeaturedBlogPosts = async (): Promise<BlogPost[]> => {
     throw new Error(`Failed to fetch featured blog posts: ${error.message}`);
   }
 
-  return data || [];
+  // Map the database field read_time to readTime in our BlogPost type
+  return (data || []).map(post => ({
+    ...post,
+    readTime: post.read_time
+  })) as BlogPost[];
 };
+
+// Add aliases for the blog pages that were using the old names
+export const getBlogPosts = fetchBlogPosts;
+export const getBlogPostById = fetchBlogPostById;
+export const getBlogPostBySlug = fetchBlogPostBySlug;

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { getBlogPosts } from "@/services/blogService";
+import { fetchBlogPosts } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import BlogHero from "@/components/blog/BlogHero";
 import FeaturedPosts from "@/components/blog/FeaturedPosts";
@@ -23,7 +23,7 @@ const Blog = () => {
   // Fetch blog posts using React Query
   const { data: blogPosts = [], isLoading } = useQuery({
     queryKey: ['blogPosts'],
-    queryFn: getBlogPosts
+    queryFn: fetchBlogPosts
   });
 
   useEffect(() => {

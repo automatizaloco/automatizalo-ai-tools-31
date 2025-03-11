@@ -21,6 +21,60 @@ export const fetchTestimonials = async () => {
 };
 
 /**
+ * Create a new testimonial
+ */
+export const createTestimonial = async (testimonial: { name: string; company: string | null; text: string }) => {
+  const { data, error } = await supabase
+    .from('testimonials')
+    .insert(testimonial)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating testimonial:", error);
+    throw new Error(`Failed to create testimonial: ${error.message}`);
+  }
+
+  return data;
+};
+
+/**
+ * Update an existing testimonial
+ */
+export const updateTestimonial = async (id: string, updates: Partial<{ name: string; company: string | null; text: string }>) => {
+  const { data, error } = await supabase
+    .from('testimonials')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating testimonial ${id}:`, error);
+    throw new Error(`Failed to update testimonial: ${error.message}`);
+  }
+
+  return data;
+};
+
+/**
+ * Delete a testimonial
+ */
+export const deleteTestimonial = async (id: string) => {
+  const { error } = await supabase
+    .from('testimonials')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error(`Error deleting testimonial ${id}:`, error);
+    throw new Error(`Failed to delete testimonial: ${error.message}`);
+  }
+
+  return true;
+};
+
+/**
  * Fetch contact information
  */
 export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
@@ -56,10 +110,20 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
     let result;
     
     if (existingData?.id) {
+      // Make sure all required fields are included when updating
+      const { data: currentData } = await supabase
+        .from('contact_info')
+        .select('*')
+        .eq('id', existingData.id)
+        .single();
+      
+      // Merge current data with updates to ensure all required fields are present
+      const updatedInfo = { ...currentData, ...info };
+      
       // Update existing record
       const { data, error } = await supabase
         .from('contact_info')
-        .update(info)
+        .update(updatedInfo)
         .eq('id', existingData.id)
         .select()
         .single();
@@ -67,10 +131,18 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
       if (error) throw error;
       result = data;
     } else {
+      // For new records, ensure all required fields are present
+      const requiredFields = ['phone', 'email', 'address', 'website'];
+      const missingFields = requiredFields.filter(field => !info[field as keyof ContactInfo]);
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+      }
+      
       // Insert new record
       const { data, error } = await supabase
         .from('contact_info')
-        .insert(info)
+        .insert(info as ContactInfo)
         .select()
         .single();
       

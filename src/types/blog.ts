@@ -25,3 +25,17 @@ export interface BlogPost {
     };
   };
 }
+
+export interface BlogTranslation {
+  id: string;
+  blog_post_id: string;
+  language: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type NewBlogPost = Omit<BlogPost, 'id'>;
+export type NewBlogTranslation = Omit<BlogTranslation, 'id' | 'created_at' | 'updated_at'>;

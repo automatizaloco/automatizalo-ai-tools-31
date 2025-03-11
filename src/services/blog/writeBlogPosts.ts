@@ -7,9 +7,15 @@ import { toast } from "sonner";
  * Create a new blog post
  */
 export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
+  // Map readTime to read_time for database consistency
+  const dbPost = {
+    ...post,
+    read_time: post.readTime
+  };
+  
   const { data, error } = await supabase
     .from('blog_posts')
-    .insert(post)
+    .insert(dbPost)
     .select()
     .single();
 
@@ -20,7 +26,10 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
   }
 
   toast.success("Blog post created successfully");
-  return data;
+  return {
+    ...data,
+    readTime: data.read_time
+  } as BlogPost;
 };
 
 /**
@@ -52,9 +61,19 @@ export const updateBlogPost = async (
   id: string, 
   updates: Partial<BlogPost>
 ): Promise<BlogPost> => {
+  // Map readTime to read_time for database consistency
+  const dbUpdates = {
+    ...updates
+  } as any;
+  
+  if (updates.readTime !== undefined) {
+    dbUpdates.read_time = updates.readTime;
+    delete dbUpdates.readTime;
+  }
+  
   const { data, error } = await supabase
     .from('blog_posts')
-    .update(updates)
+    .update(dbUpdates)
     .eq('id', id)
     .select()
     .single();
@@ -70,7 +89,10 @@ export const updateBlogPost = async (
   // Dispatch event to notify other components that blog data has changed
   window.dispatchEvent(new CustomEvent('blogPostUpdated', { detail: data }));
   
-  return data;
+  return {
+    ...data,
+    readTime: data.read_time
+  } as BlogPost;
 };
 
 /**
@@ -155,3 +177,6 @@ export const deleteBlogTranslation = async (id: string): Promise<void> => {
   // Dispatch event to notify other components
   window.dispatchEvent(new CustomEvent('blogTranslationDeleted', { detail: { id } }));
 };
+
+// Add aliases for compatibility
+export const createBlogTranslations = createBlogTranslation;

@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { createBlogPost, getBlogPostById, updateBlogPost } from "@/services/blogService";
+import { createBlogPost, fetchBlogPostById, updateBlogPost } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { BlogFormData, TranslationFormData } from "@/types/form";
 import { useLanguage } from "@/context/LanguageContext";
@@ -66,7 +65,7 @@ const BlogPostForm = () => {
     const fetchPost = async () => {
       if (id) {
         try {
-          const fetchedPost = await getBlogPostById(id);
+          const fetchedPost = await fetchBlogPostById(id);
           if (fetchedPost) {
             setPost(fetchedPost);
             

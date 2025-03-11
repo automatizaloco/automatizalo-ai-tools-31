@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { getBlogPostById } from "@/services/blogService";
+import { fetchBlogPostById } from "@/services/blogService";
 import { BlogPost as BlogPostType } from "@/types/blog";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -19,7 +18,7 @@ const BlogPost = () => {
     const fetchPost = async () => {
       if (id) {
         try {
-          const fetchedPost = await getBlogPostById(id);
+          const fetchedPost = await fetchBlogPostById(id);
           if (fetchedPost) {
             setPost(fetchedPost);
           }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -49,7 +48,7 @@ const TestimonialManager = () => {
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: createTestimonial,
+    mutationFn: (testimonial: Omit<Testimonial, 'id'>) => createTestimonial(testimonial),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
       toast.success("Testimonial added successfully!");
@@ -81,7 +80,7 @@ const TestimonialManager = () => {
 
   // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: deleteTestimonial,
+    mutationFn: (id: string) => deleteTestimonial(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
       toast.success("Testimonial deleted successfully!");

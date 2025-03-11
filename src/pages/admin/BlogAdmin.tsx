@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { PlusCircle, Edit, Trash2, Globe } from "lucide-react";
-import { getBlogPosts, deleteBlogPost } from "@/services/blogService";
+import { fetchBlogPosts, deleteBlogPost } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
@@ -26,7 +25,7 @@ const BlogAdmin = () => {
     
     const fetchPosts = async () => {
       try {
-        const fetchedPosts = await getBlogPosts();
+        const fetchedPosts = await fetchBlogPosts();
         setPosts(fetchedPosts);
       } catch (error) {
         console.error("Error fetching blog posts:", error);
@@ -42,13 +41,9 @@ const BlogAdmin = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
       try {
-        const success = await deleteBlogPost(id);
-        if (success) {
-          setPosts(posts.filter(post => post.id !== id));
-          toast.success("Post deleted successfully");
-        } else {
-          toast.error("Failed to delete post");
-        }
+        await deleteBlogPost(id);
+        setPosts(posts.filter(post => post.id !== id));
+        toast.success("Post deleted successfully");
       } catch (error) {
         console.error("Error deleting post:", error);
         toast.error("Failed to delete post");

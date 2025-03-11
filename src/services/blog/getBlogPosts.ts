@@ -1,124 +1,113 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { BlogPost } from "@/types/blog";
-import { transformDatabasePost } from "./utils";
+import { BlogPost, BlogTranslation } from "@/types/blog";
 
-// Get all blog posts
-export const getBlogPosts = async (): Promise<BlogPost[]> => {
-  const { data: posts, error } = await supabase
+/**
+ * Fetch all blog posts from the database
+ */
+export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
+  const { data, error } = await supabase
     .from('blog_posts')
-    .select(`
-      *,
-      blog_translations (
-        language,
-        title,
-        excerpt,
-        content
-      )
-    `);
+    .select('*')
+    .order('date', { ascending: false });
 
-  if (error) throw error;
-  return posts.map(transformDatabasePost);
+  if (error) {
+    console.error("Error fetching blog posts:", error);
+    throw new Error(`Failed to fetch blog posts: ${error.message}`);
+  }
+
+  return data || [];
 };
 
-// Get a single blog post by ID
-export const getBlogPostById = async (id: string): Promise<BlogPost | undefined> => {
-  const { data: post, error } = await supabase
+/**
+ * Fetch a single blog post by ID
+ */
+export const fetchBlogPostById = async (id: string): Promise<BlogPost | null> => {
+  const { data, error } = await supabase
     .from('blog_posts')
-    .select(`
-      *,
-      blog_translations (
-        language,
-        title,
-        excerpt,
-        content
-      )
-    `)
+    .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
-  if (error) throw error;
-  if (!post) return undefined;
-  
-  return transformDatabasePost(post);
+  if (error) {
+    console.error(`Error fetching blog post with ID ${id}:`, error);
+    throw new Error(`Failed to fetch blog post: ${error.message}`);
+  }
+
+  return data;
 };
 
-// Get a single blog post by slug
-export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | undefined> => {
-  const { data: post, error } = await supabase
+/**
+ * Fetch a single blog post by slug
+ */
+export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
+  const { data, error } = await supabase
     .from('blog_posts')
-    .select(`
-      *,
-      blog_translations (
-        language,
-        title,
-        excerpt,
-        content
-      )
-    `)
+    .select('*')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
 
-  if (error) throw error;
-  if (!post) return undefined;
+  if (error) {
+    console.error(`Error fetching blog post with slug ${slug}:`, error);
+    throw new Error(`Failed to fetch blog post: ${error.message}`);
+  }
 
-  return transformDatabasePost(post);
+  return data;
 };
 
-// Get featured posts
-export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
-  const { data: posts, error } = await supabase
+/**
+ * Fetch all blog post translations for a specific post
+ */
+export const fetchBlogTranslations = async (postId: string): Promise<BlogTranslation[]> => {
+  const { data, error } = await supabase
+    .from('blog_translations')
+    .select('*')
+    .eq('blog_post_id', postId);
+
+  if (error) {
+    console.error(`Error fetching translations for post ${postId}:`, error);
+    throw new Error(`Failed to fetch blog translations: ${error.message}`);
+  }
+
+  return data || [];
+};
+
+/**
+ * Fetch a specific translation by post ID and language
+ */
+export const fetchBlogTranslation = async (
+  postId: string, 
+  language: string
+): Promise<BlogTranslation | null> => {
+  const { data, error } = await supabase
+    .from('blog_translations')
+    .select('*')
+    .eq('blog_post_id', postId)
+    .eq('language', language)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`Error fetching ${language} translation for post ${postId}:`, error);
+    throw new Error(`Failed to fetch blog translation: ${error.message}`);
+  }
+
+  return data;
+};
+
+/**
+ * Fetch featured blog posts
+ */
+export const fetchFeaturedBlogPosts = async (): Promise<BlogPost[]> => {
+  const { data, error } = await supabase
     .from('blog_posts')
-    .select(`
-      *,
-      blog_translations (
-        language,
-        title,
-        excerpt,
-        content
-      )
-    `)
+    .select('*')
     .eq('featured', true)
-    .limit(3);
+    .order('date', { ascending: false });
 
-  if (error) throw error;
-  return posts.map(transformDatabasePost);
-};
+  if (error) {
+    console.error("Error fetching featured blog posts:", error);
+    throw new Error(`Failed to fetch featured blog posts: ${error.message}`);
+  }
 
-// Get posts by category
-export const getPostsByCategory = async (category: string): Promise<BlogPost[]> => {
-  const { data: posts, error } = await supabase
-    .from('blog_posts')
-    .select(`
-      *,
-      blog_translations (
-        language,
-        title,
-        excerpt,
-        content
-      )
-    `)
-    .eq('category', category);
-
-  if (error) throw error;
-  return posts.map(transformDatabasePost);
-};
-
-// Search posts
-export const searchPosts = async (query: string): Promise<BlogPost[]> => {
-  const { data: posts, error } = await supabase
-    .from('blog_posts')
-    .select(`
-      *,
-      blog_translations (
-        language,
-        title,
-        excerpt,
-        content
-      )
-    `)
-    .or(`title.ilike.%${query}%, content.ilike.%${query}%, excerpt.ilike.%${query}%`);
-
-  if (error) throw error;
-  return posts.map(transformDatabasePost);
+  return data || [];
 };

@@ -1,143 +1,157 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { BlogPost } from "@/types/blog";
-import { transformDatabasePost, transformPostForDatabase } from "./utils";
+import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
+import { toast } from "sonner";
 
-// Check authentication status
-const checkAuth = async () => {
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) {
-    throw new Error("User must be authenticated to perform this operation");
-  }
-};
-
-// Create a new blog post
-export const createBlogPost = async (postData: any): Promise<BlogPost> => {
-  await checkAuth();
-  
-  console.log("Creating blog post with data:", postData);
-  
-  const { translations, ...blogPostData } = postData;
-  const supabaseData = transformPostForDatabase(blogPostData);
-  
-  console.log("Prepared data for Supabase:", supabaseData);
-  
-  // Insert blog post
-  const { data: post, error: postError } = await supabase
+/**
+ * Create a new blog post
+ */
+export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
+  const { data, error } = await supabase
     .from('blog_posts')
-    .insert([supabaseData])
+    .insert(post)
     .select()
     .single();
 
-  if (postError) {
-    console.error("Error creating blog post:", postError);
-    throw postError;
+  if (error) {
+    console.error("Error creating blog post:", error);
+    toast.error(`Failed to create blog post: ${error.message}`);
+    throw new Error(`Failed to create blog post: ${error.message}`);
   }
 
-  console.log("Blog post created:", post);
-
-  // Insert translations if provided
-  if (translations) {
-    await insertTranslations(post.id, translations);
-  }
-
-  return transformDatabasePost(post);
+  toast.success("Blog post created successfully");
+  return data;
 };
 
-// Update an existing blog post
-export const updateBlogPost = async (id: string, postData: any): Promise<BlogPost | undefined> => {
-  await checkAuth();
-  
-  console.log("Updating blog post with data:", postData);
-  
-  const { translations, ...blogPostData } = postData;
-  const supabaseData = transformPostForDatabase(blogPostData);
-  
-  console.log("Prepared data for Supabase:", supabaseData);
-  
-  // Update blog post
-  const { data: post, error: postError } = await supabase
+/**
+ * Create a new blog post translation
+ */
+export const createBlogTranslation = async (
+  translation: NewBlogTranslation
+): Promise<BlogTranslation> => {
+  const { data, error } = await supabase
+    .from('blog_translations')
+    .insert(translation)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating blog translation:", error);
+    toast.error(`Failed to create translation: ${error.message}`);
+    throw new Error(`Failed to create blog translation: ${error.message}`);
+  }
+
+  toast.success(`Translation for "${translation.language}" created successfully`);
+  return data;
+};
+
+/**
+ * Update an existing blog post
+ */
+export const updateBlogPost = async (
+  id: string, 
+  updates: Partial<BlogPost>
+): Promise<BlogPost> => {
+  const { data, error } = await supabase
     .from('blog_posts')
-    .update(supabaseData)
+    .update(updates)
     .eq('id', id)
     .select()
     .single();
 
-  if (postError) {
-    console.error("Error updating blog post:", postError);
-    throw postError;
+  if (error) {
+    console.error(`Error updating blog post ${id}:`, error);
+    toast.error(`Failed to update blog post: ${error.message}`);
+    throw new Error(`Failed to update blog post: ${error.message}`);
   }
 
-  console.log("Blog post updated:", post);
-
-  // Update translations
-  if (translations) {
-    await updateTranslations(id, translations);
-  }
-
-  return transformDatabasePost(post);
+  toast.success("Blog post updated successfully");
+  
+  // Dispatch event to notify other components that blog data has changed
+  window.dispatchEvent(new CustomEvent('blogPostUpdated', { detail: data }));
+  
+  return data;
 };
 
-// Delete a blog post
-export const deleteBlogPost = async (id: string): Promise<boolean> => {
-  await checkAuth();
+/**
+ * Update an existing blog translation
+ */
+export const updateBlogTranslation = async (
+  id: string,
+  updates: Partial<BlogTranslation>
+): Promise<BlogTranslation> => {
+  const { data, error } = await supabase
+    .from('blog_translations')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating blog translation ${id}:`, error);
+    toast.error(`Failed to update translation: ${error.message}`);
+    throw new Error(`Failed to update blog translation: ${error.message}`);
+  }
+
+  toast.success(`Translation updated successfully`);
   
-  console.log("Deleting blog post:", id);
+  // Dispatch event to notify other components
+  window.dispatchEvent(new CustomEvent('blogTranslationUpdated', { detail: data }));
   
+  return data;
+};
+
+/**
+ * Delete a blog post and its translations
+ */
+export const deleteBlogPost = async (id: string): Promise<void> => {
+  // First delete all translations (they have a foreign key constraint)
+  const { error: translationsError } = await supabase
+    .from('blog_translations')
+    .delete()
+    .eq('blog_post_id', id);
+
+  if (translationsError) {
+    console.error(`Error deleting translations for blog post ${id}:`, translationsError);
+    toast.error(`Failed to delete blog post translations: ${translationsError.message}`);
+    throw new Error(`Failed to delete blog post translations: ${translationsError.message}`);
+  }
+
+  // Then delete the blog post
   const { error } = await supabase
     .from('blog_posts')
     .delete()
     .eq('id', id);
 
   if (error) {
-    console.error("Error deleting blog post:", error);
-    throw error;
+    console.error(`Error deleting blog post ${id}:`, error);
+    toast.error(`Failed to delete blog post: ${error.message}`);
+    throw new Error(`Failed to delete blog post: ${error.message}`);
   }
+
+  toast.success("Blog post deleted successfully");
   
-  console.log("Blog post deleted successfully");
-  return true;
+  // Dispatch event to notify other components
+  window.dispatchEvent(new CustomEvent('blogPostDeleted', { detail: { id } }));
 };
 
-// Helper function to insert translations
-const insertTranslations = async (postId: string, translations: any) => {
-  const translationsArray = Object.entries(translations)
-    .filter(([language, content]: [string, any]) => 
-      content && (content.title || content.excerpt || content.content))
-    .map(([language, content]: [string, any]) => ({
-      blog_post_id: postId,
-      language,
-      title: content.title || "",
-      excerpt: content.excerpt || "",
-      content: content.content || ""
-    }));
-
-  if (translationsArray.length > 0) {
-    console.log("Inserting translations:", translationsArray);
-    
-    const { error: translationError } = await supabase
-      .from('blog_translations')
-      .insert(translationsArray);
-
-    if (translationError) {
-      console.error("Error inserting translations:", translationError);
-      throw translationError;
-    }
-  }
-};
-
-// Helper function to update translations
-const updateTranslations = async (postId: string, translations: any) => {
-  // Delete existing translations
-  const { error: deleteError } = await supabase
+/**
+ * Delete a specific blog translation
+ */
+export const deleteBlogTranslation = async (id: string): Promise<void> => {
+  const { error } = await supabase
     .from('blog_translations')
     .delete()
-    .eq('blog_post_id', postId);
+    .eq('id', id);
 
-  if (deleteError) {
-    console.error("Error deleting existing translations:", deleteError);
-    throw deleteError;
+  if (error) {
+    console.error(`Error deleting blog translation ${id}:`, error);
+    toast.error(`Failed to delete translation: ${error.message}`);
+    throw new Error(`Failed to delete blog translation: ${error.message}`);
   }
 
-  // Insert new translations
-  await insertTranslations(postId, translations);
+  toast.success("Translation deleted successfully");
+  
+  // Dispatch event to notify other components
+  window.dispatchEvent(new CustomEvent('blogTranslationDeleted', { detail: { id } }));
 };

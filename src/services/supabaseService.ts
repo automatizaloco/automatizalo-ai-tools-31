@@ -1,173 +1,86 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { BlogPost } from "@/types/blog";
+import { supabase } from '@/integrations/supabase/client';
+import { ContactInfo } from '@/stores/contactInfoStore';
+import { toast } from 'sonner';
 
-// Blog posts
-export const fetchBlogPosts = async () => {
-  const { data, error } = await supabase
-    .from('blog_posts')
-    .select('*');
-  
-  if (error) throw error;
-  
-  // Transform to match our app's data model
-  return data.map(post => ({
-    ...post,
-    readTime: post.read_time
-  }));
-};
-
-export const fetchBlogPostBySlug = async (slug: string) => {
-  const { data, error } = await supabase
-    .from('blog_posts')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-  
-  if (error) throw error;
-  
-  // Transform to match our app's data model
-  return {
-    ...data,
-    readTime: data.read_time
-  };
-};
-
-// Contact info
-export const fetchContactInfo = async () => {
-  const { data, error } = await supabase
-    .from('contact_info')
-    .select('*')
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const updateContactInfo = async (updates: {
-  phone?: string;
-  email?: string;
-  address?: string;
-  website?: string;
-}) => {
-  // Check if user is authenticated
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) {
-    throw new Error("User must be authenticated to update contact info");
-  }
-  
-  const { data, error } = await supabase
-    .from('contact_info')
-    .update(updates)
-    .eq('id', (await fetchContactInfo()).id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-// Testimonials
+/**
+ * Fetch all testimonials
+ */
 export const fetchTestimonials = async () => {
   const { data, error } = await supabase
     .from('testimonials')
     .select('*')
     .order('created_at', { ascending: false });
-  
+
   if (error) {
-    console.error('Error fetching testimonials:', error);
-    throw error;
+    console.error("Error fetching testimonials:", error);
+    throw new Error(`Failed to fetch testimonials: ${error.message}`);
   }
-  
-  return data;
+
+  return data || [];
 };
 
-export const createTestimonial = async (testimonial: {
-  name: string;
-  company?: string | null;
-  text: string;
-}) => {
-  console.log('Creating testimonial:', testimonial);
-  
-  // Make sure we have a user session
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) {
-    throw new Error("User must be authenticated to create testimonials");
+/**
+ * Fetch contact information
+ */
+export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
+  try {
+    // Fetch the first record from contact_info table
+    const { data, error } = await supabase
+      .from('contact_info')
+      .select('*')
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching contact information:", error);
+    throw new Error(`Failed to fetch contact information: ${error.message}`);
   }
-  
-  const { data, error } = await supabase
-    .from('testimonials')
-    .insert({
-      ...testimonial,
-      // Ensure null is handled properly for optional company field
-      company: testimonial.company || null
-    })
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Error creating testimonial:', error);
-    throw error;
-  }
-  
-  console.log('Testimonial created successfully:', data);
-  return data;
 };
 
-export const updateTestimonial = async (
-  id: string,
-  updates: {
-    name?: string;
-    company?: string | null;
-    text?: string;
-  }
-) => {
-  console.log('Updating testimonial:', id, updates);
-  
-  // Make sure we have a user session
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) {
-    throw new Error("User must be authenticated to update testimonials");
-  }
-  
-  const { data, error } = await supabase
-    .from('testimonials')
-    .update({
-      ...updates,
-      // Ensure null is handled properly for optional company field
-      company: updates.company || null
-    })
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Error updating testimonial:', error);
-    throw error;
-  }
-  
-  console.log('Testimonial updated successfully:', data);
-  return data;
-};
+/**
+ * Update contact information
+ */
+export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<ContactInfo> => {
+  try {
+    // Check if there's existing contact info
+    const { data: existingData } = await supabase
+      .from('contact_info')
+      .select('id')
+      .maybeSingle();
 
-export const deleteTestimonial = async (id: string) => {
-  console.log('Deleting testimonial:', id);
-  
-  // Make sure we have a user session
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) {
-    throw new Error("User must be authenticated to delete testimonials");
+    let result;
+    
+    if (existingData?.id) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('contact_info')
+        .update(info)
+        .eq('id', existingData.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      result = data;
+    } else {
+      // Insert new record
+      const { data, error } = await supabase
+        .from('contact_info')
+        .insert(info)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      result = data;
+    }
+    
+    return result;
+  } catch (error: any) {
+    console.error("Error updating contact information:", error);
+    throw new Error(`Failed to update contact information: ${error.message}`);
   }
-  
-  const { error } = await supabase
-    .from('testimonials')
-    .delete()
-    .eq('id', id);
-  
-  if (error) {
-    console.error('Error deleting testimonial:', error);
-    throw error;
-  }
-  
-  console.log('Testimonial deleted successfully');
 };

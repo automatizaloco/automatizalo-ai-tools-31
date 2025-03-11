@@ -12,7 +12,7 @@ import { AlertCircle, Info } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("contact@automatizalo.co");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("Automatizalo2025@");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
@@ -25,6 +25,7 @@ const Login = () => {
     setError(null);
     
     try {
+      console.log("Attempting login with:", { email });
       const success = await login(email, password);
       if (success) {
         navigate("/admin/blog");

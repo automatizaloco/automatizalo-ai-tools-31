@@ -70,6 +70,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log(`Attempting to login with email: ${email}`);
+      
       // Sign in with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -83,6 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       if (!data.session) {
+        console.error("No session created");
         toast.error("No session created. Please try again.");
         return false;
       }
@@ -93,6 +96,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAuthenticated(true);
       localStorage.setItem("user", JSON.stringify(userData));
       toast.success("Successfully logged in");
+      console.log("Login successful, user data:", userData);
       return true;
     } catch (error) {
       console.error("Unexpected error during login:", error);

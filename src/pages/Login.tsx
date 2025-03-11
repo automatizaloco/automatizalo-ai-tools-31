@@ -25,13 +25,7 @@ const Login = () => {
     setError(null);
     
     try {
-      // For this demo, only one admin account is supported
-      if (email !== "contact@automatizalo.co") {
-        setError("Invalid email. Use 'contact@automatizalo.co'");
-        setIsLoading(false);
-        return;
-      }
-      
+      // Attempt to login with provided credentials
       const success = await login(email, password);
       if (success) {
         navigate("/admin/blog");
@@ -78,7 +72,7 @@ const Login = () => {
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="contact@automatizalo.co"
+                  placeholder="Enter your email"
                   required
                   className={theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : ''}
                 />
@@ -105,12 +99,6 @@ const Login = () => {
               >
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
-              
-              <div className="text-center text-sm text-gray-500 mt-4">
-                <p>Default admin credentials:</p>
-                <p>Email: contact@automatizalo.co</p>
-                <p>Password: Automatizalo2025@</p>
-              </div>
             </form>
           </div>
         </div>

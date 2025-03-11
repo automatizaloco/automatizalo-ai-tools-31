@@ -31,25 +31,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Also sign in with Supabase to ensure session is valid
       const setupSupabaseAuth = async () => {
-        // Sign in with Supabase using stored credentials
-        if (userData.email === "contact@automatizalo.co") {
-          try {
-            const { error } = await supabase.auth.signInWithPassword({
-              email: userData.email,
-              password: "Automatizalo2025@" // Using the hardcoded password from login function
-            });
-            
-            if (error) {
-              console.error("Error signing in with Supabase:", error);
-              // If Supabase auth fails, clear local storage and reset state
-              localStorage.removeItem("user");
-              setUser(null);
-              setIsAuthenticated(false);
-              toast.error("Session expired. Please login again.");
-            }
-          } catch (error) {
-            console.error("Unexpected error during Supabase auth:", error);
-          }
+        // Check the Supabase session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          // If no valid session, clear local storage
+          localStorage.removeItem("user");
+          setUser(null);
+          setIsAuthenticated(false);
+          toast.error("Session expired. Please login again.");
         }
       };
       
@@ -63,6 +53,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(null);
           setIsAuthenticated(false);
           localStorage.removeItem("user");
+        } else if (event === 'SIGNED_IN' && session) {
+          const userData = { email: session.user.email || '', isAdmin: true };
+          setUser(userData);
+          setIsAuthenticated(true);
+          localStorage.setItem("user", JSON.stringify(userData));
         }
       }
     );
@@ -74,36 +69,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // For demonstration purposes, let's hardcode the admin credentials
-    // In a real app, this would be handled by a secure backend
-    if (email === "contact@automatizalo.co" && password === "Automatizalo2025@") {
-      try {
-        // Sign in with Supabase
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (error) {
-          console.error("Supabase auth error:", error);
-          toast.error(error.message || "Invalid credentials");
-          return false;
-        }
-        
-        // If Supabase login successful, store user data
-        const userData = { email, isAdmin: true };
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem("user", JSON.stringify(userData));
-        toast.success("Successfully logged in");
-        return true;
-      } catch (error) {
-        console.error("Unexpected error during login:", error);
-        toast.error("Login failed. Please try again.");
+    try {
+      // Sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error("Supabase auth error:", error);
+        toast.error(error.message || "Invalid credentials");
         return false;
       }
-    } else {
-      toast.error("Invalid credentials");
+      
+      if (!data.session) {
+        toast.error("No session created. Please try again.");
+        return false;
+      }
+      
+      // If Supabase login successful, store user data
+      const userData = { email, isAdmin: true };
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem("user", JSON.stringify(userData));
+      toast.success("Successfully logged in");
+      return true;
+    } catch (error) {
+      console.error("Unexpected error during login:", error);
+      toast.error("Login failed. Please try again.");
       return false;
     }
   };

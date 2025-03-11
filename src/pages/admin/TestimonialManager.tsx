@@ -11,12 +11,19 @@ import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
+import { 
+  fetchTestimonials, 
+  createTestimonial, 
+  updateTestimonial, 
+  deleteTestimonial 
+} from "@/services/supabaseService";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Testimonial {
-  id: number;
+  id: string;
   name: string;
-  company: string;
+  company: string | null;
   text: string;
 }
 
@@ -24,26 +31,63 @@ const TestimonialManager = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
-  
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([
-    {
-      id: 1,
-      name: t("testimonials.client1.name"),
-      company: "",
-      text: t("testimonials.client1.text")
-    },
-    {
-      id: 2,
-      name: t("testimonials.client2.name"),
-      company: "",
-      text: t("testimonials.client2.text")
-    }
-  ]);
+  const queryClient = useQueryClient();
   
   const [newTestimonial, setNewTestimonial] = useState<Omit<Testimonial, 'id'>>({
     name: "",
     company: "",
     text: ""
+  });
+
+  // Fetch testimonials from Supabase
+  const { data: testimonials = [], isLoading } = useQuery({
+    queryKey: ['testimonials'],
+    queryFn: fetchTestimonials
+  });
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: createTestimonial,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      toast.success("Testimonial added successfully!");
+      setNewTestimonial({
+        name: "",
+        company: "",
+        text: ""
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating testimonial:', error);
+      toast.error("Failed to add testimonial");
+    }
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Testimonial> }) => 
+      updateTestimonial(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      toast.success("Testimonial updated successfully!");
+    },
+    onError: (error) => {
+      console.error('Error updating testimonial:', error);
+      toast.error("Failed to update testimonial");
+    }
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteTestimonial,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      toast.success("Testimonial deleted successfully!");
+    },
+    onError: (error) => {
+      console.error('Error deleting testimonial:', error);
+      toast.error("Failed to delete testimonial");
+    }
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -54,12 +98,12 @@ const TestimonialManager = () => {
     }));
   };
 
-  const handleTestimonialChange = (id: number, field: keyof Testimonial, value: string) => {
-    setTestimonials(prev => 
-      prev.map(testimonial => 
-        testimonial.id === id ? { ...testimonial, [field]: value } : testimonial
-      )
-    );
+  const handleTestimonialChange = (id: string, field: keyof Testimonial, value: string) => {
+    // We're not updating state locally anymore, the mutation will handle refreshing data
+    updateMutation.mutate({ 
+      id, 
+      updates: { [field]: value } 
+    });
   };
 
   const handleAddTestimonial = () => {
@@ -68,44 +112,12 @@ const TestimonialManager = () => {
       return;
     }
     
-    const newId = Math.max(0, ...testimonials.map(t => t.id)) + 1;
-    
-    setTestimonials(prev => [
-      ...prev,
-      { ...newTestimonial, id: newId }
-    ]);
-    
-    setNewTestimonial({
-      name: "",
-      company: "",
-      text: ""
-    });
-    
-    toast.success("Testimonial added successfully!");
+    createMutation.mutate(newTestimonial);
   };
 
-  const handleDeleteTestimonial = (id: number) => {
-    setTestimonials(prev => prev.filter(testimonial => testimonial.id !== id));
-    toast.success("Testimonial deleted successfully!");
+  const handleDeleteTestimonial = (id: string) => {
+    deleteMutation.mutate(id);
   };
-
-  const handleSaveAllTestimonials = () => {
-    localStorage.setItem('testimonials', JSON.stringify(testimonials));
-    toast.success("All testimonials saved successfully!");
-  };
-
-  React.useEffect(() => {
-    const savedTestimonials = localStorage.getItem('testimonials');
-    if (savedTestimonials) {
-      // Convert old testimonials format if needed (remove rating)
-      const parsedTestimonials = JSON.parse(savedTestimonials);
-      const cleanedTestimonials = parsedTestimonials.map(
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        ({ rating, ...rest }: { rating?: number, [key: string]: any }) => rest
-      );
-      setTestimonials(cleanedTestimonials);
-    }
-  }, []);
 
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -152,7 +164,7 @@ const TestimonialManager = () => {
                   <Input
                     id="company"
                     name="company"
-                    value={newTestimonial.company}
+                    value={newTestimonial.company || ""}
                     onChange={handleInputChange}
                     placeholder="e.g. Acme Inc."
                   />
@@ -171,8 +183,19 @@ const TestimonialManager = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button onClick={handleAddTestimonial} className="ml-auto">
-                  Add Testimonial
+                <Button 
+                  onClick={handleAddTestimonial} 
+                  className="ml-auto"
+                  disabled={createMutation.isPending}
+                >
+                  {createMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Testimonial"
+                  )}
                 </Button>
               </CardFooter>
             </Card>
@@ -183,62 +206,70 @@ const TestimonialManager = () => {
                 <CardDescription>Edit or delete existing testimonials</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {testimonials.map((testimonial) => (
-                  <div key={testimonial.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2 w-full">
-                        <div>
-                          <Label htmlFor={`name-${testimonial.id}`}>Client Name</Label>
-                          <Input
-                            id={`name-${testimonial.id}`}
-                            value={testimonial.name}
-                            onChange={(e) => handleTestimonialChange(testimonial.id, 'name', e.target.value)}
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor={`company-${testimonial.id}`}>Company (Optional)</Label>
-                          <Input
-                            id={`company-${testimonial.id}`}
-                            value={testimonial.company}
-                            onChange={(e) => handleTestimonialChange(testimonial.id, 'company', e.target.value)}
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor={`text-${testimonial.id}`}>Testimonial Text</Label>
-                          <Textarea
-                            id={`text-${testimonial.id}`}
-                            value={testimonial.text}
-                            onChange={(e) => handleTestimonialChange(testimonial.id, 'text', e.target.value)}
-                            rows={3}
-                          />
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+                  </div>
+                ) : (
+                  <>
+                    {testimonials.map((testimonial) => (
+                      <div key={testimonial.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2 w-full">
+                            <div>
+                              <Label htmlFor={`name-${testimonial.id}`}>Client Name</Label>
+                              <Input
+                                id={`name-${testimonial.id}`}
+                                value={testimonial.name}
+                                onChange={(e) => handleTestimonialChange(testimonial.id, 'name', e.target.value)}
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`company-${testimonial.id}`}>Company (Optional)</Label>
+                              <Input
+                                id={`company-${testimonial.id}`}
+                                value={testimonial.company || ""}
+                                onChange={(e) => handleTestimonialChange(testimonial.id, 'company', e.target.value)}
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`text-${testimonial.id}`}>Testimonial Text</Label>
+                              <Textarea
+                                id={`text-${testimonial.id}`}
+                                value={testimonial.text}
+                                onChange={(e) => handleTestimonialChange(testimonial.id, 'text', e.target.value)}
+                                rows={3}
+                              />
+                            </div>
+                          </div>
+                          
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="ml-4"
+                            onClick={() => handleDeleteTestimonial(testimonial.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            {deleteMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
                         </div>
                       </div>
-                      
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="ml-4"
-                        onClick={() => handleDeleteTestimonial(testimonial.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                
-                {testimonials.length === 0 && (
-                  <div className="text-center p-8 text-gray-500">
-                    No testimonials yet. Add your first one above.
-                  </div>
+                    ))}
+                    
+                    {testimonials.length === 0 && (
+                      <div className="text-center p-8 text-gray-500">
+                        No testimonials yet. Add your first one above.
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
-              <CardFooter>
-                <Button onClick={handleSaveAllTestimonials} className="ml-auto">
-                  Save All Changes
-                </Button>
-              </CardFooter>
             </Card>
           </div>
         </div>

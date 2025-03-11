@@ -16,7 +16,7 @@ import BlogFormFields from "@/components/admin/blog/BlogFormFields";
 const BlogPostForm = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -47,7 +47,8 @@ const BlogPostForm = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/login");
+      toast.error("Please log in to access this page");
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -163,8 +164,13 @@ const BlogPostForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("Submitting form with data:", formData);
 
     try {
+      if (!isAuthenticated) {
+        throw new Error("You must be logged in to perform this action");
+      }
+
       const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
       
       const postData: any = {
@@ -182,10 +188,14 @@ const BlogPostForm = () => {
         translations: editingTranslation ? translationData : formData.translations
       };
 
+      console.log("Post data prepared for saving:", postData);
+
       if (id) {
+        console.log("Updating existing post with ID:", id);
         await updateBlogPost(id, postData);
         toast.success("Post updated successfully");
       } else {
+        console.log("Creating new post");
         await createBlogPost(postData);
         toast.success("Post created successfully");
       }
@@ -193,7 +203,7 @@ const BlogPostForm = () => {
       navigate("/admin/blog");
     } catch (error) {
       console.error("Error saving post:", error);
-      toast.error("Failed to save post");
+      toast.error(`Failed to save post: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }

@@ -10,11 +10,13 @@ import { toast } from "sonner";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/context/AuthContext";
+import { useContactInfo } from "@/stores/contactInfoStore";
 
 const ContentManager = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("home");
+  const { contactInfo, updateContactInfo } = useContactInfo();
 
   const [homeContent, setHomeContent] = useState({
     heroImage: "/path/to/hero-image.jpg",
@@ -38,10 +40,10 @@ const ContentManager = () => {
   });
 
   const [contactContent, setContactContent] = useState({
-    phone: "+1 (555) 123-4567",
-    email: "contact@automatizalo.co",
-    address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
-    website: "https://automatizalo.co"
+    phone: contactInfo.phone,
+    email: contactInfo.email,
+    address: contactInfo.address,
+    website: contactInfo.website
   });
 
   const [footerContent, setFooterContent] = useState({
@@ -56,19 +58,34 @@ const ContentManager = () => {
     socialMedia: "Social Media",
     aiAgents: "AI Agents",
     contactUs: "Contact Us",
-    phone: "+1 (555) 123-4567",
-    email: "contact@automatizalo.co",
-    address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
-    website: "https://automatizalo.co",
+    phone: contactInfo.phone,
+    email: contactInfo.email,
+    address: contactInfo.address,
+    website: contactInfo.website,
     allRightsReserved: "All rights reserved."
   });
+
+  useEffect(() => {
+    setContactContent({
+      phone: contactInfo.phone,
+      email: contactInfo.email,
+      address: contactInfo.address,
+      website: contactInfo.website
+    });
+    
+    setFooterContent(prev => ({
+      ...prev,
+      phone: contactInfo.phone,
+      email: contactInfo.email,
+      address: contactInfo.address,
+      website: contactInfo.website
+    }));
+  }, [contactInfo]);
 
   useEffect(() => {
     try {
       const savedHomeContent = localStorage.getItem('homeContent');
       const savedSolutionsContent = localStorage.getItem('solutionsContent');
-      const savedContactContent = localStorage.getItem('contactContent');
-      const savedFooterContent = localStorage.getItem('footerContent');
       
       if (savedHomeContent) {
         setHomeContent(JSON.parse(savedHomeContent));
@@ -76,14 +93,6 @@ const ContentManager = () => {
       
       if (savedSolutionsContent) {
         setSolutionsContent(JSON.parse(savedSolutionsContent));
-      }
-      
-      if (savedContactContent) {
-        setContactContent(JSON.parse(savedContactContent));
-      }
-
-      if (savedFooterContent) {
-        setFooterContent(JSON.parse(savedFooterContent));
       }
     } catch (error) {
       console.error("Error loading saved content:", error);
@@ -150,16 +159,30 @@ const ContentManager = () => {
     }
   };
 
-  const handleSaveContent = (section: string) => {
+  const handleSaveContent = async (section: string) => {
     try {
       if (section === "home") {
         localStorage.setItem('homeContent', JSON.stringify(homeContent));
       } else if (section === "solutions") {
         localStorage.setItem('solutionsContent', JSON.stringify(solutionsContent));
       } else if (section === "contact") {
-        localStorage.setItem('contactContent', JSON.stringify(contactContent));
+        await updateContactInfo(contactContent);
       } else if (section === "footer") {
-        localStorage.setItem('footerContent', JSON.stringify(footerContent));
+        await updateContactInfo({
+          phone: footerContent.phone,
+          email: footerContent.email,
+          address: footerContent.address,
+          website: footerContent.website
+        });
+        
+        const footerTextContent = {
+          ...footerContent,
+          phone: undefined,
+          email: undefined,
+          address: undefined,
+          website: undefined
+        };
+        localStorage.setItem('footerContent', JSON.stringify(footerTextContent));
       }
       
       toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} content updated successfully!`);

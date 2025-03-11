@@ -50,6 +50,12 @@ export const updateContactInfo = async (updates: {
   address?: string;
   website?: string;
 }) => {
+  // Check if user is authenticated
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    throw new Error("User must be authenticated to update contact info");
+  }
+  
   const { data, error } = await supabase
     .from('contact_info')
     .update(updates)

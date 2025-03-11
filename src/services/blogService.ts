@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { BlogPost } from '@/types/blog';
 import { generateTranslations } from './translationService';
@@ -152,11 +153,17 @@ export const createBlogPost = async (postData: any): Promise<BlogPost> => {
   
   const { translations, ...blogPostData } = postData;
   
-  // Prepare data for Supabase
+  // Prepare data for Supabase - fix the field name mismatch
   const supabaseData = {
     ...blogPostData,
     read_time: blogPostData.readTime, // Map from readTime to read_time
+    readTime: undefined // Remove readTime as it's not in the database schema
   };
+  
+  // Remove the undefined property
+  delete supabaseData.readTime;
+  
+  console.log("Prepared data for Supabase:", supabaseData);
   
   // Insert blog post
   const { data: post, error: postError } = await supabase
@@ -224,11 +231,17 @@ export const updateBlogPost = async (id: string, postData: any): Promise<BlogPos
   
   const { translations, ...blogPostData } = postData;
   
-  // Prepare data for Supabase
+  // Prepare data for Supabase - fix the field name mismatch
   const supabaseData = {
     ...blogPostData,
     read_time: blogPostData.readTime, // Map from readTime to read_time
+    readTime: undefined // Remove readTime as it's not in the database schema
   };
+  
+  // Remove the undefined property
+  delete supabaseData.readTime;
+  
+  console.log("Prepared data for Supabase:", supabaseData);
   
   // Update blog post
   const { data: post, error: postError } = await supabase

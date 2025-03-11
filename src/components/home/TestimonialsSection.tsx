@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
@@ -7,65 +6,37 @@ import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface Testimonial {
-  id: number;
+  id: string;
   name: string;
-  company: string;
+  company: string | null;
   text: string;
 }
 
 const TestimonialsSection: React.FC = () => {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [maxSlides, setMaxSlides] = useState(0);
 
-  useEffect(() => {
-    const savedTestimonials = localStorage.getItem('testimonials');
-    if (savedTestimonials) {
-      const loadedTestimonials = JSON.parse(savedTestimonials);
-      setTestimonials(loadedTestimonials);
-      setMaxSlides(Math.max(0, Math.ceil(loadedTestimonials.length / 3) - 1));
-    } else {
-      const defaultTestimonials = [
-        {
-          id: 1,
-          name: t("testimonials.client1.name"),
-          company: "Company A",
-          text: t("testimonials.client1.text")
-        },
-        {
-          id: 2,
-          name: t("testimonials.client2.name"),
-          company: "Company B",
-          text: t("testimonials.client2.text")
-        },
-        {
-          id: 3,
-          name: "John Smith",
-          company: "Company C",
-          text: "Their AI solutions have completely transformed how we operate our business. Highly recommended!"
-        },
-        {
-          id: 4,
-          name: "Sarah Johnson",
-          company: "Company D",
-          text: "Outstanding service and exceptional results. Would definitely recommend!"
-        },
-        {
-          id: 5,
-          name: "Michael Brown",
-          company: "Company E",
-          text: "The team's expertise in AI implementation is unmatched. Great experience working with them!"
-        }
-      ];
-      setTestimonials(defaultTestimonials);
-      localStorage.setItem('testimonials', JSON.stringify(defaultTestimonials));
-      setMaxSlides(Math.max(0, Math.ceil(defaultTestimonials.length / 3) - 1));
+  const { data: testimonials = [] } = useQuery({
+    queryKey: ['testimonials'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*');
+      
+      if (error) throw error;
+      return data;
     }
-  }, [t]);
+  });
+
+  useEffect(() => {
+    setMaxSlides(Math.max(0, Math.ceil(testimonials.length / 3) - 1));
+  }, [testimonials]);
 
   useEffect(() => {
     const timer = setInterval(() => {

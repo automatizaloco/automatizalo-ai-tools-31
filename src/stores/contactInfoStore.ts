@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { fetchContactInfo, updateContactInfo } from '@/services/supabaseService';
 
 export interface ContactInfo {
   phone: string;
@@ -8,60 +9,47 @@ export interface ContactInfo {
   website: string;
 }
 
-// Default contact information
+// Default contact information (used while loading)
 const defaultContactInfo: ContactInfo = {
-  phone: "+1 (555) 123-4567",
-  email: "contact@automatizalo.co",
-  address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
-  website: "https://automatizalo.co"
-};
-
-// Get contact information from localStorage or use defaults
-export const getContactInfo = (): ContactInfo => {
-  try {
-    const savedContactInfo = localStorage.getItem('contactInfo');
-    if (savedContactInfo) {
-      return JSON.parse(savedContactInfo);
-    }
-  } catch (error) {
-    console.error("Error loading contact information:", error);
-  }
-  return defaultContactInfo;
-};
-
-// Save contact information to localStorage
-export const saveContactInfo = (info: ContactInfo): void => {
-  try {
-    localStorage.setItem('contactInfo', JSON.stringify(info));
-    // Dispatch event to notify other components
-    window.dispatchEvent(new CustomEvent('contactInfoUpdated', { detail: info }));
-  } catch (error) {
-    console.error("Error saving contact information:", error);
-  }
+  phone: "",
+  email: "",
+  address: "",
+  website: ""
 };
 
 // React hook to use contact information
 export const useContactInfo = () => {
-  const [contactInfo, setContactInfo] = useState<ContactInfo>(getContactInfo());
+  const [contactInfo, setContactInfo] = useState<ContactInfo>(defaultContactInfo);
+  const [loading, setLoading] = useState(true);
 
-  // Update contact information and save to localStorage
-  const updateContactInfo = (newInfo: Partial<ContactInfo>) => {
-    const updatedInfo = { ...contactInfo, ...newInfo };
-    setContactInfo(updatedInfo);
-    saveContactInfo(updatedInfo);
-  };
-
-  // Listen for updates from other components
+  // Load contact information from Supabase
   useEffect(() => {
-    const handleContactInfoUpdated = (event: CustomEvent<ContactInfo>) => {
-      setContactInfo(event.detail);
+    const loadContactInfo = async () => {
+      try {
+        const data = await fetchContactInfo();
+        setContactInfo(data);
+      } catch (error) {
+        console.error("Error loading contact information:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    window.addEventListener('contactInfoUpdated', handleContactInfoUpdated as EventListener);
-    return () => {
-      window.removeEventListener('contactInfoUpdated', handleContactInfoUpdated as EventListener);
-    };
+    loadContactInfo();
   }, []);
 
-  return { contactInfo, updateContactInfo };
+  // Update contact information in Supabase
+  const updateContactInfoData = async (newInfo: Partial<ContactInfo>) => {
+    try {
+      const updatedInfo = await updateContactInfo(newInfo);
+      setContactInfo(prevInfo => ({ ...prevInfo, ...updatedInfo }));
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('contactInfoUpdated', { detail: updatedInfo }));
+    } catch (error) {
+      console.error("Error saving contact information:", error);
+      throw error;
+    }
+  };
+
+  return { contactInfo, updateContactInfo: updateContactInfoData, loading };
 };

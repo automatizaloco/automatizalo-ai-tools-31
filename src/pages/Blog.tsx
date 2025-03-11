@@ -10,20 +10,21 @@ import CategoryFilter from "@/components/blog/CategoryFilter";
 import BlogList from "@/components/blog/BlogList";
 import NewsletterSignup from "@/components/blog/NewsletterSignup";
 import { useTheme } from "@/context/ThemeContext";
+import { useQuery } from "@tanstack/react-query";
 
 const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const { theme } = useTheme();
 
   // Categories
   const categories = ["All", "AI", "Automation", "Technology"];
 
-  useEffect(() => {
-    // Get posts from service
-    setBlogPosts(getBlogPosts());
-  }, []);
+  // Fetch blog posts using React Query
+  const { data: blogPosts = [], isLoading } = useQuery({
+    queryKey: ['blogPosts'],
+    queryFn: getBlogPosts
+  });
 
   useEffect(() => {
     if (activeCategory === "All") {
@@ -33,29 +34,24 @@ const Blog = () => {
     }
   }, [activeCategory, blogPosts]);
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          {/* Hero Section */}
           <BlogHero />
-          
-          {/* Featured Posts */}
           <FeaturedPosts posts={blogPosts} />
-          
-          {/* Category Filter */}
           <CategoryFilter 
             categories={categories} 
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
           />
-          
-          {/* All Blog Posts */}
           <BlogList posts={filteredPosts} />
-          
-          {/* Newsletter Signup */}
           <NewsletterSignup />
         </div>
       </main>

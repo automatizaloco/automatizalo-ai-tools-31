@@ -9,7 +9,155 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      blog_posts: {
+        Row: {
+          author: string
+          category: string
+          content: string
+          created_at: string
+          date: string
+          excerpt: string
+          featured: boolean
+          id: string
+          image: string
+          read_time: string
+          slug: string
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          category: string
+          content: string
+          created_at?: string
+          date: string
+          excerpt: string
+          featured?: boolean
+          id?: string
+          image: string
+          read_time: string
+          slug: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          content?: string
+          created_at?: string
+          date?: string
+          excerpt?: string
+          featured?: boolean
+          id?: string
+          image?: string
+          read_time?: string
+          slug?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_translations: {
+        Row: {
+          blog_post_id: string
+          content: string
+          created_at: string
+          excerpt: string
+          id: string
+          language: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          blog_post_id: string
+          content: string
+          created_at?: string
+          excerpt: string
+          id?: string
+          language: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          blog_post_id?: string
+          content?: string
+          created_at?: string
+          excerpt?: string
+          id?: string
+          language?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_translations_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_info: {
+        Row: {
+          address: string
+          created_at: string
+          email: string
+          id: string
+          phone: string
+          updated_at: string
+          website: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          email: string
+          id?: string
+          phone: string
+          updated_at?: string
+          website: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string
+          updated_at?: string
+          website?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          company: string | null
+          created_at: string
+          id: string
+          name: string
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

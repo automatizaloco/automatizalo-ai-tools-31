@@ -12,6 +12,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import TranslationPanel from "@/components/admin/blog/TranslationPanel";
 import BlogFormFields from "@/components/admin/blog/BlogFormFields";
+import { supabase } from "@/integrations/supabase/client";
 
 const BlogPostForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,6 +45,16 @@ const BlogPostForm = () => {
     fr: { title: "", excerpt: "", content: "" },
     es: { title: "", excerpt: "", content: "" }
   });
+
+  // Check authentication session
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      console.log("Current auth session:", data);
+    };
+    
+    checkSession();
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -167,8 +178,12 @@ const BlogPostForm = () => {
     console.log("Submitting form with data:", formData);
 
     try {
-      if (!isAuthenticated) {
-        throw new Error("You must be logged in to perform this action");
+      // Double-check authentication
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("You must be logged in to create or update posts");
+        navigate("/login", { replace: true });
+        return;
       }
 
       const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
@@ -203,7 +218,16 @@ const BlogPostForm = () => {
       navigate("/admin/blog");
     } catch (error) {
       console.error("Error saving post:", error);
-      toast.error(`Failed to save post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error("Detailed error:", error);
+      
+      // More detailed error message for the user
+      toast.error(
+        <div>
+          <p>Failed to save post: {errorMessage}</p>
+          <p className="text-xs mt-1">Please check the console for more details</p>
+        </div>
+      );
     } finally {
       setIsLoading(false);
     }

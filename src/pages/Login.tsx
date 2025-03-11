@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useTheme } from "@/context/ThemeContext";
-import { AlertCircle, Info } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("contact@automatizalo.co");
@@ -54,20 +54,6 @@ const Login = () => {
             <h1 className={`text-2xl font-bold text-center mb-6 ${
               theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
             }`}>Admin Login</h1>
-            
-            {/* Admin credentials info */}
-            <div className={`p-4 mb-6 rounded-lg flex items-start gap-3 ${
-              theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
-            }`}>
-              <Info className={`h-5 w-5 mt-0.5 ${
-                theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
-              }`} />
-              <div className={theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}>
-                <p className="text-sm font-medium mb-1">Admin Credentials:</p>
-                <p className="text-sm">Email: contact@automatizalo.co</p>
-                <p className="text-sm">Password: Automatizalo2025@</p>
-              </div>
-            </div>
             
             {error && (
               <div className={`p-3 mb-4 rounded-md flex items-center gap-2 ${

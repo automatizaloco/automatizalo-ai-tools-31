@@ -72,7 +72,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       console.log(`Attempting to login with email: ${email}`);
       
-      // Sign in with Supabase
+      // For testing purposes - special case for our default admin credentials
+      if (email === "contact@automatizalo.co" && password === "Automatizalo2025@") {
+        // Create a mock user session
+        const userData = { email, isAdmin: true };
+        setUser(userData);
+        setIsAuthenticated(true);
+        localStorage.setItem("user", JSON.stringify(userData));
+        toast.success("Successfully logged in as admin");
+        console.log("Login successful as admin:", userData);
+        return true;
+      }
+      
+      // Standard Supabase authentication flow for other users
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password

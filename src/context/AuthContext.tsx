@@ -22,29 +22,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
   useEffect(() => {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      setIsAuthenticated(true);
-      
-      // Also sign in with Supabase to ensure session is valid
-      const setupSupabaseAuth = async () => {
-        // Check the Supabase session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          // If no valid session, clear local storage
-          localStorage.removeItem("user");
-          setUser(null);
-          setIsAuthenticated(false);
-          toast.error("Session expired. Please login again.");
-        }
-      };
-      
-      setupSupabaseAuth();
-    }
+    // Check initial session
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const userData = { 
+          email: session.user.email || '', 
+          isAdmin: true 
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+        localStorage.setItem("user", JSON.stringify(userData));
+      }
+    };
+    
+    initializeAuth();
     
     // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -54,7 +46,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setIsAuthenticated(false);
           localStorage.removeItem("user");
         } else if (event === 'SIGNED_IN' && session) {
-          const userData = { email: session.user.email || '', isAdmin: true };
+          const userData = { 
+            email: session.user.email || '', 
+            isAdmin: true 
+          };
           setUser(userData);
           setIsAuthenticated(true);
           localStorage.setItem("user", JSON.stringify(userData));
@@ -62,7 +57,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     );
     
-    // Cleanup subscription
     return () => {
       subscription.unsubscribe();
     };
@@ -72,19 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       console.log(`Attempting to login with email: ${email}`);
       
-      // For testing purposes - special case for our default admin credentials
-      if (email === "contact@automatizalo.co" && password === "Automatizalo2025@") {
-        // Create a mock user session
-        const userData = { email, isAdmin: true };
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem("user", JSON.stringify(userData));
-        toast.success("Successfully logged in as admin");
-        console.log("Login successful as admin:", userData);
-        return true;
-      }
-      
-      // Standard Supabase authentication flow for other users
+      // Always use Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -102,7 +84,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return false;
       }
       
-      // If Supabase login successful, store user data
       const userData = { email, isAdmin: true };
       setUser(userData);
       setIsAuthenticated(true);
@@ -119,13 +100,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error signing out:", error);
       }
       
-      // Clear local storage and reset state
       setUser(null);
       setIsAuthenticated(false);
       localStorage.removeItem("user");

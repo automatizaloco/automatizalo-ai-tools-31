@@ -22,7 +22,18 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
   
   // Transform the data to match the BlogPost type
   return posts.map(post => ({
-    ...post,
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image,
+    category: post.category,
+    tags: post.tags || [],
+    date: post.date,
+    readTime: post.read_time, // Map from read_time to readTime
+    author: post.author,
+    featured: post.featured,
     translations: post.blog_translations.reduce((acc: any, trans: any) => {
       acc[trans.language] = {
         title: trans.title,
@@ -54,7 +65,18 @@ export const getBlogPostById = async (id: string): Promise<BlogPost | undefined>
   if (!post) return undefined;
 
   return {
-    ...post,
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image,
+    category: post.category,
+    tags: post.tags || [],
+    date: post.date,
+    readTime: post.read_time, // Map from read_time to readTime
+    author: post.author,
+    featured: post.featured,
     translations: post.blog_translations.reduce((acc: any, trans: any) => {
       acc[trans.language] = {
         title: trans.title,
@@ -86,7 +108,18 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | undefi
   if (!post) return undefined;
 
   return {
-    ...post,
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image,
+    category: post.category,
+    tags: post.tags || [],
+    date: post.date,
+    readTime: post.read_time, // Map from read_time to readTime
+    author: post.author,
+    featured: post.featured,
     translations: post.blog_translations.reduce((acc: any, trans: any) => {
       acc[trans.language] = {
         title: trans.title,
@@ -102,10 +135,16 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | undefi
 export const createBlogPost = async (postData: any): Promise<BlogPost> => {
   const { translations, ...blogPostData } = postData;
   
+  // Prepare data for Supabase
+  const supabaseData = {
+    ...blogPostData,
+    read_time: blogPostData.readTime, // Map from readTime to read_time
+  };
+  
   // Insert blog post
   const { data: post, error: postError } = await supabase
     .from('blog_posts')
-    .insert([blogPostData])
+    .insert([supabaseData])
     .select()
     .single();
 
@@ -126,17 +165,37 @@ export const createBlogPost = async (postData: any): Promise<BlogPost> => {
     if (translationError) throw translationError;
   }
 
-  return { ...post, translations };
+  return {
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image,
+    category: post.category,
+    tags: post.tags || [],
+    date: post.date,
+    readTime: post.read_time, // Map from read_time to readTime
+    author: post.author,
+    featured: post.featured,
+    translations: translations || {}
+  };
 };
 
 // Update an existing blog post
 export const updateBlogPost = async (id: string, postData: any): Promise<BlogPost | undefined> => {
   const { translations, ...blogPostData } = postData;
   
+  // Prepare data for Supabase
+  const supabaseData = {
+    ...blogPostData,
+    read_time: blogPostData.readTime, // Map from readTime to read_time
+  };
+  
   // Update blog post
   const { data: post, error: postError } = await supabase
     .from('blog_posts')
-    .update(blogPostData)
+    .update(supabaseData)
     .eq('id', id)
     .select()
     .single();
@@ -167,7 +226,21 @@ export const updateBlogPost = async (id: string, postData: any): Promise<BlogPos
     if (translationError) throw translationError;
   }
 
-  return { ...post, translations };
+  return {
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image,
+    category: post.category,
+    tags: post.tags || [],
+    date: post.date,
+    readTime: post.read_time, // Map from read_time to readTime
+    author: post.author,
+    featured: post.featured,
+    translations: translations || {}
+  };
 };
 
 // Delete a blog post
@@ -199,7 +272,18 @@ export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
   if (error) throw error;
 
   return posts.map(post => ({
-    ...post,
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image,
+    category: post.category,
+    tags: post.tags || [],
+    date: post.date,
+    readTime: post.read_time, // Map from read_time to readTime
+    author: post.author,
+    featured: post.featured,
     translations: post.blog_translations.reduce((acc: any, trans: any) => {
       acc[trans.language] = {
         title: trans.title,
@@ -229,7 +313,18 @@ export const getPostsByCategory = async (category: string): Promise<BlogPost[]> 
   if (error) throw error;
 
   return posts.map(post => ({
-    ...post,
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image,
+    category: post.category,
+    tags: post.tags || [],
+    date: post.date,
+    readTime: post.read_time, // Map from read_time to readTime
+    author: post.author,
+    featured: post.featured,
     translations: post.blog_translations.reduce((acc: any, trans: any) => {
       acc[trans.language] = {
         title: trans.title,
@@ -259,7 +354,18 @@ export const searchPosts = async (query: string): Promise<BlogPost[]> => {
   if (error) throw error;
 
   return posts.map(post => ({
-    ...post,
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image,
+    category: post.category,
+    tags: post.tags || [],
+    date: post.date,
+    readTime: post.read_time, // Map from read_time to readTime
+    author: post.author,
+    featured: post.featured,
     translations: post.blog_translations.reduce((acc: any, trans: any) => {
       acc[trans.language] = {
         title: trans.title,

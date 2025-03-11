@@ -9,7 +9,12 @@ export const fetchBlogPosts = async () => {
     .select('*');
   
   if (error) throw error;
-  return data;
+  
+  // Transform to match our app's data model
+  return data.map(post => ({
+    ...post,
+    readTime: post.read_time
+  }));
 };
 
 export const fetchBlogPostBySlug = async (slug: string) => {
@@ -20,7 +25,12 @@ export const fetchBlogPostBySlug = async (slug: string) => {
     .single();
   
   if (error) throw error;
-  return data;
+  
+  // Transform to match our app's data model
+  return {
+    ...data,
+    readTime: data.read_time
+  };
 };
 
 // Contact info
@@ -60,4 +70,3 @@ export const fetchTestimonials = async () => {
   if (error) throw error;
   return data;
 };
-

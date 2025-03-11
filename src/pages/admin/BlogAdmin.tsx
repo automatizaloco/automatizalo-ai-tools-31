@@ -15,6 +15,7 @@ const BlogAdmin = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const { language } = useLanguage();
 
   useEffect(() => {
@@ -23,15 +24,33 @@ const BlogAdmin = () => {
       return;
     }
     
-    setPosts(getBlogPosts());
+    const fetchPosts = async () => {
+      try {
+        const fetchedPosts = await getBlogPosts();
+        setPosts(fetchedPosts);
+      } catch (error) {
+        console.error("Error fetching blog posts:", error);
+        toast.error("Failed to load blog posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPosts();
   }, [isAuthenticated, navigate]);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
-      if (deleteBlogPost(id)) {
-        setPosts(posts.filter(post => post.id !== id));
-        toast.success("Post deleted successfully");
-      } else {
+      try {
+        const success = await deleteBlogPost(id);
+        if (success) {
+          setPosts(posts.filter(post => post.id !== id));
+          toast.success("Post deleted successfully");
+        } else {
+          toast.error("Failed to delete post");
+        }
+      } catch (error) {
+        console.error("Error deleting post:", error);
         toast.error("Failed to delete post");
       }
     }
@@ -48,6 +67,18 @@ const BlogAdmin = () => {
   const hasTranslations = (post: BlogPost) => {
     return post.translations && Object.keys(post.translations).length > 0;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <Navbar />
+        <main className="flex-grow pt-32 pb-16">
+          <div className="container mx-auto px-4">Loading...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

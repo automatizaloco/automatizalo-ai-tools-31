@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -11,19 +12,34 @@ import { useLanguage } from "@/context/LanguageContext";
 const BlogPost = () => {
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<BlogPostType | null>(null);
+  const [loading, setLoading] = useState(true);
   const { language, translateContent } = useLanguage();
   
   useEffect(() => {
-    if (id) {
-      const fetchedPost = getBlogPostById(id);
-      if (fetchedPost) {
-        setPost(fetchedPost);
+    const fetchPost = async () => {
+      if (id) {
+        try {
+          const fetchedPost = await getBlogPostById(id);
+          if (fetchedPost) {
+            setPost(fetchedPost);
+          }
+        } catch (error) {
+          console.error("Error fetching blog post:", error);
+        } finally {
+          setLoading(false);
+        }
       }
-    }
+    };
+    
+    fetchPost();
   }, [id]);
 
-  if (!post) {
+  if (loading) {
     return <div>Loading...</div>;
+  }
+  
+  if (!post) {
+    return <div>Post not found</div>;
   }
 
   const title = translateContent(post, 'title', language);

@@ -19,6 +19,7 @@ const BlogPostForm = () => {
   const { isAuthenticated } = useAuth();
   const { language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [post, setPost] = useState<BlogPost | null>(null);
   const [formData, setFormData] = useState<BlogFormData>({
     title: "",
@@ -50,56 +51,71 @@ const BlogPostForm = () => {
       return;
     }
 
-    if (id) {
-      const post = getBlogPostById(id);
-      if (post) {
-        setPost(post);
-        setFormData({
-          title: post.title,
-          slug: post.slug,
-          excerpt: post.excerpt,
-          content: post.content,
-          category: post.category,
-          tags: post.tags.join(", "),
-          author: post.author,
-          date: post.date,
-          readTime: post.readTime,
-          image: post.image,
-          featured: post.featured || false,
-          translations: post.translations ? {
-            fr: {
-              title: post.translations.fr?.title || "",
-              excerpt: post.translations.fr?.excerpt || "",
-              content: post.translations.fr?.content || ""
-            },
-            es: {
-              title: post.translations.es?.title || "",
-              excerpt: post.translations.es?.excerpt || "",
-              content: post.translations.es?.content || ""
+    const fetchPost = async () => {
+      if (id) {
+        try {
+          const fetchedPost = await getBlogPostById(id);
+          if (fetchedPost) {
+            setPost(fetchedPost);
+            
+            // Populate form data
+            setFormData({
+              title: fetchedPost.title,
+              slug: fetchedPost.slug,
+              excerpt: fetchedPost.excerpt,
+              content: fetchedPost.content,
+              category: fetchedPost.category,
+              tags: fetchedPost.tags.join(", "),
+              author: fetchedPost.author,
+              date: fetchedPost.date,
+              readTime: fetchedPost.readTime,
+              image: fetchedPost.image,
+              featured: fetchedPost.featured || false,
+              translations: fetchedPost.translations ? {
+                fr: {
+                  title: fetchedPost.translations.fr?.title || "",
+                  excerpt: fetchedPost.translations.fr?.excerpt || "",
+                  content: fetchedPost.translations.fr?.content || ""
+                },
+                es: {
+                  title: fetchedPost.translations.es?.title || "",
+                  excerpt: fetchedPost.translations.es?.excerpt || "",
+                  content: fetchedPost.translations.es?.content || ""
+                }
+              } : {
+                fr: { title: "", excerpt: "", content: "" },
+                es: { title: "", excerpt: "", content: "" }
+              }
+            });
+            
+            // Initialize translation data if it exists
+            if (fetchedPost.translations) {
+              setTranslationData({
+                fr: {
+                  title: fetchedPost.translations.fr?.title || "",
+                  excerpt: fetchedPost.translations.fr?.excerpt || "",
+                  content: fetchedPost.translations.fr?.content || ""
+                },
+                es: {
+                  title: fetchedPost.translations.es?.title || "",
+                  excerpt: fetchedPost.translations.es?.excerpt || "",
+                  content: fetchedPost.translations.es?.content || ""
+                }
+              });
             }
-          } : {
-            fr: { title: "", excerpt: "", content: "" },
-            es: { title: "", excerpt: "", content: "" }
           }
-        });
-        
-        // Initialize translation data if it exists
-        if (post.translations) {
-          setTranslationData({
-            fr: {
-              title: post.translations.fr?.title || "",
-              excerpt: post.translations.fr?.excerpt || "",
-              content: post.translations.fr?.content || ""
-            },
-            es: {
-              title: post.translations.es?.title || "",
-              excerpt: post.translations.es?.excerpt || "",
-              content: post.translations.es?.content || ""
-            }
-          });
+        } catch (error) {
+          console.error("Error fetching blog post:", error);
+          toast.error("Failed to load blog post");
+        } finally {
+          setFetchLoading(false);
         }
+      } else {
+        setFetchLoading(false);
       }
-    }
+    };
+    
+    fetchPost();
   }, [id, isAuthenticated, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -182,6 +198,18 @@ const BlogPostForm = () => {
       setIsLoading(false);
     }
   };
+
+  if (fetchLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <Navbar />
+        <main className="flex-grow pt-32 pb-16">
+          <div className="container mx-auto px-4">Loading...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, AlertTriangle } from "lucide-react";
 import { 
   fetchTestimonials, 
   createTestimonial, 
@@ -40,9 +40,11 @@ const TestimonialManager = () => {
   });
 
   // Fetch testimonials from Supabase
-  const { data: testimonials = [], isLoading } = useQuery({
+  const { data: testimonials = [], isLoading, error: fetchError } = useQuery({
     queryKey: ['testimonials'],
-    queryFn: fetchTestimonials
+    queryFn: fetchTestimonials,
+    // Only attempt to fetch if the user is authenticated
+    enabled: isAuthenticated,
   });
 
   // Create mutation
@@ -57,9 +59,9 @@ const TestimonialManager = () => {
         text: ""
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error creating testimonial:', error);
-      toast.error("Failed to add testimonial");
+      toast.error(`Failed to add testimonial: ${error.message || "Unknown error"}`);
     }
   });
 
@@ -71,9 +73,9 @@ const TestimonialManager = () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
       toast.success("Testimonial updated successfully!");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating testimonial:', error);
-      toast.error("Failed to update testimonial");
+      toast.error(`Failed to update testimonial: ${error.message || "Unknown error"}`);
     }
   });
 
@@ -84,9 +86,9 @@ const TestimonialManager = () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
       toast.success("Testimonial deleted successfully!");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error deleting testimonial:', error);
-      toast.error("Failed to delete testimonial");
+      toast.error(`Failed to delete testimonial: ${error.message || "Unknown error"}`);
     }
   });
 
@@ -106,6 +108,11 @@ const TestimonialManager = () => {
   };
 
   const handleAddTestimonial = () => {
+    if (!isAuthenticated) {
+      toast.error("You must be logged in to add testimonials");
+      return;
+    }
+
     if (!newTestimonial.name || !newTestimonial.text) {
       toast.error("Please fill in at least name and testimonial text");
       return;
@@ -115,10 +122,15 @@ const TestimonialManager = () => {
   };
 
   const handleDeleteTestimonial = (id: string) => {
+    if (!isAuthenticated) {
+      toast.error("You must be logged in to delete testimonials");
+      return;
+    }
+    
     deleteMutation.mutate(id);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
       toast.error("Please login to access the testimonial manager");
@@ -138,6 +150,12 @@ const TestimonialManager = () => {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold">Testimonial Manager</h1>
             <p className="text-gray-600 mt-2">Add and edit client testimonials</p>
+            
+            {user && (
+              <div className="mt-2 text-sm text-green-600">
+                Logged in as: {user.email}
+              </div>
+            )}
           </div>
           
           <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
@@ -185,7 +203,7 @@ const TestimonialManager = () => {
                 <Button 
                   onClick={handleAddTestimonial} 
                   className="ml-auto"
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || !isAuthenticated}
                 >
                   {createMutation.isPending ? (
                     <>
@@ -205,7 +223,15 @@ const TestimonialManager = () => {
                 <CardDescription>Edit or delete existing testimonials</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {isLoading ? (
+                {fetchError ? (
+                  <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-700 flex items-center">
+                    <AlertTriangle className="h-5 w-5 mr-2" />
+                    <div>
+                      <p className="font-medium">Error loading testimonials</p>
+                      <p className="text-sm">{(fetchError as Error).message}</p>
+                    </div>
+                  </div>
+                ) : isLoading ? (
                   <div className="flex justify-center items-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
                   </div>

@@ -83,9 +83,19 @@ export const createTestimonial = async (testimonial: {
 }) => {
   console.log('Creating testimonial:', testimonial);
   
+  // Make sure we have a user session
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    throw new Error("User must be authenticated to create testimonials");
+  }
+  
   const { data, error } = await supabase
     .from('testimonials')
-    .insert(testimonial)
+    .insert({
+      ...testimonial,
+      // Ensure null is handled properly for optional company field
+      company: testimonial.company || null
+    })
     .select()
     .single();
   
@@ -108,9 +118,19 @@ export const updateTestimonial = async (
 ) => {
   console.log('Updating testimonial:', id, updates);
   
+  // Make sure we have a user session
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    throw new Error("User must be authenticated to update testimonials");
+  }
+  
   const { data, error } = await supabase
     .from('testimonials')
-    .update(updates)
+    .update({
+      ...updates,
+      // Ensure null is handled properly for optional company field
+      company: updates.company || null
+    })
     .eq('id', id)
     .select()
     .single();
@@ -126,6 +146,12 @@ export const updateTestimonial = async (
 
 export const deleteTestimonial = async (id: string) => {
   console.log('Deleting testimonial:', id);
+  
+  // Make sure we have a user session
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    throw new Error("User must be authenticated to delete testimonials");
+  }
   
   const { error } = await supabase
     .from('testimonials')

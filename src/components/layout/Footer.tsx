@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -261,11 +260,7 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row md:justify-between items-center">
             <p className={theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}>
-              &copy; {currentYear} Automatízalo.&nbsp;
-              <EditableText 
-                id="footer-rights" 
-                defaultText={t("footer.copyright")}
-              />
+              &copy; {currentYear} Automatízalo.
             </p>
             <div className="mt-4 md:mt-0 flex items-center space-x-4">
               <Link 

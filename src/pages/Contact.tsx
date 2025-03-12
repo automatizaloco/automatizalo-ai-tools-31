@@ -8,6 +8,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import EditableText from "@/components/admin/EditableText";
 import { useContactInfo } from "@/stores/contactInfoStore";
+import { toast } from "sonner";
 
 const Contact = () => {
   const { t } = useLanguage();
@@ -22,7 +23,6 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle contact info updates
   const handleContactInfoChange = (id: string, value: string) => {
     const fieldMap: Record<string, keyof typeof contactInfo> = {
       'contact-phone-value': 'phone',
@@ -49,7 +49,6 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      // Send form data to our Supabase Edge Function
       const response = await fetch('https://juwbamkqkawyibcvllvo.supabase.co/functions/v1/contact-form', {
         method: 'POST',
         headers: {
@@ -64,7 +63,6 @@ const Contact = () => {
         throw new Error(result.error || 'Failed to submit form');
       }
       
-      // Reset form after submission
       setFormData({
         name: "",
         email: "",
@@ -72,7 +70,6 @@ const Contact = () => {
         message: "",
       });
       
-      // Show success message
       toast.success(t('contact.form.success'));
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -112,7 +109,6 @@ const Contact = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            {/* Contact Information */}
             <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
               <h2 className={`text-2xl font-heading font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
                 {isAuthenticated ? (
@@ -278,7 +274,6 @@ const Contact = () => {
               </div>
             </div>
             
-            {/* Contact Form */}
             <div className={`p-8 rounded-2xl shadow-sm border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
               <h2 className={`text-2xl font-heading font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
                 {isAuthenticated ? (

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation } from "@/types/blog";
 
@@ -24,10 +23,15 @@ export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
 
   // Fetch translations for all posts
   for (const post of posts) {
-    const { data: translations } = await supabase
+    const { data: translations, error: translationsError } = await supabase
       .from('blog_translations')
       .select('*')
       .eq('blog_post_id', post.id);
+
+    if (translationsError) {
+      console.error(`Error fetching translations for post ${post.id}:`, translationsError);
+      continue; // Continue with other posts if there's an error with this one
+    }
 
     if (translations && translations.length > 0) {
       post.translations = {};
@@ -71,17 +75,20 @@ export const fetchBlogPostById = async (id: string): Promise<BlogPost | null> =>
   } as BlogPost;
 
   // Fetch translations for this post
-  const { data: translations } = await supabase
+  const { data: translations, error: translationsError } = await supabase
     .from('blog_translations')
     .select('*')
     .eq('blog_post_id', id);
 
-  if (translations && translations.length > 0) {
+  if (translationsError) {
+    console.error(`Error fetching translations for post ${id}:`, translationsError);
+  } else if (translations && translations.length > 0) {
     post.translations = {};
     
     // Group translations by language
     translations.forEach((translation: BlogTranslation) => {
       if (translation.language === 'fr' || translation.language === 'es') {
+        console.log(`Found ${translation.language} translation: content length = ${translation.content?.length || 0}`);
         post.translations![translation.language] = {
           title: translation.title,
           excerpt: translation.excerpt,
@@ -117,17 +124,23 @@ export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null
   } as BlogPost;
 
   // Fetch translations for this post
-  const { data: translations } = await supabase
+  const { data: translations, error: translationsError } = await supabase
     .from('blog_translations')
     .select('*')
     .eq('blog_post_id', post.id);
 
-  if (translations && translations.length > 0) {
+  if (translationsError) {
+    console.error(`Error fetching translations for post ${post.id}:`, translationsError);
+  } else if (translations && translations.length > 0) {
     post.translations = {};
+    
+    // Log translation data for debugging
+    console.log(`Found ${translations.length} translations for post ${post.id}`);
     
     // Group translations by language
     translations.forEach((translation: BlogTranslation) => {
       if (translation.language === 'fr' || translation.language === 'es') {
+        console.log(`Processing ${translation.language} translation: title=${translation.title?.substring(0, 20)}..., content length=${translation.content?.length || 0}`);
         post.translations![translation.language] = {
           title: translation.title,
           excerpt: translation.excerpt,

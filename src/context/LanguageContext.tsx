@@ -294,7 +294,7 @@ const translations = {
     "footer.documentation": "Documentation",
     "footer.help": "Centre d'Aide",
     "footer.community": "Communauté",
-    "footer.copyright": "© 2023 Automatízalo. Tous droits réservés.",
+    "footer.copyright": "© 2023 Automatízalo. Tous droits réserv��s.",
     "footer.description": "Transformer les entreprises grâce à des solutions d'IA et d'automatisation"
   },
   es: {
@@ -424,7 +424,7 @@ const translations = {
     "footer.careers": "Carreras",
     "footer.blog": "Blog",
     "footer.contact": "Contacto",
-    "footer.legal": "Legal",
+    "footer.legal": "Légal",
     "footer.terms": "Términos",
     "footer.privacy": "Privacidad",
     "footer.cookies": "Cookies",
@@ -463,10 +463,21 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   // Function to translate blog content and other dynamic content
   const translateContent = (content: any, field: string, lang: Language): string => {
-    if (!content || !content.translations || !content.translations[lang] || !content.translations[lang][field]) {
+    // If the requested language is English or no translations exist, return the original content
+    if (lang === 'en' || !content || !content.translations) {
       return content[field] || '';
     }
-    return content.translations[lang][field];
+    
+    // Check if we have a translation for the requested language
+    if (content.translations[lang] && content.translations[lang][field]) {
+      const translatedContent = content.translations[lang][field];
+      console.log(`Using ${lang} translation for ${field}. Length: ${translatedContent.length}`);
+      return translatedContent;
+    }
+    
+    // Fallback to original content if translation is not available
+    console.log(`No ${lang} translation found for ${field}, using original content`);
+    return content[field] || '';
   };
 
   return (
@@ -483,3 +494,4 @@ export const useLanguage = (): LanguageContextType => {
   }
   return context;
 };
+

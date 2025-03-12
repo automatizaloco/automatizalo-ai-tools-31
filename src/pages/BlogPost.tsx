@@ -39,6 +39,11 @@ const BlogPost = () => {
     fetchPost();
   }, [slug]);
 
+  useEffect(() => {
+    // Scroll to top when component mounts or slug changes
+    window.scrollTo(0, 0);
+  }, [slug]);
+  
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-white">
@@ -66,8 +71,17 @@ const BlogPost = () => {
     );
   }
 
+  // Get the translated title and content based on current language
   const title = translateContent(post, 'title', language);
   const content = translateContent(post, 'content', language);
+  const excerpt = translateContent(post, 'excerpt', language);
+
+  // For debugging - log the content lengths
+  console.log(`Language: ${language}`);
+  console.log(`Original content length: ${post.content.length}`);
+  if (language !== 'en' && post.translations && post.translations[language]) {
+    console.log(`${language} content length: ${post.translations[language]?.content?.length || 0}`);
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -84,7 +98,7 @@ const BlogPost = () => {
           
           <div className="max-w-3xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold font-heading mb-6 text-justify">{title}</h1>
+              <h1 className="text-4xl md:text-5xl font-bold font-heading mb-6">{title}</h1>
               
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -110,7 +124,7 @@ const BlogPost = () => {
               )}
             </div>
             
-            <div className="prose prose-lg max-w-none text-justify">
+            <div className="prose prose-lg max-w-none">
               <div dangerouslySetInnerHTML={{ __html: content }} />
             </div>
             

@@ -39,6 +39,7 @@ export const translateBlogContent = async (
     }
     
     console.log(`Translation to ${targetLang} completed successfully:`, data);
+    console.log(`Translated content length: ${data.content?.length || 0}`);
 
     if (!data.title || !data.content) {
       console.error('Incomplete translation data received:', data);

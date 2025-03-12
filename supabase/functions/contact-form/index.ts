@@ -10,11 +10,11 @@ interface ContactFormData {
   message: string;
 }
 
-// Define CORS headers
+// Define CORS headers directly in this file
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -30,13 +30,34 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Validate form data
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
-      throw new Error("Missing required fields in form submission");
+      return new Response(
+        JSON.stringify({ error: "Missing required fields in form submission" }),
+        { 
+          status: 400, 
+          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        }
+      );
     }
 
+    // Save submission to database
+    console.log("Attempting to save to database");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing Supabase credentials");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { 
+          status: 500, 
+          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        }
+      );
+    }
+    
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+    
     try {
-      // Save submission to database
-      console.log("Attempting to save to database");
-      const supabaseClient = getSupabaseClient();
       const { error: dbError } = await supabaseClient
         .from('contact_messages')
         .insert({
@@ -48,10 +69,10 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (dbError) {
         console.error("Database error:", dbError);
-        throw new Error(`Database error: ${dbError.message}`);
+        // Continue with email sending even if database save fails
+      } else {
+        console.log("Form data saved to database successfully");
       }
-      
-      console.log("Form data saved to database successfully");
     } catch (dbErr) {
       console.error("Database operation failed:", dbErr);
       // Continue with email sending even if database save fails
@@ -62,7 +83,13 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Using Resend API Key:", resendApiKey ? "Key is present" : "Key is missing");
     
     if (!resendApiKey) {
-      throw new Error("Resend API key is missing");
+      return new Response(
+        JSON.stringify({ error: "Resend API key is missing" }),
+        { 
+          status: 500, 
+          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        }
+      );
     }
     
     const resend = new Resend(resendApiKey);
@@ -83,7 +110,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (error) {
       console.error("Error sending email:", error);
-      throw new Error(`Failed to send email: ${error.message}`);
+      return new Response(
+        JSON.stringify({ error: `Failed to send email: ${error.message}` }),
+        { 
+          status: 500, 
+          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        }
+      );
     }
 
     console.log("Email sent successfully:", data);
@@ -95,6 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
         emailId: data?.id 
       }), 
       { 
+        status: 200,
         headers: { 
           "Content-Type": "application/json",
           ...corsHeaders 
@@ -114,21 +148,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   }
-};
-
-// Helper to get Supabase client in edge function
-const getSupabaseClient = () => {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("Missing Supabase credentials:", {
-      urlPresent: !!supabaseUrl,
-      keyPresent: !!supabaseServiceKey
-    });
-  }
-  
-  return createClient(supabaseUrl, supabaseServiceKey);
 };
 
 serve(handler);

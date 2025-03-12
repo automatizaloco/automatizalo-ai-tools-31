@@ -8,12 +8,12 @@ import ContactHeader from "@/components/contact/ContactHeader";
 import ContactInfo from "@/components/contact/ContactInfo";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
-import { useState, useEffect } from "react";
-import { MessageCircle, Calendar } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { MessageCircle, Calendar, Video, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { format } from "date-fns";
 import { es, fr } from "date-fns/locale";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Contact = () => {
   const { theme } = useTheme();
@@ -22,6 +22,7 @@ const Contact = () => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showTyping, setShowTyping] = useState(false);
   const [meetingConfirmed, setMeetingConfirmed] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const getNextFriday = () => {
     const today = new Date();
@@ -91,6 +92,13 @@ const Contact = () => {
     ]
   };
 
+  // Auto-scroll the chat container when new messages appear
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [currentMessageIndex, showTyping]);
+
   useEffect(() => {
     if (currentMessageIndex < chatMessages[language || 'en'].length) {
       setShowTyping(true);
@@ -112,35 +120,23 @@ const Contact = () => {
       }, typingDelay);
       
       return () => clearTimeout(typingTimer);
-    } else {
-      if (meetingConfirmed) {
-        toast.success(t("contact.calendar.confirmation") || "Meeting scheduled successfully! A calendar invitation has been sent to your email and WhatsApp.", {
-          duration: 5000,
-          icon: <Calendar className="text-green-500" />
-        });
-        setMeetingConfirmed(false);
-      }
     }
-  }, [currentMessageIndex, language, meetingConfirmed]);
+  }, [currentMessageIndex, language]);
 
   const currentLanguageKey = language || 'en';
   const messages = chatMessages[currentLanguageKey as keyof typeof chatMessages] || chatMessages.en;
 
-  const handleScheduleDemo = () => {
+  const handleChatWithUs = () => {
     const cleanPhone = contactInfo.phone.replace(/\D/g, '');
     const message = encodeURIComponent(
-      `${t('contact.whatsapp.meetingConfirmed') || `Meeting confirmed for ${meetingDateString}. I look forward to our demo session!`}`
+      `${t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services"}`
     );
     
-    toast.success(t("contact.calendar.confirmation") || "Meeting scheduled successfully! A calendar invitation has been sent to your email and WhatsApp.", {
-      duration: 5000,
-      icon: <Calendar className="text-green-500" />
-    });
-    
-    setTimeout(() => {
-      window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
-    }, 1000);
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
+
+  // Generate a fake meeting URL
+  const meetingUrl = "https://meet.automatizalo.com/" + Math.random().toString(36).substring(2, 10);
 
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
@@ -167,7 +163,10 @@ const Contact = () => {
                   <span className="text-white font-medium">Automatízalo WhatsApp</span>
                 </div>
                 
-                <div className="p-4 h-64 overflow-y-auto flex flex-col space-y-3">
+                <div 
+                  ref={chatContainerRef}
+                  className="p-4 h-64 overflow-y-auto flex flex-col space-y-3"
+                >
                   {messages.slice(0, currentMessageIndex).map((msg, index) => (
                     <div 
                       key={index} 
@@ -202,17 +201,32 @@ const Contact = () => {
                   )}
                   
                   {currentMessageIndex >= messages.length && (
-                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-center mb-2">
-                        <Calendar className="text-green-600 dark:text-green-400 mr-2" size={20} />
-                        <h3 className="font-medium text-green-800 dark:text-green-300">
-                          {t('contact.calendar.title') || "Meeting Scheduled"}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{meetingDateString}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t('contact.calendar.details') || "Calendar invitation has been sent to your email"}
-                      </p>
+                    <div className="mt-4">
+                      <Card className="border border-green-200 dark:border-green-800">
+                        <CardHeader className="bg-green-50 dark:bg-green-900/30 pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center text-green-800 dark:text-green-300">
+                            <Calendar className="mr-2" size={16} />
+                            {t('contact.calendar.invitation') || "Calendar Invitation"}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-3 pb-4">
+                          <div className="text-left space-y-2">
+                            <p className="text-sm font-medium">{t('contact.calendar.title') || "Automatízalo Product Demo"}</p>
+                            <p className="text-xs flex items-start">
+                              <Calendar className="mr-2 mt-0.5 shrink-0" size={12} />
+                              <span>{meetingDateString}</span>
+                            </p>
+                            <p className="text-xs flex items-start">
+                              <Video className="mr-2 mt-0.5 shrink-0" size={12} />
+                              <span className="text-blue-600 dark:text-blue-400 underline">{meetingUrl}</span>
+                            </p>
+                            <p className="text-xs flex items-start">
+                              <MapPin className="mr-2 mt-0.5 shrink-0" size={12} />
+                              <span>{t('contact.calendar.location') || "Virtual Meeting"}</span>
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   )}
                 </div>
@@ -225,15 +239,15 @@ const Contact = () => {
               <WhatsAppButton 
                 phoneNumber={contactInfo.phone}
                 message={t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services"}
-                showCalendarConfirmation={true}
+                showCalendarConfirmation={false}
               />
               
               <Button 
-                onClick={handleScheduleDemo}
+                onClick={handleChatWithUs}
                 className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium py-3 px-6 rounded-full shadow-lg transition-all duration-200 inline-flex items-center gap-2"
               >
-                <Calendar size={20} />
-                {t('contact.schedule.demo') || "Schedule Demo on WhatsApp"}
+                <MessageCircle size={20} />
+                {t('contact.whatsapp.chat') || "Chat With Us"}
               </Button>
             </div>
           </div>

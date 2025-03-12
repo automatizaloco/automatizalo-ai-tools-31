@@ -41,11 +41,20 @@ export const subscribeToNewsletter = async (email: string, frequency: Newsletter
  */
 const sendSubscriptionNotification = async (email: string, frequency: NewsletterFrequency): Promise<void> => {
   try {
-    // In a real implementation, you would use an edge function to send emails
-    // For now, we'll just log this action
-    console.log(`Would send email to contact@automatizalo.co about new ${frequency} subscription from ${email}`);
-    
-    // In future, implement this with a Supabase Edge Function using a service like Resend
+    // Call the Supabase Edge Function to send the email notification
+    const { data, error } = await supabase.functions.invoke('send-notification', {
+      body: { 
+        email, 
+        frequency,
+        type: 'newsletter_subscription'
+      }
+    });
+
+    if (error) {
+      console.error("Failed to send subscription notification:", error);
+    } else {
+      console.log("Notification sent successfully:", data);
+    }
   } catch (error) {
     console.error("Failed to send subscription notification:", error);
   }

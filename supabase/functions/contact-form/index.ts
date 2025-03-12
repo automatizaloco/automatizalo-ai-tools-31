@@ -10,7 +10,6 @@ interface ContactFormData {
   message: string;
 }
 
-// Define CORS headers directly in this file
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -19,83 +18,71 @@ const corsHeaders = {
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    });
   }
 
   try {
-    console.log("Contact form handler started");
-    
     const formData: ContactFormData = await req.json();
-    console.log("Contact form submission:", formData);
 
     // Validate form data
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields in form submission" }),
-        { 
-          status: 400, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        JSON.stringify({ error: "All fields are required" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
 
-    // Save submission to database
-    console.log("Attempting to save to database");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Missing Supabase credentials");
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseKey) {
       return new Response(
         JSON.stringify({ error: "Server configuration error" }),
-        { 
-          status: 500, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
-    
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
-    
-    try {
-      const { error: dbError } = await supabaseClient
-        .from('contact_messages')
-        .insert({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message
-        });
 
-      if (dbError) {
-        console.error("Database error:", dbError);
-        // Continue with email sending even if database save fails
-      } else {
-        console.log("Form data saved to database successfully");
-      }
-    } catch (dbErr) {
-      console.error("Database operation failed:", dbErr);
-      // Continue with email sending even if database save fails
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Save to database
+    const { error: dbError } = await supabase
+      .from('contact_messages')
+      .insert([{
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message
+      }]);
+
+    if (dbError) {
+      console.error("Database error:", dbError);
     }
-    
-    // Send email using Resend
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    console.log("Using Resend API Key:", resendApiKey ? "Key is present" : "Key is missing");
-    
-    if (!resendApiKey) {
+
+    // Send email
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendKey) {
       return new Response(
-        JSON.stringify({ error: "Resend API key is missing" }),
-        { 
-          status: 500, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        JSON.stringify({ error: "Email service configuration error" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
+
+    const resend = new Resend(resendKey);
     
-    const resend = new Resend(resendApiKey);
-    
-    console.log("Attempting to send email");
-    const { data, error } = await resend.emails.send({
+    const { data, error: emailError } = await resend.emails.send({
       from: "Contact Form <onboarding@resend.dev>",
       to: ["contact@automatizalo.co"],
       subject: `New Contact Form: ${formData.subject}`,
@@ -105,46 +92,42 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Subject:</strong> ${formData.subject}</p>
         <h2>Message:</h2>
         <p>${formData.message}</p>
-      `,
+      `
     });
 
-    if (error) {
-      console.error("Error sending email:", error);
+    if (emailError) {
       return new Response(
-        JSON.stringify({ error: `Failed to send email: ${error.message}` }),
-        { 
-          status: 500, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        JSON.stringify({ error: "Failed to send email" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
 
-    console.log("Email sent successfully:", data);
-
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: "Contact form submitted successfully",
-        emailId: data?.id 
-      }), 
-      { 
+        emailId: data?.id
+      }),
+      {
         status: 200,
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders 
-        } 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
-  } catch (error: any) {
-    console.error("Error in contact-form function:", error);
+
+  } catch (error) {
+    console.error("Error in contact form handler:", error);
+    
     return new Response(
-      JSON.stringify({ error: error.message || "An unknown error occurred" }),
-      { 
+      JSON.stringify({
+        error: "Internal server error",
+        details: error.message
+      }),
+      {
         status: 500,
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders 
-        } 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
   }

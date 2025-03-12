@@ -1,6 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { Resend } from "https://esm.sh/resend@1.0.0";
 
 interface ContactFormData {
   name: string;
@@ -35,7 +37,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send email using Resend
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    console.log("Using Resend API Key:", resendApiKey ? "Key is present" : "Key is missing");
+    
+    const resend = new Resend(resendApiKey);
     
     const { data, error } = await resend.emails.send({
       from: "Contact Form <onboarding@resend.dev>",
@@ -88,8 +93,5 @@ const getSupabaseClient = () => {
   
   return createClient(supabaseUrl, supabaseServiceKey);
 };
-
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import { Resend } from "https://esm.sh/resend@1.0.0";
 
 serve(handler);

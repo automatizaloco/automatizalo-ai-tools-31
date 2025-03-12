@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { fetchContactInfo, updateContactInfo } from '@/services/supabaseService';
 import { toast } from 'sonner';
@@ -55,19 +54,10 @@ export const useContactInfo = () => {
   // Update contact information in Supabase
   const updateContactInfoData = async (newInfo: Partial<ContactInfo>) => {
     try {
-      console.log("Updating contact info with:", newInfo);
       setUpdating(true);
-      
-      // First update the local state for a quick UI response
-      setContactInfo(prevInfo => {
-        const updatedInfo = { ...prevInfo, ...newInfo };
-        console.log("Updated local state:", updatedInfo);
-        return updatedInfo;
-      });
       
       // Then update the database
       const updatedInfo = await updateContactInfo(newInfo);
-      console.log("Successfully received updated info from server:", updatedInfo);
       
       // Update state with the returned data from the server
       setContactInfo(prevInfo => ({ ...prevInfo, ...updatedInfo }));

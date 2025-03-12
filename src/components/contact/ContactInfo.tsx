@@ -27,7 +27,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
           icon={<Phone className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />}
           title={t('contact.phone')}
           value={contactInfo.phone}
-          id="contact-phone-value"
+          id="phone"
           isAuthenticated={isAuthenticated}
           onChange={handleContactInfoChange}
           isDisabled={updating}
@@ -38,7 +38,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
           icon={<Mail className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />}
           title={t('contact.email')}
           value={contactInfo.email}
-          id="contact-email-value"
+          id="email"
           isAuthenticated={isAuthenticated}
           onChange={handleContactInfoChange}
           isDisabled={updating}
@@ -49,7 +49,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
           icon={<MapPin className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />}
           title={t('contact.address')}
           value={contactInfo.address}
-          id="contact-address-value"
+          id="address"
           isAuthenticated={isAuthenticated}
           onChange={handleContactInfoChange}
           isDisabled={updating}
@@ -60,7 +60,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
           icon={<Globe className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />}
           title={t('contact.website')}
           value={contactInfo.website}
-          id="contact-website-value"
+          id="website"
           isAuthenticated={isAuthenticated}
           onChange={handleContactInfoChange}
           isDisabled={updating}

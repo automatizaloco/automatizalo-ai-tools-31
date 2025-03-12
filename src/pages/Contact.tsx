@@ -1,4 +1,3 @@
-
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
@@ -20,24 +19,14 @@ const Contact = () => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showTyping, setShowTyping] = useState(false);
 
-  const handleContactInfoChange = async (id: string, value: string) => {
+  const handleContactInfoChange = async (field: string, value: string) => {
     try {
-      const fieldMap: Record<string, keyof typeof contactInfo> = {
-        'contact-phone-value': 'phone',
-        'contact-email-value': 'email',
-        'contact-address-value': 'address',
-        'contact-website-value': 'website'
-      };
-      
-      if (id in fieldMap) {
-        const field = fieldMap[id];
-        const update = { [field]: value };
-        console.log(`Updating ${field} with value:`, value);
-        await updateContactInfo(update);
-      }
+      const update = { [field]: value };
+      console.log(`Updating ${field} with value:`, value);
+      await updateContactInfo(update);
     } catch (error) {
       console.error("Error updating contact info:", error);
-      toast.error(`Failed to update ${id.replace('contact-', '').replace('-value', '')}`);
+      toast.error(`Failed to update ${field}`);
     }
   };
 

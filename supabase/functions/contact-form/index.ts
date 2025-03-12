@@ -19,9 +19,11 @@ serve(async (req) => {
 
   try {
     const reqData = await req.json();
+    console.log("Received form data:", reqData);
     
-    // Validate form data
+    // Basic validation
     if (!reqData.name || !reqData.email || !reqData.subject || !reqData.message) {
+      console.log("Missing required fields");
       return new Response(
         JSON.stringify({ error: "All fields are required" }), 
         { 
@@ -31,12 +33,13 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client
+    // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const resendKey = Deno.env.get("RESEND_API_KEY");
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("Missing Supabase credentials");
+    if (!supabaseUrl || !supabaseKey || !resendKey) {
+      console.error("Missing environment variables");
       return new Response(
         JSON.stringify({ error: "Server configuration error" }),
         { 
@@ -46,77 +49,83 @@ serve(async (req) => {
       );
     }
 
+    // Initialize clients
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const resend = new Resend(resendKey);
 
-    // Save to database
-    const { error: dbError } = await supabase
-      .from('contact_messages')
-      .insert([{
-        name: reqData.name,
-        email: reqData.email,
-        subject: reqData.subject,
-        message: reqData.message
-      }]);
+    // Save to database (don't stop on error)
+    try {
+      const { error: dbError } = await supabase
+        .from('contact_messages')
+        .insert([{
+          name: reqData.name,
+          email: reqData.email,
+          subject: reqData.subject,
+          message: reqData.message
+        }]);
 
-    if (dbError) {
-      console.error("Database error:", dbError);
+      if (dbError) {
+        console.error("Database error:", dbError);
+      } else {
+        console.log("Contact message saved to database");
+      }
+    } catch (dbError) {
+      console.error("Error saving to database:", dbError);
       // Continue execution even if DB save fails
     }
 
     // Send email
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendKey) {
-      console.error("Missing Resend API key");
-      return new Response(
-        JSON.stringify({ error: "Email service configuration error" }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
+    try {
+      const { data, error: emailError } = await resend.emails.send({
+        from: "Contact Form <onboarding@resend.dev>",
+        to: ["contact@automatizalo.co"],
+        subject: `New Contact Form: ${reqData.subject}`,
+        html: `
+          <h1>New Contact Message</h1>
+          <p><strong>From:</strong> ${reqData.name} (${reqData.email})</p>
+          <p><strong>Subject:</strong> ${reqData.subject}</p>
+          <h2>Message:</h2>
+          <p>${reqData.message}</p>
+        `
+      });
 
-    const resend = new Resend(resendKey);
-    
-    const { data, error: emailError } = await resend.emails.send({
-      from: "Contact Form <onboarding@resend.dev>",
-      to: ["contact@automatizalo.co"],
-      subject: `New Contact Form: ${reqData.subject}`,
-      html: `
-        <h1>New Contact Message</h1>
-        <p><strong>From:</strong> ${reqData.name} (${reqData.email})</p>
-        <p><strong>Subject:</strong> ${reqData.subject}</p>
-        <h2>Message:</h2>
-        <p>${reqData.message}</p>
-      `
-    });
-
-    if (emailError) {
-      console.error("Email error:", emailError);
-      return new Response(
-        JSON.stringify({ error: "Failed to send email", details: emailError }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
-
-    // Success response
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Contact form submitted successfully",
-        emailId: data?.id
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      if (emailError) {
+        console.error("Email error:", emailError);
+        return new Response(
+          JSON.stringify({ error: "Failed to send email", details: emailError }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
       }
-    );
 
+      console.log("Email sent successfully:", data);
+      
+      // Success response
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Contact form submitted successfully",
+          emailId: data?.id
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      return new Response(
+        JSON.stringify({ error: "Failed to send email", details: emailError.message }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
   } catch (error) {
-    console.error("Unhandled error in contact form handler:", error);
+    console.error("Unhandled error:", error);
     
     return new Response(
       JSON.stringify({

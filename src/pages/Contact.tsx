@@ -232,7 +232,7 @@ const Contact = () => {
                 className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium py-3 px-6 rounded-full shadow-lg transition-all duration-200 inline-flex items-center gap-2"
               >
                 <MessageCircle size={20} />
-                {t('contact.whatsapp.chat') || "Chat with us"}
+                {"Chat with us"}
               </Button>
             </div>
           </div>

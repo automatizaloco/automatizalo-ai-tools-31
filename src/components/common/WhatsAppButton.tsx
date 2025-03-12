@@ -1,17 +1,20 @@
 
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Calendar } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
+import { toast } from "sonner";
 
 interface WhatsAppButtonProps {
   phoneNumber?: string;
   message?: string;
+  showCalendarConfirmation?: boolean;
 }
 
 const WhatsAppButton = ({
   phoneNumber: propPhoneNumber,
-  message = "Hello, I would like more information"
+  message = "Hello, I would like more information",
+  showCalendarConfirmation = false
 }: WhatsAppButtonProps) => {
   const { t } = useLanguage();
   const { contactInfo } = useContactInfo();
@@ -23,7 +26,21 @@ const WhatsAppButton = ({
     // Clean the phone number - remove any non-digit characters
     const cleanPhone = phoneNumber.replace(/\D/g, '');
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
+
+    // If calendar confirmation is requested, show success toast first
+    if (showCalendarConfirmation) {
+      toast.success(t("contact.calendar.confirmation") || "Meeting scheduled successfully! A calendar invitation has been sent to your email and WhatsApp.", {
+        duration: 5000,
+        icon: <Calendar className="text-green-500" />
+      });
+      
+      // Slight delay to allow toast to appear before WhatsApp opens
+      setTimeout(() => {
+        window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
+      }, 1000);
+    } else {
+      window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
+    }
   };
 
   return (

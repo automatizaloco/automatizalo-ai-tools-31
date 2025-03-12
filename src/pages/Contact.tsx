@@ -8,27 +8,47 @@ import ContactInfo from "@/components/contact/ContactInfo";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import { useState, useEffect } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 const Contact = () => {
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { contactInfo, loading } = useContactInfo();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showTyping, setShowTyping] = useState(false);
+  const [meetingConfirmed, setMeetingConfirmed] = useState(false);
 
-  const handleContactInfoChange = async (field: string, value: string) => {
-    try {
-      const update = { [field]: value };
-      console.log(`Updating ${field} with value:`, value);
-      // await updateContactInfo(update); // This line was removed because updateContactInfo is not defined here
-    } catch (error) {
-      console.error("Error updating contact info:", error);
-      toast.error(`Failed to update ${field}`);
-    }
+  const getNextFriday = () => {
+    const today = new Date();
+    const day = today.getDay();
+    const daysUntilFriday = day <= 5 ? 5 - day : 5 + (7 - day);
+    
+    const nextFriday = new Date(today);
+    nextFriday.setDate(today.getDate() + daysUntilFriday);
+    nextFriday.setHours(14, 0, 0, 0);
+    
+    return nextFriday;
   };
+
+  const meetingDate = getNextFriday();
+  
+  const getMeetingDateString = () => {
+    const dateOptions: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    
+    return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : language === 'fr' ? 'fr-FR' : 'es-ES', dateOptions).format(meetingDate);
+  };
+
+  const meetingDateString = getMeetingDateString();
 
   const chatMessages = {
     en: [
@@ -37,7 +57,7 @@ const Contact = () => {
       { sender: 'user', message: 'Can you schedule a demo for me?' },
       { sender: 'bot', message: 'Of course! I can schedule a demo for you. What day works best for you?' },
       { sender: 'user', message: 'How about Friday afternoon?' },
-      { sender: 'bot', message: 'Perfect! I\'ve scheduled a demo for this Friday at 2:00 PM. You\'ll receive a confirmation email shortly.' }
+      { sender: 'bot', message: `Perfect! I've scheduled a demo for ${format(meetingDate, "EEEE, MMMM d 'at' h:mm a")}. You'll receive a calendar invitation shortly.` }
     ],
     fr: [
       { sender: 'user', message: 'Bonjour, j\'ai besoin d\'informations sur vos services.' },
@@ -45,7 +65,7 @@ const Contact = () => {
       { sender: 'user', message: 'Pouvez-vous programmer une démo pour moi?' },
       { sender: 'bot', message: 'Bien sûr! Je peux programmer une démo pour vous. Quel jour vous convient le mieux?' },
       { sender: 'user', message: 'Que diriez-vous de vendredi après-midi?' },
-      { sender: 'bot', message: 'Parfait! J\'ai programmé une démo pour ce vendredi à 14h00. Vous recevrez un email de confirmation sous peu.' }
+      { sender: 'bot', message: `Parfait! J'ai programmé une démo pour ${format(meetingDate, "EEEE d MMMM 'à' HH'h'mm", { locale: require('date-fns/locale/fr') })}. Vous recevrez une invitation à votre calendrier sous peu.` }
     ],
     es: [
       { sender: 'user', message: 'Hola, necesito información sobre sus servicios.' },
@@ -53,21 +73,25 @@ const Contact = () => {
       { sender: 'user', message: '¿Pueden programar una demo para mí?' },
       { sender: 'bot', message: '¡Por supuesto! Puedo programar una demo para ti. ¿Qué día te funciona mejor?' },
       { sender: 'user', message: '¿Qué tal el viernes por la tarde?' },
-      { sender: 'bot', message: '¡Perfecto! He programado una demo para este viernes a las 14:00. Recibirás un correo de confirmación en breve.' }
+      { sender: 'bot', message: `¡Perfecto! He programado una demo para el ${format(meetingDate, "EEEE d 'de' MMMM 'a las' HH:mm", { locale: require('date-fns/locale/es') })}. Recibirás una invitación para tu calendario en breve.` }
     ]
   };
 
   useEffect(() => {
-    if (currentMessageIndex < chatMessages[t('language') || 'en'].length) {
+    if (currentMessageIndex < chatMessages[language || 'en'].length) {
       setShowTyping(true);
       
-      const typingDelay = chatMessages[t('language') || 'en'][currentMessageIndex].sender === 'bot' ? 1500 : 800;
+      const typingDelay = chatMessages[language || 'en'][currentMessageIndex].sender === 'bot' ? 1500 : 800;
       
       const typingTimer = setTimeout(() => {
         setShowTyping(false);
         
         const messageTimer = setTimeout(() => {
           setCurrentMessageIndex(prev => prev + 1);
+          
+          if (currentMessageIndex === chatMessages[language || 'en'].length - 1) {
+            setMeetingConfirmed(true);
+          }
         }, 300);
         
         return () => clearTimeout(messageTimer);
@@ -75,16 +99,34 @@ const Contact = () => {
       
       return () => clearTimeout(typingTimer);
     } else {
-      const resetTimer = setTimeout(() => {
-        setCurrentMessageIndex(0);
-      }, 3000);
-      
-      return () => clearTimeout(resetTimer);
+      if (meetingConfirmed) {
+        toast.success(t("contact.calendar.confirmation") || "Meeting scheduled successfully! A calendar invitation has been sent to your email and WhatsApp.", {
+          duration: 5000,
+          icon: <Calendar className="text-green-500" />
+        });
+        setMeetingConfirmed(false);
+      }
     }
-  }, [currentMessageIndex, t]);
+  }, [currentMessageIndex, language, meetingConfirmed]);
 
-  const currentLanguageKey = t('language') || 'en';
+  const currentLanguageKey = language || 'en';
   const messages = chatMessages[currentLanguageKey as keyof typeof chatMessages] || chatMessages.en;
+
+  const handleScheduleDemo = () => {
+    const cleanPhone = contactInfo.phone.replace(/\D/g, '');
+    const message = encodeURIComponent(
+      `${t('contact.whatsapp.meetingConfirmed') || `Meeting confirmed for ${meetingDateString}. I look forward to our demo session!`}`
+    );
+    
+    toast.success(t("contact.calendar.confirmation") || "Meeting scheduled successfully! A calendar invitation has been sent to your email and WhatsApp.", {
+      duration: 5000,
+      icon: <Calendar className="text-green-500" />
+    });
+    
+    setTimeout(() => {
+      window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+    }, 1000);
+  };
 
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
@@ -111,7 +153,7 @@ const Contact = () => {
                   <span className="text-white font-medium">Automatízalo WhatsApp</span>
                 </div>
                 
-                <div className="p-4 h-80 overflow-y-auto flex flex-col space-y-3" style={{ minHeight: "320px" }}>
+                <div className="p-4 h-64 overflow-y-auto flex flex-col space-y-3">
                   {messages.slice(0, currentMessageIndex).map((msg, index) => (
                     <div 
                       key={index} 
@@ -144,6 +186,21 @@ const Contact = () => {
                       </div>
                     </div>
                   )}
+                  
+                  {currentMessageIndex >= messages.length && (
+                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
+                      <div className="flex items-center mb-2">
+                        <Calendar className="text-green-600 dark:text-green-400 mr-2" size={20} />
+                        <h3 className="font-medium text-green-800 dark:text-green-300">
+                          {t('contact.calendar.title') || "Meeting Scheduled"}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{meetingDateString}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {t('contact.calendar.details') || "Calendar invitation has been sent to your email"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -154,18 +211,15 @@ const Contact = () => {
               <WhatsAppButton 
                 phoneNumber={contactInfo.phone}
                 message={t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services"}
+                showCalendarConfirmation={true}
               />
               
               <Button 
-                onClick={() => {
-                  const cleanPhone = contactInfo.phone.replace(/\D/g, '');
-                  const message = encodeURIComponent(t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services");
-                  window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
-                }}
+                onClick={handleScheduleDemo}
                 className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium py-3 px-6 rounded-full shadow-lg transition-all duration-200 inline-flex items-center gap-2"
               >
-                <MessageCircle size={20} />
-                {t('contact.whatsapp') || "Chat on WhatsApp"}
+                <Calendar size={20} />
+                {t('contact.schedule.demo') || "Schedule Demo on WhatsApp"}
               </Button>
             </div>
           </div>

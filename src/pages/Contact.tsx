@@ -1,3 +1,4 @@
+
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
@@ -12,6 +13,7 @@ import { MessageCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { es, fr } from "date-fns/locale";
 
 const Contact = () => {
   const { theme } = useTheme();
@@ -36,6 +38,7 @@ const Contact = () => {
   const meetingDate = getNextFriday();
   
   const getMeetingDateString = () => {
+    // Use proper imports instead of require
     const dateOptions: Intl.DateTimeFormatOptions = { 
       weekday: 'long', 
       year: 'numeric', 
@@ -50,6 +53,17 @@ const Contact = () => {
 
   const meetingDateString = getMeetingDateString();
 
+  // Format date strings using date-fns with proper imports
+  const formatDateForLanguage = (date: Date, lang: string) => {
+    if (lang === 'fr') {
+      return format(date, "EEEE d MMMM 'à' HH'h'mm", { locale: fr });
+    } else if (lang === 'es') {
+      return format(date, "EEEE d 'de' MMMM 'a las' HH:mm", { locale: es });
+    } else {
+      return format(date, "EEEE, MMMM d 'at' h:mm a");
+    }
+  };
+
   const chatMessages = {
     en: [
       { sender: 'user', message: 'Hello, I need information about your services.' },
@@ -57,7 +71,7 @@ const Contact = () => {
       { sender: 'user', message: 'Can you schedule a demo for me?' },
       { sender: 'bot', message: 'Of course! I can schedule a demo for you. What day works best for you?' },
       { sender: 'user', message: 'How about Friday afternoon?' },
-      { sender: 'bot', message: `Perfect! I've scheduled a demo for ${format(meetingDate, "EEEE, MMMM d 'at' h:mm a")}. You'll receive a calendar invitation shortly.` }
+      { sender: 'bot', message: `Perfect! I've scheduled a demo for ${formatDateForLanguage(meetingDate, 'en')}. You'll receive a calendar invitation shortly.` }
     ],
     fr: [
       { sender: 'user', message: 'Bonjour, j\'ai besoin d\'informations sur vos services.' },
@@ -65,7 +79,7 @@ const Contact = () => {
       { sender: 'user', message: 'Pouvez-vous programmer une démo pour moi?' },
       { sender: 'bot', message: 'Bien sûr! Je peux programmer une démo pour vous. Quel jour vous convient le mieux?' },
       { sender: 'user', message: 'Que diriez-vous de vendredi après-midi?' },
-      { sender: 'bot', message: `Parfait! J'ai programmé une démo pour ${format(meetingDate, "EEEE d MMMM 'à' HH'h'mm", { locale: require('date-fns/locale/fr') })}. Vous recevrez une invitation à votre calendrier sous peu.` }
+      { sender: 'bot', message: `Parfait! J'ai programmé une démo pour ${formatDateForLanguage(meetingDate, 'fr')}. Vous recevrez une invitation à votre calendrier sous peu.` }
     ],
     es: [
       { sender: 'user', message: 'Hola, necesito información sobre sus servicios.' },
@@ -73,7 +87,7 @@ const Contact = () => {
       { sender: 'user', message: '¿Pueden programar una demo para mí?' },
       { sender: 'bot', message: '¡Por supuesto! Puedo programar una demo para ti. ¿Qué día te funciona mejor?' },
       { sender: 'user', message: '¿Qué tal el viernes por la tarde?' },
-      { sender: 'bot', message: `¡Perfecto! He programado una demo para el ${format(meetingDate, "EEEE d 'de' MMMM 'a las' HH:mm", { locale: require('date-fns/locale/es') })}. Recibirás una invitación para tu calendario en breve.` }
+      { sender: 'bot', message: `¡Perfecto! He programado una demo para el ${formatDateForLanguage(meetingDate, 'es')}. Recibirás una invitación para tu calendario en breve.` }
     ]
   };
 

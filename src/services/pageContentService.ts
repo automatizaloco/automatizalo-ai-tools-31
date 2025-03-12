@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface PageSection {
@@ -11,13 +10,12 @@ export interface PageSection {
 
 export const getPageContent = async (page: string, section: string): Promise<string> => {
   try {
-    // Try to fetch content from Supabase
     const { data, error } = await supabase
       .from('page_content')
       .select('content')
       .eq('page', page)
       .eq('section_name', section)
-      .maybeSingle();
+      .single();
     
     if (error) {
       console.error('Error fetching page content:', error);
@@ -25,7 +23,7 @@ export const getPageContent = async (page: string, section: string): Promise<str
     }
     
     // If content exists in the database, return it
-    if (data) {
+    if (data?.content) {
       return data.content;
     }
     
@@ -33,12 +31,16 @@ export const getPageContent = async (page: string, section: string): Promise<str
     const defaultContent = getDefaultContent(page, section);
     
     // Store the default content in Supabase for future use
-    await supabase.from('page_content').insert({
+    const { error: insertError } = await supabase.from('page_content').insert({
       page,
       section_name: section,
-      content: defaultContent,
-      updated_at: new Date().toISOString()
+      content: defaultContent
     });
+    
+    if (insertError) {
+      console.error('Error inserting default content:', insertError);
+      throw insertError;
+    }
     
     return defaultContent;
   } catch (error) {
@@ -62,42 +64,18 @@ export const getPageContent = async (page: string, section: string): Promise<str
 
 export const updatePageContent = async (page: string, section: string, content: string): Promise<void> => {
   try {
-    // Check if content already exists
-    const { data } = await supabase
-      .from('page_content')
-      .select('id')
-      .eq('page', page)
-      .eq('section_name', section)
-      .maybeSingle();
+    const { error } = await supabase.from('page_content')
+      .upsert({
+        page,
+        section_name: section,
+        content,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'page,section_name'
+      });
     
-    if (data) {
-      // Update existing content
-      const { error } = await supabase
-        .from('page_content')
-        .update({
-          content,
-          updated_at: new Date().toISOString()
-        })
-        .eq('page', page)
-        .eq('section_name', section);
-      
-      if (error) {
-        throw error;
-      }
-    } else {
-      // Insert new content
-      const { error } = await supabase
-        .from('page_content')
-        .insert({
-          page,
-          section_name: section,
-          content,
-          updated_at: new Date().toISOString()
-        });
-      
-      if (error) {
-        throw error;
-      }
+    if (error) {
+      throw error;
     }
     
     console.log(`Content updated for ${page} - ${section}`);

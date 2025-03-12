@@ -261,6 +261,30 @@ export type Database = {
         }
         Relationships: []
       }
+      page_content: {
+        Row: {
+          content: string
+          id: string
+          page: string
+          section_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          id?: string
+          page: string
+          section_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          page?: string
+          section_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           company: string | null

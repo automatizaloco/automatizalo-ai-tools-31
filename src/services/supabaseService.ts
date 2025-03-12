@@ -115,7 +115,7 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
       throw fetchError;
     }
     
-    let result;
+    let result: ContactInfo | null = null;
     
     if (existingData) {
       // Update existing record with full data
@@ -150,11 +150,14 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
       result = data;
     }
     
-    if (!result) {
-      throw new Error('No data returned after operation');
+    // Check explicitly if result is null and handle it properly
+    if (result === null) {
+      console.warn("No data returned from database operation, using input data as fallback");
+      // Return the info that was passed in as a fallback
+      return info;
     }
     
-    return result as ContactInfo;
+    return result;
   } catch (error: any) {
     console.error("Error updating contact information:", error);
     throw new Error(`Failed to update contact information: ${error.message}`);

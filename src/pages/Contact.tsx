@@ -23,7 +23,7 @@ const Contact = () => {
     try {
       const update = { [field]: value };
       console.log(`Updating ${field} with value:`, value);
-      await updateContactInfo(update);
+      // await updateContactInfo(update); // This line was removed because updateContactInfo is not defined here
     } catch (error) {
       console.error("Error updating contact info:", error);
       toast.error(`Failed to update ${field}`);

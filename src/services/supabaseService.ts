@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ContactInfo } from '@/stores/contactInfoStore';
 import { toast } from 'sonner';
@@ -124,7 +125,7 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
         .update(info)
         .eq('id', existingData.id)
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error updating contact info:", error);
@@ -139,7 +140,7 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
         .from('contact_info')
         .insert([info])  // Wrap in array to match expected type
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error inserting contact info:", error);

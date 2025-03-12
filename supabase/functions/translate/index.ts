@@ -3,6 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 const GOOGLE_API_URL = "https://translation.googleapis.com/language/translate/v2";
+const API_KEY = Deno.env.get('GOOGLE_API_KEY');
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -11,12 +12,25 @@ serve(async (req) => {
   }
 
   try {
-    const { text, targetLang } = await req.json()
+    const { text, targetLang } = await req.json();
+    
+    console.log(`Translating text to ${targetLang}. API Key exists: ${!!API_KEY}`);
+    
+    if (!API_KEY) {
+      console.error("Google API key not found in environment variables");
+      return new Response(
+        JSON.stringify({ error: 'Google API key is not configured' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        },
+      );
+    }
     
     const params = new URLSearchParams({
       q: text,
       target: targetLang,
-      key: Deno.env.get('GOOGLE_API_KEY') || ''
+      key: API_KEY
     });
 
     const response = await fetch(`${GOOGLE_API_URL}?${params.toString()}`, {
@@ -29,10 +43,18 @@ serve(async (req) => {
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.error?.message || 'Translation failed');
+      console.error("Translation API error:", data);
+      return new Response(
+        JSON.stringify({ error: data.error?.message || `Translation failed with status ${response.status}` }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        },
+      );
     }
 
     const translatedText = data.data?.translations?.[0]?.translatedText;
+    console.log("Translation successful:", translatedText?.substring(0, 30) + "...");
 
     return new Response(
       JSON.stringify({ translatedText }),
@@ -42,6 +64,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error("Translation error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

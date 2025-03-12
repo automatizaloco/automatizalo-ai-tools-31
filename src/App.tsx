@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { LanguageProvider } from "@/context/LanguageContext";
@@ -17,7 +17,7 @@ import BlogAdmin from "@/pages/admin/BlogAdmin";
 import BlogPostForm from "@/pages/admin/BlogPostForm";
 import TestimonialManager from "@/pages/admin/TestimonialManager";
 import NotFound from "@/pages/NotFound";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import NewsletterAdmin from "@/pages/admin/NewsletterAdmin";
 
@@ -42,28 +42,30 @@ function App() {
       <AuthProvider>
         <ThemeProvider defaultTheme={theme}>
           <LanguageProvider>
-            <WhatsAppButton />
-            <Toaster />
-            
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/solutions" element={<Solutions />} />
-              <Route path="/login" element={<Login />} />
+            <BrowserRouter>
+              <WhatsAppButton />
+              <Toaster />
               
-              {/* Admin routes */}
-              <Route path="/admin" element={<ContentManager />} />
-              <Route path="/admin/blog" element={<BlogAdmin />} />
-              <Route path="/admin/blog/new" element={<BlogPostForm />} />
-              <Route path="/admin/blog/edit/:id" element={<BlogPostForm />} />
-              <Route path="/admin/testimonials" element={<TestimonialManager />} />
-              <Route path="/admin/newsletter" element={<NewsletterAdmin />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/solutions" element={<Solutions />} />
+                <Route path="/login" element={<Login />} />
+                
+                {/* Admin routes */}
+                <Route path="/admin" element={<ContentManager />} />
+                <Route path="/admin/blog" element={<BlogAdmin />} />
+                <Route path="/admin/blog/new" element={<BlogPostForm />} />
+                <Route path="/admin/blog/edit/:id" element={<BlogPostForm />} />
+                <Route path="/admin/testimonials" element={<TestimonialManager />} />
+                <Route path="/admin/newsletter" element={<NewsletterAdmin />} />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
           </LanguageProvider>
         </ThemeProvider>
       </AuthProvider>

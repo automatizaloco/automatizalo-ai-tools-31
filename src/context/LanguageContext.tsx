@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 type Language = "en" | "fr" | "es";
@@ -59,6 +58,11 @@ const translations = {
     "contact.email": "Email Us",
     "contact.phone": "Call Us",
     "contact.address": "Visit Us",
+    "contact.whatsapp.title": "Let Our WhatsApp Bot Assist You 24/7",
+    "contact.whatsapp.description": "Our AI-powered WhatsApp assistant can answer your questions, schedule meetings, and handle inquiries instantly - anytime, anywhere.",
+    "contact.whatsapp.cta": "Connect with us now for fast responses, meeting scheduling, and personalized assistance!",
+    "contact.whatsapp.defaultMessage": "Hello, I would like to know more about your services",
+    "language": "en",
     
     // Solutions
     "solutions.title": "Our Solutions",
@@ -192,6 +196,11 @@ const translations = {
     "contact.email": "Envoyez-nous un Email",
     "contact.phone": "Appelez-Nous",
     "contact.address": "Visitez-Nous",
+    "contact.whatsapp.title": "Laissez Notre Bot WhatsApp Vous Aider 24/7",
+    "contact.whatsapp.description": "Notre assistant WhatsApp alimenté par l'IA peut répondre à vos questions, programmer des réunions et traiter vos demandes instantanément - à tout moment, n'importe où.",
+    "contact.whatsapp.cta": "Connectez-vous avec nous maintenant pour des réponses rapides, la programmation de réunions et une assistance personnalisée!",
+    "contact.whatsapp.defaultMessage": "Bonjour, je voudrais en savoir plus sur vos services",
+    "language": "fr",
     
     // Solutions
     "solutions.title": "Nos Solutions",
@@ -325,6 +334,11 @@ const translations = {
     "contact.email": "Envíanos un Email",
     "contact.phone": "Llámanos",
     "contact.address": "Visítanos",
+    "contact.whatsapp.title": "Deja Que Nuestro Bot de WhatsApp Te Ayude 24/7",
+    "contact.whatsapp.description": "Nuestro asistente de WhatsApp impulsado por IA puede responder tus preguntas, programar reuniones y gestionar consultas instantáneamente - en cualquier momento y lugar.",
+    "contact.whatsapp.cta": "¡Conéctate con nosotros ahora para respuestas rápidas, programación de reuniones y asistencia personalizada!",
+    "contact.whatsapp.defaultMessage": "Hola, me gustaría saber más sobre sus servicios",
+    "language": "es",
     
     // Solutions
     "solutions.title": "Nuestras Soluciones",

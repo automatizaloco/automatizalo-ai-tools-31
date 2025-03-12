@@ -17,10 +17,35 @@ export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
   }
 
   // Map the database field read_time to readTime in our BlogPost type
-  return (data || []).map(post => ({
+  let posts = (data || []).map(post => ({
     ...post,
     readTime: post.read_time
   })) as BlogPost[];
+
+  // Fetch translations for all posts
+  for (const post of posts) {
+    const { data: translations } = await supabase
+      .from('blog_translations')
+      .select('*')
+      .eq('blog_post_id', post.id);
+
+    if (translations && translations.length > 0) {
+      post.translations = {};
+      
+      // Group translations by language
+      translations.forEach((translation: BlogTranslation) => {
+        if (translation.language === 'fr' || translation.language === 'es') {
+          post.translations![translation.language] = {
+            title: translation.title,
+            excerpt: translation.excerpt,
+            content: translation.content
+          };
+        }
+      });
+    }
+  }
+
+  return posts;
 };
 
 /**
@@ -40,10 +65,33 @@ export const fetchBlogPostById = async (id: string): Promise<BlogPost | null> =>
 
   if (!data) return null;
   
-  return {
+  const post = {
     ...data,
     readTime: data.read_time
   } as BlogPost;
+
+  // Fetch translations for this post
+  const { data: translations } = await supabase
+    .from('blog_translations')
+    .select('*')
+    .eq('blog_post_id', id);
+
+  if (translations && translations.length > 0) {
+    post.translations = {};
+    
+    // Group translations by language
+    translations.forEach((translation: BlogTranslation) => {
+      if (translation.language === 'fr' || translation.language === 'es') {
+        post.translations![translation.language] = {
+          title: translation.title,
+          excerpt: translation.excerpt,
+          content: translation.content
+        };
+      }
+    });
+  }
+
+  return post;
 };
 
 /**
@@ -63,10 +111,33 @@ export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null
 
   if (!data) return null;
   
-  return {
+  const post = {
     ...data,
     readTime: data.read_time
   } as BlogPost;
+
+  // Fetch translations for this post
+  const { data: translations } = await supabase
+    .from('blog_translations')
+    .select('*')
+    .eq('blog_post_id', post.id);
+
+  if (translations && translations.length > 0) {
+    post.translations = {};
+    
+    // Group translations by language
+    translations.forEach((translation: BlogTranslation) => {
+      if (translation.language === 'fr' || translation.language === 'es') {
+        post.translations![translation.language] = {
+          title: translation.title,
+          excerpt: translation.excerpt,
+          content: translation.content
+        };
+      }
+    });
+  }
+
+  return post;
 };
 
 /**
@@ -124,10 +195,35 @@ export const fetchFeaturedBlogPosts = async (): Promise<BlogPost[]> => {
   }
 
   // Map the database field read_time to readTime in our BlogPost type
-  return (data || []).map(post => ({
+  let posts = (data || []).map(post => ({
     ...post,
     readTime: post.read_time
   })) as BlogPost[];
+
+  // Fetch translations for all featured posts
+  for (const post of posts) {
+    const { data: translations } = await supabase
+      .from('blog_translations')
+      .select('*')
+      .eq('blog_post_id', post.id);
+
+    if (translations && translations.length > 0) {
+      post.translations = {};
+      
+      // Group translations by language
+      translations.forEach((translation: BlogTranslation) => {
+        if (translation.language === 'fr' || translation.language === 'es') {
+          post.translations![translation.language] = {
+            title: translation.title,
+            excerpt: translation.excerpt,
+            content: translation.content
+          };
+        }
+      });
+    }
+  }
+
+  return posts;
 };
 
 // Add aliases for the blog pages that were using the old names

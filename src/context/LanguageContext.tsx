@@ -278,7 +278,7 @@ const translations = {
     "testimonials.client2.text": "L'automatisation des flux de travail que nous avons mise en œuvre avec Automatízalo a réduit notre temps de traitement de 60%. Leur équipe a compris nos besoins spécifiques et a livré une solution qui s'intègre parfaitement à nos systèmes existants.",
     "testimonials.client3.name": "Emma Thompson",
     "testimonials.client3.company": "Creative Solutions",
-    "testimonials.client3.text": "En tant que petite entreprise, nous avions besoin d'une automatisation abordable qui pourrait grandir avec nous. Automatízalo a livré exactement cela - des outils puissants qui ont simplifié nos opérations sans ruiner la banque.",
+    "testimonials.client3.text": "As a small business, we needed affordable automation that could grow with us. Automatízalo delivered exactly that - powerful tools that simplified our operations without breaking the bank.",
     
     // Footer
     "footer.company": "Entreprise",
@@ -410,7 +410,7 @@ const translations = {
     "testimonials.description": "Descubre cómo Automatízalo ha ayudado a empresas e individuos a transformar sus flujos de trabajo y productividad.",
     "testimonials.client1.name": "Sarah Johnson",
     "testimonials.client1.company": "Tech Innovators Inc.",
-    "testimonials.client1.text": "Automatízalo ha transformado completamente la forma en que manejamos las consultas de los clientes. Su solución de chatbot IA ha reducido los tiempos de respuesta en un 80% y ha permitido a nuestro equipo centrarse en problemas complejos. El retorno de inversión ha sido increíble.",
+    "testimonials.client1.text": "Automatízalo ha transformado completamente la forma en que manejamos las consultas de los clientes. Su solución de chatbot IA ha reducido los tiempos de respuesta de un 80% y ha permitido a nuestro equipo centrarse en problemas complejos. El retorno de inversión ha sido increíble.",
     "testimonials.client2.name": "Carlos Rodriguez",
     "testimonials.client2.company": "Global Logistics",
     "testimonials.client2.text": "La automatización de flujo de trabajo que implementamos con Automatízalo ha reducido nuestro tiempo de procesamiento en un 60%. Su equipo entendió nuestras necesidades específicas y entregó una solución que se integró perfectamente con nuestros sistemas existentes.",

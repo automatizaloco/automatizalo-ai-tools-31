@@ -14,6 +14,8 @@ serve(async (req) => {
   try {
     const { text, title, excerpt, targetLang } = await req.json();
     
+    console.log(`Translating content to ${targetLang}. API Key exists: ${!!API_KEY}`);
+    
     if (!API_KEY) {
       throw new Error('Google API key is not configured');
     }
@@ -53,6 +55,8 @@ serve(async (req) => {
       translateText(excerpt, targetLang),
       translateText(text, targetLang)
     ]);
+
+    console.log(`Translation completed successfully for ${targetLang}`);
 
     return new Response(
       JSON.stringify({ 

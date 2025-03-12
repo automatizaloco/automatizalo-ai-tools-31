@@ -51,6 +51,12 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
+      if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+        throw new Error("Please fill in all required fields");
+      }
+      
+      console.log("Submitting contact form:", formData);
+      
       const { data, error } = await supabase.functions.invoke('contact-form', {
         body: formData,
       });
@@ -69,10 +75,10 @@ const Contact = () => {
         message: "",
       });
       
-      toast.success("Message sent successfully!");
-    } catch (error) {
+      toast.success(t('contact.form.success') || "Message sent successfully!");
+    } catch (error: any) {
       console.error('Error submitting form:', error);
-      toast.error("Failed to send message. Please try again.");
+      toast.error(error.message || "Failed to send message. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

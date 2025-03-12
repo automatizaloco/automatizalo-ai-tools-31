@@ -28,24 +28,30 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Missing required fields in form submission");
     }
 
-    // Save submission to database
-    const supabaseClient = getSupabaseClient();
-    const { error: dbError } = await supabaseClient
-      .from('contact_messages')
-      .insert({
-        name: formData.name,
-        email: formData.email,
-        subject: formData.subject,
-        message: formData.message
-      });
+    try {
+      // Save submission to database
+      console.log("Attempting to save to database");
+      const supabaseClient = getSupabaseClient();
+      const { error: dbError } = await supabaseClient
+        .from('contact_messages')
+        .insert({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message
+        });
 
-    if (dbError) {
-      console.error("Database error:", dbError);
-      throw new Error(`Database error: ${dbError.message}`);
+      if (dbError) {
+        console.error("Database error:", dbError);
+        throw new Error(`Database error: ${dbError.message}`);
+      }
+      
+      console.log("Form data saved to database successfully");
+    } catch (dbErr) {
+      console.error("Database operation failed:", dbErr);
+      // Continue with email sending even if database save fails
     }
     
-    console.log("Form data saved to database successfully");
-
     // Send email using Resend
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     console.log("Using Resend API Key:", resendApiKey ? "Key is present" : "Key is missing");
@@ -56,6 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     const resend = new Resend(resendApiKey);
     
+    console.log("Attempting to send email");
     const { data, error } = await resend.emails.send({
       from: "Contact Form <onboarding@resend.dev>",
       to: ["contact@automatizalo.co"],
@@ -93,7 +100,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in contact-form function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "An unknown error occurred" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -106,6 +113,13 @@ const handler = async (req: Request): Promise<Response> => {
 const getSupabaseClient = () => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("Missing Supabase credentials:", {
+      urlPresent: !!supabaseUrl,
+      keyPresent: !!supabaseServiceKey
+    });
+  }
   
   return createClient(supabaseUrl, supabaseServiceKey);
 };

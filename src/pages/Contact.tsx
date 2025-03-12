@@ -10,6 +10,7 @@ import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Contact = () => {
   const { theme } = useTheme();
@@ -162,10 +163,24 @@ const Contact = () => {
                 {t('contact.whatsapp.cta') || "Connect with us now for fast responses, meeting scheduling, and personalized assistance!"}
               </p>
               
+              {/* Fixed WhatsApp button at the bottom right */}
               <WhatsAppButton 
                 phoneNumber={contactInfo.phone}
                 message={t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services"}
               />
+              
+              {/* Inline WhatsApp button */}
+              <Button 
+                onClick={() => {
+                  const cleanPhone = contactInfo.phone.replace(/\D/g, '');
+                  const message = encodeURIComponent(t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services");
+                  window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+                }}
+                className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium py-3 px-6 rounded-full shadow-lg transition-all duration-200 inline-flex items-center gap-2"
+              >
+                <MessageCircle size={20} />
+                {t('contact.whatsapp') || "Chat on WhatsApp"}
+              </Button>
             </div>
           </div>
         </div>

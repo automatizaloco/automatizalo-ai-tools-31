@@ -8,6 +8,11 @@ interface ThemeContextType {
   setTheme: (theme: Theme) => void;
 }
 
+interface ThemeProviderProps {
+  children: React.ReactNode;
+  defaultTheme?: Theme;
+}
+
 const defaultContext: ThemeContextType = {
   theme: 'light',
   setTheme: () => {},
@@ -17,14 +22,16 @@ const ThemeContext = createContext<ThemeContextType>(defaultContext);
 
 export const useTheme = () => useContext(ThemeContext);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Check if theme exists in localStorage, otherwise default to light
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, defaultTheme }) => {
+  // Check if theme exists in localStorage, otherwise use defaultTheme or light
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
-      return (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme as Theme : 'light';
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        return savedTheme as Theme;
+      }
     }
-    return 'light';
+    return defaultTheme || 'light';
   });
 
   // Update localStorage whenever theme changes

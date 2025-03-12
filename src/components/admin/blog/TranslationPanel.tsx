@@ -4,7 +4,7 @@ import { BlogPost } from "@/types/blog";
 import { TranslationFormData } from "@/types/form";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Check, Edit, Loader2 } from "lucide-react";
+import { Globe, Check, Edit, Loader2, Save } from "lucide-react";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { translateBlogContent } from "@/services/translationService";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ interface TranslationPanelProps {
   onTranslationEdit: () => void;
   onTranslationChange: (lang: "fr" | "es", field: "title" | "excerpt" | "content", value: string) => void;
   onTranslationContentChange: (content: string) => void;
+  onSaveTranslations: () => void; // New prop for saving translations
 }
 
 const TranslationPanel = ({
@@ -29,6 +30,7 @@ const TranslationPanel = ({
   onTranslationEdit,
   onTranslationChange,
   onTranslationContentChange,
+  onSaveTranslations,
 }: TranslationPanelProps) => {
   const [isTranslating, setIsTranslating] = useState<{ [key: string]: boolean }>({
     fr: false,
@@ -51,6 +53,8 @@ const TranslationPanel = ({
         post.excerpt,
         language
       );
+
+      console.log(`Translation results for ${language}:`, translated);
       
       // Update translation data with results
       onTranslationChange(language, "title", translated.title);
@@ -73,15 +77,28 @@ const TranslationPanel = ({
           <Globe className="mr-2 h-5 w-5 text-gray-500" />
           Translation Preview
         </h2>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onTranslationEdit}
-          className="flex items-center gap-1"
-        >
-          <Edit className="h-4 w-4" />
-          {editingTranslation ? "Done Editing" : "Edit Translations"}
-        </Button>
+        <div className="flex space-x-2">
+          {editingTranslation && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onSaveTranslations}
+              className="flex items-center gap-1"
+            >
+              <Save className="h-4 w-4" />
+              Save Translations
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onTranslationEdit}
+            className="flex items-center gap-1"
+          >
+            <Edit className="h-4 w-4" />
+            {editingTranslation ? "Done Editing" : "Edit Translations"}
+          </Button>
+        </div>
       </div>
       <Tabs
         defaultValue="en"

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -180,6 +181,7 @@ const BlogPostForm = () => {
     setIsTranslating(true);
 
     try {
+      // French translation
       const frTranslation = await translateBlogContent(
         formData.content,
         formData.title,
@@ -187,6 +189,7 @@ const BlogPostForm = () => {
         'fr'
       );
 
+      // Spanish translation
       const esTranslation = await translateBlogContent(
         formData.content,
         formData.title,
@@ -194,7 +197,8 @@ const BlogPostForm = () => {
         'es'
       );
 
-      setTranslationData({
+      // Update the translation data state
+      const updatedTranslations = {
         fr: {
           title: frTranslation.title,
           excerpt: frTranslation.excerpt,
@@ -205,14 +209,59 @@ const BlogPostForm = () => {
           excerpt: esTranslation.excerpt,
           content: esTranslation.content
         }
-      });
+      };
 
+      // Update both states to ensure consistency
+      setTranslationData(updatedTranslations);
+      
+      // Also update the form data with the translations
+      setFormData(prev => ({
+        ...prev,
+        translations: updatedTranslations
+      }));
+
+      console.log("Translations updated:", updatedTranslations);
       toast.success("Content translated to all languages");
+      
+      // Update the post immediately if in edit mode and not manually editing translations
+      if (id && !editingTranslation) {
+        await saveTranslations(updatedTranslations);
+      }
     } catch (error) {
       console.error("Error auto-translating all content:", error);
       toast.error("Failed to translate content to all languages");
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  // New function to save translations without having to submit the entire form
+  const saveTranslations = async (translations: TranslationFormData) => {
+    if (!id) return;
+    
+    try {
+      const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
+      
+      const postData = {
+        ...formData,
+        tags: tagsArray,
+        translations
+      };
+      
+      await updateBlogPost(id, postData);
+      
+      // Update the post state to reflect the new translations
+      if (post) {
+        setPost({
+          ...post,
+          translations
+        });
+      }
+      
+      toast.success("Translations saved successfully");
+    } catch (error) {
+      console.error("Error saving translations:", error);
+      toast.error("Failed to save translations");
     }
   };
 
@@ -231,6 +280,9 @@ const BlogPostForm = () => {
 
       const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
       
+      // Use the most up-to-date translation data
+      const finalTranslations = editingTranslation ? translationData : formData.translations;
+      
       const postData: any = {
         title: formData.title,
         excerpt: formData.excerpt,
@@ -243,7 +295,7 @@ const BlogPostForm = () => {
         image: formData.image,
         featured: formData.featured,
         slug: formData.slug || formData.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-'),
-        translations: editingTranslation ? translationData : formData.translations
+        translations: finalTranslations
       };
 
       console.log("Post data prepared for saving:", postData);
@@ -330,6 +382,7 @@ const BlogPostForm = () => {
                 onTranslationEdit={toggleTranslationEditing}
                 onTranslationChange={handleTranslationChange}
                 onTranslationContentChange={handleTranslationContentChange}
+                onSaveTranslations={() => saveTranslations(translationData)}
               />
             )}
             

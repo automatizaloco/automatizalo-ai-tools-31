@@ -17,6 +17,7 @@ export const translateBlogContent = async (
 }> => {
   try {
     console.log(`Starting translation to ${targetLang}...`);
+    console.log(`Content length: ${content.length}, Title length: ${title.length}, Excerpt length: ${excerpt.length}`);
     
     const { data, error } = await supabase.functions.invoke('translate-blog', {
       body: {
@@ -33,10 +34,16 @@ export const translateBlogContent = async (
     }
 
     if (!data) {
+      console.error('No translation data received');
       throw new Error('No translation data received');
     }
     
     console.log(`Translation to ${targetLang} completed successfully:`, data);
+
+    if (!data.title || !data.content) {
+      console.error('Incomplete translation data received:', data);
+      throw new Error('Incomplete translation data received');
+    }
 
     return {
       title: data.title || '',

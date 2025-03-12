@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Phone, Mail, MapPin, Globe, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import EditableText from "@/components/admin/EditableText";
 import { useContactInfo } from "@/stores/contactInfoStore";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 const Contact = () => {
   const { t } = useLanguage();
@@ -60,6 +62,7 @@ const Contact = () => {
       const result = await response.json();
       
       if (!response.ok) {
+        console.error('Server response error:', result);
         throw new Error(result.error || 'Failed to submit form');
       }
       
@@ -70,10 +73,10 @@ const Contact = () => {
         message: "",
       });
       
-      toast.success(t('contact.form.success'));
+      toast.success("Message sent successfully!");
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error(t('contact.form.error'));
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

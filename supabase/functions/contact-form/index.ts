@@ -18,6 +18,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log("Contact form handler started");
+    
     const formData: ContactFormData = await req.json();
     console.log("Contact form submission:", formData);
 
@@ -33,8 +35,11 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (dbError) {
+      console.error("Database error:", dbError);
       throw new Error(`Database error: ${dbError.message}`);
     }
+    
+    console.log("Form data saved to database successfully");
 
     // Send email using Resend
     const resendApiKey = Deno.env.get("RESEND_API_KEY");

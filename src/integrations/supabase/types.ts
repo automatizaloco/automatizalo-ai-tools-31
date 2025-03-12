@@ -131,6 +131,82 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_content: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          position: number
+          template_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          position?: number
+          template_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          position?: number
+          template_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_content_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_history: {
+        Row: {
+          content: string
+          frequency: string
+          id: string
+          recipient_count: number
+          sent_at: string
+          subject: string
+          template_id: string
+        }
+        Insert: {
+          content: string
+          frequency: string
+          id?: string
+          recipient_count?: number
+          sent_at?: string
+          subject: string
+          template_id: string
+        }
+        Update: {
+          content?: string
+          frequency?: string
+          id?: string
+          recipient_count?: number
+          sent_at?: string
+          subject?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_history_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscriptions: {
         Row: {
           created_at: string
@@ -151,6 +227,36 @@ export type Database = {
           email?: string
           frequency?: string
           id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      newsletter_templates: {
+        Row: {
+          created_at: string
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          name?: string
+          subject?: string
           updated_at?: string
         }
         Relationships: []
@@ -182,6 +288,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -191,9 +315,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never

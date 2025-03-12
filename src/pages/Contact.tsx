@@ -9,7 +9,7 @@ import ContactForm from "@/components/contact/ContactForm";
 
 const Contact = () => {
   const { theme } = useTheme();
-  const { updateContactInfo } = useContactInfo();
+  const { contactInfo, updateContactInfo } = useContactInfo();
 
   const handleContactInfoChange = (id: string, value: string) => {
     const fieldMap: Record<string, keyof typeof contactInfo> = {

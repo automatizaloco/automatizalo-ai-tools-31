@@ -117,7 +117,6 @@ const Contact = () => {
       
       return () => clearTimeout(typingTimer);
     } else if (!meetingConfirmed && chatMessages[language || 'en'].length > 0) {
-      // Restart the animation when it's complete
       setTimeout(() => {
         setCurrentMessageIndex(0);
         setMeetingConfirmed(false);
@@ -149,12 +148,10 @@ const Contact = () => {
           
           <div className="max-w-6xl mx-auto mt-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Contact Info Column */}
               <div>
                 {!loading && <ContactInfo />}
               </div>
               
-              {/* WhatsApp Animation Column */}
               <div className="p-8 rounded-2xl shadow-sm text-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
                 <h2 className={`text-2xl font-heading font-semibold mb-4 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
                   {t('contact.whatsapp.title') || "Let Our WhatsApp Bot Assist You 24/7"}
@@ -243,7 +240,7 @@ const Contact = () => {
                   className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium py-3 px-6 rounded-full shadow-lg transition-all duration-200 inline-flex items-center gap-2"
                 >
                   <MessageCircle size={20} />
-                  {t('contact.whatsapp.chat') || "Chat with us"}
+                  {language === 'en' ? "Chat with us" : t('contact.whatsapp.chat')}
                 </Button>
               </div>
             </div>

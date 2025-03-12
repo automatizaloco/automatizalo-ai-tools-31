@@ -28,21 +28,27 @@ serve(async (req) => {
       }
       
       console.log(`Making request to Google Translate API for content length ${content.length}`);
+      console.log(`Content sample: ${content.substring(0, 50)}...`);
       
       try {
-        const params = new URLSearchParams({
+        // Build request body according to Google's API docs
+        const requestBody = {
           q: content,
           target: target,
-          key: API_KEY
-        });
+          format: "text"
+        };
 
-        const response = await fetch(`${GOOGLE_API_URL}?${params.toString()}`, {
+        // Make API request
+        const response = await fetch(`${GOOGLE_API_URL}?key=${API_KEY}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify(requestBody)
         });
 
+        console.log(`Translation API response status for ${target}: ${response.status}`);
+        
         const data = await response.json();
         
         if (!response.ok) {
@@ -54,6 +60,9 @@ serve(async (req) => {
           throw new Error(`Translation API error: ${data.error?.message || response.statusText}`);
         }
 
+        // Log data structure for debugging
+        console.log(`Response data structure for ${target}:`, JSON.stringify(data).substring(0, 200) + "...");
+
         const translatedText = data.data?.translations?.[0]?.translatedText;
         
         if (!translatedText) {
@@ -63,7 +72,7 @@ serve(async (req) => {
 
         return translatedText;
       } catch (error) {
-        console.error(`Error translating text: ${error.message}`);
+        console.error(`Error translating text to ${target}: ${error.message}`);
         throw error;
       }
     }
@@ -75,6 +84,8 @@ serve(async (req) => {
 
     try {
       // Translate title, excerpt, and content in parallel with proper error handling
+      console.log(`Starting parallel translation of blog content to ${targetLang}`);
+      
       const [translatedTitle, translatedExcerpt, translatedContent] = await Promise.all([
         title ? translateText(title, targetLang) : Promise.resolve(''),
         excerpt ? translateText(excerpt, targetLang) : Promise.resolve(''),

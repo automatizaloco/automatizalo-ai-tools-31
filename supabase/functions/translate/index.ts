@@ -26,21 +26,29 @@ serve(async (req) => {
       throw new Error('Missing required parameters: text and targetLang are required');
     }
 
+    // Log the parameters we're about to send
     console.log(`Making request to Google Translate API for language: ${targetLang}`);
+    console.log(`Text to translate (sample): ${text.substring(0, 50)}...`);
     
-    const params = new URLSearchParams({
+    // Build the request body according to Google's API docs
+    const requestBody = {
       q: text,
       target: targetLang,
-      key: API_KEY
-    });
-
-    const response = await fetch(`${GOOGLE_API_URL}?${params.toString()}`, {
+      format: "text"
+    };
+    
+    // Make the API request
+    const response = await fetch(`${GOOGLE_API_URL}?key=${API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify(requestBody)
     });
 
+    // Log response status to help with debugging
+    console.log(`Translation API response status: ${response.status}`);
+    
     const data = await response.json();
     
     if (!response.ok) {
@@ -51,6 +59,9 @@ serve(async (req) => {
       });
       throw new Error(`Translation API error: ${data.error?.message || response.statusText}`);
     }
+
+    // Log the response data structure to debug
+    console.log("Response data structure:", JSON.stringify(data).substring(0, 200) + "...");
 
     const translatedText = data.data?.translations?.[0]?.translatedText;
     

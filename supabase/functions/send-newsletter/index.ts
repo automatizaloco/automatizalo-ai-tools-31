@@ -3,12 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { createTransport } from "npm:nodemailer@6.9.9";
 import { google } from "npm:googleapis@128.0.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 // Create a Supabase client
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";

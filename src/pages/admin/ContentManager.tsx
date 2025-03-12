@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { PenSquare, MessageSquare, Mail, User } from "lucide-react";
+import { PenSquare, MessageSquare, Mail, LayoutDashboard, Globe } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -40,6 +40,18 @@ const ContentManager = () => {
       description: "Manage newsletter templates and send newsletters",
       route: "/admin/newsletter",
       icon: Mail
+    },
+    {
+      title: "Website Content",
+      description: "Edit content, images, and text across all website pages",
+      route: "/admin/content-editor",
+      icon: Globe
+    },
+    {
+      title: "Page Layout",
+      description: "Manage page sections and their arrangements",
+      route: "/admin/layout",
+      icon: LayoutDashboard
     }
   ];
 

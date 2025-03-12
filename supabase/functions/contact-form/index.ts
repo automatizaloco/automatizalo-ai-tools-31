@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "https://esm.sh/resend@1.0.0";
 
@@ -9,6 +8,12 @@ interface ContactFormData {
   email: string;
   subject: string;
   message: string;
+}
+
+// Define CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -88,22 +93,24 @@ const handler = async (req: Request): Promise<Response> => {
         success: true, 
         message: "Contact form submitted successfully",
         emailId: data?.id 
-      }),
-      {
-        status: 200,
-        headers: {
+      }), 
+      { 
+        headers: { 
           "Content-Type": "application/json",
-          ...corsHeaders,
-        },
+          ...corsHeaders 
+        } 
       }
     );
   } catch (error: any) {
     console.error("Error in contact-form function:", error);
     return new Response(
       JSON.stringify({ error: error.message || "An unknown error occurred" }),
-      {
+      { 
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        } 
       }
     );
   }

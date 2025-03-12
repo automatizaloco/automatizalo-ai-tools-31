@@ -14,19 +14,19 @@ serve(async (req) => {
   try {
     const { text, targetLang } = await req.json();
     
-    console.log(`Starting translation to ${targetLang}. API Key exists: ${!!API_KEY}`);
+    console.log(`Starting translation to ${targetLang}. API Key length: ${API_KEY?.length || 0}`);
     
     if (!API_KEY) {
-      console.error("Google API key not found in environment variables");
+      console.error("Google API key not found");
       throw new Error('Google API key is not configured');
     }
     
     if (!text || !targetLang) {
-      console.error("Missing required parameters");
+      console.error("Missing required parameters:", { hasText: !!text, hasTargetLang: !!targetLang });
       throw new Error('Missing required parameters: text and targetLang are required');
     }
 
-    console.log(`Attempting to translate text to ${targetLang}`);
+    console.log(`Making request to Google Translate API for language: ${targetLang}`);
     
     const params = new URLSearchParams({
       q: text,
@@ -44,18 +44,22 @@ serve(async (req) => {
     const data = await response.json();
     
     if (!response.ok) {
-      console.error("Translation API error:", data);
-      throw new Error(data.error?.message || `Translation failed with status ${response.status}`);
+      console.error("Google Translate API error:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: data.error
+      });
+      throw new Error(`Translation API error: ${data.error?.message || response.statusText}`);
     }
 
     const translatedText = data.data?.translations?.[0]?.translatedText;
     
     if (!translatedText) {
-      console.error("No translation returned from API");
+      console.error("No translation in response:", data);
       throw new Error('No translation returned from API');
     }
 
-    console.log("Translation successful:", translatedText.substring(0, 30) + "...");
+    console.log("Translation successful");
 
     return new Response(
       JSON.stringify({ translatedText }),
@@ -65,7 +69,8 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error("Translation error:", error);
+    console.error("Translation function error:", error);
+    
     return new Response(
       JSON.stringify({ 
         error: error.message || 'An unexpected error occurred during translation',

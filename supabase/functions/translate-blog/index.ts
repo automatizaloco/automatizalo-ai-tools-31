@@ -14,10 +14,10 @@ serve(async (req) => {
   try {
     const { text, title, excerpt, targetLang } = await req.json();
     
-    console.log(`Starting blog translation to ${targetLang}. API Key exists: ${!!API_KEY}`);
+    console.log(`Starting blog translation to ${targetLang}. API Key length: ${API_KEY?.length || 0}`);
     
     if (!API_KEY) {
-      console.error("Google API key not found in environment variables");
+      console.error("Google API key not found");
       throw new Error('Google API key is not configured');
     }
 
@@ -27,7 +27,7 @@ serve(async (req) => {
         return '';
       }
       
-      console.log(`Attempting to translate content to ${target}`);
+      console.log(`Making request to Google Translate API for content length ${content.length}`);
       
       try {
         const params = new URLSearchParams({
@@ -46,13 +46,18 @@ serve(async (req) => {
         const data = await response.json();
         
         if (!response.ok) {
-          console.error("Translation API error:", data);
-          throw new Error(data.error?.message || `Translation failed with status ${response.status}`);
+          console.error("Google Translate API error:", {
+            status: response.status,
+            statusText: response.statusText,
+            error: data.error
+          });
+          throw new Error(`Translation API error: ${data.error?.message || response.statusText}`);
         }
 
         const translatedText = data.data?.translations?.[0]?.translatedText;
         
         if (!translatedText) {
+          console.error("No translation in response for content:", { data });
           throw new Error('No translation returned from API');
         }
 
@@ -76,7 +81,7 @@ serve(async (req) => {
         text ? translateText(text, targetLang) : Promise.resolve('')
       ]);
 
-      console.log(`Blog translation completed successfully for ${targetLang}`);
+      console.log("Blog translation completed successfully");
 
       return new Response(
         JSON.stringify({ 

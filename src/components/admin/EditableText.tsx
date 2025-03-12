@@ -11,14 +11,16 @@ interface EditableTextProps {
   defaultText: string;
   multiline?: boolean;
   onSave?: (value: string) => void;
+  disabled?: boolean;
 }
 
-const EditableText = ({ id, defaultText, multiline = false, onSave }: EditableTextProps) => {
+const EditableText = ({ id, defaultText, multiline = false, onSave, disabled = false }: EditableTextProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(defaultText);
   const [pendingText, setPendingText] = useState(defaultText);
 
   const handleEdit = () => {
+    if (disabled) return;
     setIsEditing(true);
     setPendingText(text);
   };
@@ -50,6 +52,7 @@ const EditableText = ({ id, defaultText, multiline = false, onSave }: EditableTe
             onChange={(e) => setPendingText(e.target.value)}
             className="w-full min-h-[60px] p-2 border-2 border-blue-400 focus:border-blue-500 rounded"
             placeholder="Enter text..."
+            disabled={disabled}
           />
         ) : (
           <Input
@@ -57,6 +60,7 @@ const EditableText = ({ id, defaultText, multiline = false, onSave }: EditableTe
             onChange={(e) => setPendingText(e.target.value)}
             className="w-full p-2 border-2 border-blue-400 focus:border-blue-500 rounded"
             placeholder="Enter text..."
+            disabled={disabled}
           />
         )}
         <div className="flex mt-2 justify-end gap-2">
@@ -65,6 +69,7 @@ const EditableText = ({ id, defaultText, multiline = false, onSave }: EditableTe
             variant="outline"
             className="p-1 h-8 w-8"
             onClick={handleCancel}
+            disabled={disabled}
           >
             <XIcon className="h-4 w-4" />
           </Button>
@@ -72,6 +77,7 @@ const EditableText = ({ id, defaultText, multiline = false, onSave }: EditableTe
             size="sm"
             className="p-1 h-8 w-8 bg-green-600 hover:bg-green-700"
             onClick={handleSave}
+            disabled={disabled}
           >
             <CheckIcon className="h-4 w-4" />
           </Button>
@@ -82,13 +88,15 @@ const EditableText = ({ id, defaultText, multiline = false, onSave }: EditableTe
 
   return (
     <span
-      className="group relative inline-block cursor-pointer"
+      className={`group relative inline-block ${disabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
       onClick={handleEdit}
     >
       {text}
-      <span className="absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <PencilIcon className="h-4 w-4 text-blue-500" />
-      </span>
+      {!disabled && (
+        <span className="absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <PencilIcon className="h-4 w-4 text-blue-500" />
+        </span>
+      )}
     </span>
   );
 };

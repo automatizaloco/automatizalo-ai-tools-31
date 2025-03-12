@@ -23,6 +23,7 @@ export const useContactInfo = () => {
   const [contactInfo, setContactInfo] = useState<ContactInfo>(defaultContactInfo);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
 
   // Load contact information from Supabase
   useEffect(() => {
@@ -55,15 +56,18 @@ export const useContactInfo = () => {
   const updateContactInfoData = async (newInfo: Partial<ContactInfo>) => {
     try {
       console.log("Updating contact info with:", newInfo);
+      setUpdating(true);
       
       // First update the local state for a quick UI response
       setContactInfo(prevInfo => {
         const updatedInfo = { ...prevInfo, ...newInfo };
+        console.log("Updated local state:", updatedInfo);
         return updatedInfo;
       });
       
       // Then update the database
       const updatedInfo = await updateContactInfo(newInfo);
+      console.log("Successfully received updated info from server:", updatedInfo);
       
       // Update state with the returned data from the server
       setContactInfo(prevInfo => ({ ...prevInfo, ...updatedInfo }));
@@ -76,6 +80,8 @@ export const useContactInfo = () => {
       console.error("Error saving contact information:", error);
       toast.error("Failed to update contact information");
       throw error;
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -83,6 +89,7 @@ export const useContactInfo = () => {
     contactInfo, 
     updateContactInfo: updateContactInfoData, 
     loading,
+    updating,
     error
   };
 };

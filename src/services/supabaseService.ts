@@ -101,12 +101,16 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
  */
 export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<ContactInfo> => {
   try {
+    console.log("Starting updateContactInfo with:", info);
+    
     // Check if there's existing contact info
     const { data: existingData } = await supabase
       .from('contact_info')
       .select('id')
       .maybeSingle();
-
+    
+    console.log("Existing data check:", existingData);
+    
     let result;
     
     if (existingData?.id) {
@@ -117,11 +121,24 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
         .eq('id', existingData.id)
         .maybeSingle();
       
-      if (fetchError) throw fetchError;
-      if (!currentData) throw new Error('Could not fetch current contact info');
+      if (fetchError) {
+        console.error("Error fetching current contact info:", fetchError);
+        throw fetchError;
+      }
+      if (!currentData) {
+        console.error("No current data found for ID:", existingData.id);
+        throw new Error('Could not fetch current contact info');
+      }
+      
+      console.log("Current data before update:", currentData);
       
       // Merge current data with updates to ensure all required fields are present
       const updatedInfo = { ...currentData, ...info };
+      console.log("Prepared updatedInfo:", updatedInfo);
+      
+      // Remove unnecessary properties coming from Supabase that might cause issues
+      delete updatedInfo.created_at;
+      delete updatedInfo.updated_at;
       
       // Update existing record
       const { data, error } = await supabase
@@ -131,8 +148,16 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
         .select()
         .maybeSingle();
       
-      if (error) throw error;
-      if (!data) throw new Error('No data returned after update');
+      console.log("Update response:", { data, error });
+      
+      if (error) {
+        console.error("Error during update operation:", error);
+        throw error;
+      }
+      if (!data) {
+        console.error("No data returned after update");
+        throw new Error('No data returned after update');
+      }
       
       result = data;
     } else {
@@ -155,6 +180,7 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
       result = data;
     }
     
+    console.log("Successfully updated contact info, returning:", result);
     return result;
   } catch (error: any) {
     console.error("Error updating contact information:", error);

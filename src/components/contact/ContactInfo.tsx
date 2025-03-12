@@ -14,7 +14,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const { contactInfo } = useContactInfo();
+  const { contactInfo, updating } = useContactInfo();
 
   return (
     <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
@@ -30,6 +30,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
           id="contact-phone-value"
           isAuthenticated={isAuthenticated}
           onChange={handleContactInfoChange}
+          isDisabled={updating}
           theme={theme}
         />
         
@@ -40,6 +41,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
           id="contact-email-value"
           isAuthenticated={isAuthenticated}
           onChange={handleContactInfoChange}
+          isDisabled={updating}
           theme={theme}
         />
         
@@ -50,6 +52,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
           id="contact-address-value"
           isAuthenticated={isAuthenticated}
           onChange={handleContactInfoChange}
+          isDisabled={updating}
           theme={theme}
         />
         
@@ -60,6 +63,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
           id="contact-website-value"
           isAuthenticated={isAuthenticated}
           onChange={handleContactInfoChange}
+          isDisabled={updating}
           theme={theme}
         />
       </div>
@@ -74,10 +78,11 @@ interface InfoItemProps {
   id: string;
   isAuthenticated: boolean;
   onChange: (id: string, value: string) => void;
+  isDisabled?: boolean;
   theme: string;
 }
 
-const InfoItem = ({ icon, title, value, id, isAuthenticated, onChange, theme }: InfoItemProps) => (
+const InfoItem = ({ icon, title, value, id, isAuthenticated, onChange, isDisabled, theme }: InfoItemProps) => (
   <div className="flex items-start">
     <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
       {icon}
@@ -92,6 +97,7 @@ const InfoItem = ({ icon, title, value, id, isAuthenticated, onChange, theme }: 
             id={id}
             defaultText={value}
             onSave={(value) => onChange(id, value)}
+            disabled={isDisabled}
           />
         ) : (
           value

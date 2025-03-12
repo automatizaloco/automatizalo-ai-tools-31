@@ -61,7 +61,7 @@ export const useContactInfo = () => {
   }, []);
 
   // Update contact information in Supabase
-  const updateContactInfoData = async (newInfo: Partial<ContactInfo>) => {
+  const updateContactInfoData = async (newInfo: ContactInfo) => {
     if (updating) {
       console.log("Update already in progress, skipping");
       toast.info("Update in progress, please wait...");
@@ -74,7 +74,7 @@ export const useContactInfo = () => {
       
       const updatedInfo = await updateContactInfo(newInfo);
       
-      setContactInfo(prevInfo => ({ ...prevInfo, ...updatedInfo }));
+      setContactInfo(updatedInfo);
       
       window.dispatchEvent(new CustomEvent('contactInfoUpdated', { detail: updatedInfo }));
       toast.success("Contact information updated successfully");

@@ -15,7 +15,7 @@ import { toast } from "sonner";
 const Contact = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { contactInfo, updateContactInfo, loading } = useContactInfo();
+  const { contactInfo, loading } = useContactInfo();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showTyping, setShowTyping] = useState(false);
 
@@ -30,7 +30,6 @@ const Contact = () => {
     }
   };
 
-  // Chat simulation messages in all three languages
   const chatMessages = {
     en: [
       { sender: 'user', message: 'Hello, I need information about your services.' },
@@ -58,19 +57,15 @@ const Contact = () => {
     ]
   };
 
-  // Animation effect for the chat
   useEffect(() => {
     if (currentMessageIndex < chatMessages[t('language') || 'en'].length) {
-      // Show typing indicator
       setShowTyping(true);
       
-      // Delay for typing effect
       const typingDelay = chatMessages[t('language') || 'en'][currentMessageIndex].sender === 'bot' ? 1500 : 800;
       
       const typingTimer = setTimeout(() => {
         setShowTyping(false);
         
-        // Delay before showing the next message
         const messageTimer = setTimeout(() => {
           setCurrentMessageIndex(prev => prev + 1);
         }, 300);
@@ -80,7 +75,6 @@ const Contact = () => {
       
       return () => clearTimeout(typingTimer);
     } else {
-      // Reset the animation after it completes
       const resetTimer = setTimeout(() => {
         setCurrentMessageIndex(0);
       }, 3000);
@@ -101,9 +95,7 @@ const Contact = () => {
           <ContactHeader />
           
           <div className="max-w-4xl mx-auto">
-            {!loading && (
-              <ContactInfo handleContactInfoChange={handleContactInfoChange} />
-            )}
+            {!loading && <ContactInfo />}
             
             <div className="mt-12 p-8 rounded-2xl shadow-sm text-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
               <h2 className={`text-2xl font-heading font-semibold mb-4 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
@@ -113,15 +105,12 @@ const Contact = () => {
                 {t('contact.whatsapp.description') || "Get instant responses through our WhatsApp business account. Our team is ready to assist you with any questions or inquiries."}
               </p>
               
-              {/* WhatsApp Chat Animation */}
               <div className="mb-10 max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-                {/* Chat Header */}
                 <div className="bg-green-500 p-3 flex items-center">
                   <MessageCircle className="text-white mr-2" size={20} />
                   <span className="text-white font-medium">Automatízalo WhatsApp</span>
                 </div>
                 
-                {/* Chat Messages */}
                 <div className="p-4 h-80 overflow-y-auto flex flex-col space-y-3" style={{ minHeight: "320px" }}>
                   {messages.slice(0, currentMessageIndex).map((msg, index) => (
                     <div 
@@ -140,7 +129,6 @@ const Contact = () => {
                     </div>
                   ))}
                   
-                  {/* Typing Indicator */}
                   {showTyping && (
                     <div className={`flex ${messages[currentMessageIndex]?.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`p-3 rounded-lg ${
@@ -163,13 +151,11 @@ const Contact = () => {
                 {t('contact.whatsapp.cta') || "Connect with us now for fast responses, meeting scheduling, and personalized assistance!"}
               </p>
               
-              {/* Fixed WhatsApp button at the bottom right */}
               <WhatsAppButton 
                 phoneNumber={contactInfo.phone}
                 message={t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services"}
               />
               
-              {/* Inline WhatsApp button */}
               <Button 
                 onClick={() => {
                   const cleanPhone = contactInfo.phone.replace(/\D/g, '');

@@ -1,43 +1,43 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export async function translateText(text: string, targetLang: string): Promise<string> {
-  try {
-    const { data, error } = await supabase.functions.invoke('translate', {
-      body: { text, targetLang }
-    });
-
-    if (error) {
-      console.error('Translation error:', error);
-      throw error;
-    }
-
-    return data?.translatedText || text;
-  } catch (error) {
-    console.error('Translation service error:', error);
-    return text;
-  }
-}
-
-export async function translateBlogPost(content: {
+/**
+ * Translates blog post content to the target language
+ */
+export const translateBlogContent = async (
+  content: string,
+  title: string,
+  excerpt: string,
+  targetLang: 'fr' | 'es'
+): Promise<{
   title: string;
   excerpt: string;
   content: string;
-}, targetLang: string) {
+}> => {
   try {
-    const [translatedTitle, translatedExcerpt, translatedContent] = await Promise.all([
-      translateText(content.title, targetLang),
-      translateText(content.excerpt, targetLang),
-      translateText(content.content, targetLang)
-    ]);
+    const { data, error } = await supabase.functions.invoke('translate-blog', {
+      body: {
+        text: content,
+        title: title,
+        excerpt: excerpt,
+        targetLang: targetLang
+      },
+    });
+
+    if (error) {
+      console.error(`Error translating content to ${targetLang}:`, error);
+      throw new Error(`Translation failed: ${error.message}`);
+    }
 
     return {
-      title: translatedTitle,
-      excerpt: translatedExcerpt,
-      content: translatedContent
+      title: data.title || '',
+      excerpt: data.excerpt || '',
+      content: data.content || ''
     };
-  } catch (error) {
-    console.error('Blog post translation error:', error);
-    return content;
+  } catch (error: any) {
+    console.error(`Error translating content to ${targetLang}:`, error);
+    toast.error(`Failed to translate content: ${error.message}`);
+    throw error;
   }
-}
+};

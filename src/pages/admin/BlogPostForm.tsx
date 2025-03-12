@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import TranslationPanel from "@/components/admin/blog/TranslationPanel";
 import BlogFormFields from "@/components/admin/blog/BlogFormFields";
 import { supabase } from "@/integrations/supabase/client";
+import { translateBlogContent } from "@/services/translationService";
 
 const BlogPostForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,6 +46,7 @@ const BlogPostForm = () => {
     fr: { title: "", excerpt: "", content: "" },
     es: { title: "", excerpt: "", content: "" }
   });
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Check authentication session
   useEffect(() => {
@@ -171,6 +174,54 @@ const BlogPostForm = () => {
     setEditingTranslation(!editingTranslation);
   };
 
+  const autoTranslateAll = async () => {
+    if (!formData.content || !formData.title || !formData.excerpt) {
+      toast.error("Please add content to translate");
+      return;
+    }
+
+    setIsTranslating(true);
+
+    try {
+      // Translate to French
+      const frTranslation = await translateBlogContent(
+        formData.content,
+        formData.title,
+        formData.excerpt,
+        'fr'
+      );
+
+      // Translate to Spanish
+      const esTranslation = await translateBlogContent(
+        formData.content,
+        formData.title,
+        formData.excerpt,
+        'es'
+      );
+
+      // Update translation data
+      setTranslationData({
+        fr: {
+          title: frTranslation.title,
+          excerpt: frTranslation.excerpt,
+          content: frTranslation.content
+        },
+        es: {
+          title: esTranslation.title,
+          excerpt: esTranslation.excerpt,
+          content: esTranslation.content
+        }
+      });
+
+      toast.success("Content translated to all languages");
+    } catch (error) {
+      console.error("Error auto-translating all content:", error);
+      toast.error("Failed to translate content to all languages");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -254,10 +305,30 @@ const BlogPostForm = () => {
             <h1 className="text-3xl font-bold">
               {id ? "Edit Blog Post" : "Create New Blog Post"}
             </h1>
+            {id && !editingTranslation && (
+              <Button
+                variant="outline"
+                onClick={autoTranslateAll}
+                disabled={isTranslating}
+                className="flex items-center gap-2"
+              >
+                {isTranslating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Translating...
+                  </>
+                ) : (
+                  <>
+                    <Globe className="h-4 w-4" />
+                    Auto-translate All
+                  </>
+                )}
+              </Button>
+            )}
           </div>
           
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            {post && post.translations && (
+            {post && (
               <TranslationPanel
                 post={post}
                 editingTranslation={editingTranslation}

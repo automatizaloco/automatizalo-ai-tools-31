@@ -4,8 +4,10 @@ import { BlogPost } from "@/types/blog";
 import { TranslationFormData } from "@/types/form";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Check, Edit } from "lucide-react";
+import { Globe, Check, Edit, Loader2 } from "lucide-react";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
+import { translateBlogContent } from "@/services/translationService";
+import { toast } from "sonner";
 
 interface TranslationPanelProps {
   post: BlogPost | null;
@@ -28,7 +30,41 @@ const TranslationPanel = ({
   onTranslationChange,
   onTranslationContentChange,
 }: TranslationPanelProps) => {
-  if (!post || !post.translations) return null;
+  const [isTranslating, setIsTranslating] = useState<{ [key: string]: boolean }>({
+    fr: false,
+    es: false
+  });
+
+  if (!post) return null;
+  
+  const handleAutoTranslate = async (language: 'fr' | 'es') => {
+    if (!post) return;
+    
+    try {
+      // Set translating state for the specific language
+      setIsTranslating(prev => ({ ...prev, [language]: true }));
+      
+      // Call translation service
+      const translated = await translateBlogContent(
+        post.content,
+        post.title,
+        post.excerpt,
+        language
+      );
+      
+      // Update translation data with results
+      onTranslationChange(language, "title", translated.title);
+      onTranslationChange(language, "excerpt", translated.excerpt);
+      onTranslationChange(language, "content", translated.content);
+      
+      toast.success(`Content translated to ${language === 'fr' ? 'French' : 'Spanish'} successfully`);
+    } catch (error) {
+      console.error(`Error auto-translating to ${language}:`, error);
+      toast.error(`Failed to translate to ${language === 'fr' ? 'French' : 'Spanish'}`);
+    } finally {
+      setIsTranslating(prev => ({ ...prev, [language]: false }));
+    }
+  };
 
   return (
     <div className="mb-6">
@@ -44,7 +80,7 @@ const TranslationPanel = ({
           className="flex items-center gap-1"
         >
           <Edit className="h-4 w-4" />
-          {editingTranslation ? "Auto-translate" : "Edit Translations"}
+          {editingTranslation ? "Done Editing" : "Edit Translations"}
         </Button>
       </div>
       <Tabs
@@ -60,13 +96,13 @@ const TranslationPanel = ({
           </TabsTrigger>
           <TabsTrigger value="fr" className="flex items-center">
             🇫🇷 French
-            {post.translations.fr ? (
+            {post.translations?.fr ? (
               <Check className="ml-1 h-3 w-3 text-green-500" />
             ) : null}
           </TabsTrigger>
           <TabsTrigger value="es" className="flex items-center">
             🇨🇴 Spanish
-            {post.translations.es ? (
+            {post.translations?.es ? (
               <Check className="ml-1 h-3 w-3 text-green-500" />
             ) : null}
           </TabsTrigger>
@@ -77,7 +113,26 @@ const TranslationPanel = ({
         </TabsContent>
         
         <TabsContent value="fr" className="p-4 border rounded-md mt-2">
-          <h3 className="font-medium">French Translation</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium">French Translation</h3>
+            {editingTranslation && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleAutoTranslate('fr')}
+                disabled={isTranslating.fr}
+              >
+                {isTranslating.fr ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Translating...
+                  </>
+                ) : (
+                  'Auto-translate'
+                )}
+              </Button>
+            )}
+          </div>
           {editingTranslation ? (
             <div className="space-y-4 mt-3">
               <div>
@@ -108,7 +163,7 @@ const TranslationPanel = ({
                 </label>
                 <RichTextEditor 
                   value={translationData.fr.content}
-                  onChange={onTranslationContentChange}
+                  onChange={(content) => onTranslationChange("fr", "content", content)}
                   placeholder="Write your French content here..."
                 />
               </div>
@@ -116,11 +171,11 @@ const TranslationPanel = ({
           ) : (
             <>
               <p className="text-sm text-gray-500">
-                {post.translations.fr 
-                  ? "Content has been automatically translated to French"
+                {post.translations?.fr 
+                  ? "Content has been translated to French"
                   : "Content will be automatically translated when you save"}
               </p>
-              {post.translations.fr && (
+              {post.translations?.fr && (
                 <div className="mt-3">
                   <p><strong>Title:</strong> {post.translations.fr.title}</p>
                   <p><strong>Excerpt:</strong> {post.translations.fr.excerpt}</p>
@@ -131,7 +186,26 @@ const TranslationPanel = ({
         </TabsContent>
         
         <TabsContent value="es" className="p-4 border rounded-md mt-2">
-          <h3 className="font-medium">Spanish Translation</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium">Spanish Translation</h3>
+            {editingTranslation && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleAutoTranslate('es')}
+                disabled={isTranslating.es}
+              >
+                {isTranslating.es ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Translating...
+                  </>
+                ) : (
+                  'Auto-translate'
+                )}
+              </Button>
+            )}
+          </div>
           {editingTranslation ? (
             <div className="space-y-4 mt-3">
               <div>
@@ -162,7 +236,7 @@ const TranslationPanel = ({
                 </label>
                 <RichTextEditor 
                   value={translationData.es.content}
-                  onChange={onTranslationContentChange}
+                  onChange={(content) => onTranslationChange("es", "content", content)}
                   placeholder="Write your Spanish content here..."
                 />
               </div>
@@ -170,11 +244,11 @@ const TranslationPanel = ({
           ) : (
             <>
               <p className="text-sm text-gray-500">
-                {post.translations.es 
-                  ? "Content has been automatically translated to Spanish"
+                {post.translations?.es 
+                  ? "Content has been translated to Spanish"
                   : "Content will be automatically translated when you save"}
               </p>
-              {post.translations.es && (
+              {post.translations?.es && (
                 <div className="mt-3">
                   <p><strong>Title:</strong> {post.translations.es.title}</p>
                   <p><strong>Excerpt:</strong> {post.translations.es.excerpt}</p>
@@ -187,8 +261,8 @@ const TranslationPanel = ({
       <p className="text-sm text-gray-500 mt-3">
         <Globe className="inline-block mr-1 h-4 w-4" />
         {editingTranslation 
-          ? "You're manually editing translations. Your changes will override automatic translations."
-          : "Content is automatically translated to French and Spanish when you save the post."}
+          ? "You're manually editing translations. Use the Auto-translate button to automatically translate content."
+          : "Content is translated to French and Spanish when you save the post."}
       </p>
     </div>
   );

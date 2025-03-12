@@ -50,7 +50,7 @@ const ContentManager = () => {
     {
       title: "Page Layout",
       description: "Manage page sections and their arrangements",
-      route: "/admin/layout",
+      route: "/admin/layout-manager",
       icon: LayoutDashboard
     }
   ];

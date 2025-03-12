@@ -16,10 +16,12 @@ import ContentManager from "@/pages/admin/ContentManager";
 import BlogAdmin from "@/pages/admin/BlogAdmin";
 import BlogPostForm from "@/pages/admin/BlogPostForm";
 import TestimonialManager from "@/pages/admin/TestimonialManager";
+import NewsletterAdmin from "@/pages/admin/NewsletterAdmin";
+import ContentEditor from "@/pages/admin/ContentEditor";
+import LayoutManager from "@/pages/admin/LayoutManager";
 import NotFound from "@/pages/NotFound";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
-import NewsletterAdmin from "@/pages/admin/NewsletterAdmin";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +64,8 @@ function App() {
                 <Route path="/admin/blog/edit/:id" element={<BlogPostForm />} />
                 <Route path="/admin/testimonials" element={<TestimonialManager />} />
                 <Route path="/admin/newsletter" element={<NewsletterAdmin />} />
+                <Route path="/admin/content-editor" element={<ContentEditor />} />
+                <Route path="/admin/layout-manager" element={<LayoutManager />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>

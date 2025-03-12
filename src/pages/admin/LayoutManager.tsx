@@ -13,7 +13,7 @@ const LayoutManager = () => {
 
   React.useEffect(() => {
     if (!user) {
-      navigate('/login?redirect=/admin/layout');
+      navigate('/login?redirect=/admin/layout-manager');
     }
   }, [user, navigate]);
 

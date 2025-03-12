@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Settings } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -80,21 +81,21 @@ const Navbar = () => {
               </Link>
             ))}
             
-            {isAuthenticated && adminItems.map((item) => (
+            {isAuthenticated && (
               <Link 
-                key={item.path}
-                to={item.path}
+                to="/admin"
                 className={`
-                  text-sm font-medium transition-colors py-1.5 px-1 link-underline
-                  ${isActive(item.path) 
-                    ? 'text-gray-900' 
-                    : 'text-slate-700 hover:text-gray-900'
+                  flex items-center gap-2 text-sm font-medium transition-colors py-1.5 px-3 rounded-md
+                  ${isActive('/admin') 
+                    ? 'bg-gray-100 text-gray-900' 
+                    : 'text-slate-700 hover:bg-gray-50 hover:text-gray-900'
                   }
                 `}
               >
-                {item.title}
+                <Settings size={16} />
+                Admin Panel
               </Link>
-            ))}
+            )}
             
             <LanguageSwitcher />
             
@@ -140,21 +141,21 @@ const Navbar = () => {
                 </Link>
               ))}
               
-              {isAuthenticated && adminItems.map((item) => (
+              {isAuthenticated && (
                 <Link
-                  key={item.path}
-                  to={item.path}
+                  to="/admin"
                   className={`
-                    py-2 text-base font-medium transition-colors
-                    ${isActive(item.path) 
+                    py-2 text-base font-medium transition-colors flex items-center gap-2
+                    ${isActive('/admin') 
                       ? 'text-gray-900' 
                       : 'text-slate-700 hover:text-gray-900'
                     }
                   `}
                 >
-                  {item.title}
+                  <Settings size={16} />
+                  Admin Panel
                 </Link>
-              ))}
+              )}
               
               {isAuthenticated && (
                 <Button 

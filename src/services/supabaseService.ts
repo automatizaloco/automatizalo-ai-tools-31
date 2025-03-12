@@ -104,7 +104,6 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
   try {
     console.log("Updating contact info with:", info);
     
-    // First check if there's any existing contact info
     const { data: existingData, error: fetchError } = await supabase
       .from('contact_info')
       .select('*')
@@ -116,7 +115,7 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
     }
 
     // Default contact information
-    const defaultContactInfo: ContactInfo = {
+    const defaultContactInfo = {
       phone: "+1 (555) 123-4567",
       email: "contact@automatizalo.co",
       address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
@@ -143,12 +142,15 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
       result = data;
     } else {
       // For new records, ensure all required fields are present
-      const completeInfo = { ...defaultContactInfo, ...info };
+      const completeContactInfo = {
+        ...defaultContactInfo,
+        ...info
+      };
       
-      console.log("Inserting new contact info with complete data:", completeInfo);
+      console.log("Inserting new contact info:", completeContactInfo);
       const { data, error } = await supabase
         .from('contact_info')
-        .insert([completeInfo]) // Wrap in array to match Supabase's expected type
+        .insert([completeContactInfo])
         .select()
         .single();
       

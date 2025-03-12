@@ -24,6 +24,7 @@ import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
+// Create QueryClient outside of the component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -54,10 +55,10 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <BrowserRouter>
         <ThemeProvider defaultTheme={theme}>
-          <LanguageProvider>
-            <BrowserRouter>
+          <AuthProvider>
+            <LanguageProvider>
               <WhatsAppButton />
               <Toaster />
               
@@ -82,10 +83,10 @@ function App() {
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
-          </LanguageProvider>
+            </LanguageProvider>
+          </AuthProvider>
         </ThemeProvider>
-      </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }

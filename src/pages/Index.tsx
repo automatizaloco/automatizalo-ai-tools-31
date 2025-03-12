@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { toast } from 'sonner';
@@ -7,7 +6,6 @@ import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
 import About from '@/components/home/About';
 import SolutionsSection from '@/components/home/SolutionsSection';
-import CTASection from '@/components/home/CTASection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 
 interface SectionState {
@@ -24,7 +22,6 @@ const Index = () => {
     { id: 2, name: 'About Section', visible: true, component: 'About', order: 2 },
     { id: 3, name: 'Solutions Section', visible: true, component: 'SolutionsSection', order: 3 },
     { id: 4, name: 'Testimonials Section', visible: true, component: 'TestimonialsSection', order: 4 },
-    { id: 5, name: 'Call to Action Section', visible: true, component: 'CTASection', order: 5 },
   ]);
 
   useEffect(() => {
@@ -52,16 +49,13 @@ const Index = () => {
     };
   }, []);
 
-  // Component map for dynamic rendering
   const componentMap: Record<string, React.ReactNode> = {
     'Hero': <Hero />,
     'About': <About />,
     'SolutionsSection': <SolutionsSection />,
-    'TestimonialsSection': <TestimonialsSection />,
-    'CTASection': <CTASection />
+    'TestimonialsSection': <TestimonialsSection />
   };
 
-  // Sort sections by order and filter visible ones
   const visibleSections = sections
     .filter(section => section.visible)
     .sort((a, b) => a.order - b.order);

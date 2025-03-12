@@ -14,18 +14,19 @@ serve(async (req) => {
   try {
     const { text, targetLang } = await req.json();
     
-    console.log(`Translating text to ${targetLang}. API Key exists: ${!!API_KEY}`);
+    console.log(`Starting translation to ${targetLang}. API Key exists: ${!!API_KEY}`);
     
     if (!API_KEY) {
       console.error("Google API key not found in environment variables");
-      return new Response(
-        JSON.stringify({ error: 'Google API key is not configured' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        },
-      );
+      throw new Error('Google API key is not configured');
     }
+    
+    if (!text || !targetLang) {
+      console.error("Missing required parameters");
+      throw new Error('Missing required parameters: text and targetLang are required');
+    }
+
+    console.log(`Attempting to translate text to ${targetLang}`);
     
     const params = new URLSearchParams({
       q: text,
@@ -44,17 +45,17 @@ serve(async (req) => {
     
     if (!response.ok) {
       console.error("Translation API error:", data);
-      return new Response(
-        JSON.stringify({ error: data.error?.message || `Translation failed with status ${response.status}` }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        },
-      );
+      throw new Error(data.error?.message || `Translation failed with status ${response.status}`);
     }
 
     const translatedText = data.data?.translations?.[0]?.translatedText;
-    console.log("Translation successful:", translatedText?.substring(0, 30) + "...");
+    
+    if (!translatedText) {
+      console.error("No translation returned from API");
+      throw new Error('No translation returned from API');
+    }
+
+    console.log("Translation successful:", translatedText.substring(0, 30) + "...");
 
     return new Response(
       JSON.stringify({ translatedText }),
@@ -66,7 +67,10 @@ serve(async (req) => {
   } catch (error) {
     console.error("Translation error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred during translation',
+        details: error.toString()
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

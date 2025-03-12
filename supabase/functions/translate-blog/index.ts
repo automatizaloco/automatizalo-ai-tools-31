@@ -14,24 +14,20 @@ serve(async (req) => {
   try {
     const { text, title, excerpt, targetLang } = await req.json();
     
-    console.log(`Translating content to ${targetLang}. API Key exists: ${!!API_KEY}`);
+    console.log(`Starting blog translation to ${targetLang}. API Key exists: ${!!API_KEY}`);
     
     if (!API_KEY) {
       console.error("Google API key not found in environment variables");
-      return new Response(
-        JSON.stringify({ error: 'Google API key is not configured' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        },
-      );
+      throw new Error('Google API key is not configured');
     }
 
-    // Function to translate a single text item
-    async function translateText(content, target) {
+    // Function to translate a single text item with improved error handling
+    async function translateText(content: string, target: string): Promise<string> {
       if (!content || content.trim() === '') {
         return '';
       }
+      
+      console.log(`Attempting to translate content to ${target}`);
       
       try {
         const params = new URLSearchParams({
@@ -54,22 +50,33 @@ serve(async (req) => {
           throw new Error(data.error?.message || `Translation failed with status ${response.status}`);
         }
 
-        return data.data?.translations?.[0]?.translatedText;
+        const translatedText = data.data?.translations?.[0]?.translatedText;
+        
+        if (!translatedText) {
+          throw new Error('No translation returned from API');
+        }
+
+        return translatedText;
       } catch (error) {
         console.error(`Error translating text: ${error.message}`);
         throw error;
       }
     }
 
+    // Validate input parameters
+    if (!targetLang) {
+      throw new Error('Target language is required');
+    }
+
     try {
-      // Translate title, excerpt, and content in parallel
+      // Translate title, excerpt, and content in parallel with proper error handling
       const [translatedTitle, translatedExcerpt, translatedContent] = await Promise.all([
-        translateText(title, targetLang),
-        translateText(excerpt, targetLang),
-        translateText(text, targetLang)
+        title ? translateText(title, targetLang) : Promise.resolve(''),
+        excerpt ? translateText(excerpt, targetLang) : Promise.resolve(''),
+        text ? translateText(text, targetLang) : Promise.resolve('')
       ]);
 
-      console.log(`Translation completed successfully for ${targetLang}`);
+      console.log(`Blog translation completed successfully for ${targetLang}`);
 
       return new Response(
         JSON.stringify({ 
@@ -83,19 +90,16 @@ serve(async (req) => {
         },
       );
     } catch (translationError) {
-      console.error("Failed to translate content:", translationError);
-      return new Response(
-        JSON.stringify({ error: `Translation failed: ${translationError.message}` }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        },
-      );
+      console.error("Failed to translate blog content:", translationError);
+      throw translationError;
     }
   } catch (error) {
-    console.error("Translation error:", error);
+    console.error("Blog translation error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred during translation',
+        details: error.toString()
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

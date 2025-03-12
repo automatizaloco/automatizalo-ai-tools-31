@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import ContactHeader from "@/components/contact/ContactHeader";
 import ContactInfo from "@/components/contact/ContactInfo";
 import ContactForm from "@/components/contact/ContactForm";
+import { Toaster } from "@/components/ui/sonner";
 
 const Contact = () => {
   const { theme } = useTheme();
@@ -40,6 +41,7 @@ const Contact = () => {
       </main>
       
       <Footer />
+      <Toaster />
     </div>
   );
 };

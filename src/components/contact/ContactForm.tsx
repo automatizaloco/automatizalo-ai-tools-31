@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { LoaderCircle } from "lucide-react";
 
 const ContactForm = () => {
   const { theme } = useTheme();
@@ -28,16 +29,30 @@ const ContactForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
+      console.log("Submitting form data:", formData);
+      
       const { data, error } = await supabase.functions.invoke('contact-form', {
         body: formData
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error submitting form:', error);
+        throw error;
+      }
 
+      console.log("Form submission successful:", data);
       toast.success(t('contact.form.success') || "Message sent successfully!");
+      
+      // Reset form
       setFormData({
         name: "",
         email: "",
@@ -46,16 +61,21 @@ const ContactForm = () => {
       });
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error(t('contact.form.error') || "Failed to send message. Please try again.");
+      toast.error(t('contact.form.error') || "Failed to send message. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const getFormThemeClasses = () => 
+    theme === 'dark' 
+      ? 'bg-gray-800 border-gray-700 text-white' 
+      : 'bg-white border-gray-300 text-gray-800';
+
   return (
     <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
       <h2 className={`text-2xl font-heading font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
-        {t('contact.form.title')}
+        {t('contact.form.title') || "Send us a message"}
       </h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -63,7 +83,7 @@ const ContactForm = () => {
           id="name"
           name="name"
           type="text"
-          label={t('contact.form.name')}
+          label={t('contact.form.name') || "Your Name"}
           value={formData.name}
           onChange={handleChange}
           theme={theme}
@@ -74,7 +94,7 @@ const ContactForm = () => {
           id="email"
           name="email"
           type="email"
-          label={t('contact.form.email')}
+          label={t('contact.form.email') || "Your Email"}
           value={formData.email}
           onChange={handleChange}
           theme={theme}
@@ -85,7 +105,7 @@ const ContactForm = () => {
           id="subject"
           name="subject"
           type="text"
-          label={t('contact.form.subject')}
+          label={t('contact.form.subject') || "Subject"}
           value={formData.subject}
           onChange={handleChange}
           theme={theme}
@@ -97,7 +117,7 @@ const ContactForm = () => {
             htmlFor="message" 
             className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
           >
-            {t('contact.form.message')}
+            {t('contact.form.message') || "Message"}
           </label>
           <Textarea
             id="message"
@@ -119,7 +139,14 @@ const ContactForm = () => {
           disabled={isSubmitting}
           className="w-full"
         >
-          {isSubmitting ? t('contact.form.submitting') : t('contact.form.submit')}
+          {isSubmitting ? (
+            <span className="flex items-center justify-center">
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              {t('contact.form.submitting') || "Sending..."}
+            </span>
+          ) : (
+            t('contact.form.submit') || "Send Message"
+          )}
         </Button>
       </form>
     </div>

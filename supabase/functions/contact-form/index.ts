@@ -23,6 +23,11 @@ const handler = async (req: Request): Promise<Response> => {
     const formData: ContactFormData = await req.json();
     console.log("Contact form submission:", formData);
 
+    // Validate form data
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      throw new Error("Missing required fields in form submission");
+    }
+
     // Save submission to database
     const supabaseClient = getSupabaseClient();
     const { error: dbError } = await supabaseClient

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Phone, Mail, MapPin, Globe, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import EditableText from "@/components/admin/EditableText";
 import { useContactInfo } from "@/stores/contactInfoStore";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
   const { t } = useLanguage();
@@ -51,20 +51,16 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('https://juwbamkqkawyibcvllvo.supabase.co/functions/v1/contact-form', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      const { data, error } = await supabase.functions.invoke('contact-form', {
+        body: formData,
       });
       
-      const result = await response.json();
-      
-      if (!response.ok) {
-        console.error('Server response error:', result);
-        throw new Error(result.error || 'Failed to submit form');
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to submit form');
       }
+      
+      console.log('Contact form submission successful:', data);
       
       setFormData({
         name: "",

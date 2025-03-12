@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ContactInfo } from '@/stores/contactInfoStore';
 import { toast } from 'sonner';
@@ -79,16 +78,18 @@ export const deleteTestimonial = async (id: string) => {
  */
 export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
   try {
-    // Fetch the first record from contact_info table
+    console.log("Fetching contact info...");
     const { data, error } = await supabase
       .from('contact_info')
       .select('*')
       .maybeSingle();
 
     if (error) {
+      console.error("Error in fetchContactInfo:", error);
       throw error;
     }
 
+    console.log("Fetched contact info:", data);
     return data;
   } catch (error: any) {
     console.error("Error fetching contact information:", error);
@@ -101,12 +102,19 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
  */
 export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<ContactInfo> => {
   try {
-    // Check if there's existing contact info
-    const { data: existingData } = await supabase
+    console.log("Updating contact info with:", info);
+    
+    // First check if there's any existing contact info
+    const { data: existingData, error: fetchError } = await supabase
       .from('contact_info')
       .select('id')
-      .maybeSingle();
-    
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      console.error("Error checking existing contact info:", fetchError);
+      throw fetchError;
+    }
+
     let result;
     
     if (existingData?.id) {
@@ -116,20 +124,22 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
         .update(info)
         .eq('id', existingData.id)
         .select()
-        .maybeSingle();
+        .single();
       
       if (error) throw error;
       result = data;
+      console.log("Updated existing contact info:", result);
     } else {
       // Insert new record
       const { data, error } = await supabase
         .from('contact_info')
-        .insert(info as ContactInfo)
+        .insert(info)
         .select()
-        .maybeSingle();
+        .single();
       
       if (error) throw error;
       result = data;
+      console.log("Inserted new contact info:", result);
     }
     
     if (!result) {

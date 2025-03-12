@@ -1,4 +1,3 @@
-
 import { Phone, Mail, MapPin, Globe } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -19,7 +18,7 @@ const ContactInfo = ({ handleContactInfoChange }: ContactInfoProps) => {
   return (
     <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
       <h2 className={`text-2xl font-heading font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
-        {t('contact.info')}
+        {t('contact.title')}
       </h2>
       
       <div className="space-y-6">

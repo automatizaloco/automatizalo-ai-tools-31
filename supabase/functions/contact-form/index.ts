@@ -9,8 +9,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
       headers: corsHeaders
@@ -18,123 +17,91 @@ serve(async (req) => {
   }
 
   try {
-    const reqData = await req.json();
-    console.log("Received form data:", reqData);
-    
-    // Basic validation
-    if (!reqData.name || !reqData.email || !reqData.subject || !reqData.message) {
-      console.log("Missing required fields");
-      return new Response(
-        JSON.stringify({ error: "All fields are required" }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
+    const body = await req.json();
+    console.log("Received request body:", body);
 
-    // Get environment variables
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-
-    if (!supabaseUrl || !supabaseKey || !resendKey) {
-      console.error("Missing environment variables");
+    if (!body.name || !body.email || !body.subject || !body.message) {
       return new Response(
-        JSON.stringify({ error: "Server configuration error" }),
+        JSON.stringify({ error: "Missing required fields" }),
         { 
-          status: 500, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
     // Initialize clients
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const resendKey = Deno.env.get('RESEND_API_KEY');
+
+    if (!supabaseUrl || !supabaseKey || !resendKey) {
+      return new Response(
+        JSON.stringify({ error: "Server configuration missing" }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
     const resend = new Resend(resendKey);
 
-    // Save to database (don't stop on error)
-    try {
-      const { error: dbError } = await supabase
-        .from('contact_messages')
-        .insert([{
-          name: reqData.name,
-          email: reqData.email,
-          subject: reqData.subject,
-          message: reqData.message
-        }]);
+    // Save to database
+    const { error: dbError } = await supabase
+      .from('contact_messages')
+      .insert([{
+        name: body.name,
+        email: body.email,
+        subject: body.subject,
+        message: body.message
+      }]);
 
-      if (dbError) {
-        console.error("Database error:", dbError);
-      } else {
-        console.log("Contact message saved to database");
-      }
-    } catch (dbError) {
-      console.error("Error saving to database:", dbError);
-      // Continue execution even if DB save fails
+    if (dbError) {
+      console.error("Database error:", dbError);
     }
 
-    // Send email
-    try {
-      const { data, error: emailError } = await resend.emails.send({
-        from: "Contact Form <onboarding@resend.dev>",
-        to: ["contact@automatizalo.co"],
-        subject: `New Contact Form: ${reqData.subject}`,
-        html: `
-          <h1>New Contact Message</h1>
-          <p><strong>From:</strong> ${reqData.name} (${reqData.email})</p>
-          <p><strong>Subject:</strong> ${reqData.subject}</p>
-          <h2>Message:</h2>
-          <p>${reqData.message}</p>
-        `
-      });
+    // Send email notification
+    const { data: emailData, error: emailError } = await resend.emails.send({
+      from: 'Contact Form <onboarding@resend.dev>',
+      to: ['contact@automatizalo.co'],
+      subject: `New Contact Form: ${body.subject}`,
+      html: `
+        <h1>New Contact Message</h1>
+        <p><strong>From:</strong> ${body.name} (${body.email})</p>
+        <p><strong>Subject:</strong> ${body.subject}</p>
+        <h2>Message:</h2>
+        <p>${body.message}</p>
+      `,
+    });
 
-      if (emailError) {
-        console.error("Email error:", emailError);
-        return new Response(
-          JSON.stringify({ error: "Failed to send email", details: emailError }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
-          }
-        );
-      }
-
-      console.log("Email sent successfully:", data);
-      
-      // Success response
+    if (emailError) {
+      console.error("Email error:", emailError);
       return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Contact form submitted successfully",
-          emailId: data?.id
-        }),
+        JSON.stringify({ error: "Failed to send email" }),
         { 
-          status: 200, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    } catch (emailError) {
-      console.error("Error sending email:", emailError);
-      return new Response(
-        JSON.stringify({ error: "Failed to send email", details: emailError.message }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
-  } catch (error) {
-    console.error("Unhandled error:", error);
-    
+
     return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        details: error.message
-      }),
+      JSON.stringify({ success: true, data: emailData }),
       { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+
+  } catch (error) {
+    console.error("Server error:", error);
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

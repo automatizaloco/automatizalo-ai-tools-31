@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Phone, Mail, MapPin, Globe, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
@@ -9,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import EditableText from "@/components/admin/EditableText";
 import { useContactInfo } from "@/stores/contactInfoStore";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
@@ -17,13 +18,13 @@ const Contact = () => {
   const { theme } = useTheme();
   const { isAuthenticated } = useAuth();
   const { contactInfo, updateContactInfo } = useContactInfo();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
-    message: "",
+    message: ""
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleContactInfoChange = (id: string, value: string) => {
     const fieldMap: Record<string, keyof typeof contactInfo> = {
@@ -40,8 +41,8 @@ const Contact = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
     }));
   };
@@ -49,36 +50,24 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
-      if (!formData.name || !formData.email || !formData.subject || !formData.message) {
-        throw new Error("Please fill in all required fields");
-      }
-      
-      console.log("Submitting contact form:", formData);
-      
       const { data, error } = await supabase.functions.invoke('contact-form', {
-        body: formData,
+        body: formData
       });
-      
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to submit form');
-      }
-      
-      console.log('Contact form submission successful:', data);
-      
+
+      if (error) throw error;
+
+      toast.success(t('contact.form.success') || "Message sent successfully!");
       setFormData({
         name: "",
         email: "",
         subject: "",
-        message: "",
+        message: ""
       });
-      
-      toast.success(t('contact.form.success') || "Message sent successfully!");
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error(error.message || "Failed to send message. Please try again.");
+      toast.error(t('contact.form.error') || "Failed to send message. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -90,6 +79,7 @@ const Contact = () => {
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
+          {/* Title section */}
           <div className="text-center mb-16">
             <h1 className={`text-4xl font-heading font-bold mb-4 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>
               {isAuthenticated ? (
@@ -114,35 +104,22 @@ const Contact = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            {/* Contact Info Section */}
             <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
               <h2 className={`text-2xl font-heading font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
-                {isAuthenticated ? (
-                  <EditableText 
-                    id="contact-info-title"
-                    defaultText={t('contact.title')}
-                  />
-                ) : (
-                  t('contact.title')
-                )}
+                {t('contact.info')}
               </h2>
               
-              <div className="space-y-6 text-left">
+              <div className="space-y-6">
                 <div className="flex items-start">
                   <div className={`p-3 rounded-full mr-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <Phone className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
                   </div>
                   <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {isAuthenticated ? (
-                        <EditableText 
-                          id="contact-phone-label"
-                          defaultText={t('contact.phone')}
-                        />
-                      ) : (
-                        t('contact.phone')
-                      )}
+                      {t('contact.phone')}
                     </h3>
-                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
                       {isAuthenticated ? (
                         <EditableText 
                           id="contact-phone-value"
@@ -162,16 +139,9 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {isAuthenticated ? (
-                        <EditableText 
-                          id="contact-email-label"
-                          defaultText={t('contact.email')}
-                        />
-                      ) : (
-                        t('contact.email')
-                      )}
+                      {t('contact.email')}
                     </h3>
-                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
                       {isAuthenticated ? (
                         <EditableText 
                           id="contact-email-value"
@@ -191,22 +161,14 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {isAuthenticated ? (
-                        <EditableText 
-                          id="contact-address-label"
-                          defaultText={t('contact.address')}
-                        />
-                      ) : (
-                        t('contact.address')
-                      )}
+                      {t('contact.address')}
                     </h3>
-                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
                       {isAuthenticated ? (
                         <EditableText 
                           id="contact-address-value"
                           defaultText={contactInfo.address}
                           onSave={(value) => handleContactInfoChange('contact-address-value', value)}
-                          multiline={true}
                         />
                       ) : (
                         contactInfo.address
@@ -221,16 +183,9 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {isAuthenticated ? (
-                        <EditableText 
-                          id="contact-website-label"
-                          defaultText="Website"
-                        />
-                      ) : (
-                        "Website"
-                      )}
+                      {t('contact.website')}
                     </h3>
-                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
                       {isAuthenticated ? (
                         <EditableText 
                           id="contact-website-value"
@@ -244,64 +199,21 @@ const Contact = () => {
                   </div>
                 </div>
               </div>
-              
-              <div className="mt-10">
-                <h3 className={`text-lg font-medium mb-4 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                  {isAuthenticated ? (
-                    <EditableText 
-                      id="contact-connect-title"
-                      defaultText="Connect with us"
-                    />
-                  ) : (
-                    "Connect with us"
-                  )}
-                </h3>
-                <div className="flex space-x-4">
-                  <a 
-                    href={`https://wa.me/${contactInfo.phone.replace(/[^0-9]/g, '')}`}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex"
-                  >
-                    <Button variant="outline" className={theme === 'dark' ? 'border-gray-700 bg-gray-800 hover:bg-gray-700' : 'border-gray-300 bg-white hover:bg-gray-100'}>
-                      <MessageSquare className="mr-2 h-5 w-5" />
-                      {isAuthenticated ? (
-                        <EditableText 
-                          id="contact-whatsapp-button"
-                          defaultText={t('contact.whatsapp')}
-                        />
-                      ) : (
-                        t('contact.whatsapp')
-                      )}
-                    </Button>
-                  </a>
-                </div>
-              </div>
             </div>
             
-            <div className={`p-8 rounded-2xl shadow-sm border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+            {/* Contact Form Section */}
+            <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
               <h2 className={`text-2xl font-heading font-semibold mb-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>
-                {isAuthenticated ? (
-                  <EditableText 
-                    id="contact-form-title"
-                    defaultText={t('contact.form.submit')}
-                  />
-                ) : (
-                  t('contact.form.submit')
-                )}
+                {t('contact.form.title')}
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {isAuthenticated ? (
-                      <EditableText 
-                        id="contact-form-name-label"
-                        defaultText={t('contact.form.name')}
-                      />
-                    ) : (
-                      t('contact.form.name')
-                    )}
+                  <label 
+                    htmlFor="name" 
+                    className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    {t('contact.form.name')}
                   </label>
                   <input
                     type="text"
@@ -309,25 +221,21 @@ const Contact = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent ${
-                      theme === 'dark' 
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-gray-500' 
-                        : 'border-gray-300 focus:ring-gray-500'
-                    }`}
                     required
+                    className={`w-full px-4 py-2 rounded-lg border ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'border-gray-300'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {isAuthenticated ? (
-                      <EditableText 
-                        id="contact-form-email-label"
-                        defaultText={t('contact.form.email')}
-                      />
-                    ) : (
-                      t('contact.form.email')
-                    )}
+                  <label 
+                    htmlFor="email" 
+                    className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    {t('contact.form.email')}
                   </label>
                   <input
                     type="email"
@@ -335,25 +243,21 @@ const Contact = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent ${
-                      theme === 'dark' 
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-gray-500' 
-                        : 'border-gray-300 focus:ring-gray-500'
-                    }`}
                     required
+                    className={`w-full px-4 py-2 rounded-lg border ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'border-gray-300'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="subject" className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {isAuthenticated ? (
-                      <EditableText 
-                        id="contact-form-subject-label"
-                        defaultText="Subject"
-                      />
-                    ) : (
-                      "Subject"
-                    )}
+                  <label 
+                    htmlFor="subject" 
+                    className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    {t('contact.form.subject')}
                   </label>
                   <input
                     type="text"
@@ -361,64 +265,43 @@ const Contact = () => {
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent ${
-                      theme === 'dark' 
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-gray-500' 
-                        : 'border-gray-300 focus:ring-gray-500'
-                    }`}
                     required
+                    className={`w-full px-4 py-2 rounded-lg border ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'border-gray-300'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="message" className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {isAuthenticated ? (
-                      <EditableText 
-                        id="contact-form-message-label"
-                        defaultText={t('contact.form.message')}
-                      />
-                    ) : (
-                      t('contact.form.message')
-                    )}
+                  <label 
+                    htmlFor="message" 
+                    className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
+                    {t('contact.form.message')}
                   </label>
-                  <textarea
+                  <Textarea
                     id="message"
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
-                    rows={6}
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent ${
-                      theme === 'dark' 
-                        ? 'bg-gray-700 border-gray-600 text-white focus:ring-gray-500' 
-                        : 'border-gray-300 focus:ring-gray-500'
-                    }`}
                     required
-                  ></textarea>
+                    rows={6}
+                    className={`w-full px-4 py-2 rounded-lg border ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'border-gray-300'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  />
                 </div>
                 
-                <Button 
-                  type="submit" 
-                  className={theme === 'dark' ? 'w-full py-3 bg-blue-600 hover:bg-blue-700' : 'w-full py-3 bg-gray-900 hover:bg-gray-800'}
+                <Button
+                  type="submit"
                   disabled={isSubmitting}
+                  className="w-full"
                 >
-                  {isSubmitting ? (
-                    <div className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      {t('contact.form.submitting')}
-                    </div>
-                  ) : (
-                    isAuthenticated ? (
-                      <EditableText 
-                        id="contact-form-submit-button"
-                        defaultText={t('contact.form.submit')}
-                      />
-                    ) : (
-                      t('contact.form.submit')
-                    )
-                  )}
+                  {isSubmitting ? t('contact.form.submitting') : t('contact.form.submit')}
                 </Button>
               </form>
             </div>

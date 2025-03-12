@@ -111,11 +111,14 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
     
     if (existingData?.id) {
       // Make sure all required fields are included when updating
-      const { data: currentData } = await supabase
+      const { data: currentData, error: fetchError } = await supabase
         .from('contact_info')
         .select('*')
         .eq('id', existingData.id)
-        .single();
+        .maybeSingle();
+      
+      if (fetchError) throw fetchError;
+      if (!currentData) throw new Error('Could not fetch current contact info');
       
       // Merge current data with updates to ensure all required fields are present
       const updatedInfo = { ...currentData, ...info };
@@ -126,9 +129,11 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
         .update(updatedInfo)
         .eq('id', existingData.id)
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) throw new Error('No data returned after update');
+      
       result = data;
     } else {
       // For new records, ensure all required fields are present

@@ -11,24 +11,33 @@ import { Toaster } from "@/components/ui/sonner";
 import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Contact = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { contactInfo, updateContactInfo } = useContactInfo();
+  const { contactInfo, updateContactInfo, loading } = useContactInfo();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showTyping, setShowTyping] = useState(false);
 
-  const handleContactInfoChange = (id: string, value: string) => {
-    const fieldMap: Record<string, keyof typeof contactInfo> = {
-      'contact-phone-value': 'phone',
-      'contact-email-value': 'email',
-      'contact-address-value': 'address',
-      'contact-website-value': 'website'
-    };
-    
-    if (id in fieldMap) {
-      updateContactInfo({ [fieldMap[id]]: value });
+  const handleContactInfoChange = async (id: string, value: string) => {
+    try {
+      const fieldMap: Record<string, keyof typeof contactInfo> = {
+        'contact-phone-value': 'phone',
+        'contact-email-value': 'email',
+        'contact-address-value': 'address',
+        'contact-website-value': 'website'
+      };
+      
+      if (id in fieldMap) {
+        const field = fieldMap[id];
+        const update = { [field]: value };
+        console.log(`Updating ${field} with value:`, value);
+        await updateContactInfo(update);
+      }
+    } catch (error) {
+      console.error("Error updating contact info:", error);
+      toast.error(`Failed to update ${id.replace('contact-', '').replace('-value', '')}`);
     }
   };
 
@@ -103,7 +112,9 @@ const Contact = () => {
           <ContactHeader />
           
           <div className="max-w-4xl mx-auto">
-            <ContactInfo handleContactInfoChange={handleContactInfoChange} />
+            {!loading && (
+              <ContactInfo handleContactInfoChange={handleContactInfoChange} />
+            )}
             
             <div className="mt-12 p-8 rounded-2xl shadow-sm text-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
               <h2 className={`text-2xl font-heading font-semibold mb-4 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>

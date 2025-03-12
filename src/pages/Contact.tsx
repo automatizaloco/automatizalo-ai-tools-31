@@ -1,4 +1,3 @@
-
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
@@ -9,7 +8,7 @@ import ContactInfo from "@/components/contact/ContactInfo";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, Calendar, Video, MapPin } from "lucide-react";
+import { MessageCircle, Calendar, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { es, fr } from "date-fns/locale";
@@ -39,7 +38,6 @@ const Contact = () => {
   const meetingDate = getNextFriday();
   
   const getMeetingDateString = () => {
-    // Use proper imports instead of require
     const dateOptions: Intl.DateTimeFormatOptions = { 
       weekday: 'long', 
       year: 'numeric', 
@@ -54,7 +52,6 @@ const Contact = () => {
 
   const meetingDateString = getMeetingDateString();
 
-  // Format date strings using date-fns with proper imports
   const formatDateForLanguage = (date: Date, lang: string) => {
     if (lang === 'fr') {
       return format(date, "EEEE d MMMM 'à' HH'h'mm", { locale: fr });
@@ -92,7 +89,6 @@ const Contact = () => {
     ]
   };
 
-  // Auto-scroll the chat container when new messages appear
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -135,7 +131,6 @@ const Contact = () => {
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
-  // Generate a fake meeting URL
   const meetingUrl = "https://meet.automatizalo.com/" + Math.random().toString(36).substring(2, 10);
 
   return (
@@ -211,7 +206,7 @@ const Contact = () => {
                         </CardHeader>
                         <CardContent className="pt-3 pb-4">
                           <div className="text-left space-y-2">
-                            <p className="text-sm font-medium">{t('contact.calendar.title') || "Automatízalo Product Demo"}</p>
+                            <p className="text-sm font-medium">{t('contact.calendar.title') || "Demo"}</p>
                             <p className="text-xs flex items-start">
                               <Calendar className="mr-2 mt-0.5 shrink-0" size={12} />
                               <span>{meetingDateString}</span>
@@ -219,10 +214,6 @@ const Contact = () => {
                             <p className="text-xs flex items-start">
                               <Video className="mr-2 mt-0.5 shrink-0" size={12} />
                               <span className="text-blue-600 dark:text-blue-400 underline">{meetingUrl}</span>
-                            </p>
-                            <p className="text-xs flex items-start">
-                              <MapPin className="mr-2 mt-0.5 shrink-0" size={12} />
-                              <span>{t('contact.calendar.location') || "Virtual Meeting"}</span>
                             </p>
                           </div>
                         </CardContent>
@@ -236,18 +227,12 @@ const Contact = () => {
                 {t('contact.whatsapp.cta') || "Connect with us now for fast responses, meeting scheduling, and personalized assistance!"}
               </p>
               
-              <WhatsAppButton 
-                phoneNumber={contactInfo.phone}
-                message={t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services"}
-                showCalendarConfirmation={false}
-              />
-              
               <Button 
                 onClick={handleChatWithUs}
                 className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium py-3 px-6 rounded-full shadow-lg transition-all duration-200 inline-flex items-center gap-2"
               >
                 <MessageCircle size={20} />
-                {t('contact.whatsapp.chat') || "Chat With Us"}
+                {t('contact.whatsapp.chat') || "Chat with us"}
               </Button>
             </div>
           </div>

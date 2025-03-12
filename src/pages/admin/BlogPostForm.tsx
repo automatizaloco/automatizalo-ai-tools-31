@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +13,7 @@ import TranslationPanel from "@/components/admin/blog/TranslationPanel";
 import BlogFormFields from "@/components/admin/blog/BlogFormFields";
 import { supabase } from "@/integrations/supabase/client";
 import { translateBlogContent } from "@/services/translationService";
+import { Loader2, Globe } from "lucide-react";
 
 const BlogPostForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,7 +48,6 @@ const BlogPostForm = () => {
   });
   const [isTranslating, setIsTranslating] = useState(false);
 
-  // Check authentication session
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
@@ -72,7 +71,6 @@ const BlogPostForm = () => {
           if (fetchedPost) {
             setPost(fetchedPost);
             
-            // Populate form data
             setFormData({
               title: fetchedPost.title,
               slug: fetchedPost.slug,
@@ -102,7 +100,6 @@ const BlogPostForm = () => {
               }
             });
             
-            // Initialize translation data if it exists
             if (fetchedPost.translations) {
               setTranslationData({
                 fr: {
@@ -183,7 +180,6 @@ const BlogPostForm = () => {
     setIsTranslating(true);
 
     try {
-      // Translate to French
       const frTranslation = await translateBlogContent(
         formData.content,
         formData.title,
@@ -191,7 +187,6 @@ const BlogPostForm = () => {
         'fr'
       );
 
-      // Translate to Spanish
       const esTranslation = await translateBlogContent(
         formData.content,
         formData.title,
@@ -199,7 +194,6 @@ const BlogPostForm = () => {
         'es'
       );
 
-      // Update translation data
       setTranslationData({
         fr: {
           title: frTranslation.title,
@@ -228,7 +222,6 @@ const BlogPostForm = () => {
     console.log("Submitting form with data:", formData);
 
     try {
-      // Double-check authentication
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
         toast.error("You must be logged in to create or update posts");
@@ -271,7 +264,6 @@ const BlogPostForm = () => {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error("Detailed error:", error);
       
-      // More detailed error message for the user
       toast.error(
         <div>
           <p>Failed to save post: {errorMessage}</p>

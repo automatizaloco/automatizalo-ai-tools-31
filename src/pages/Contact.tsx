@@ -1,3 +1,4 @@
+
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
@@ -95,34 +96,47 @@ const Contact = () => {
     }
   }, [currentMessageIndex, showTyping]);
 
+  // Continuous automatic animation loop
   useEffect(() => {
-    if (currentMessageIndex < chatMessages[language || 'en'].length) {
-      setShowTyping(true);
-      
-      const typingDelay = chatMessages[language || 'en'][currentMessageIndex].sender === 'bot' ? 1500 : 800;
-      
-      const typingTimer = setTimeout(() => {
-        setShowTyping(false);
+    const animationHandler = () => {
+      if (currentMessageIndex < chatMessages[language || 'en'].length) {
+        setShowTyping(true);
         
-        const messageTimer = setTimeout(() => {
-          setCurrentMessageIndex(prev => prev + 1);
+        const typingDelay = chatMessages[language || 'en'][currentMessageIndex].sender === 'bot' ? 1500 : 800;
+        
+        const typingTimer = setTimeout(() => {
+          setShowTyping(false);
           
-          if (currentMessageIndex === chatMessages[language || 'en'].length - 1) {
-            setMeetingConfirmed(true);
-          }
-        }, 300);
+          const messageTimer = setTimeout(() => {
+            setCurrentMessageIndex(prev => prev + 1);
+            
+            if (currentMessageIndex === chatMessages[language || 'en'].length - 1) {
+              setMeetingConfirmed(true);
+            }
+          }, 300);
+          
+          return () => clearTimeout(messageTimer);
+        }, typingDelay);
         
-        return () => clearTimeout(messageTimer);
-      }, typingDelay);
-      
-      return () => clearTimeout(typingTimer);
-    } else if (!meetingConfirmed && chatMessages[language || 'en'].length > 0) {
-      setTimeout(() => {
-        setCurrentMessageIndex(0);
-        setMeetingConfirmed(false);
-      }, 5000);
-    }
-  }, [currentMessageIndex, language, meetingConfirmed]);
+        return () => clearTimeout(typingTimer);
+      } else {
+        // Reset the animation after a short pause
+        const resetTimer = setTimeout(() => {
+          setCurrentMessageIndex(0);
+          setMeetingConfirmed(false);
+        }, 3000);
+        
+        return () => clearTimeout(resetTimer);
+      }
+    };
+    
+    const animation = animationHandler();
+    
+    // Ensure animation restarts when language changes
+    return () => {
+      if (animation) animation();
+    };
+  }, [currentMessageIndex, language]);
 
   const currentLanguageKey = language || 'en';
   const messages = chatMessages[currentLanguageKey as keyof typeof chatMessages] || chatMessages.en;
@@ -157,10 +171,10 @@ const Contact = () => {
                   {t('contact.whatsapp.title') || "Let Our WhatsApp Bot Assist You 24/7"}
                 </h2>
                 <p className={`text-lg mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {t('contact.whatsapp.description') || "Get instant responses through our WhatsApp business account. Our team is ready to assist you with any questions or inquiries."}
+                  {t('contact.whatsapp.description') || "Get instant responses through our WhatsApp business account."}
                 </p>
                 
-                <div className="mb-10 max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                <div className="mb-8 max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                   <div className="bg-green-500 p-3 flex items-center">
                     <MessageCircle className="text-white mr-2" size={20} />
                     <span className="text-white font-medium">Automatízalo WhatsApp</span>
@@ -168,7 +182,7 @@ const Contact = () => {
                   
                   <div 
                     ref={chatContainerRef}
-                    className="p-4 h-64 overflow-y-auto flex flex-col space-y-3"
+                    className="p-4 h-60 overflow-hidden flex flex-col space-y-3"
                   >
                     {messages.slice(0, currentMessageIndex).map((msg, index) => (
                       <div 
@@ -231,8 +245,8 @@ const Contact = () => {
                   </div>
                 </div>
                 
-                <p className={`text-lg mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {t('contact.whatsapp.cta') || "Connect with us now for fast responses, meeting scheduling, and personalized assistance!"}
+                <p className={`text-sm mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {t('contact.whatsapp.cta') || "Connect with us for fast responses and personalized assistance!"}
                 </p>
                 
                 <Button 
@@ -240,7 +254,7 @@ const Contact = () => {
                   className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium py-3 px-6 rounded-full shadow-lg transition-all duration-200 inline-flex items-center gap-2"
                 >
                   <MessageCircle size={20} />
-                  {language === 'en' ? "Chat with us" : t('contact.whatsapp.chat')}
+                  {t('contact.whatsapp.chat') || "Chat with us"}
                 </Button>
               </div>
             </div>

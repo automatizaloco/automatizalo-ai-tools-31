@@ -1,55 +1,72 @@
 
-import React from 'react';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/context/LanguageContext';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
+import { useContactInfo } from '@/stores/contactInfoStore';
+import { Link } from 'react-router-dom';
 
-const CTASection: React.FC = () => {
+const CTASection = () => {
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const { contactInfo } = useContactInfo();
+  
+  // Clean phone number for WhatsApp
+  const cleanPhone = contactInfo.phone.replace(/\D/g, '');
+  const whatsappMessage = encodeURIComponent("Hello, I would like to know more about your services.");
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${whatsappMessage}`;
 
   return (
-    <section className="py-20 md:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 z-0 opacity-10">
-        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-automatizalo-blue/20 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-tr from-automatizalo-blue/20 to-transparent"></div>
-      </div>
-      
-      <div className="container mx-auto px-4 md:px-8 relative z-10">
-        <div className="max-w-3xl mx-auto text-center">
+    <section className="py-16 md:py-24 bg-gray-900 text-white">
+      <div className="container mx-auto px-4 md:px-8">
+        <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6">
             {isAuthenticated ? (
               <EditableText 
-                id="cta-section-title"
-                defaultText={t("solutions.futureproof.title")}
+                id="cta-title"
+                defaultText={t('home.cta.title')}
               />
             ) : (
-              t("solutions.futureproof.title")
+              t('home.cta.title')
             )}
           </h2>
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg md:text-xl text-gray-300 mb-10">
             {isAuthenticated ? (
               <EditableText 
-                id="cta-section-description"
-                defaultText={t("solutions.futureproof.description")}
+                id="cta-description"
+                defaultText={t('home.cta.description')}
               />
             ) : (
-              t("solutions.futureproof.description")
+              t('home.cta.description')
             )}
           </p>
-          <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 px-8 py-6 h-auto text-base transition-all duration-300 rounded-xl" size="lg">
-            {isAuthenticated ? (
-              <EditableText 
-                id="cta-button-text"
-                defaultText={t("solutions.cta.button")}
-              />
-            ) : (
-              t("solutions.cta.button")
-            )}
-            <ArrowRight size={18} className="ml-2" />
-          </Button>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link to="/contact">
+              <Button className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-6 rounded-xl text-base">
+                {isAuthenticated ? (
+                  <EditableText 
+                    id="cta-contact-button"
+                    defaultText={t('home.cta.contactButton')}
+                  />
+                ) : (
+                  t('home.cta.contactButton')
+                )}
+              </Button>
+            </Link>
+            
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-800 px-8 py-6 rounded-xl text-base">
+                {isAuthenticated ? (
+                  <EditableText 
+                    id="cta-talk-button"
+                    defaultText={t('home.cta.talkButton')}
+                  />
+                ) : (
+                  t('home.cta.talkButton')
+                )}
+              </Button>
+            </a>
+          </div>
         </div>
       </div>
     </section>

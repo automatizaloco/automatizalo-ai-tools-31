@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -22,8 +21,19 @@ import LayoutManager from "@/pages/admin/LayoutManager";
 import NotFound from "@/pages/NotFound";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      onError: (error) => {
+        console.error('Query error:', error);
+        toast.error('An error occurred while fetching data');
+      }
+    }
+  }
+});
 
 function App() {
   const [theme, setTheme] = useState<"light" | "dark">("light");

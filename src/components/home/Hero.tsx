@@ -1,8 +1,8 @@
-
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -149,7 +149,7 @@ const Hero = () => {
                 <ArrowRight size={18} className="ml-2" />
               </Button>
               
-              <a href="#about-section">
+              <Link to="#about-section">
                 <Button 
                   variant="outline" 
                   className="border-gray-300 text-gray-800 hover:bg-gray-100 px-6 text-base transition-all duration-300 rounded-xl h-12" 
@@ -157,7 +157,7 @@ const Hero = () => {
                 >
                   {t('home.hero.learnMore')}
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
           

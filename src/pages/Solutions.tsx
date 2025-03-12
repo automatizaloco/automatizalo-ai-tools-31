@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import EditableText from "@/components/admin/EditableText";
+import { Link } from 'react-router-dom';
+import { useContactInfo } from "@/stores/contactInfoStore";
 
 const Solutions = () => {
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const { contactInfo } = useContactInfo();
   
   // Solution Cards Data
   const solutionCards = [

@@ -1,29 +1,35 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { fetchBlogPostById } from "@/services/blogService";
+import { fetchBlogPostBySlug } from "@/services/blog/getBlogPosts";
 import { BlogPost as BlogPostType } from "@/types/blog";
 import { useLanguage } from "@/context/LanguageContext";
+import { toast } from "sonner";
 
 const BlogPost = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<BlogPostType | null>(null);
   const [loading, setLoading] = useState(true);
   const { language, translateContent } = useLanguage();
   
   useEffect(() => {
     const fetchPost = async () => {
-      if (id) {
+      if (slug) {
         try {
-          const fetchedPost = await fetchBlogPostById(id);
+          setLoading(true);
+          const fetchedPost = await fetchBlogPostBySlug(slug);
           if (fetchedPost) {
             setPost(fetchedPost);
+          } else {
+            toast.error("Blog post not found");
           }
         } catch (error) {
           console.error("Error fetching blog post:", error);
+          toast.error("Failed to load blog post");
         } finally {
           setLoading(false);
         }
@@ -31,14 +37,33 @@ const BlogPost = () => {
     };
     
     fetchPost();
-  }, [id]);
+  }, [slug]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
   
   if (!post) {
-    return <div>Post not found</div>;
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <Navbar />
+        <div className="flex-grow flex flex-col items-center justify-center">
+          <h2 className="text-2xl font-bold mb-4">Post not found</h2>
+          <Link to="/blog">
+            <Button>Return to Blog</Button>
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   const title = translateContent(post, 'title', language);
@@ -92,7 +117,7 @@ const BlogPost = () => {
             <div className="mt-12 pt-8 border-t border-gray-200">
               <h3 className="text-lg font-semibold mb-4">Tags</h3>
               <div className="flex flex-wrap gap-2">
-                {post.tags.map((tag, index) => (
+                {post.tags && post.tags.map((tag, index) => (
                   <span 
                     key={index}
                     className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"

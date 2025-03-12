@@ -2,6 +2,7 @@
 import { MessageCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/context/LanguageContext";
+import { useContactInfo } from "@/stores/contactInfoStore";
 
 interface WhatsAppButtonProps {
   phoneNumber?: string;
@@ -9,14 +10,20 @@ interface WhatsAppButtonProps {
 }
 
 const WhatsAppButton = ({
-  phoneNumber = "1234567890",
+  phoneNumber: propPhoneNumber,
   message = "Hello, I would like more information"
 }: WhatsAppButtonProps) => {
   const { t } = useLanguage();
+  const { contactInfo } = useContactInfo();
+  
+  // Use the phone number from props if provided, otherwise use the one from contactInfo
+  const phoneNumber = propPhoneNumber || contactInfo.phone;
   
   const handleClick = () => {
+    // Clean the phone number - remove any non-digit characters
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
   };
 
   return (

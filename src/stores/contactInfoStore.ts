@@ -37,13 +37,21 @@ export const useContactInfo = () => {
         } else {
           console.log("No contact info found in database, using defaults");
           // If no data exists, create initial record with defaults
-          const initialData = await updateContactInfo(defaultContactInfo);
-          setContactInfo(initialData);
+          try {
+            const initialData = await updateContactInfo(defaultContactInfo);
+            setContactInfo(initialData);
+          } catch (initError) {
+            console.error("Error creating initial contact info:", initError);
+            // Still use default values even if we couldn't save them
+            setContactInfo(defaultContactInfo);
+          }
         }
         setError(null);
       } catch (error) {
         console.error("Error loading contact information:", error);
         setError("Failed to load contact information");
+        // Use default values as fallback
+        setContactInfo(defaultContactInfo);
       } finally {
         setLoading(false);
       }
@@ -56,6 +64,7 @@ export const useContactInfo = () => {
   const updateContactInfoData = async (newInfo: Partial<ContactInfo>) => {
     if (updating) {
       console.log("Update already in progress, skipping");
+      toast.info("Update in progress, please wait...");
       return;
     }
     

@@ -12,9 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const { text, title, excerpt, targetLang } = await req.json();
+    const { text, title, excerpt, targetLang, isChunk, chunkIndex, onlyMetadata } = await req.json();
     
     console.log(`Starting blog translation to ${targetLang}. API Key length: ${API_KEY?.length || 0}`);
+    console.log(`Is chunk: ${isChunk ? 'yes' : 'no'}, Chunk index: ${chunkIndex || 'N/A'}, Only metadata: ${onlyMetadata ? 'yes' : 'no'}`);
     
     if (!API_KEY) {
       console.error("Google API key not found");
@@ -35,7 +36,7 @@ serve(async (req) => {
         const requestBody = {
           q: content,
           target: target,
-          format: "text"
+          format: "html"  // Using html to better preserve formatting
         };
 
         // Make API request
@@ -83,16 +84,57 @@ serve(async (req) => {
     }
 
     try {
-      // Translate title, excerpt, and content in parallel with proper error handling
-      console.log(`Starting parallel translation of blog content to ${targetLang}`);
+      // If this is a metadata-only request, just translate title and excerpt
+      if (onlyMetadata) {
+        console.log("Processing metadata-only translation request");
+        const [translatedTitle, translatedExcerpt] = await Promise.all([
+          title ? translateText(title, targetLang) : Promise.resolve(''),
+          excerpt ? translateText(excerpt, targetLang) : Promise.resolve('')
+        ]);
+        
+        return new Response(
+          JSON.stringify({ 
+            title: translatedTitle,
+            excerpt: translatedExcerpt,
+            content: ''
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          },
+        );
+      }
       
-      const [translatedTitle, translatedExcerpt, translatedContent] = await Promise.all([
-        title ? translateText(title, targetLang) : Promise.resolve(''),
-        excerpt ? translateText(excerpt, targetLang) : Promise.resolve(''),
-        text ? translateText(text, targetLang) : Promise.resolve('')
-      ]);
+      // For chunk translations or normal translations
+      console.log(`Starting ${isChunk ? 'chunk' : 'full'} translation of blog content to ${targetLang}`);
+      
+      // If it's a chunk, we may not need to translate title and excerpt
+      const needsMetadata = !isChunk || chunkIndex === 0;
+      
+      const translationPromises = [];
+      
+      if (needsMetadata && title) {
+        translationPromises.push(translateText(title, targetLang));
+      } else {
+        translationPromises.push(Promise.resolve(''));
+      }
+      
+      if (needsMetadata && excerpt) {
+        translationPromises.push(translateText(excerpt, targetLang));
+      } else {
+        translationPromises.push(Promise.resolve(''));
+      }
+      
+      if (text) {
+        translationPromises.push(translateText(text, targetLang));
+      } else {
+        translationPromises.push(Promise.resolve(''));
+      }
+      
+      const [translatedTitle, translatedExcerpt, translatedContent] = await Promise.all(translationPromises);
 
       console.log("Blog translation completed successfully");
+      console.log(`Translated content length: ${translatedContent.length}`);
 
       return new Response(
         JSON.stringify({ 

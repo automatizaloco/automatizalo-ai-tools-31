@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ContactInfo } from '@/stores/contactInfoStore';
 import { toast } from 'sonner';
@@ -109,16 +108,24 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
     const { data: existingData, error: fetchError } = await supabase
       .from('contact_info')
       .select('*')
-      .single();
+      .maybeSingle();
 
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+    if (fetchError && fetchError.code !== 'PGRST116') {
       console.error("Error checking existing contact info:", fetchError);
       throw fetchError;
     }
 
+    // Default contact information
+    const defaultContactInfo: ContactInfo = {
+      phone: "+1 (555) 123-4567",
+      email: "contact@automatizalo.co",
+      address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
+      website: "https://automatizalo.co"
+    };
+
     let result;
     
-    if (existingData?.id) {
+    if (existingData) {
       // Update existing record with partial data
       console.log("Updating existing record with ID:", existingData.id);
       const { data, error } = await supabase
@@ -134,24 +141,14 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
       }
       
       result = data;
-      console.log("Updated existing contact info:", result);
     } else {
-      // For new records, we need to ensure all required fields are present
-      // Create a complete ContactInfo object by using default values for missing fields
-      const defaultContactInfo: ContactInfo = {
-        phone: "+1 (555) 123-4567",
-        email: "contact@automatizalo.co",
-        address: "123 AI Boulevard, Tech District, San Francisco, CA 94105",
-        website: "https://automatizalo.co"
-      };
-      
-      // Combine default values with provided values
+      // For new records, ensure all required fields are present
       const completeInfo = { ...defaultContactInfo, ...info };
       
       console.log("Inserting new contact info with complete data:", completeInfo);
       const { data, error } = await supabase
         .from('contact_info')
-        .insert(completeInfo)
+        .insert([completeInfo]) // Wrap in array to match Supabase's expected type
         .select()
         .single();
       
@@ -161,14 +158,13 @@ export const updateContactInfo = async (info: Partial<ContactInfo>): Promise<Con
       }
       
       result = data;
-      console.log("Inserted new contact info:", result);
     }
     
     if (!result) {
       throw new Error('No data returned after operation');
     }
     
-    return result;
+    return result as ContactInfo;
   } catch (error: any) {
     console.error("Error updating contact information:", error);
     throw new Error(`Failed to update contact information: ${error.message}`);

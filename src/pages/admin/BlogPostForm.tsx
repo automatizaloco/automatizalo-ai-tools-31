@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { createBlogPost, fetchBlogPostById, updateBlogPost } from "@/services/blogService";
+import { createBlogPost, fetchBlogPostById, updateBlogPost, saveBlogTranslations, getBlogTranslations } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { BlogFormData, TranslationFormData } from "@/types/form";
 import { useLanguage } from "@/context/LanguageContext";
@@ -84,36 +83,29 @@ const BlogPostForm = () => {
               readTime: fetchedPost.readTime,
               image: fetchedPost.image,
               featured: fetchedPost.featured || false,
-              translations: fetchedPost.translations ? {
-                fr: {
-                  title: fetchedPost.translations.fr?.title || "",
-                  excerpt: fetchedPost.translations.fr?.excerpt || "",
-                  content: fetchedPost.translations.fr?.content || ""
-                },
-                es: {
-                  title: fetchedPost.translations.es?.title || "",
-                  excerpt: fetchedPost.translations.es?.excerpt || "",
-                  content: fetchedPost.translations.es?.content || ""
-                }
-              } : {
+              translations: {
                 fr: { title: "", excerpt: "", content: "" },
                 es: { title: "", excerpt: "", content: "" }
               }
             });
             
-            if (fetchedPost.translations) {
-              setTranslationData({
-                fr: {
-                  title: fetchedPost.translations.fr?.title || "",
-                  excerpt: fetchedPost.translations.fr?.excerpt || "",
-                  content: fetchedPost.translations.fr?.content || ""
-                },
-                es: {
-                  title: fetchedPost.translations.es?.title || "",
-                  excerpt: fetchedPost.translations.es?.excerpt || "",
-                  content: fetchedPost.translations.es?.content || ""
-                }
+            try {
+              const translations = await getBlogTranslations(id);
+              setTranslationData(translations);
+              setFormData(prev => ({
+                ...prev,
+                translations
+              }));
+              
+              setPost(prev => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  translations
+                };
               });
+            } catch (translationError) {
+              console.error("Error fetching translations:", translationError);
             }
           }
         } catch (error) {
@@ -223,8 +215,8 @@ const BlogPostForm = () => {
       console.log("Translations updated:", updatedTranslations);
       toast.success("Content translated to all languages");
       
-      // Update the post immediately if in edit mode and not manually editing translations
-      if (id && !editingTranslation) {
+      // Save translations to database if in edit mode
+      if (id) {
         await saveTranslations(updatedTranslations);
       }
     } catch (error) {
@@ -235,22 +227,15 @@ const BlogPostForm = () => {
     }
   };
 
-  // New function to save translations without having to submit the entire form
   const saveTranslations = async (translations: TranslationFormData) => {
-    if (!id) return;
+    if (!id) {
+      toast.error("Cannot save translations for a post that hasn't been created yet");
+      return;
+    }
     
     try {
-      const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
+      await saveBlogTranslations(id, translations);
       
-      const postData = {
-        ...formData,
-        tags: tagsArray,
-        translations
-      };
-      
-      await updateBlogPost(id, postData);
-      
-      // Update the post state to reflect the new translations
       if (post) {
         setPost({
           ...post,
@@ -261,7 +246,7 @@ const BlogPostForm = () => {
       toast.success("Translations saved successfully");
     } catch (error) {
       console.error("Error saving translations:", error);
-      toast.error("Failed to save translations");
+      toast.error(`Failed to save translations: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -280,9 +265,6 @@ const BlogPostForm = () => {
 
       const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
       
-      // Use the most up-to-date translation data
-      const finalTranslations = editingTranslation ? translationData : formData.translations;
-      
       const postData: any = {
         title: formData.title,
         excerpt: formData.excerpt,
@@ -294,20 +276,34 @@ const BlogPostForm = () => {
         readTime: formData.readTime,
         image: formData.image,
         featured: formData.featured,
-        slug: formData.slug || formData.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-'),
-        translations: finalTranslations
+        slug: formData.slug || formData.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
       };
 
       console.log("Post data prepared for saving:", postData);
 
+      let savedPostId: string;
+      
       if (id) {
         console.log("Updating existing post with ID:", id);
         await updateBlogPost(id, postData);
+        savedPostId = id;
         toast.success("Post updated successfully");
       } else {
         console.log("Creating new post");
-        await createBlogPost(postData);
+        const newPost = await createBlogPost(postData);
+        savedPostId = newPost.id;
         toast.success("Post created successfully");
+      }
+      
+      const currentTranslations = editingTranslation ? translationData : formData.translations;
+      if ((currentTranslations.fr.title && currentTranslations.fr.content) || 
+          (currentTranslations.es.title && currentTranslations.es.content)) {
+        try {
+          await saveBlogTranslations(savedPostId, currentTranslations);
+        } catch (translationError) {
+          console.error("Error saving translations:", translationError);
+          toast.error(`Post was saved, but translations failed: ${translationError instanceof Error ? translationError.message : String(translationError)}`);
+        }
       }
       
       navigate("/admin/blog");

@@ -1,4 +1,3 @@
-
 import { Brain, Bot, Zap, Sparkles, BarChart, Clock, Shield, Users, MessageSquare, FileText, Cog, Database } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -154,16 +153,6 @@ const Solutions = () => {
                 t("solutions.subtitle")
               )}
             </p>
-            <Button className="bg-gray-900 hover:bg-gray-800 py-6 px-8 rounded-xl text-base">
-              {isAuthenticated ? (
-                <EditableText 
-                  id="solutions-viewall-button"
-                  defaultText={t("solutions.viewAllButton")}
-                />
-              ) : (
-                t("solutions.viewAllButton")
-              )}
-            </Button>
           </div>
           
           {/* Main Solutions */}

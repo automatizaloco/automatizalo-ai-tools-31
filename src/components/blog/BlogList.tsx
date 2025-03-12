@@ -44,7 +44,7 @@ const BlogList = ({ posts }: BlogListProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {translatedPosts.map((post) => (
           <div key={post.id} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300">
-            <Link to={`/blog/${post.id}`} className="block h-48 overflow-hidden">
+            <Link to={`/blog/${post.slug}`} className="block h-48 overflow-hidden">
               <img 
                 src={post.image} 
                 alt={post.title} 
@@ -57,7 +57,7 @@ const BlogList = ({ posts }: BlogListProps) => {
                   {post.category}
                 </span>
               </div>
-              <Link to={`/blog/${post.id}`} className="block">
+              <Link to={`/blog/${post.slug}`} className="block">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors">
                   {isAuthenticated ? (
                     <EditableText 
@@ -86,7 +86,7 @@ const BlogList = ({ posts }: BlogListProps) => {
                 <Clock className="mr-1 h-3 w-3" />
                 <span>{post.readTime}</span>
               </div>
-              <Link to={`/blog/${post.id}`}>
+              <Link to={`/blog/${post.slug}`}>
                 <Button 
                   variant="ghost" 
                   className="w-full justify-between px-4 py-2 border border-gray-200 hover:bg-gray-100 hover:text-gray-800 hover:border-gray-300 transition-colors"

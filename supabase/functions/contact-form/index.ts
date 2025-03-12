@@ -40,6 +40,10 @@ const handler = async (req: Request): Promise<Response> => {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     console.log("Using Resend API Key:", resendApiKey ? "Key is present" : "Key is missing");
     
+    if (!resendApiKey) {
+      throw new Error("Resend API key is missing");
+    }
+    
     const resend = new Resend(resendApiKey);
     
     const { data, error } = await resend.emails.send({
@@ -59,6 +63,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error sending email:", error);
       throw new Error(`Failed to send email: ${error.message}`);
     }
+
+    console.log("Email sent successfully:", data);
 
     return new Response(
       JSON.stringify({ 

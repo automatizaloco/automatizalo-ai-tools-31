@@ -44,7 +44,7 @@ const FeaturedPosts = ({ posts }: FeaturedPostsProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {translatedFeaturedPosts.map((post) => (
           <div key={post.id} className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
-            <Link to={`/blog/${post.id}`} className="block h-64 overflow-hidden">
+            <Link to={`/blog/${post.slug}`} className="block h-64 overflow-hidden">
               <img 
                 src={post.image} 
                 alt={post.title} 
@@ -57,7 +57,7 @@ const FeaturedPosts = ({ posts }: FeaturedPostsProps) => {
                   {post.category}
                 </span>
               </div>
-              <Link to={`/blog/${post.id}`} className="block">
+              <Link to={`/blog/${post.slug}`} className="block">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">
                   {isAuthenticated ? (
                     <EditableText 

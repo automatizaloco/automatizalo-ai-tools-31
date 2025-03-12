@@ -9,38 +9,105 @@ export interface PageSection {
   updated_at: string;
 }
 
-// In a real implementation, this would fetch from the database
-// For now, we'll use localStorage to simulate persistence
 export const getPageContent = async (page: string, section: string): Promise<string> => {
-  const key = `page_content_${page}_${section}`;
-  const storedContent = localStorage.getItem(key);
-  
-  if (storedContent) {
-    return storedContent;
+  try {
+    // Try to fetch content from Supabase
+    const { data, error } = await supabase
+      .from('page_content')
+      .select('content')
+      .eq('page', page)
+      .eq('section_name', section)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching page content:', error);
+      throw error;
+    }
+    
+    // If content exists in the database, return it
+    if (data) {
+      return data.content;
+    }
+    
+    // If not in the database, use default content
+    const defaultContent = getDefaultContent(page, section);
+    
+    // Store the default content in Supabase for future use
+    await supabase.from('page_content').insert({
+      page,
+      section_name: section,
+      content: defaultContent,
+      updated_at: new Date().toISOString()
+    });
+    
+    return defaultContent;
+  } catch (error) {
+    console.error('Error in getPageContent:', error);
+    
+    // Fallback to localStorage if Supabase fails
+    const key = `page_content_${page}_${section}`;
+    const storedContent = localStorage.getItem(key);
+    
+    if (storedContent) {
+      return storedContent;
+    }
+    
+    // Default content as last resort
+    const defaultContent = getDefaultContent(page, section);
+    localStorage.setItem(key, defaultContent);
+    
+    return defaultContent;
   }
-  
-  // Default content for each section
-  const defaultContent = getDefaultContent(page, section);
-  
-  // Store the default content if nothing exists
-  localStorage.setItem(key, defaultContent);
-  
-  return defaultContent;
 };
 
 export const updatePageContent = async (page: string, section: string, content: string): Promise<void> => {
-  const key = `page_content_${page}_${section}`;
-  localStorage.setItem(key, content);
-  
-  // In a real implementation, this would update the database:
-  // await supabase.from('page_content').upsert({
-  //   page,
-  //   section_name: section, 
-  //   content,
-  //   updated_at: new Date().toISOString()
-  // }).eq('page', page).eq('section_name', section);
-  
-  console.log(`Content updated for ${page} - ${section}`);
+  try {
+    // Check if content already exists
+    const { data } = await supabase
+      .from('page_content')
+      .select('id')
+      .eq('page', page)
+      .eq('section_name', section)
+      .maybeSingle();
+    
+    if (data) {
+      // Update existing content
+      const { error } = await supabase
+        .from('page_content')
+        .update({
+          content,
+          updated_at: new Date().toISOString()
+        })
+        .eq('page', page)
+        .eq('section_name', section);
+      
+      if (error) {
+        throw error;
+      }
+    } else {
+      // Insert new content
+      const { error } = await supabase
+        .from('page_content')
+        .insert({
+          page,
+          section_name: section,
+          content,
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) {
+        throw error;
+      }
+    }
+    
+    console.log(`Content updated for ${page} - ${section}`);
+  } catch (error) {
+    console.error('Error updating page content in Supabase:', error);
+    
+    // Fallback to localStorage if Supabase fails
+    const key = `page_content_${page}_${section}`;
+    localStorage.setItem(key, content);
+  }
 };
 
 // Default content for each section if nothing is stored yet

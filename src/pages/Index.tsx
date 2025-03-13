@@ -1,8 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { toast } from 'sonner';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
 import About from '@/components/home/About';
 import SolutionsSection from '@/components/home/SolutionsSection';
@@ -62,8 +61,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
       <main className="flex-grow">
         {visibleSections.map(section => (
           <React.Fragment key={section.id}>
@@ -71,8 +68,6 @@ const Index = () => {
           </React.Fragment>
         ))}
       </main>
-      
-      <Footer />
     </div>
   );
 };

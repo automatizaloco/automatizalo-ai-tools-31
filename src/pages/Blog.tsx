@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from "react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { fetchBlogPosts } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import BlogHero from "@/components/blog/BlogHero";
@@ -40,8 +38,6 @@ const Blog = () => {
 
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
-      <Navbar />
-      
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           <BlogHero />
@@ -55,8 +51,6 @@ const Blog = () => {
           <NewsletterSignup />
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };

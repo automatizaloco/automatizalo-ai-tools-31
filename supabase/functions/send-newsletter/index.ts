@@ -250,7 +250,7 @@ function generateNewsletterHTML(
   customContent?: string
 ): string {
   // Logo URL (using the uploaded image)
-  const logoUrl = "https://automatizalo.co/lovable-uploads/0c48ab88-7f33-4af0-b4ef-1d9da8d5c3b9.png";
+  const logoUrl = "https://automatizalo.co/lovable-uploads/6e67af0a-84d4-4c75-bf38-9001dbc81481.png";
   
   // Social media links - updated to match website links from Footer.tsx
   const socialLinks = {
@@ -262,6 +262,9 @@ function generateNewsletterHTML(
   // WhatsApp number
   const whatsappNumber = "+573042037763";
   const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+  
+  // Define the base URL for the website
+  const baseUrl = "https://automatizalo.co";
   
   // Basic styling with brand colors: black, grey and white
   const html = `
@@ -313,15 +316,41 @@ function generateNewsletterHTML(
           margin-bottom: 30px; 
           border-bottom: 1px solid #eee;
           padding-bottom: 20px;
+          display: flex;
+          flex-direction: column;
+        }
+        @media (min-width: 480px) {
+          .blog-post {
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 20px;
+          }
         }
         .blog-post:last-child {
           border-bottom: none;
         }
-        .blog-post img { 
-          max-width: 100%; 
-          border-radius: 4px;
+        .blog-post-image { 
+          flex-shrink: 0;
+          width: 100%;
+          max-width: 150px;
+          margin-bottom: 15px;
         }
-        .blog-post h2 { 
+        @media (min-width: 480px) {
+          .blog-post-image {
+            margin-bottom: 0;
+          }
+        }
+        .blog-post-image img { 
+          width: 100%;
+          height: auto;
+          border-radius: 4px;
+          object-fit: cover;
+        }
+        .blog-post-content {
+          flex-grow: 1;
+        }
+        .blog-post h2, .blog-post h3 { 
+          margin-top: 0;
           margin-bottom: 10px; 
           color: #333333;
         }
@@ -392,10 +421,15 @@ function generateNewsletterHTML(
             <h2>Latest Blog Posts</h2>
             ${blogPosts.map(post => `
               <div class="blog-post">
-                <h3>${post.title}</h3>
-                <p class="date">${new Date(post.date).toLocaleDateString()}</p>
-                <p class="excerpt">${post.excerpt}</p>
-                <a href="https://automatizalo.co/blog/${post.slug}" class="read-more">Read More</a>
+                <div class="blog-post-image">
+                  <img src="${post.image}" alt="${post.title}" />
+                </div>
+                <div class="blog-post-content">
+                  <h3>${post.title}</h3>
+                  <p class="date">${new Date(post.date).toLocaleDateString()}</p>
+                  <p class="excerpt">${post.excerpt}</p>
+                  <a href="${baseUrl}/blog/${post.slug}" class="read-more">Read More</a>
+                </div>
               </div>
             `).join('')}
           ` : ''}
@@ -412,7 +446,7 @@ function generateNewsletterHTML(
             <a href="${socialLinks.twitter}">X</a>
           </div>
           
-          <p>If you no longer wish to receive these emails, you can <a href="https://automatizalo.co/unsubscribe">unsubscribe here</a>.</p>
+          <p>If you no longer wish to receive these emails, you can <a href="${baseUrl}/unsubscribe">unsubscribe here</a>.</p>
           <p>&copy; ${new Date().getFullYear()} Automatizalo. All rights reserved.</p>
         </div>
       </div>

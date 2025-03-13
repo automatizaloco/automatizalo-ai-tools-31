@@ -1,9 +1,16 @@
+
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import EditableText from '@/components/admin/EditableText';
 import { useContactInfo, ContactInfo } from '@/stores/contactInfoStore';
 import { useAuth } from '@/context/AuthContext';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { subscribeToNewsletter, NewsletterFrequency } from '@/services/newsletterService';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -11,6 +18,11 @@ const Footer = () => {
   const { isAuthenticated } = useAuth();
   const { contactInfo, updateContactInfo } = useContactInfo();
   const currentYear = new Date().getFullYear();
+  
+  // Newsletter subscription state
+  const [email, setEmail] = useState("");
+  const [frequency, setFrequency] = useState<NewsletterFrequency>("weekly");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleContactInfoChange = (id: string, value: string) => {
     const fieldMap: Record<string, keyof ContactInfo> = {
@@ -27,6 +39,22 @@ const Footer = () => {
         [field]: value
       };
       updateContactInfo(updatedInfo);
+    }
+  };
+  
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await subscribeToNewsletter(email, frequency);
+      setEmail(""); // Clear form on success
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -239,6 +267,54 @@ const Footer = () => {
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
               {isAuthenticated ? (
                 <EditableText 
+                  id="footer-newsletter" 
+                  defaultText="Subscribe to our Newsletter"
+                />
+              ) : (
+                "Subscribe to our Newsletter"
+              )}
+            </h3>
+            <form onSubmit={handleSubscribe} className="mb-6">
+              <div className="flex flex-col space-y-3">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="flex-grow px-4 py-2 rounded-lg"
+                  required
+                />
+                
+                <div className="flex space-x-4">
+                  <RadioGroup 
+                    value={frequency} 
+                    onValueChange={(value) => setFrequency(value as NewsletterFrequency)}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="weekly" id="footer-weekly" />
+                      <Label htmlFor="footer-weekly">Weekly</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="monthly" id="footer-monthly" />
+                      <Label htmlFor="footer-monthly">Monthly</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Subscribing...' : 'Subscribe'}
+                </Button>
+              </div>
+            </form>
+            
+            <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
+              {isAuthenticated ? (
+                <EditableText 
                   id="footer-contact-us" 
                   defaultText={t("contact.title")}
                 />
@@ -327,10 +403,10 @@ const Footer = () => {
               </Link>
               <span className={theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}>•</span>
               <Link 
-                to="/privacy-policy?tab=cookies" 
+                to="/unsubscribe" 
                 className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
               >
-                Cookie Settings
+                Unsubscribe
               </Link>
             </div>
           </div>
@@ -341,4 +417,3 @@ const Footer = () => {
 };
 
 export default Footer;
-

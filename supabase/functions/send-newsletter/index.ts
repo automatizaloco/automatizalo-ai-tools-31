@@ -249,14 +249,14 @@ function generateNewsletterHTML(
   blogPosts: BlogPost[],
   customContent?: string
 ): string {
-  // New logo URL (using the uploaded image)
+  // Logo URL (using the uploaded image)
   const logoUrl = "https://automatizalo.co/lovable-uploads/0c48ab88-7f33-4af0-b4ef-1d9da8d5c3b9.png";
   
-  // Social media links - updated to match website links from Navbar.tsx
+  // Social media links - updated to match website links from Footer.tsx
   const socialLinks = {
-    facebook: "https://facebook.com/automatizalo",
-    instagram: "https://instagram.com/automatizalo",
-    twitter: "https://twitter.com/automatizalo"
+    facebook: "https://www.facebook.com/automatizalo.co",
+    instagram: "https://www.instagram.com/automatizalo.co/",
+    twitter: "https://x.com/Automatizalo_co"
   };
   
   // WhatsApp number

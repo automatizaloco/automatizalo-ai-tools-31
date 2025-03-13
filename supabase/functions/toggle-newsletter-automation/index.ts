@@ -46,7 +46,13 @@ const handler = async (req: Request): Promise<Response> => {
         
         console.log("Weekly newsletter automation setup complete");
       } else {
-        console.log("No weekly template ID provided, skipping weekly automation setup");
+        // If no template is provided, remove any existing weekly job
+        try {
+          await supabase.rpc('remove_cron_job', { job_name: 'send_weekly_newsletter' });
+          console.log("Weekly newsletter automation removed (no template provided)");
+        } catch (error) {
+          console.log("No weekly job to remove");
+        }
       }
       
       // Set up scheduled cron job for monthly newsletter (1st day of the month at 9 AM)
@@ -67,18 +73,32 @@ const handler = async (req: Request): Promise<Response> => {
         
         console.log("Monthly newsletter automation setup complete");
       } else {
-        console.log("No monthly template ID provided, skipping monthly automation setup");
+        // If no template is provided, remove any existing monthly job
+        try {
+          await supabase.rpc('remove_cron_job', { job_name: 'send_monthly_newsletter' });
+          console.log("Monthly newsletter automation removed (no template provided)");
+        } catch (error) {
+          console.log("No monthly job to remove");
+        }
       }
     } else {
       // Remove the scheduled cron jobs
       if (weeklyTemplateId) {
-        await supabase.rpc('remove_cron_job', { job_name: 'send_weekly_newsletter' });
-        console.log("Weekly newsletter automation removed");
+        try {
+          await supabase.rpc('remove_cron_job', { job_name: 'send_weekly_newsletter' });
+          console.log("Weekly newsletter automation removed");
+        } catch (error) {
+          console.log("Error removing weekly job:", error);
+        }
       }
       
       if (monthlyTemplateId) {
-        await supabase.rpc('remove_cron_job', { job_name: 'send_monthly_newsletter' });
-        console.log("Monthly newsletter automation removed");
+        try {
+          await supabase.rpc('remove_cron_job', { job_name: 'send_monthly_newsletter' });
+          console.log("Monthly newsletter automation removed");
+        } catch (error) {
+          console.log("Error removing monthly job:", error);
+        }
       }
     }
 

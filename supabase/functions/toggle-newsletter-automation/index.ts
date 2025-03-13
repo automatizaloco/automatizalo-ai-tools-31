@@ -29,38 +29,57 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (enable) {
       // Set up scheduled cron job for weekly newsletter (every Monday at 9 AM)
-      const weeklyCommand = `
-        SELECT net.http_post(
-          url:='${supabaseUrl}/functions/v1/send-newsletter',
-          headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}'::jsonb,
-          body:='{"frequency": "weekly"${weeklyTemplateId ? `, "templateId": "${weeklyTemplateId}"` : ''}, "testMode": false}'::jsonb
-        ) as request_id;
-      `;
-      
-      await supabase.rpc('create_or_replace_cron_job', {
-        job_name: 'send_weekly_newsletter',
-        schedule: '0 9 * * 1', // Monday at 9 AM
-        command: weeklyCommand
-      });
+      if (weeklyTemplateId) {
+        const weeklyCommand = `
+          SELECT net.http_post(
+            url:='${supabaseUrl}/functions/v1/send-newsletter',
+            headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}'::jsonb,
+            body:='{"frequency": "weekly", "templateId": "${weeklyTemplateId}", "testMode": false}'::jsonb
+          ) as request_id;
+        `;
+        
+        await supabase.rpc('create_or_replace_cron_job', {
+          job_name: 'send_weekly_newsletter',
+          schedule: '0 9 * * 1', // Monday at 9 AM
+          command: weeklyCommand
+        });
+        
+        console.log("Weekly newsletter automation setup complete");
+      } else {
+        console.log("No weekly template ID provided, skipping weekly automation setup");
+      }
       
       // Set up scheduled cron job for monthly newsletter (1st day of the month at 9 AM)
-      const monthlyCommand = `
-        SELECT net.http_post(
-          url:='${supabaseUrl}/functions/v1/send-newsletter',
-          headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}'::jsonb,
-          body:='{"frequency": "monthly"${monthlyTemplateId ? `, "templateId": "${monthlyTemplateId}"` : ''}, "testMode": false}'::jsonb
-        ) as request_id;
-      `;
-      
-      await supabase.rpc('create_or_replace_cron_job', {
-        job_name: 'send_monthly_newsletter',
-        schedule: '0 9 1 * *', // 1st day of month at 9 AM
-        command: monthlyCommand
-      });
+      if (monthlyTemplateId) {
+        const monthlyCommand = `
+          SELECT net.http_post(
+            url:='${supabaseUrl}/functions/v1/send-newsletter',
+            headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}'::jsonb,
+            body:='{"frequency": "monthly", "templateId": "${monthlyTemplateId}", "testMode": false}'::jsonb
+          ) as request_id;
+        `;
+        
+        await supabase.rpc('create_or_replace_cron_job', {
+          job_name: 'send_monthly_newsletter',
+          schedule: '0 9 1 * *', // 1st day of month at 9 AM
+          command: monthlyCommand
+        });
+        
+        console.log("Monthly newsletter automation setup complete");
+      } else {
+        console.log("No monthly template ID provided, skipping monthly automation setup");
+      }
     } else {
       // Remove the scheduled cron jobs
-      await supabase.rpc('remove_cron_job', { job_name: 'send_weekly_newsletter' });
-      await supabase.rpc('remove_cron_job', { job_name: 'send_monthly_newsletter' });
+      if (weeklyTemplateId) {
+        await supabase.rpc('remove_cron_job', { job_name: 'send_weekly_newsletter' });
+        console.log("Weekly newsletter automation removed");
+      }
+      
+      if (monthlyTemplateId) {
+        await supabase.rpc('remove_cron_job', { job_name: 'send_monthly_newsletter' });
+        console.log("Monthly newsletter automation removed");
+      }
     }
 
     return new Response(

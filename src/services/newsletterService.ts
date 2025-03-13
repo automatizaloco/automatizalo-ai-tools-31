@@ -430,6 +430,12 @@ export const toggleNewsletterAutomation = async (
   }
 ): Promise<boolean> => {
   try {
+    // Make sure we have at least one template ID if enabling
+    if (enable && (!options?.weeklyTemplateId && !options?.monthlyTemplateId)) {
+      toast.error("Please select at least one template for automation");
+      return false;
+    }
+
     const { data, error } = await supabase.functions.invoke('toggle-newsletter-automation', {
       body: { 
         enable,

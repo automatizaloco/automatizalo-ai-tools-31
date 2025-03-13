@@ -266,6 +266,11 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
   };
 
   const handleToggleAutomation = async (checked: boolean) => {
+    if (checked && !automationSettings.weeklyTemplateId && !automationSettings.monthlyTemplateId) {
+      toast.error("Please select at least one template for automation");
+      return;
+    }
+    
     setLoading(prev => ({ ...prev, automation: true }));
     try {
       const success = await toggleNewsletterAutomation(checked, {
@@ -753,11 +758,15 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
             <h3 className="text-lg font-medium mb-4">Newsletter Automation Settings</h3>
             <p className="mb-4 text-gray-600">
               Configure which templates should be used for automated weekly and monthly newsletters.
+              You must select at least one template to enable automation.
             </p>
             
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Weekly Newsletter Template</label>
+                <label className="block text-sm font-medium mb-2">
+                  Weekly Newsletter Template
+                  <span className="text-sm font-normal text-gray-500 ml-2">(Sent every Monday at 9 AM)</span>
+                </label>
                 <select 
                   className="w-full px-3 py-2 border rounded-md"
                   value={automationSettings.weeklyTemplateId}
@@ -766,7 +775,7 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
                     weeklyTemplateId: e.target.value
                   })}
                 >
-                  <option value="">Default Template</option>
+                  <option value="">None - No Weekly Newsletter</option>
                   {templates.map(template => (
                     <option key={template.id} value={template.id}>
                       {template.name}
@@ -779,7 +788,10 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">Monthly Newsletter Template</label>
+                <label className="block text-sm font-medium mb-2">
+                  Monthly Newsletter Template
+                  <span className="text-sm font-normal text-gray-500 ml-2">(Sent on the 1st day of each month at 9 AM)</span>
+                </label>
                 <select 
                   className="w-full px-3 py-2 border rounded-md"
                   value={automationSettings.monthlyTemplateId}
@@ -788,7 +800,7 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
                     monthlyTemplateId: e.target.value
                   })}
                 >
-                  <option value="">Default Template</option>
+                  <option value="">None - No Monthly Newsletter</option>
                   {templates.map(template => (
                     <option key={template.id} value={template.id}>
                       {template.name}
@@ -805,7 +817,7 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
                   <Switch 
                     checked={automationEnabled}
                     onCheckedChange={handleToggleAutomation}
-                    disabled={loading.automation}
+                    disabled={loading.automation || (!automationSettings.weeklyTemplateId && !automationSettings.monthlyTemplateId)}
                   />
                 </div>
                 <div>
@@ -820,7 +832,7 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
               
               <Button 
                 onClick={() => handleToggleAutomation(!automationEnabled)}
-                disabled={loading.automation}
+                disabled={loading.automation || (!automationSettings.weeklyTemplateId && !automationSettings.monthlyTemplateId)}
               >
                 {loading.automation 
                   ? 'Updating...' 

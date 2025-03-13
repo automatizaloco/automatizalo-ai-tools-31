@@ -249,15 +249,14 @@ function generateNewsletterHTML(
   blogPosts: BlogPost[],
   customContent?: string
 ): string {
-  // Logo URL (using the full URL to prevent issues)
-  const logoUrl = "https://automatizalo.co/lovable-uploads/6e67af0a-84d4-4c75-bf38-9001dbc81481.png";
+  // New logo URL (using the uploaded image)
+  const logoUrl = "https://automatizalo.co/lovable-uploads/0c48ab88-7f33-4af0-b4ef-1d9da8d5c3b9.png";
   
-  // Social media links
+  // Social media links - updated to match website links from Navbar.tsx
   const socialLinks = {
     facebook: "https://facebook.com/automatizalo",
     instagram: "https://instagram.com/automatizalo",
-    twitter: "https://twitter.com/automatizalo",
-    linkedin: "https://linkedin.com/company/automatizalo"
+    twitter: "https://twitter.com/automatizalo"
   };
   
   // WhatsApp number
@@ -410,8 +409,7 @@ function generateNewsletterHTML(
           <div class="social-links">
             <a href="${socialLinks.facebook}">Facebook</a>
             <a href="${socialLinks.instagram}">Instagram</a>
-            <a href="${socialLinks.twitter}">Twitter</a>
-            <a href="${socialLinks.linkedin}">LinkedIn</a>
+            <a href="${socialLinks.twitter}">X</a>
           </div>
           
           <p>If you no longer wish to receive these emails, you can <a href="https://automatizalo.co/unsubscribe">unsubscribe here</a>.</p>

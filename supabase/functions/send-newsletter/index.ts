@@ -249,10 +249,10 @@ function generateNewsletterHTML(
   blogPosts: BlogPost[],
   customContent?: string
 ): string {
-  // Logo URL (using the uploaded image)
-  const logoUrl = "https://automatizalo.co/lovable-uploads/6e67af0a-84d4-4c75-bf38-9001dbc81481.png";
+  // Logo URL (using the uploaded image from the user)
+  const logoUrl = "https://automatizalo.co/lovable-uploads/5ac78895-cc3c-450b-b1ce-da2960edb89e.png";
   
-  // Social media links - updated to match website links from Footer.tsx
+  // Social media links - using the updated correct links
   const socialLinks = {
     facebook: "https://www.facebook.com/automatizalo.co",
     instagram: "https://www.instagram.com/automatizalo.co/",
@@ -263,7 +263,7 @@ function generateNewsletterHTML(
   const whatsappNumber = "+573042037763";
   const whatsappUrl = `https://wa.me/${whatsappNumber}`;
   
-  // Define the base URL for the website
+  // Define the base URL for the website - ensure it's the full URL with https
   const baseUrl = "https://automatizalo.co";
   
   // Basic styling with brand colors: black, grey and white
@@ -348,6 +348,12 @@ function generateNewsletterHTML(
         }
         .blog-post-content {
           flex-grow: 1;
+          padding-left: 0;
+        }
+        @media (min-width: 480px) {
+          .blog-post-content {
+            padding-left: 15px;
+          }
         }
         .blog-post h2, .blog-post h3 { 
           margin-top: 0;
@@ -396,6 +402,10 @@ function generateNewsletterHTML(
           background: #ddd; 
           margin: 30px 0; 
         }
+        a {
+          color: #333333;
+          text-decoration: underline;
+        }
       </style>
     </head>
     <body>
@@ -428,25 +438,25 @@ function generateNewsletterHTML(
                   <h3>${post.title}</h3>
                   <p class="date">${new Date(post.date).toLocaleDateString()}</p>
                   <p class="excerpt">${post.excerpt}</p>
-                  <a href="${baseUrl}/blog/${post.slug}" class="read-more">Read More</a>
+                  <a href="${baseUrl}/blog/${post.slug}" class="read-more" target="_blank">Read More</a>
                 </div>
               </div>
             `).join('')}
           ` : ''}
           
-          <a href="${whatsappUrl}" class="whatsapp-button">Chat with us on WhatsApp</a>
+          <a href="${whatsappUrl}" class="whatsapp-button" target="_blank">Chat with us on WhatsApp</a>
         </div>
         
         <div class="footer">
           <p>${template.footer_text || ''}</p>
           
           <div class="social-links">
-            <a href="${socialLinks.facebook}">Facebook</a>
-            <a href="${socialLinks.instagram}">Instagram</a>
-            <a href="${socialLinks.twitter}">X</a>
+            <a href="${socialLinks.facebook}" target="_blank">Facebook</a>
+            <a href="${socialLinks.instagram}" target="_blank">Instagram</a>
+            <a href="${socialLinks.twitter}" target="_blank">X</a>
           </div>
           
-          <p>If you no longer wish to receive these emails, you can <a href="${baseUrl}/unsubscribe">unsubscribe here</a>.</p>
+          <p>If you no longer wish to receive these emails, you can <a href="${baseUrl}/unsubscribe" target="_blank">unsubscribe here</a>.</p>
           <p>&copy; ${new Date().getFullYear()} Automatizalo. All rights reserved.</p>
         </div>
       </div>

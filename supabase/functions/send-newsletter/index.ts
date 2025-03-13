@@ -17,6 +17,7 @@ interface NewsletterSendRequest {
   customContent?: string;
   testMode?: boolean;
   testEmail?: string;
+  previewOnly?: boolean;
 }
 
 interface BlogPost {
@@ -35,21 +36,27 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { templateId, frequency, customSubject, customContent, testMode = false, testEmail } = await req.json() as NewsletterSendRequest;
+    const { templateId, frequency, customSubject, customContent, testMode = false, testEmail, previewOnly = false } = 
+      await req.json() as NewsletterSendRequest;
     
-    console.log(`Processing newsletter request: frequency=${frequency}, testMode=${testMode}`);
+    console.log(`Processing newsletter request: frequency=${frequency}, testMode=${testMode}, previewOnly=${previewOnly}`);
     
-    // Fetch subscribers based on frequency
-    const { data: subscribers, error: subscribersError } = await supabase
-      .from('newsletter_subscriptions')
-      .select('email')
-      .eq('frequency', frequency);
+    // Fetch subscribers based on frequency (skip if preview only)
+    let subscribers = [];
+    if (!previewOnly) {
+      const { data: subscribersData, error: subscribersError } = await supabase
+        .from('newsletter_subscriptions')
+        .select('email')
+        .eq('frequency', frequency);
 
-    if (subscribersError) {
-      throw new Error(`Failed to fetch subscribers: ${subscribersError.message}`);
+      if (subscribersError) {
+        throw new Error(`Failed to fetch subscribers: ${subscribersError.message}`);
+      }
+      
+      subscribers = subscribersData;
     }
 
-    if (subscribers.length === 0 && !testMode) {
+    if (subscribers.length === 0 && !testMode && !previewOnly) {
       console.log(`No subscribers found for ${frequency} newsletter`);
       return new Response(
         JSON.stringify({ message: `No subscribers found for ${frequency} newsletter` }),
@@ -126,6 +133,21 @@ const handler = async (req: Request): Promise<Response> => {
     // Generate email content
     const subject = customSubject || template.subject;
     const emailContent = generateNewsletterHTML(template, customContentBlocks, blogPosts, customContent);
+
+    // If this is just a preview request, return the HTML content
+    if (previewOnly) {
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          subject: subject,
+          content: emailContent
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     // Configure OAuth2 client
     const oauth2Client = new google.auth.OAuth2(
@@ -227,6 +249,21 @@ function generateNewsletterHTML(
   blogPosts: BlogPost[],
   customContent?: string
 ): string {
+  // Company logo URL
+  const logoUrl = "https://automatizalo.co/logo.png";
+  
+  // Social media links
+  const socialLinks = {
+    facebook: "https://facebook.com/automatizalo",
+    instagram: "https://instagram.com/automatizalo",
+    twitter: "https://twitter.com/automatizalo",
+    linkedin: "https://linkedin.com/company/automatizalo"
+  };
+  
+  // WhatsApp number
+  const whatsappNumber = "+573042037763";
+  const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+  
   // Basic styling
   const html = `
     <!DOCTYPE html>
@@ -243,56 +280,143 @@ function generateNewsletterHTML(
           max-width: 600px; 
           margin: 0 auto; 
           padding: 20px; 
+          background-color: #f9f9f9;
         }
-        .header { margin-bottom: 30px; }
-        .footer { margin-top: 30px; color: #777; font-size: 14px; }
-        .blog-post { margin-bottom: 30px; }
-        .blog-post img { max-width: 100%; }
-        .blog-post h2 { margin-bottom: 10px; }
-        .blog-post .excerpt { margin-bottom: 10px; }
+        .container {
+          background-color: #ffffff;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header { 
+          text-align: center;
+          padding: 20px;
+          background-color: #9b87f5;
+          color: white;
+        }
+        .header img {
+          max-width: 200px;
+          margin-bottom: 15px;
+        }
+        .content-area {
+          padding: 30px 20px;
+        }
+        .footer { 
+          margin-top: 30px; 
+          color: #777; 
+          font-size: 14px; 
+          text-align: center;
+          padding: 20px;
+          background-color: #f1f0fb;
+          border-top: 1px solid #e5deff;
+        }
+        .blog-post { 
+          margin-bottom: 30px; 
+          border-bottom: 1px solid #eee;
+          padding-bottom: 20px;
+        }
+        .blog-post:last-child {
+          border-bottom: none;
+        }
+        .blog-post img { 
+          max-width: 100%; 
+          border-radius: 4px;
+        }
+        .blog-post h2 { 
+          margin-bottom: 10px; 
+          color: #6E59A5;
+        }
+        .blog-post .excerpt { 
+          margin-bottom: 10px; 
+        }
         .blog-post .read-more {
           display: inline-block;
           padding: 5px 10px;
-          background: #f1f1f1;
+          background: #9b87f5;
           text-decoration: none;
-          color: #333;
+          color: white;
           border-radius: 3px;
+          font-size: 14px;
         }
-        .content-block { margin-bottom: 30px; }
-        hr { border: 0; height: 1px; background: #ddd; margin: 30px 0; }
+        .content-block { 
+          margin-bottom: 30px; 
+        }
+        .social-links {
+          margin: 20px 0;
+        }
+        .social-links a {
+          display: inline-block;
+          margin: 0 10px;
+          color: #8B5CF6;
+          text-decoration: none;
+        }
+        .whatsapp-button {
+          display: block;
+          background-color: #25D366;
+          color: white;
+          text-align: center;
+          padding: 10px 15px;
+          border-radius: 4px;
+          margin: 20px auto;
+          width: 200px;
+          text-decoration: none;
+          font-weight: bold;
+        }
+        hr { 
+          border: 0; 
+          height: 1px; 
+          background: #ddd; 
+          margin: 30px 0; 
+        }
       </style>
     </head>
     <body>
-      <div class="header">
-        <h1>${template.subject}</h1>
-        <p>${template.header_text || ''}</p>
-      </div>
-      
-      ${customContent ? `<div class="content-block">${customContent}</div><hr>` : ''}
-      
-      ${contentBlocks.map(block => `
-        <div class="content-block">
-          <h2>${block.title}</h2>
-          <div>${block.content}</div>
+      <div class="container">
+        <div class="header">
+          <img src="${logoUrl}" alt="Automatizalo Logo" />
+          <h1>${template.subject}</h1>
+          <p>${template.header_text || ''}</p>
         </div>
-      `).join('<hr>')}
-      
-      ${blogPosts.length > 0 ? `
-        <hr>
-        <h2>Latest Blog Posts</h2>
-        ${blogPosts.map(post => `
-          <div class="blog-post">
-            <h3>${post.title}</h3>
-            <p class="date">${new Date(post.date).toLocaleDateString()}</p>
-            <p class="excerpt">${post.excerpt}</p>
-            <a href="https://automatizalo.co/blog/${post.slug}" class="read-more">Read More</a>
+        
+        <div class="content-area">
+          ${customContent ? `<div class="content-block">${customContent}</div><hr>` : ''}
+          
+          ${contentBlocks.map(block => `
+            <div class="content-block">
+              <h2>${block.title}</h2>
+              <div>${block.content}</div>
+            </div>
+          `).join('<hr>')}
+          
+          ${blogPosts.length > 0 ? `
+            <hr>
+            <h2>Latest Blog Posts</h2>
+            ${blogPosts.map(post => `
+              <div class="blog-post">
+                <h3>${post.title}</h3>
+                <p class="date">${new Date(post.date).toLocaleDateString()}</p>
+                <p class="excerpt">${post.excerpt}</p>
+                <a href="https://automatizalo.co/blog/${post.slug}" class="read-more">Read More</a>
+              </div>
+            `).join('')}
+          ` : ''}
+          
+          <a href="${whatsappUrl}" class="whatsapp-button">Chat with us on WhatsApp</a>
+        </div>
+        
+        <div class="footer">
+          <p>${template.footer_text || ''}</p>
+          
+          <div class="social-links">
+            <a href="${socialLinks.facebook}">Facebook</a>
+            <a href="${socialLinks.instagram}">Instagram</a>
+            <a href="${socialLinks.twitter}">Twitter</a>
+            <a href="${socialLinks.linkedin}">LinkedIn</a>
           </div>
-        `).join('')}
-      ` : ''}
-      
-      <div class="footer">
-        <p>${template.footer_text || ''}</p>
-        <p>If you no longer wish to receive these emails, you can <a href="https://automatizalo.co/unsubscribe">unsubscribe here</a>.</p>
+          
+          <p>If you no longer wish to receive these emails, you can <a href="https://automatizalo.co/unsubscribe">unsubscribe here</a>.</p>
+          <p>&copy; ${new Date().getFullYear()} Automatizalo. All rights reserved.</p>
+        </div>
       </div>
     </body>
     </html>

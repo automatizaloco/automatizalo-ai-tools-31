@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -377,6 +376,90 @@ export const sendNewsletter = async (
   } catch (error: any) {
     console.error("Error in newsletter sending:", error);
     toast.error('Something went wrong while sending the newsletter.');
+    return false;
+  }
+};
+
+/**
+ * Preview a newsletter without sending it
+ */
+export const previewNewsletter = async (
+  frequency: NewsletterFrequency,
+  options: {
+    templateId?: string;
+    customSubject?: string;
+    customContent?: string;
+  } = {}
+): Promise<{subject: string, content: string} | null> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-newsletter', {
+      body: {
+        frequency,
+        templateId: options.templateId,
+        customSubject: options.customSubject,
+        customContent: options.customContent,
+        previewOnly: true
+      },
+    });
+
+    if (error) {
+      console.error("Error generating newsletter preview:", error);
+      toast.error(`Failed to generate preview: ${error.message}`);
+      return null;
+    }
+    
+    return {
+      subject: data.subject,
+      content: data.content
+    };
+  } catch (error: any) {
+    console.error("Error in newsletter preview:", error);
+    toast.error('Something went wrong while generating the preview.');
+    return null;
+  }
+};
+
+/**
+ * Toggle newsletter automation (weekly/monthly scheduled sending)
+ */
+export const toggleNewsletterAutomation = async (enable: boolean): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('toggle-newsletter-automation', {
+      body: { enable }
+    });
+
+    if (error) {
+      console.error("Error toggling newsletter automation:", error);
+      toast.error(`Failed to ${enable ? 'enable' : 'disable'} automation: ${error.message}`);
+      return false;
+    }
+
+    toast.success(`Newsletter automation ${enable ? 'enabled' : 'disabled'} successfully`);
+    return true;
+  } catch (error: any) {
+    console.error("Error in automation toggle:", error);
+    toast.error(`Something went wrong while ${enable ? 'enabling' : 'disabling'} automation.`);
+    return false;
+  }
+};
+
+/**
+ * Check newsletter automation status
+ */
+export const checkNewsletterAutomation = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('check-newsletter-automation', {
+      body: {}
+    });
+
+    if (error) {
+      console.error("Error checking newsletter automation:", error);
+      return false;
+    }
+
+    return data.enabled;
+  } catch (error: any) {
+    console.error("Error checking automation status:", error);
     return false;
   }
 };

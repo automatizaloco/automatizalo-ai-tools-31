@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   getNewsletterTemplates, 
@@ -15,6 +15,8 @@ import {
   deleteNewsletterContent,
   sendNewsletter,
   getNewsletterHistory,
+  previewNewsletter,
+  toggleNewsletterAutomation,
   NewsletterTemplate,
   NewsletterContent,
   NewsletterHistory,
@@ -23,7 +25,15 @@ import {
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { toast } from "sonner";
 
-const NewsletterManager = () => {
+interface NewsletterManagerProps {
+  isAutomationEnabled?: boolean;
+  onAutomationToggle?: (enabled: boolean) => void;
+}
+
+const NewsletterManager: React.FC<NewsletterManagerProps> = ({ 
+  isAutomationEnabled = false, 
+  onAutomationToggle 
+}) => {
   const [activeTab, setActiveTab] = useState("templates");
   const [templates, setTemplates] = useState<NewsletterTemplate[]>([]);
   const [history, setHistory] = useState<NewsletterHistory[]>([]);
@@ -48,10 +58,17 @@ const NewsletterManager = () => {
     testMode: true,
     testEmail: ""
   });
+  const [previewData, setPreviewData] = useState<{
+    subject: string;
+    content: string;
+  } | null>(null);
+  const [automationEnabled, setAutomationEnabled] = useState(isAutomationEnabled);
   const [loading, setLoading] = useState({
     templates: false,
     history: false,
-    sendNewsletter: false
+    sendNewsletter: false,
+    preview: false,
+    automation: false
   });
 
   // Fetch templates on load
@@ -61,6 +78,11 @@ const NewsletterManager = () => {
       fetchHistory();
     }
   }, [activeTab]);
+
+  // Update internal state when prop changes
+  useEffect(() => {
+    setAutomationEnabled(isAutomationEnabled);
+  }, [isAutomationEnabled]);
 
   // Fetch template content when a template is selected
   useEffect(() => {
@@ -222,15 +244,67 @@ const NewsletterManager = () => {
     }
   };
 
+  const handleGeneratePreview = async () => {
+    setLoading(prev => ({ ...prev, preview: true }));
+    try {
+      const preview = await previewNewsletter(sendOptions.frequency, {
+        templateId: sendOptions.templateId || undefined,
+        customSubject: sendOptions.customSubject || undefined,
+        customContent: sendOptions.customContent || undefined
+      });
+      
+      if (preview) {
+        setPreviewData(preview);
+        setActiveTab("preview");
+      }
+    } catch (error) {
+      console.error("Failed to generate preview:", error);
+    } finally {
+      setLoading(prev => ({ ...prev, preview: false }));
+    }
+  };
+
+  const handleToggleAutomation = async (checked: boolean) => {
+    setLoading(prev => ({ ...prev, automation: true }));
+    try {
+      const success = await toggleNewsletterAutomation(checked);
+      if (success) {
+        setAutomationEnabled(checked);
+        if (onAutomationToggle) {
+          onAutomationToggle(checked);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to toggle automation:", error);
+    } finally {
+      setLoading(prev => ({ ...prev, automation: false }));
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-semibold tracking-tight">Newsletter Manager</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold tracking-tight">Newsletter Manager</h2>
+        
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">Automatic Sending:</span>
+          <Switch 
+            checked={automationEnabled}
+            onCheckedChange={handleToggleAutomation}
+            disabled={loading.automation}
+          />
+          <span className="text-sm font-medium">
+            {automationEnabled ? 'Enabled' : 'Disabled'}
+          </span>
+        </div>
+      </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 mb-4">
+        <TabsList className="grid grid-cols-5 mb-4">
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="send">Send</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
         
@@ -560,11 +634,19 @@ const NewsletterManager = () => {
                 </div>
               )}
               
-              <div className="pt-2">
+              <div className="flex justify-between pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={handleGeneratePreview}
+                  disabled={loading.preview}
+                >
+                  {loading.preview ? 'Generating...' : 'Preview Newsletter'}
+                </Button>
+                
                 <Button 
                   type="submit" 
                   disabled={loading.sendNewsletter}
-                  className="w-full"
                 >
                   {loading.sendNewsletter 
                     ? 'Sending...' 
@@ -572,6 +654,61 @@ const NewsletterManager = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </TabsContent>
+        
+        {/* Preview Tab */}
+        <TabsContent value="preview" className="space-y-6">
+          <div className="border rounded-lg p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Newsletter Preview</h3>
+              <Button 
+                variant="outline"
+                onClick={handleGeneratePreview}
+                disabled={loading.preview}
+              >
+                {loading.preview ? 'Refreshing...' : 'Refresh Preview'}
+              </Button>
+            </div>
+            
+            {!previewData ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-4">No preview generated yet</p>
+                <Button onClick={handleGeneratePreview} disabled={loading.preview}>
+                  {loading.preview ? 'Generating...' : 'Generate Preview'}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-3 bg-gray-100 rounded-md">
+                  <h4 className="font-medium">Subject:</h4>
+                  <p>{previewData.subject}</p>
+                </div>
+                
+                <div className="border rounded-md">
+                  <div className="p-3 border-b bg-gray-50">
+                    <h4 className="font-medium">Email Content Preview:</h4>
+                  </div>
+                  <div className="p-0">
+                    <iframe
+                      srcDoc={previewData.content}
+                      title="Newsletter Preview"
+                      className="w-full min-h-[600px] border-0"
+                      sandbox="allow-same-origin"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={() => setActiveTab("send")}
+                    variant="outline"
+                  >
+                    Back to Send Tab
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
         

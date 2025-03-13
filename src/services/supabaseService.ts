@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ContactInfo } from '@/stores/contactInfoStore';
 import { toast } from 'sonner';
@@ -91,7 +90,7 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
     }
 
     console.log("Fetched contact info:", data);
-    return data;
+    return data as ContactInfo;
   } catch (error: any) {
     console.error("Error fetching contact information:", error);
     throw new Error(`Failed to fetch contact information: ${error.message}`);
@@ -107,25 +106,25 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
     
     const { data: existingData, error: fetchError } = await supabase
       .from('contact_info')
-      .select('*')
+      .select('id')
       .maybeSingle();
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
+    if (fetchError) {
       console.error("Error checking existing contact info:", fetchError);
       throw fetchError;
     }
     
-    let result: ContactInfo | null = null;
+    let result;
     
-    if (existingData) {
-      // Update existing record with full data
+    if (existingData?.id) {
+      // Update existing record
       console.log("Updating existing record with ID:", existingData.id);
       const { data, error } = await supabase
         .from('contact_info')
         .update(info)
         .eq('id', existingData.id)
         .select()
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error("Error updating contact info:", error);
@@ -134,13 +133,13 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
       
       result = data;
     } else {
-      // Insert new record with full data
+      // Insert new record
       console.log("Inserting new contact info:", info);
       const { data, error } = await supabase
         .from('contact_info')
-        .insert([info])  // Wrap in array to match expected type
+        .insert(info)
         .select()
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error("Error inserting contact info:", error);
@@ -150,14 +149,7 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
       result = data;
     }
     
-    // Check explicitly if result is null and handle it properly
-    if (result === null) {
-      console.warn("No data returned from database operation, using input data as fallback");
-      // Return the info that was passed in as a fallback
-      return info;
-    }
-    
-    return result;
+    return result as ContactInfo;
   } catch (error: any) {
     console.error("Error updating contact information:", error);
     throw new Error(`Failed to update contact information: ${error.message}`);

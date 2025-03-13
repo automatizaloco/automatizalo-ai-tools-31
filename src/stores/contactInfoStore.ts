@@ -2,23 +2,33 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 
-interface ContactInfo {
+export interface ContactInfo {
   phone: string;
   email: string;
   address: string;
+  website?: string;
   whatsapp?: string;
 }
 
 interface ContactInfoState {
-  contactInfo: ContactInfo | null;
+  contactInfo: ContactInfo;
   loading: boolean;
   error: string | null;
   fetchContactInfo: () => Promise<void>;
   updateContactInfo: (info: ContactInfo) => Promise<void>;
 }
 
+// Default contact info to use as fallback
+const defaultContactInfo: ContactInfo = {
+  phone: '+1 (555) 123-4567',
+  email: 'contact@automatizalo.co',
+  address: '123 AI Street, Tech City, TC 12345',
+  whatsapp: '+1 (555) 123-4567',
+  website: 'https://automatizalo.co'
+};
+
 export const useContactInfo = create<ContactInfoState>((set) => ({
-  contactInfo: null,
+  contactInfo: defaultContactInfo,
   loading: false,
   error: null,
   
@@ -27,10 +37,9 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
       set({ loading: true, error: null });
       
       const { data, error } = await supabase
-        .from('site_settings')
+        .from('contact_info')
         .select('*')
-        .eq('key', 'contact_info')
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching contact info:', error);
@@ -38,20 +47,15 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
         return;
       }
       
-      if (data && data.value) {
+      if (data) {
         set({
-          contactInfo: typeof data.value === 'string' ? JSON.parse(data.value) : data.value,
+          contactInfo: data as ContactInfo,
           loading: false,
         });
       } else {
         // Set default values if no data found
         set({
-          contactInfo: {
-            phone: '+1 (555) 123-4567',
-            email: 'contact@automatizalo.co',
-            address: '123 AI Street, Tech City, TC 12345',
-            whatsapp: '+1 (555) 123-4567'
-          },
+          contactInfo: defaultContactInfo,
           loading: false,
         });
       }
@@ -60,12 +64,7 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
       set({ 
         error: 'Failed to fetch contact info',
         loading: false,
-        contactInfo: {
-          phone: '+1 (555) 123-4567',
-          email: 'contact@automatizalo.co',
-          address: '123 AI Street, Tech City, TC 12345',
-          whatsapp: '+1 (555) 123-4567'
-        }
+        contactInfo: defaultContactInfo
       });
     }
   },
@@ -74,20 +73,48 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
     try {
       set({ loading: true, error: null });
       
-      const { error } = await supabase
-        .from('site_settings')
-        .upsert({
-          key: 'contact_info',
-          value: info
-        });
+      // Check if we have an existing record
+      const { data: existingData } = await supabase
+        .from('contact_info')
+        .select('id')
+        .maybeSingle();
       
-      if (error) {
-        console.error('Error updating contact info:', error);
-        set({ error: error.message, loading: false });
-        return;
+      let result;
+      
+      if (existingData?.id) {
+        // Update existing record
+        const { data, error } = await supabase
+          .from('contact_info')
+          .update(info)
+          .eq('id', existingData.id)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Error updating contact info:', error);
+          set({ error: error.message, loading: false });
+          return;
+        }
+        
+        result = data;
+      } else {
+        // Insert new record
+        const { data, error } = await supabase
+          .from('contact_info')
+          .insert(info)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Error creating contact info:', error);
+          set({ error: error.message, loading: false });
+          return;
+        }
+        
+        result = data;
       }
       
-      set({ contactInfo: info, loading: false });
+      set({ contactInfo: result as ContactInfo, loading: false });
     } catch (err) {
       console.error('Unexpected error:', err);
       set({ error: 'Failed to update contact info', loading: false });

@@ -13,7 +13,7 @@ const ContactInfo = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const { contactInfo, updateContactInfo, updating } = useContactInfo();
+  const { contactInfo, updateContactInfo, loading } = useContactInfo();
   
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<ContactInfoType>({
@@ -64,7 +64,7 @@ const ContactInfo = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={handleCancel}
-                  disabled={updating}
+                  disabled={loading}
                 >
                   <X className="h-4 w-4 mr-1" />
                   Cancel
@@ -73,7 +73,7 @@ const ContactInfo = () => {
                   variant="default" 
                   size="sm" 
                   onClick={handleSave}
-                  disabled={updating}
+                  disabled={loading}
                 >
                   <Save className="h-4 w-4 mr-1" />
                   Save
@@ -102,7 +102,7 @@ const ContactInfo = () => {
           isEditing={isEditing && isAuthenticated}
           onChange={(value) => handleInputChange('phone', value)}
           currentValue={formData.phone}
-          isDisabled={updating}
+          isDisabled={loading}
           theme={theme}
         />
         
@@ -114,7 +114,7 @@ const ContactInfo = () => {
           isEditing={isEditing && isAuthenticated}
           onChange={(value) => handleInputChange('email', value)}
           currentValue={formData.email}
-          isDisabled={updating}
+          isDisabled={loading}
           theme={theme}
         />
         
@@ -126,19 +126,19 @@ const ContactInfo = () => {
           isEditing={isEditing && isAuthenticated}
           onChange={(value) => handleInputChange('address', value)}
           currentValue={formData.address}
-          isDisabled={updating}
+          isDisabled={loading}
           theme={theme}
         />
         
         <InfoItem
           icon={<Globe className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />}
           title={t('contact.website')}
-          value={contactInfo.website}
+          value={contactInfo.website || ''}
           id="website"
           isEditing={isEditing && isAuthenticated}
           onChange={(value) => handleInputChange('website', value)}
-          currentValue={formData.website}
-          isDisabled={updating}
+          currentValue={formData.website || ''}
+          isDisabled={loading}
           theme={theme}
         />
       </div>

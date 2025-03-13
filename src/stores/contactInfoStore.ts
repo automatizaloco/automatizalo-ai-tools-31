@@ -48,12 +48,13 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
       }
       
       if (data) {
-        // Ensure website is set even if it's null in the database
-        const contactInfo = {
-          ...data as ContactInfo,
+        // Create ContactInfo object with whatsapp added separately since it's not in the DB
+        const contactInfo: ContactInfo = {
+          phone: data.phone || defaultContactInfo.phone,
+          email: data.email || defaultContactInfo.email,
+          address: data.address || defaultContactInfo.address,
           website: data.website || defaultContactInfo.website,
-          // Add whatsapp property which doesn't exist in the database
-          whatsapp: defaultContactInfo.whatsapp
+          whatsapp: defaultContactInfo.whatsapp // Add default whatsapp
         };
         
         set({
@@ -87,8 +88,13 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
         .select('id')
         .maybeSingle();
       
-      // Remove whatsapp from the data to be sent to the database
-      const { whatsapp, ...contactInfoForDB } = info;
+      // Create a new object without the whatsapp property for the database
+      const contactInfoForDB = {
+        phone: info.phone,
+        email: info.email,
+        address: info.address,
+        website: info.website
+      };
       
       let result;
       
@@ -125,13 +131,13 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
         result = data;
       }
       
-      // Add whatsapp back to the result since it's not in the DB
-      const updatedResult = {
-        ...result as ContactInfo,
+      // Add whatsapp property to the result
+      const updatedContactInfo: ContactInfo = {
+        ...result,
         whatsapp: info.whatsapp || defaultContactInfo.whatsapp
       };
       
-      set({ contactInfo: updatedResult, loading: false });
+      set({ contactInfo: updatedContactInfo, loading: false });
     } catch (err) {
       console.error('Unexpected error:', err);
       set({ error: 'Failed to update contact info', loading: false });

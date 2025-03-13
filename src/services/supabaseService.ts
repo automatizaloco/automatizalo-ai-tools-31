@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ContactInfo } from '@/stores/contactInfoStore';
 import { toast } from 'sonner';
@@ -93,13 +94,13 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
     
     if (!data) return null;
     
-    // Set default values for missing fields
+    // Create ContactInfo object with whatsapp added separately since it's not in the DB
     const contactInfo: ContactInfo = {
       phone: data.phone || '+1 (555) 123-4567',
       email: data.email || 'contact@automatizalo.co',
       address: data.address || '123 AI Street, Tech City, TC 12345',
       website: data.website || 'https://automatizalo.co',
-      whatsapp: data.whatsapp || '+1 (555) 123-4567'
+      whatsapp: '+1 (555) 123-4567' // Add default whatsapp value
     };
     
     return contactInfo;
@@ -114,8 +115,13 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
  */
 export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   try {
-    // Remove the whatsapp property before sending to Supabase since it's not in the DB schema
-    const { whatsapp, ...contactInfoForDB } = info;
+    // Create a new object without the whatsapp property for the database
+    const contactInfoForDB = {
+      phone: info.phone,
+      email: info.email,
+      address: info.address,
+      website: info.website
+    };
     
     const { error } = await supabase
       .from('contact_info')

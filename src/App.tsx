@@ -2,7 +2,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, Suspense, lazy } from 'react';
 import { Toaster } from '@/components/ui/sonner';
-import Layout from './components/layout/Layout';
+import Layout from '@/components/layout/Layout';
 import Index from './pages/Index';
 import Solutions from './pages/Solutions';
 import Contact from './pages/Contact';
@@ -11,7 +11,7 @@ import BlogPost from './pages/BlogPost';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import AdminLayout from './components/layout/AdminLayout';
+import AdminLayout from '@/components/layout/AdminLayout';
 import ContentManager from './pages/admin/ContentManager';
 import BlogAdmin from './pages/admin/BlogAdmin';
 import BlogPostForm from './pages/admin/BlogPostForm';

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ContactInfo } from '@/stores/contactInfoStore';
 import { toast } from 'sonner';
@@ -90,7 +91,19 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
     }
 
     console.log("Fetched contact info:", data);
-    return data as ContactInfo;
+    
+    if (!data) return null;
+    
+    // Set default values for missing fields
+    const contactInfo: ContactInfo = {
+      phone: data.phone || '+1 (555) 123-4567',
+      email: data.email || 'contact@automatizalo.co',
+      address: data.address || '123 AI Street, Tech City, TC 12345',
+      website: data.website || 'https://automatizalo.co',
+      whatsapp: data.whatsapp || '+1 (555) 123-4567'
+    };
+    
+    return contactInfo;
   } catch (error: any) {
     console.error("Error fetching contact information:", error);
     throw new Error(`Failed to fetch contact information: ${error.message}`);
@@ -114,6 +127,14 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
       throw fetchError;
     }
     
+    // Prepare the data to match the database schema
+    const contactData = {
+      phone: info.phone,
+      email: info.email,
+      address: info.address,
+      website: info.website || 'https://automatizalo.co' // Ensure website is never null
+    };
+    
     let result;
     
     if (existingData?.id) {
@@ -121,7 +142,7 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
       console.log("Updating existing record with ID:", existingData.id);
       const { data, error } = await supabase
         .from('contact_info')
-        .update(info)
+        .update(contactData)
         .eq('id', existingData.id)
         .select()
         .single();
@@ -134,10 +155,10 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
       result = data;
     } else {
       // Insert new record
-      console.log("Inserting new contact info:", info);
+      console.log("Inserting new contact info:", contactData);
       const { data, error } = await supabase
         .from('contact_info')
-        .insert(info)
+        .insert(contactData)
         .select()
         .single();
       
@@ -149,7 +170,11 @@ export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo>
       result = data;
     }
     
-    return result as ContactInfo;
+    // Add whatsapp back to the result since it's not in the DB
+    return {
+      ...result as ContactInfo,
+      whatsapp: info.whatsapp || '+1 (555) 123-4567'
+    };
   } catch (error: any) {
     console.error("Error updating contact information:", error);
     throw new Error(`Failed to update contact information: ${error.message}`);

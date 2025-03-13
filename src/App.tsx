@@ -3,31 +3,35 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { useEffect, Suspense, lazy } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import Layout from '@/components/layout/Layout';
-import Index from './pages/Index';
-import Solutions from './pages/Solutions';
-import Contact from './pages/Contact';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
-import Login from './pages/Login';
-import NotFound from './pages/NotFound';
-import PrivacyPolicy from './pages/PrivacyPolicy';
+import Index from '@/pages/Index';
+import Solutions from '@/pages/Solutions';
+import Contact from '@/pages/Contact';
+import Blog from '@/pages/Blog';
+import BlogPost from '@/pages/BlogPost';
+import Login from '@/pages/Login';
+import NotFound from '@/pages/NotFound';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import AdminLayout from '@/components/layout/AdminLayout';
-import ContentManager from './pages/admin/ContentManager';
-import BlogAdmin from './pages/admin/BlogAdmin';
-import BlogPostForm from './pages/admin/BlogPostForm';
-import LayoutManager from './pages/admin/LayoutManager';
-import ContentEditor from './pages/admin/ContentEditor';
-import TestimonialManager from './pages/admin/TestimonialManager';
-import NewsletterAdmin from './pages/admin/NewsletterAdmin';
-import Unsubscribe from './pages/Unsubscribe';
+import ContentManager from '@/pages/admin/ContentManager';
+import BlogAdmin from '@/pages/admin/BlogAdmin';
+import BlogPostForm from '@/pages/admin/BlogPostForm';
+import LayoutManager from '@/pages/admin/LayoutManager';
+import ContentEditor from '@/pages/admin/ContentEditor';
+import TestimonialManager from '@/pages/admin/TestimonialManager';
+import NewsletterAdmin from '@/pages/admin/NewsletterAdmin';
+import Unsubscribe from '@/pages/Unsubscribe';
 
-import { useContactInfo } from './stores/contactInfoStore';
+import { useContactInfo } from '@/stores/contactInfoStore';
 
 import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  const { contactInfo, loading } = useContactInfo();
+  const { fetchContactInfo } = useContactInfo();
+
+  useEffect(() => {
+    fetchContactInfo();
+  }, [fetchContactInfo]);
 
   useEffect(() => {
     window.scrollTo(0, 0);

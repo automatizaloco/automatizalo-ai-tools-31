@@ -1,5 +1,5 @@
 
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, Suspense, lazy } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import Layout from './components/layout/Layout';
@@ -25,13 +25,9 @@ import { useContactInfo } from './stores/contactInfoStore';
 
 import './App.css';
 
-function App() {
+function AppContent() {
   const location = useLocation();
-  const { loadContactInfo } = useContactInfo();
-
-  useEffect(() => {
-    loadContactInfo();
-  }, [loadContactInfo]);
+  const { contactInfo, loading } = useContactInfo();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -69,6 +65,14 @@ function App() {
         </Routes>
       </Suspense>
     </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

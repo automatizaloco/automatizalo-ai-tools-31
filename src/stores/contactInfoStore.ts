@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchContactInfo, updateContactInfo } from '@/services/supabaseService';
 import { toast } from 'sonner';
 
@@ -25,40 +25,41 @@ export const useContactInfo = () => {
   const [updating, setUpdating] = useState(false);
 
   // Load contact information from Supabase
-  useEffect(() => {
-    const loadContactInfo = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchContactInfo();
-        
-        if (data) {
-          console.log("Contact info loaded from database:", data);
-          setContactInfo(data);
-        } else {
-          console.log("No contact info found in database, using defaults");
-          // If no data exists, create initial record with defaults
-          try {
-            const initialData = await updateContactInfo(defaultContactInfo);
-            setContactInfo(initialData);
-          } catch (initError) {
-            console.error("Error creating initial contact info:", initError);
-            // Still use default values even if we couldn't save them
-            setContactInfo(defaultContactInfo);
-          }
+  const loadContactInfo = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await fetchContactInfo();
+      
+      if (data) {
+        console.log("Contact info loaded from database:", data);
+        setContactInfo(data);
+      } else {
+        console.log("No contact info found in database, using defaults");
+        // If no data exists, create initial record with defaults
+        try {
+          const initialData = await updateContactInfo(defaultContactInfo);
+          setContactInfo(initialData);
+        } catch (initError) {
+          console.error("Error creating initial contact info:", initError);
+          // Still use default values even if we couldn't save them
+          setContactInfo(defaultContactInfo);
         }
-        setError(null);
-      } catch (error) {
-        console.error("Error loading contact information:", error);
-        setError("Failed to load contact information");
-        // Use default values as fallback
-        setContactInfo(defaultContactInfo);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    loadContactInfo();
+      setError(null);
+    } catch (error) {
+      console.error("Error loading contact information:", error);
+      setError("Failed to load contact information");
+      // Use default values as fallback
+      setContactInfo(defaultContactInfo);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Load contact info on component mount
+  useEffect(() => {
+    loadContactInfo();
+  }, [loadContactInfo]);
 
   // Update contact information in Supabase
   const updateContactInfoData = async (newInfo: ContactInfo) => {
@@ -91,7 +92,8 @@ export const useContactInfo = () => {
 
   return { 
     contactInfo, 
-    updateContactInfo: updateContactInfoData, 
+    updateContactInfo: updateContactInfoData,
+    loadContactInfo,
     loading,
     updating,
     error 

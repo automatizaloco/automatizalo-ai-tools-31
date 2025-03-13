@@ -63,6 +63,10 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
     content: string;
   } | null>(null);
   const [automationEnabled, setAutomationEnabled] = useState(isAutomationEnabled);
+  const [automationSettings, setAutomationSettings] = useState({
+    weeklyTemplateId: "",
+    monthlyTemplateId: ""
+  });
   const [loading, setLoading] = useState({
     templates: false,
     history: false,
@@ -71,7 +75,6 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
     automation: false
   });
 
-  // Fetch templates on load
   useEffect(() => {
     fetchTemplates();
     if (activeTab === "history") {
@@ -79,12 +82,10 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
     }
   }, [activeTab]);
 
-  // Update internal state when prop changes
   useEffect(() => {
     setAutomationEnabled(isAutomationEnabled);
   }, [isAutomationEnabled]);
 
-  // Fetch template content when a template is selected
   useEffect(() => {
     if (selectedTemplate?.id) {
       fetchTemplateContent(selectedTemplate.id);
@@ -267,7 +268,11 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
   const handleToggleAutomation = async (checked: boolean) => {
     setLoading(prev => ({ ...prev, automation: true }));
     try {
-      const success = await toggleNewsletterAutomation(checked);
+      const success = await toggleNewsletterAutomation(checked, {
+        weeklyTemplateId: automationSettings.weeklyTemplateId || undefined,
+        monthlyTemplateId: automationSettings.monthlyTemplateId || undefined
+      });
+      
       if (success) {
         setAutomationEnabled(checked);
         if (onAutomationToggle) {
@@ -300,18 +305,17 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 mb-4">
+        <TabsList className="grid grid-cols-6 mb-4">
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="send">Send</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="automation">Automation</TabsTrigger>
         </TabsList>
         
-        {/* Templates Tab */}
         <TabsContent value="templates" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Template List */}
             <div className="border rounded-lg p-4">
               <h3 className="text-lg font-medium mb-4">Templates</h3>
               
@@ -349,7 +353,6 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
               )}
             </div>
             
-            {/* Create/Edit Template */}
             <div className="border rounded-lg p-4">
               {selectedTemplate ? (
                 <div>
@@ -439,10 +442,8 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
           </div>
         </TabsContent>
         
-        {/* Content Tab */}
         <TabsContent value="content" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Template Selection */}
             <div className="border rounded-lg p-4">
               <h3 className="text-lg font-medium mb-4">Select Template</h3>
               
@@ -468,7 +469,6 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
               )}
             </div>
             
-            {/* Template Content */}
             <div className="border rounded-lg p-4">
               {!selectedTemplate ? (
                 <p>Select a template to manage its content</p>
@@ -532,7 +532,6 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
           </div>
         </TabsContent>
         
-        {/* Send Tab */}
         <TabsContent value="send" className="space-y-6">
           <div className="border rounded-lg p-6">
             <h3 className="text-lg font-medium mb-4">Send Newsletter</h3>
@@ -657,7 +656,6 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
           </div>
         </TabsContent>
         
-        {/* Preview Tab */}
         <TabsContent value="preview" className="space-y-6">
           <div className="border rounded-lg p-4">
             <div className="flex justify-between items-center mb-4">
@@ -712,7 +710,6 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
           </div>
         </TabsContent>
         
-        {/* History Tab */}
         <TabsContent value="history" className="space-y-6">
           <div className="border rounded-lg p-4">
             <h3 className="text-lg font-medium mb-4">Newsletter History</h3>
@@ -748,6 +745,90 @@ const NewsletterManager: React.FC<NewsletterManagerProps> = ({
                 ))}
               </div>
             )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="automation" className="space-y-6">
+          <div className="border rounded-lg p-6">
+            <h3 className="text-lg font-medium mb-4">Newsletter Automation Settings</h3>
+            <p className="mb-4 text-gray-600">
+              Configure which templates should be used for automated weekly and monthly newsletters.
+            </p>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">Weekly Newsletter Template</label>
+                <select 
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={automationSettings.weeklyTemplateId}
+                  onChange={(e) => setAutomationSettings({
+                    ...automationSettings,
+                    weeklyTemplateId: e.target.value
+                  })}
+                >
+                  <option value="">Default Template</option>
+                  {templates.map(template => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-sm text-gray-500">
+                  Sent every Monday at 9 AM
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Monthly Newsletter Template</label>
+                <select 
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={automationSettings.monthlyTemplateId}
+                  onChange={(e) => setAutomationSettings({
+                    ...automationSettings,
+                    monthlyTemplateId: e.target.value
+                  })}
+                >
+                  <option value="">Default Template</option>
+                  {templates.map(template => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-sm text-gray-500">
+                  Sent on the 1st day of each month at 9 AM
+                </p>
+              </div>
+              
+              <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                <div className="mr-4">
+                  <Switch 
+                    checked={automationEnabled}
+                    onCheckedChange={handleToggleAutomation}
+                    disabled={loading.automation}
+                  />
+                </div>
+                <div>
+                  <h4 className="font-medium">Automatic Newsletter Sending</h4>
+                  <p className="text-sm text-gray-600">
+                    {automationEnabled 
+                      ? 'Newsletters will be sent automatically according to the schedule'
+                      : 'Enable to automatically send newsletters on schedule'}
+                  </p>
+                </div>
+              </div>
+              
+              <Button 
+                onClick={() => handleToggleAutomation(!automationEnabled)}
+                disabled={loading.automation}
+              >
+                {loading.automation 
+                  ? 'Updating...' 
+                  : automationEnabled 
+                    ? 'Update Automation Settings' 
+                    : 'Enable Automation'}
+              </Button>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

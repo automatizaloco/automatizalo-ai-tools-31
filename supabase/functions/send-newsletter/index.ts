@@ -249,8 +249,8 @@ function generateNewsletterHTML(
   blogPosts: BlogPost[],
   customContent?: string
 ): string {
-  // Company logo URL
-  const logoUrl = "https://automatizalo.co/logo.png";
+  // Logo URL (using the full URL to prevent issues)
+  const logoUrl = "https://automatizalo.co/lovable-uploads/6e67af0a-84d4-4c75-bf38-9001dbc81481.png";
   
   // Social media links
   const socialLinks = {
@@ -264,7 +264,7 @@ function generateNewsletterHTML(
   const whatsappNumber = "+573042037763";
   const whatsappUrl = `https://wa.me/${whatsappNumber}`;
   
-  // Basic styling
+  // Basic styling with brand colors: black, grey and white
   const html = `
     <!DOCTYPE html>
     <html>
@@ -276,11 +276,11 @@ function generateNewsletterHTML(
         body { 
           font-family: Arial, sans-serif; 
           line-height: 1.6; 
-          color: #333; 
+          color: #333333; 
           max-width: 600px; 
           margin: 0 auto; 
           padding: 20px; 
-          background-color: #f9f9f9;
+          background-color: #ffffff;
         }
         .container {
           background-color: #ffffff;
@@ -291,7 +291,7 @@ function generateNewsletterHTML(
         .header { 
           text-align: center;
           padding: 20px;
-          background-color: #9b87f5;
+          background-color: #333333;
           color: white;
         }
         .header img {
@@ -303,12 +303,12 @@ function generateNewsletterHTML(
         }
         .footer { 
           margin-top: 30px; 
-          color: #777; 
+          color: #555555; 
           font-size: 14px; 
           text-align: center;
           padding: 20px;
-          background-color: #f1f0fb;
-          border-top: 1px solid #e5deff;
+          background-color: #f1f1f1;
+          border-top: 1px solid #dddddd;
         }
         .blog-post { 
           margin-bottom: 30px; 
@@ -324,7 +324,7 @@ function generateNewsletterHTML(
         }
         .blog-post h2 { 
           margin-bottom: 10px; 
-          color: #6E59A5;
+          color: #333333;
         }
         .blog-post .excerpt { 
           margin-bottom: 10px; 
@@ -332,7 +332,7 @@ function generateNewsletterHTML(
         .blog-post .read-more {
           display: inline-block;
           padding: 5px 10px;
-          background: #9b87f5;
+          background: #333333;
           text-decoration: none;
           color: white;
           border-radius: 3px;
@@ -347,12 +347,12 @@ function generateNewsletterHTML(
         .social-links a {
           display: inline-block;
           margin: 0 10px;
-          color: #8B5CF6;
+          color: #333333;
           text-decoration: none;
         }
         .whatsapp-button {
           display: block;
-          background-color: #25D366;
+          background-color: #333333;
           color: white;
           text-align: center;
           padding: 10px 15px;

@@ -10,6 +10,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface AutomationRequest {
   enable: boolean;
+  weeklyTemplateId?: string;
+  monthlyTemplateId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -19,35 +21,41 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { enable } = await req.json() as AutomationRequest;
+    const { enable, weeklyTemplateId, monthlyTemplateId } = await req.json() as AutomationRequest;
     
     console.log(`${enable ? 'Enabling' : 'Disabling'} newsletter automation`);
+    console.log(`Weekly template ID: ${weeklyTemplateId || 'none'}`);
+    console.log(`Monthly template ID: ${monthlyTemplateId || 'none'}`);
     
     if (enable) {
       // Set up scheduled cron job for weekly newsletter (every Monday at 9 AM)
+      const weeklyCommand = `
+        SELECT net.http_post(
+          url:='${supabaseUrl}/functions/v1/send-newsletter',
+          headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}'::jsonb,
+          body:='{"frequency": "weekly"${weeklyTemplateId ? `, "templateId": "${weeklyTemplateId}"` : ''}, "testMode": false}'::jsonb
+        ) as request_id;
+      `;
+      
       await supabase.rpc('create_or_replace_cron_job', {
         job_name: 'send_weekly_newsletter',
         schedule: '0 9 * * 1', // Monday at 9 AM
-        command: `
-          SELECT net.http_post(
-            url:='${supabaseUrl}/functions/v1/send-newsletter',
-            headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}'::jsonb,
-            body:='{"frequency": "weekly", "testMode": false}'::jsonb
-          ) as request_id;
-        `
+        command: weeklyCommand
       });
       
       // Set up scheduled cron job for monthly newsletter (1st day of the month at 9 AM)
+      const monthlyCommand = `
+        SELECT net.http_post(
+          url:='${supabaseUrl}/functions/v1/send-newsletter',
+          headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}'::jsonb,
+          body:='{"frequency": "monthly"${monthlyTemplateId ? `, "templateId": "${monthlyTemplateId}"` : ''}, "testMode": false}'::jsonb
+        ) as request_id;
+      `;
+      
       await supabase.rpc('create_or_replace_cron_job', {
         job_name: 'send_monthly_newsletter',
         schedule: '0 9 1 * *', // 1st day of month at 9 AM
-        command: `
-          SELECT net.http_post(
-            url:='${supabaseUrl}/functions/v1/send-newsletter',
-            headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}'::jsonb,
-            body:='{"frequency": "monthly", "testMode": false}'::jsonb
-          ) as request_id;
-        `
+        command: monthlyCommand
       });
     } else {
       // Remove the scheduled cron jobs

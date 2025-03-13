@@ -422,10 +422,20 @@ export const previewNewsletter = async (
 /**
  * Toggle newsletter automation (weekly/monthly scheduled sending)
  */
-export const toggleNewsletterAutomation = async (enable: boolean): Promise<boolean> => {
+export const toggleNewsletterAutomation = async (
+  enable: boolean, 
+  options?: { 
+    weeklyTemplateId?: string; 
+    monthlyTemplateId?: string;
+  }
+): Promise<boolean> => {
   try {
     const { data, error } = await supabase.functions.invoke('toggle-newsletter-automation', {
-      body: { enable }
+      body: { 
+        enable,
+        weeklyTemplateId: options?.weeklyTemplateId,
+        monthlyTemplateId: options?.monthlyTemplateId
+      }
     });
 
     if (error) {

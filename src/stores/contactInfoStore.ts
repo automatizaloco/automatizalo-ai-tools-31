@@ -51,7 +51,9 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
         // Ensure website is set even if it's null in the database
         const contactInfo = {
           ...data as ContactInfo,
-          website: data.website || defaultContactInfo.website
+          website: data.website || defaultContactInfo.website,
+          // Add whatsapp property which doesn't exist in the database
+          whatsapp: defaultContactInfo.whatsapp
         };
         
         set({

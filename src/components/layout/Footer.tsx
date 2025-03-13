@@ -6,11 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import EditableText from '@/components/admin/EditableText';
 import { useContactInfo, ContactInfo } from '@/stores/contactInfoStore';
 import { useAuth } from '@/context/AuthContext';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { subscribeToNewsletter, NewsletterFrequency } from '@/services/newsletterService';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -18,12 +14,7 @@ const Footer = () => {
   const { isAuthenticated } = useAuth();
   const { contactInfo, updateContactInfo } = useContactInfo();
   const currentYear = new Date().getFullYear();
-  
-  // Newsletter subscription state
-  const [email, setEmail] = useState("");
-  const [frequency, setFrequency] = useState<NewsletterFrequency>("weekly");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const handleContactInfoChange = (id: string, value: string) => {
     const fieldMap: Record<string, keyof ContactInfo> = {
       'footer-phone': 'phone',
@@ -39,22 +30,6 @@ const Footer = () => {
         [field]: value
       };
       updateContactInfo(updatedInfo);
-    }
-  };
-  
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email) {
-      return;
-    }
-    
-    setIsSubmitting(true);
-    try {
-      await subscribeToNewsletter(email, frequency);
-      setEmail(""); // Clear form on success
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -268,49 +243,28 @@ const Footer = () => {
               {isAuthenticated ? (
                 <EditableText 
                   id="footer-newsletter" 
-                  defaultText="Subscribe to our Newsletter"
+                  defaultText="Newsletter"
                 />
               ) : (
-                "Subscribe to our Newsletter"
+                "Newsletter"
               )}
             </h3>
-            <form onSubmit={handleSubscribe} className="mb-6">
-              <div className="flex flex-col space-y-3">
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="flex-grow px-4 py-2 rounded-lg"
-                  required
+            <p className={theme === 'dark' ? 'text-gray-400 mb-4' : 'text-gray-600 mb-4'}>
+              {isAuthenticated ? (
+                <EditableText 
+                  id="footer-newsletter-description" 
+                  defaultText="Stay updated with the latest news and resources from Automatízalo."
+                  multiline={true}
                 />
-                
-                <div className="flex space-x-4">
-                  <RadioGroup 
-                    value={frequency} 
-                    onValueChange={(value) => setFrequency(value as NewsletterFrequency)}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="weekly" id="footer-weekly" />
-                      <Label htmlFor="footer-weekly">Weekly</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="monthly" id="footer-monthly" />
-                      <Label htmlFor="footer-monthly">Monthly</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="bg-gray-900 hover:bg-gray-800 text-white"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Subscribing...' : 'Subscribe'}
-                </Button>
-              </div>
-            </form>
+              ) : (
+                "Stay updated with the latest news and resources from Automatízalo."
+              )}
+            </p>
+            <Link to="/blog">
+              <Button className="bg-gray-900 hover:bg-gray-800 text-white mb-8">
+                Subscribe to Newsletter
+              </Button>
+            </Link>
             
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
               {isAuthenticated ? (

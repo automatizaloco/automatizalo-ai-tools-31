@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ContactInfo } from '@/stores/contactInfoStore';
 import { toast } from 'sonner';
@@ -113,70 +112,21 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
 /**
  * Update contact information
  */
-export const updateContactInfo = async (info: ContactInfo): Promise<ContactInfo> => {
+export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   try {
-    console.log("Updating contact info with:", info);
+    // Remove the whatsapp property before sending to Supabase since it's not in the DB schema
+    const { whatsapp, ...contactInfoForDB } = info;
     
-    const { data: existingData, error: fetchError } = await supabase
+    const { error } = await supabase
       .from('contact_info')
-      .select('id')
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error("Error checking existing contact info:", fetchError);
-      throw fetchError;
+      .upsert(contactInfoForDB);
+    
+    if (error) {
+      console.error('Error updating contact info:', error);
+      throw new Error(error.message);
     }
-    
-    // Prepare the data to match the database schema
-    const contactData = {
-      phone: info.phone,
-      email: info.email,
-      address: info.address,
-      website: info.website || 'https://automatizalo.co' // Ensure website is never null
-    };
-    
-    let result;
-    
-    if (existingData?.id) {
-      // Update existing record
-      console.log("Updating existing record with ID:", existingData.id);
-      const { data, error } = await supabase
-        .from('contact_info')
-        .update(contactData)
-        .eq('id', existingData.id)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error updating contact info:", error);
-        throw error;
-      }
-      
-      result = data;
-    } else {
-      // Insert new record
-      console.log("Inserting new contact info:", contactData);
-      const { data, error } = await supabase
-        .from('contact_info')
-        .insert(contactData)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error inserting contact info:", error);
-        throw error;
-      }
-      
-      result = data;
-    }
-    
-    // Add whatsapp back to the result since it's not in the DB
-    return {
-      ...result as ContactInfo,
-      whatsapp: info.whatsapp || '+1 (555) 123-4567'
-    };
-  } catch (error: any) {
-    console.error("Error updating contact information:", error);
-    throw new Error(`Failed to update contact information: ${error.message}`);
+  } catch (err) {
+    console.error('Failed to update contact info:', err);
+    throw err;
   }
 };

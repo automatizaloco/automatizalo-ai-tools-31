@@ -57,6 +57,7 @@ const Footer = () => {
               )}
             </p>
             <div className="flex space-x-4 justify-center">
+              {/* Social media icons */}
               <a 
                 href="https://www.facebook.com/automatizalo.co" 
                 target="_blank" 
@@ -150,6 +151,22 @@ const Footer = () => {
                   )}
                 </Link>
               </li>
+              {/* Added Subscribe link */}
+              <li>
+                <Link 
+                  to="/blog" 
+                  className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
+                >
+                  {isAuthenticated ? (
+                    <EditableText 
+                      id="footer-subscribe" 
+                      defaultText="Subscribe"
+                    />
+                  ) : (
+                    "Subscribe"
+                  )}
+                </Link>
+              </li>
               {!isAuthenticated && (
                 <li>
                   <Link 
@@ -239,33 +256,6 @@ const Footer = () => {
           </div>
 
           <div className="md:col-span-4">
-            <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
-              {isAuthenticated ? (
-                <EditableText 
-                  id="footer-newsletter" 
-                  defaultText="Newsletter"
-                />
-              ) : (
-                "Newsletter"
-              )}
-            </h3>
-            <p className={theme === 'dark' ? 'text-gray-400 mb-4' : 'text-gray-600 mb-4'}>
-              {isAuthenticated ? (
-                <EditableText 
-                  id="footer-newsletter-description" 
-                  defaultText="Stay updated with the latest news and resources from Automatízalo."
-                  multiline={true}
-                />
-              ) : (
-                "Stay updated with the latest news and resources from Automatízalo."
-              )}
-            </p>
-            <Link to="/blog">
-              <Button className="bg-gray-900 hover:bg-gray-800 text-white mb-8">
-                Subscribe to Newsletter
-              </Button>
-            </Link>
-            
             <h3 className={`font-medium mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-left`}>
               {isAuthenticated ? (
                 <EditableText 

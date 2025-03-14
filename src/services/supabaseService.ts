@@ -100,7 +100,7 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
       email: data.email || 'contact@automatizalo.co',
       address: data.address || '123 AI Street, Tech City, TC 12345',
       website: data.website || 'https://automatizalo.co',
-      whatsapp: '+1 (555) 123-4567' // Add default whatsapp value
+      whatsapp: data.phone || '+1 (555) 123-4567' // Use phone number for whatsapp if not explicitly set
     };
     
     return contactInfo;

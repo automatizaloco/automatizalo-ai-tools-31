@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -7,13 +6,18 @@ import { useContactInfo, ContactInfo } from '@/stores/contactInfoStore';
 import { useAuth } from '@/context/AuthContext';
 import { Instagram } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 const Footer = () => {
   const { t } = useLanguage();
   const { theme } = useTheme();
   const { isAuthenticated } = useAuth();
-  const { contactInfo, updateContactInfo } = useContactInfo();
+  const { contactInfo, updateContactInfo, fetchContactInfo } = useContactInfo();
   const currentYear = new Date().getFullYear();
+
+  useEffect(() => {
+    fetchContactInfo();
+  }, [fetchContactInfo]);
 
   const handleContactInfoChange = async (id: string, value: string) => {
     const fieldMap: Record<string, keyof ContactInfo> = {
@@ -30,6 +34,11 @@ const Footer = () => {
           ...contactInfo,
           [field]: value
         };
+        
+        if (field === 'phone' && (contactInfo.whatsapp === contactInfo.phone)) {
+          updatedInfo.whatsapp = value;
+        }
+        
         await updateContactInfo(updatedInfo);
         toast.success("Contact information updated successfully");
       } catch (error) {
@@ -155,7 +164,6 @@ const Footer = () => {
                   )}
                 </Link>
               </li>
-              {/* Added Subscribe link */}
               <li>
                 <Link 
                   to="/blog" 

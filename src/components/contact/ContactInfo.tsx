@@ -21,8 +21,14 @@ const ContactInfo = () => {
     phone: contactInfo.phone,
     email: contactInfo.email,
     address: contactInfo.address,
-    website: contactInfo.website
+    website: contactInfo.website,
+    whatsapp: contactInfo.whatsapp
   });
+
+  // Refresh contact info when component mounts
+  useEffect(() => {
+    fetchContactInfo();
+  }, [fetchContactInfo]);
 
   // Update form data when contactInfo changes
   useEffect(() => {

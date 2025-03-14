@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 interface WhatsAppButtonProps {
   phoneNumber?: string;
@@ -17,10 +18,16 @@ const WhatsAppButton = ({
   showCalendarConfirmation = false
 }: WhatsAppButtonProps) => {
   const { t } = useLanguage();
-  const { contactInfo } = useContactInfo();
+  const { contactInfo, fetchContactInfo } = useContactInfo();
+  
+  // Fetch contact info when component mounts
+  useEffect(() => {
+    fetchContactInfo();
+  }, [fetchContactInfo]);
   
   // Use the phone number from props if provided, otherwise use the one from contactInfo
-  const phoneNumber = propPhoneNumber || contactInfo.phone;
+  // Prioritize whatsapp number if available
+  const phoneNumber = propPhoneNumber || contactInfo.whatsapp || contactInfo.phone;
   
   const handleClick = () => {
     // Clean the phone number - remove any non-digit characters

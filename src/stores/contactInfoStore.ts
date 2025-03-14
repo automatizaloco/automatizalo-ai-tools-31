@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchContactInfo as fetchContactInfoService, updateContactInfo as updateContactInfoService } from '@/services/supabaseService';
 
 export interface ContactInfo {
   phone: string;
@@ -27,7 +27,7 @@ const defaultContactInfo: ContactInfo = {
   whatsapp: '+1 (555) 123-4567'
 };
 
-export const useContactInfo = create<ContactInfoState>((set) => ({
+export const useContactInfo = create<ContactInfoState>((set, get) => ({
   contactInfo: defaultContactInfo,
   loading: false,
   error: null,
@@ -36,25 +36,13 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
     try {
       set({ loading: true, error: null });
       
-      const { data, error } = await supabase
-        .from('contact_info')
-        .select('*')
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error fetching contact info:', error);
-        set({ error: error.message, loading: false });
-        return;
-      }
+      const data = await fetchContactInfoService();
       
       if (data) {
-        // Create ContactInfo object with whatsapp added separately since it's not in the DB
+        // Make sure whatsapp is set, defaulting to phone if it's not
         const contactInfo: ContactInfo = {
-          phone: data.phone || defaultContactInfo.phone,
-          email: data.email || defaultContactInfo.email,
-          address: data.address || defaultContactInfo.address,
-          website: data.website || defaultContactInfo.website,
-          whatsapp: defaultContactInfo.whatsapp // Add default whatsapp
+          ...data,
+          whatsapp: data.whatsapp || data.phone
         };
         
         set({
@@ -82,62 +70,18 @@ export const useContactInfo = create<ContactInfoState>((set) => ({
     try {
       set({ loading: true, error: null });
       
-      // Check if we have an existing record
-      const { data: existingData } = await supabase
-        .from('contact_info')
-        .select('id')
-        .maybeSingle();
-      
-      // Create a new object without the whatsapp property for the database
-      const contactInfoForDB = {
-        phone: info.phone,
-        email: info.email,
-        address: info.address,
-        website: info.website
+      // Make sure whatsapp is set, defaulting to phone if not explicitly set
+      const updatedInfo = {
+        ...info,
+        whatsapp: info.whatsapp || info.phone
       };
       
-      let result;
+      await updateContactInfoService(updatedInfo);
       
-      if (existingData?.id) {
-        // Update existing record
-        const { data, error } = await supabase
-          .from('contact_info')
-          .update(contactInfoForDB)
-          .eq('id', existingData.id)
-          .select()
-          .single();
-        
-        if (error) {
-          console.error('Error updating contact info:', error);
-          set({ error: error.message, loading: false });
-          return;
-        }
-        
-        result = data;
-      } else {
-        // Insert new record
-        const { data, error } = await supabase
-          .from('contact_info')
-          .insert(contactInfoForDB)
-          .select()
-          .single();
-        
-        if (error) {
-          console.error('Error creating contact info:', error);
-          set({ error: error.message, loading: false });
-          return;
-        }
-        
-        result = data;
-      }
-      
-      // Add whatsapp property to the result
-      const updatedContactInfo: ContactInfo = {
-        ...result,
-        whatsapp: info.whatsapp || defaultContactInfo.whatsapp
-      };
-      
-      set({ contactInfo: updatedContactInfo, loading: false });
+      set({ 
+        contactInfo: updatedInfo, 
+        loading: false 
+      });
     } catch (err) {
       console.error('Unexpected error:', err);
       set({ error: 'Failed to update contact info', loading: false });

@@ -82,6 +82,8 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
         contactInfo: updatedInfo, 
         loading: false 
       });
+
+      console.log('Contact info updated successfully in the store:', updatedInfo);
     } catch (err) {
       console.error('Unexpected error:', err);
       set({ error: 'Failed to update contact info', loading: false });

@@ -27,11 +27,13 @@ const ContactInfo = () => {
 
   // Refresh contact info when component mounts
   useEffect(() => {
+    console.log("ContactInfo component: Fetching contact info");
     fetchContactInfo();
   }, [fetchContactInfo]);
 
   // Update form data when contactInfo changes
   useEffect(() => {
+    console.log("ContactInfo component: Contact info updated", contactInfo);
     setFormData({
       phone: contactInfo.phone,
       email: contactInfo.email,
@@ -153,7 +155,7 @@ const ContactInfo = () => {
         
         <InfoItem
           icon={<Globe className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />}
-          title={t('contact.website')}
+          title={t('contact.website') || "Website"}
           value={contactInfo.website || ''}
           id="website"
           isEditing={isEditing && isAuthenticated}

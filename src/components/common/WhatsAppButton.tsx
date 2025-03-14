@@ -22,6 +22,7 @@ const WhatsAppButton = ({
   
   // Fetch contact info when component mounts
   useEffect(() => {
+    console.log("WhatsAppButton component: Fetching contact info");
     fetchContactInfo();
   }, [fetchContactInfo]);
   

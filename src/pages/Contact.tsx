@@ -1,9 +1,9 @@
+
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
 import ContactHeader from "@/components/contact/ContactHeader";
 import ContactInfo from "@/components/contact/ContactInfo";
-import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import { useState, useEffect, useRef } from "react";
 import { MessageCircle, Calendar, Video } from "lucide-react";
@@ -22,6 +22,7 @@ const Contact = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    console.log("Contact page: Fetching contact info");
     fetchContactInfo();
   }, [fetchContactInfo]);
 
@@ -140,7 +141,7 @@ const Contact = () => {
   const messages = chatMessages[currentLanguageKey as keyof typeof chatMessages] || chatMessages.en;
 
   const handleChatWithUs = () => {
-    const cleanPhone = contactInfo.phone.replace(/\D/g, '');
+    const cleanPhone = contactInfo.whatsapp?.replace(/\D/g, '') || contactInfo.phone.replace(/\D/g, '');
     const message = encodeURIComponent(
       `${t('contact.whatsapp.defaultMessage') || "Hello, I would like to know more about your services"}`
     );

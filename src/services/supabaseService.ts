@@ -115,7 +115,10 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
  */
 export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   try {
+    console.log("Updating contact info with:", info);
+    
     // Create a new object without the whatsapp property for the database
+    // This fixes the TypeScript error where whatsapp doesn't exist in DB schema
     const contactInfoForDB = {
       phone: info.phone,
       email: info.email,
@@ -123,14 +126,36 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
       website: info.website
     };
     
-    const { error } = await supabase
+    // Check if we have an existing record
+    const { data: existingData } = await supabase
       .from('contact_info')
-      .upsert(contactInfoForDB);
+      .select('id')
+      .maybeSingle();
     
-    if (error) {
-      console.error('Error updating contact info:', error);
-      throw new Error(error.message);
+    if (existingData?.id) {
+      // Update the record
+      const { error } = await supabase
+        .from('contact_info')
+        .update(contactInfoForDB)
+        .eq('id', existingData.id);
+      
+      if (error) {
+        console.error('Error updating contact info:', error);
+        throw new Error(error.message);
+      }
+    } else {
+      // Create a new record if none exists
+      const { error } = await supabase
+        .from('contact_info')
+        .insert(contactInfoForDB);
+      
+      if (error) {
+        console.error('Error inserting contact info:', error);
+        throw new Error(error.message);
+      }
     }
+    
+    console.log("Contact info updated successfully");
   } catch (err) {
     console.error('Failed to update contact info:', err);
     throw err;

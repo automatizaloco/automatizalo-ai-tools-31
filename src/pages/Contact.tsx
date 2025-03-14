@@ -1,9 +1,6 @@
-
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import ContactHeader from "@/components/contact/ContactHeader";
 import ContactInfo from "@/components/contact/ContactInfo";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
@@ -18,11 +15,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const Contact = () => {
   const { theme } = useTheme();
   const { t, language } = useLanguage();
-  const { contactInfo, loading } = useContactInfo();
+  const { contactInfo, loading, fetchContactInfo } = useContactInfo();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showTyping, setShowTyping] = useState(false);
   const [meetingConfirmed, setMeetingConfirmed] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchContactInfo();
+  }, [fetchContactInfo]);
 
   const getNextFriday = () => {
     const today = new Date();
@@ -96,7 +97,6 @@ const Contact = () => {
     }
   }, [currentMessageIndex, showTyping]);
 
-  // Continuous automatic animation loop
   useEffect(() => {
     const animationHandler = () => {
       if (currentMessageIndex < chatMessages[language || 'en'].length) {
@@ -120,7 +120,6 @@ const Contact = () => {
         
         return () => clearTimeout(typingTimer);
       } else {
-        // Reset the animation after a short pause
         const resetTimer = setTimeout(() => {
           setCurrentMessageIndex(0);
           setMeetingConfirmed(false);
@@ -132,7 +131,6 @@ const Contact = () => {
     
     const animation = animationHandler();
     
-    // Ensure animation restarts when language changes
     return () => {
       if (animation) animation();
     };
@@ -154,8 +152,6 @@ const Contact = () => {
 
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
-      <Navbar />
-      
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           <ContactHeader />
@@ -262,7 +258,6 @@ const Contact = () => {
         </div>
       </main>
       
-      <Footer />
       <Toaster />
     </div>
   );

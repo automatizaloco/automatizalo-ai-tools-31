@@ -7,13 +7,14 @@ import { useContactInfo, ContactInfo as ContactInfoType } from "@/stores/contact
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 const ContactInfo = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const { contactInfo, updateContactInfo, loading } = useContactInfo();
+  const { contactInfo, updateContactInfo, loading, fetchContactInfo } = useContactInfo();
   
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<ContactInfoType>({
@@ -22,6 +23,17 @@ const ContactInfo = () => {
     address: contactInfo.address,
     website: contactInfo.website
   });
+
+  // Update form data when contactInfo changes
+  useEffect(() => {
+    setFormData({
+      phone: contactInfo.phone,
+      email: contactInfo.email,
+      address: contactInfo.address,
+      website: contactInfo.website,
+      whatsapp: contactInfo.whatsapp
+    });
+  }, [contactInfo]);
 
   const handleInputChange = (field: keyof ContactInfoType, value: string) => {
     setFormData(prev => ({
@@ -33,9 +45,11 @@ const ContactInfo = () => {
   const handleSave = async () => {
     try {
       await updateContactInfo(formData);
+      toast.success("Contact information updated successfully");
       setIsEditing(false);
     } catch (error) {
       console.error("Error saving contact info:", error);
+      toast.error("Failed to update contact information");
     }
   };
 
@@ -44,7 +58,8 @@ const ContactInfo = () => {
       phone: contactInfo.phone,
       email: contactInfo.email,
       address: contactInfo.address,
-      website: contactInfo.website
+      website: contactInfo.website,
+      whatsapp: contactInfo.whatsapp
     });
     setIsEditing(false);
   };

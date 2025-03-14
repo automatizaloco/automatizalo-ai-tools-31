@@ -1,4 +1,3 @@
-
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
@@ -160,7 +159,7 @@ const Contact = () => {
           <div className="max-w-6xl mx-auto mt-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                {!loading && <ContactInfo />}
+                <ContactInfo />
               </div>
               
               <div className="p-8 rounded-2xl shadow-sm text-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">

@@ -72,6 +72,16 @@ const ContactInfo = () => {
     setIsEditing(false);
   };
 
+  if (!contactInfo && loading) {
+    return (
+      <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
       <div className="flex justify-between items-center mb-6">

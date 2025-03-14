@@ -49,12 +49,15 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
           contactInfo,
           loading: false,
         });
+        
+        console.log('Contact info fetched successfully:', contactInfo);
       } else {
         // Set default values if no data found
         set({
           contactInfo: defaultContactInfo,
           loading: false,
         });
+        console.log('No contact info found, using defaults:', defaultContactInfo);
       }
     } catch (err) {
       console.error('Unexpected error:', err);

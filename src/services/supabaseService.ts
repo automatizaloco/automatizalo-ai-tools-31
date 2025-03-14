@@ -106,7 +106,15 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
     return contactInfo;
   } catch (error: any) {
     console.error("Error fetching contact information:", error);
-    throw new Error(`Failed to fetch contact information: ${error.message}`);
+    toast.error("Failed to load contact information. Using default values.");
+    // Return default values on error
+    return {
+      phone: '+1 (555) 123-4567',
+      email: 'contact@automatizalo.co',
+      address: '123 AI Street, Tech City, TC 12345',
+      website: 'https://automatizalo.co',
+      whatsapp: '+1 (555) 123-4567'
+    };
   }
 };
 
@@ -158,6 +166,7 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
     console.log("Contact info updated successfully");
   } catch (err) {
     console.error('Failed to update contact info:', err);
+    toast.error("Failed to update contact information.");
     throw err;
   }
 };

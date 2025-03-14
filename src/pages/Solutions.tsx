@@ -9,13 +9,18 @@ import { useAuth } from "@/context/AuthContext";
 import EditableText from "@/components/admin/EditableText";
 import { Link } from 'react-router-dom';
 import { useContactInfo } from "@/stores/contactInfoStore";
+import { useEffect } from "react";
 
 const Solutions = () => {
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const { contactInfo } = useContactInfo();
+  const { contactInfo, fetchContactInfo } = useContactInfo();
   
-  // Solution Cards Data
+  useEffect(() => {
+    console.log("Solutions page: Fetching contact info");
+    fetchContactInfo();
+  }, [fetchContactInfo]);
+  
   const solutionCards = [
     {
       title: t("solutions.chatbots.title"),
@@ -55,7 +60,6 @@ const Solutions = () => {
     }
   ];
 
-  // Features for each product
   const aiWorkflowFeatures = [
     {
       icon: <Bot className="h-5 w-5 text-gray-700" />,
@@ -131,7 +135,6 @@ const Solutions = () => {
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          {/* Hero Section */}
           <div className="text-center mb-20">
             <h1 className="text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-6">
               {isAuthenticated ? (
@@ -155,7 +158,6 @@ const Solutions = () => {
             </p>
           </div>
           
-          {/* Main Solutions */}
           <div className="mb-24">
             <h2 className="text-3xl font-semibold text-gray-900 text-center mb-12">
               {isAuthenticated ? (
@@ -184,7 +186,6 @@ const Solutions = () => {
             </div>
           </div>
           
-          {/* AI Workflow Automation Section */}
           <div className="mb-24 scroll-mt-24" id="ai-workflow">
             <div className="flex flex-col lg:flex-row items-center gap-12 mb-16">
               <div className="lg:w-1/2">
@@ -242,7 +243,6 @@ const Solutions = () => {
             </div>
           </div>
           
-          {/* Conversational AI Section */}
           <div className="mb-24 scroll-mt-24" id="conversational-ai">
             <div className="flex flex-col lg:flex-row-reverse items-center gap-12 mb-16">
               <div className="lg:w-1/2">
@@ -300,7 +300,6 @@ const Solutions = () => {
             </div>
           </div>
           
-          {/* Data Intelligence Section */}
           <div className="mb-24 scroll-mt-24" id="data-intelligence">
             <div className="flex flex-col lg:flex-row items-center gap-12 mb-16">
               <div className="lg:w-1/2">
@@ -358,7 +357,6 @@ const Solutions = () => {
             </div>
           </div>
           
-          {/* CTA Section */}
           <div className="bg-gray-50 rounded-2xl p-10 lg:p-16 text-center">
             <h2 className="text-3xl font-semibold text-gray-900 mb-6">
               {isAuthenticated ? (

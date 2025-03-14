@@ -53,11 +53,9 @@ const ContactInfo = () => {
   const handleSave = async () => {
     try {
       await updateContactInfo(formData);
-      toast.success("Contact information updated successfully");
       setIsEditing(false);
     } catch (error) {
       console.error("Error saving contact info:", error);
-      toast.error("Failed to update contact information");
     }
   };
 
@@ -72,7 +70,7 @@ const ContactInfo = () => {
     setIsEditing(false);
   };
 
-  if (!contactInfo && loading) {
+  if (loading) {
     return (
       <div className={`p-8 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
         <div className="flex justify-center items-center h-40">

@@ -1,6 +1,7 @@
 
 import { create } from 'zustand';
 import { fetchContactInfo as fetchContactInfoService, updateContactInfo as updateContactInfoService } from '@/services/supabaseService';
+import { toast } from 'sonner';
 
 export interface ContactInfo {
   phone: string;
@@ -66,6 +67,7 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
         loading: false,
         contactInfo: defaultContactInfo
       });
+      toast.error("Failed to load contact information. Using default values.");
     }
   },
   
@@ -87,9 +89,11 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
       });
 
       console.log('Contact info updated successfully in the store:', updatedInfo);
+      toast.success("Contact information updated successfully");
     } catch (err) {
       console.error('Unexpected error:', err);
       set({ error: 'Failed to update contact info', loading: false });
+      toast.error("Failed to update contact information");
     }
   }
 }));

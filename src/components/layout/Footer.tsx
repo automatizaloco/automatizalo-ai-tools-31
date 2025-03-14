@@ -16,6 +16,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
+    console.log("Footer component: Fetching contact info");
     fetchContactInfo();
   }, [fetchContactInfo]);
 
@@ -40,10 +41,8 @@ const Footer = () => {
         }
         
         await updateContactInfo(updatedInfo);
-        toast.success("Contact information updated successfully");
       } catch (error) {
         console.error("Error updating contact info:", error);
-        toast.error("Failed to update contact information");
       }
     }
   };
@@ -72,7 +71,6 @@ const Footer = () => {
               )}
             </p>
             <div className="flex space-x-4 justify-center">
-              {/* Social media icons */}
               <a 
                 href="https://www.facebook.com/automatizalo.co" 
                 target="_blank" 

@@ -22,15 +22,37 @@ const Unsubscribe = () => {
     
     try {
       // Check if the email exists in the subscription list
-      const { data, error } = await supabase
+      const { data: existingSubscriptions, error: checkError } = await supabase
+        .from('newsletter_subscriptions')
+        .select('id')
+        .eq('email', email);
+      
+      if (checkError) {
+        throw checkError;
+      }
+
+      // If the email doesn't exist, show a success message anyway for privacy reasons
+      if (!existingSubscriptions || existingSubscriptions.length === 0) {
+        console.log('Email not found in subscription list:', email);
+        // We still show success for privacy reasons
+        setUnsubscribed(true);
+        setEmail('');
+        setIsSubmitting(false);
+        toast.success('You have been unsubscribed from our newsletter');
+        return;
+      }
+      
+      // Delete the subscription
+      const { error: deleteError } = await supabase
         .from('newsletter_subscriptions')
         .delete()
         .eq('email', email);
       
-      if (error) {
-        throw error;
+      if (deleteError) {
+        throw deleteError;
       }
       
+      console.log('Successfully unsubscribed:', email);
       toast.success('You have been unsubscribed from our newsletter');
       setUnsubscribed(true);
       setEmail('');

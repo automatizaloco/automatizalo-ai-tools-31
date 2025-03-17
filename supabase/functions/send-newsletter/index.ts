@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { createTransport } from "npm:nodemailer@6.9.9";
@@ -130,9 +129,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Failed to fetch blog posts: ${blogError.message}`);
     }
 
+    // Define the base URL for the website - now using the custom domain
+    const baseUrl = "https://automatizalo.co";
+    
     // Generate email content
     const subject = customSubject || template.subject;
-    const emailContent = generateNewsletterHTML(template, customContentBlocks, blogPosts, customContent);
+    const emailContent = generateNewsletterHTML(template, customContentBlocks, blogPosts, customContent, baseUrl);
 
     // If this is just a preview request, return the HTML content
     if (previewOnly) {
@@ -247,12 +249,13 @@ function generateNewsletterHTML(
   template: any, 
   contentBlocks: any[], 
   blogPosts: BlogPost[],
-  customContent?: string
+  customContent?: string,
+  baseUrl: string = "https://automatizalo.co"
 ): string {
   // Logo URL (using the uploaded image from the user)
-  const logoUrl = "https://automatizalo.co/lovable-uploads/5ac78895-cc3c-450b-b1ce-da2960edb89e.png";
+  const logoUrl = `${baseUrl}/lovable-uploads/5ac78895-cc3c-450b-b1ce-da2960edb89e.png`;
   
-  // Social media links - using the updated correct links
+  // Social media links
   const socialLinks = {
     facebook: "https://www.facebook.com/automatizalo.co",
     instagram: "https://www.instagram.com/automatizalo.co/",
@@ -262,9 +265,6 @@ function generateNewsletterHTML(
   // WhatsApp number
   const whatsappNumber = "+573042037763";
   const whatsappUrl = `https://wa.me/${whatsappNumber}`;
-  
-  // Define the base URL for the website - ensure it's the full URL with https
-  const baseUrl = "https://automatizalo.co";
   
   // Basic styling with brand colors: black, grey and white
   const html = `

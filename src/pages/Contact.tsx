@@ -3,7 +3,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
 import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import ContactForm from "@/components/contact/ContactForm";
 import ContactInfo from "@/components/contact/ContactInfo";
 import ContactHeader from "@/components/contact/ContactHeader";
@@ -23,8 +22,6 @@ const Contact = () => {
 
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-950' : 'bg-white'}`}>
-      <Navbar />
-      
       {/* Main content */}
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
@@ -68,9 +65,6 @@ const Contact = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
-      <WhatsAppButton />
     </div>
   );
 };

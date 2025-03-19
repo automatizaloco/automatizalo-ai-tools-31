@@ -1,6 +1,4 @@
 import { Brain, Bot, Zap, Sparkles, BarChart, Clock, Shield, Users, MessageSquare, FileText, Cog, Database } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import SolutionCard from "@/components/ui/SolutionCard";
 import ProductFeature from "@/components/solutions/ProductFeature";
 import { Button } from "@/components/ui/button";
@@ -131,8 +129,6 @@ const Solutions = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar />
-      
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
@@ -403,10 +399,9 @@ const Solutions = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };
 
 export default Solutions;
+

@@ -2,7 +2,6 @@
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContactInfo } from "@/stores/contactInfoStore";
-import Navbar from "@/components/layout/Navbar";
 import ContactForm from "@/components/contact/ContactForm";
 import ContactInfo from "@/components/contact/ContactInfo";
 import ContactHeader from "@/components/contact/ContactHeader";
@@ -65,6 +64,9 @@ const Contact = () => {
           </div>
         </div>
       </main>
+      
+      {/* WhatsApp Button */}
+      <WhatsAppButton />
     </div>
   );
 };

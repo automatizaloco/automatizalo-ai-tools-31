@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { PlusCircle, Edit, Trash2, Globe } from "lucide-react";
 import { fetchBlogPosts, deleteBlogPost } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
@@ -56,7 +54,7 @@ const BlogAdmin = () => {
   };
 
   const handleCreate = () => {
-    navigate("/admin/blog/create");
+    navigate("/admin/blog/new");
   };
 
   const hasTranslations = (post: BlogPost) => {

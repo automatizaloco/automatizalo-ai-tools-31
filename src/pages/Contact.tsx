@@ -23,6 +23,7 @@ const Contact = () => {
   const { t, language } = useLanguage();
   const { fetchContactInfo, contactInfo } = useContactInfo();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [showMeetingConfirmation, setShowMeetingConfirmation] = useState(false);
   
   // Fetch contact info when the page loads
   useEffect(() => {
@@ -32,10 +33,11 @@ const Contact = () => {
 
   // Chat simulation logic with looping animation
   useEffect(() => {
+    // Define conversation messages for the chat simulation
     const conversation = [
-      { sender: 'bot', text: t('contact.chat.greeting'), delay: 0 },
+      { sender: 'bot', text: t('contact.chat.greeting'), delay: 1000 },
       { sender: 'user', text: t('contact.chat.askServices'), delay: 2000 },
-      { sender: 'bot', text: t('contact.chat.explainServices'), delay: 2000 },
+      { sender: 'bot', text: t('contact.chat.explainServices'), delay: 2500 },
       { sender: 'user', text: t('contact.chat.askMeeting'), delay: 2000 },
       { sender: 'bot', text: t('contact.chat.confirmMeeting'), delay: 2000 },
       { sender: 'user', text: t('contact.chat.acceptTime'), delay: 2000 },
@@ -47,6 +49,7 @@ const Contact = () => {
     const startConversation = () => {
       // Clear messages to restart conversation
       setMessages([]);
+      setShowMeetingConfirmation(false);
       
       // Schedule each message to appear with its delay
       let cumulativeDelay = 0;
@@ -69,13 +72,20 @@ const Contact = () => {
             }
           ]);
           
-          // When we reach the end of the conversation, schedule a restart
+          // When we reach the end of the conversation, show meeting confirmation
           if (index === conversation.length - 1) {
-            const resetTimeout = setTimeout(() => {
-              startConversation();
-            }, 5000); // Wait 5 seconds before restarting
+            const confirmationTimeout = setTimeout(() => {
+              setShowMeetingConfirmation(true);
+              
+              // After showing the meeting confirmation for a while, restart the conversation
+              const resetTimeout = setTimeout(() => {
+                startConversation();
+              }, 4000); // Wait 4 seconds before restarting
+              
+              timeoutIds.push(resetTimeout);
+            }, 1000);
             
-            timeoutIds.push(resetTimeout);
+            timeoutIds.push(confirmationTimeout);
           }
         }, cumulativeDelay);
         
@@ -179,7 +189,7 @@ const Contact = () => {
                       ))}
                       
                       {/* Meeting confirmation animation */}
-                      {messages.length === 7 && (
+                      {showMeetingConfirmation && (
                         <motion.div
                           initial={{ scale: 0.8, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -209,7 +219,7 @@ const Contact = () => {
                     className="bg-[#25D366] hover:bg-[#128C7E] text-white shadow-lg"
                   >
                     <MessageCircle className="mr-2" size={20} />
-                    {t('contact.chat.chatWithUs')}
+                    {t('contact.whatsapp.chat')}
                   </Button>
                 </div>
               </div>

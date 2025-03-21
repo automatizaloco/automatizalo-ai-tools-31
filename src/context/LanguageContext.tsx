@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 type Language = "en" | "fr" | "es";
@@ -457,4 +458,69 @@ const translations = {
     // Footer
     "footer.company": "Empresa",
     "footer.about": "Sobre Nosotros",
-    "footer.careers":
+    "footer.careers": "Carreras",
+    "footer.blog": "Blog",
+    "footer.contact": "Contacto",
+    "footer.legal": "Legal",
+    "footer.terms": "Términos",
+    "footer.privacy": "Privacidad",
+    "footer.cookies": "Cookies",
+    "footer.resources": "Recursos",
+    "footer.documentation": "Documentación",
+    "footer.help": "Centro de Ayuda",
+    "footer.community": "Comunidad",
+    "footer.copyright": "© 2023 Automatízalo. Todos los derechos reservados.",
+    "footer.description": "Transformando empresas a través de soluciones de IA y automatización"
+  }
+};
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>(() => {
+    // Try to get language from localStorage first
+    const savedLanguage = localStorage.getItem('language');
+    return (savedLanguage as Language) || 'en';
+  });
+
+  useEffect(() => {
+    // Save language preference to localStorage whenever it changes
+    localStorage.setItem('language', language);
+  }, [language]);
+
+  const t = (key: string): string => {
+    const lang = translations[language] || translations.en;
+    return lang[key] || key;
+  };
+
+  // Function to translate content from a blog post or other content object that might have translations
+  const translateContent = (content: any, field: string, lang: Language): string => {
+    if (!content) return '';
+    
+    // If content has translations and the field exists in the translation
+    if (content.translations && 
+        content.translations[lang] && 
+        content.translations[lang][field]) {
+      return content.translations[lang][field];
+    }
+    
+    // Fallback to the default language field
+    return content[field] || '';
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t, translateContent }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = (): LanguageContextType => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};
+
+export default LanguageContext;

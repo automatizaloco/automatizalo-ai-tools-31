@@ -80,10 +80,10 @@ const Contact = () => {
               // After showing the meeting confirmation for a while, restart the conversation
               const resetTimeout = setTimeout(() => {
                 startConversation();
-              }, 4000); // Wait 4 seconds before restarting
+              }, 5000); // Wait 5 seconds before restarting (increased from 4s)
               
               timeoutIds.push(resetTimeout);
-            }, 1000);
+            }, 2000); // Increased from 1s to 2s to give more time to see the final state
             
             timeoutIds.push(confirmationTimeout);
           }
@@ -100,7 +100,7 @@ const Contact = () => {
     return () => {
       timeoutIds.forEach(id => clearTimeout(id));
     };
-  }, [t]); // Only re-run when language changes (t function changes)
+  }, [t, language]); // Re-run when language changes (t function changes)
 
   const handleChatClick = () => {
     // Clean the phone number - remove any non-digit characters
@@ -145,66 +145,69 @@ const Contact = () => {
                     </div>
                   </div>
                   
-                  {/* Chat Messages - Fixed height without scrolling */}
-                  <div className="p-4 h-80 bg-[#E5DDD5] dark:bg-gray-700 relative overflow-hidden">
-                    <AnimatePresence>
-                      {messages.map((msg) => (
-                        <motion.div
-                          key={msg.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-3`}
-                        >
-                          <div 
-                            className={`max-w-[80%] rounded-lg px-3 py-2 relative ${
-                              msg.sender === 'user' 
-                                ? 'bg-[#DCF8C6] dark:bg-green-700 dark:text-white mr-2' 
-                                : 'bg-white dark:bg-gray-600 dark:text-white ml-2'
-                            }`}
+                  {/* Chat Messages - Fixed height without scrolling, content displays fully */}
+                  <div className="p-4 bg-[#E5DDD5] dark:bg-gray-700 flex flex-col">
+                    {/* Use CSS grid to ensure all messages are visible without scrolling */}
+                    <div className="grid grid-cols-1 gap-3 min-h-[350px]">
+                      <AnimatePresence>
+                        {messages.map((msg) => (
+                          <motion.div
+                            key={msg.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                           >
-                            <div className="flex items-center mb-1">
-                              {msg.sender === 'user' ? (
-                                <User size={14} className="mr-1 text-gray-600 dark:text-gray-300" />
-                              ) : (
-                                <Bot size={14} className="mr-1 text-gray-600 dark:text-gray-300" />
-                              )}
-                              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                                {msg.sender === 'user' ? t('contact.chat.you') : 'Automatizalo AI'}
-                              </span>
-                            </div>
-                            <p className="text-sm">{msg.text}</p>
-                            <div className="text-right">
-                              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-end gap-1">
-                                <Clock size={10} />
-                                {msg.timestamp}
-                                {msg.sender === 'user' && (
-                                  <CheckCircle2 size={10} className="text-blue-500" />
+                            <div 
+                              className={`max-w-[80%] rounded-lg px-3 py-2 relative ${
+                                msg.sender === 'user' 
+                                  ? 'bg-[#DCF8C6] dark:bg-green-700 dark:text-white mr-2' 
+                                  : 'bg-white dark:bg-gray-600 dark:text-white ml-2'
+                              }`}
+                            >
+                              <div className="flex items-center mb-1">
+                                {msg.sender === 'user' ? (
+                                  <User size={14} className="mr-1 text-gray-600 dark:text-gray-300" />
+                                ) : (
+                                  <Bot size={14} className="mr-1 text-gray-600 dark:text-gray-300" />
                                 )}
-                              </span>
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                                  {msg.sender === 'user' ? t('contact.chat.you') : 'Automatizalo AI'}
+                                </span>
+                              </div>
+                              <p className="text-sm">{msg.text}</p>
+                              <div className="text-right">
+                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-end gap-1">
+                                  <Clock size={10} />
+                                  {msg.timestamp}
+                                  {msg.sender === 'user' && (
+                                    <CheckCircle2 size={10} className="text-blue-500" />
+                                  )}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                      
-                      {/* Meeting confirmation animation */}
-                      {showMeetingConfirmation && (
-                        <motion.div
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ duration: 0.5 }}
-                          className="flex justify-center mt-4"
-                        >
-                          <div className="bg-white dark:bg-gray-600 rounded-lg p-3 shadow-md text-center">
-                            <Calendar className="mx-auto mb-2 text-[#25D366]" size={24} />
-                            <p className="text-sm font-medium dark:text-white">
-                              {t('contact.chat.meetingScheduled')}
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          </motion.div>
+                        ))}
+                        
+                        {/* Meeting confirmation animation */}
+                        {showMeetingConfirmation && (
+                          <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="flex justify-center mt-4"
+                          >
+                            <div className="bg-white dark:bg-gray-600 rounded-lg p-3 shadow-md text-center">
+                              <Calendar className="mx-auto mb-2 text-[#25D366]" size={24} />
+                              <p className="text-sm font-medium dark:text-white">
+                                {t('contact.chat.meetingScheduled')}
+                              </p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </div>
                 

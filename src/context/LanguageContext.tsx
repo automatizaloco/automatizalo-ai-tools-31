@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 type Language = "en" | "fr" | "es";
@@ -59,6 +58,7 @@ const translations = {
     "contact.email": "Email Us",
     "contact.phone": "Call Us",
     "contact.address": "Visit Us",
+    "contact.website": "Visit Our Website",
     "contact.whatsapp.title": "Let Our WhatsApp Bot Assist You 24/7",
     "contact.whatsapp.description": "Our AI-powered WhatsApp assistant can answer your questions, schedule meetings, and handle inquiries instantly - anytime, anywhere.",
     "contact.whatsapp.cta": "Connect with us now for fast responses, meeting scheduling, and personalized assistance!",
@@ -208,6 +208,7 @@ const translations = {
     "contact.email": "Envoyez-nous un Email",
     "contact.phone": "Appelez-Nous",
     "contact.address": "Visitez-Nous",
+    "contact.website": "Visitez Notre Site Web",
     "contact.whatsapp.title": "Laissez Notre Bot WhatsApp Vous Aider 24/7",
     "contact.whatsapp.description": "Notre assistant WhatsApp alimenté par l'IA peut répondre à vos questions, programmer des réunions et traiter vos demandes instantanément - à tout moment, n'importe où.",
     "contact.whatsapp.cta": "Connectez-vous avec nous maintenant pour des réponses rapides, la programmation de réunions et une assistance personnalisée!",
@@ -357,6 +358,7 @@ const translations = {
     "contact.email": "Envíanos un Email",
     "contact.phone": "Llámanos",
     "contact.address": "Visítanos",
+    "contact.website": "Visita Nuestra Web",
     "contact.whatsapp.title": "Deja Que Nuestro Bot de WhatsApp Te Ayude 24/7",
     "contact.whatsapp.description": "Nuestro asistente de WhatsApp impulsado por IA puede responder tus preguntas, programar reuniones y gestionar consultas instantáneamente - en cualquier momento y lugar.",
     "contact.whatsapp.cta": "¡Conéctate con nosotros ahora para respuestas rápidas, programación de reuniones y asistencia personalizada!",
@@ -401,131 +403,5 @@ const translations = {
     "solutions.leadGeneration.description": "Encontramos leads, los involucramos y mantenemos la conversación hasta que obtienes la información que necesitas.",
     "solutions.leadGeneration.feature1": "Prospección y calificación automatizada",
     "solutions.leadGeneration.feature2": "Seguimientos por email personalizados",
-    "solutions.leadGeneration.feature3": "Manejo de conversaciones impulsado por IA",
-    
-    "solutions.socialMedia.title": "Redes Sociales y Creación de Contenido",
-    "solutions.socialMedia.description": "Deja que la IA genere publicaciones, blogs, historias de Instagram y contenido social para ti.",
-    "solutions.socialMedia.feature1": "Historias y publicaciones de Instagram generadas por IA",
-    "solutions.socialMedia.feature2": "Creación de blogs y artículos",
-    "solutions.socialMedia.feature3": "Programación de contenido multiplataforma",
-    
-    "solutions.aiAgents.title": "Agentes IA Personales",
-    "solutions.aiAgents.description": "Tu propio asistente virtual impulsado por IA para optimizar tareas diarias, gestionar emails, organizar reuniones y más.",
-    "solutions.aiAgents.feature1": "Se conecta a emails, calendario y WhatsApp",
-    "solutions.aiAgents.feature2": "Para empresas e individuos",
-    "solutions.aiAgents.feature3": "Aprende y se optimiza continuamente",
-    
-    // Home
-    "home.hero.tagline": "Soluciones de IA y Automatización",
-    "home.hero.title": "Deja de perder tiempo en tareas repetitivas",
-    "home.hero.description": "trae herramientas de IA y automatización de vanguardia para ayudarte a trabajar de manera más inteligente, crecer más rápido y mantenerte a la vanguardia del futuro.",
-    "home.hero.getStarted": "Comenzar",
-    "home.hero.learnMore": "Saber Más",
-    "home.about.tagline": "Sobre Nosotros",
-    "home.about.title": "Estamos Construyendo el Futuro de la Automatización con IA",
-    "home.about.description": "En Automatízalo, somos un equipo de jóvenes especialistas apasionados por la IA y expertos en automatización. Conectamos, afinamos y optimizamos herramientas de automatización como Make.com, N8N, chatbots de IA y flujos de trabajo personalizados para ayudar a empresas e individuos a ser más eficientes, escalables y estar preparados para el futuro.",
-    "home.about.mission": "Nuestra misión es capacitar a empresas de todos los tamaños con soluciones de IA de vanguardia que sean asequibles, escalables y fáciles de implementar. Creemos que la automatización debe ser accesible para todos, no solo para los gigantes tecnológicos.",
-    "home.about.feature1.title": "Flujos de Trabajo Automatizados",
-    "home.about.feature1.description": "Conecta y automatiza tus flujos de trabajo usando IA de vanguardia y herramientas Make.com/N8N.",
-    "home.about.feature2.title": "Chatbots de IA",
-    "home.about.feature2.description": "Chatbots personalizados para manejar servicio al cliente, programación y captación de clientes potenciales.",
-    "home.about.feature3.title": "Sistemas Inteligentes",
-    "home.about.feature3.description": "Sistemas impulsados por IA que aprenden y se adaptan a las necesidades de tu negocio con el tiempo.",
-    "home.about.learnMore": "Saber Más",
-    "home.about.contactUs": "Contáctanos",
-    "home.about.whyWorkWithUs": "¿Por Qué Trabajar Con Nosotros?",
-    "home.about.reason1": "Asequible y escalable – Configuración única, mantenimiento de bajo costo",
-    "home.about.reason2": "Herramientas de IA personalizadas – Adaptamos soluciones para cada cliente",
-    "home.about.reason3": "Siempre mejorando – Nuevas características y automatizaciones refinadas cada mes",
-    
-    // Testimonials
-    "testimonials.title": "Testimonios",
-    "testimonials.subtitle": "Lo Que Dicen Nuestros Clientes",
-    "testimonials.description": "Descubre cómo Automatízalo ha ayudado a empresas e individuos a transformar sus flujos de trabajo y productividad.",
-    "testimonials.client1.name": "Sarah Johnson",
-    "testimonials.client1.company": "Tech Innovators Inc.",
-    "testimonials.client1.text": "Automatízalo ha transformado completamente la forma en que manejamos las consultas de los clientes. Su solución de chatbot IA ha reducido los tiempos de respuesta de un 80% y ha permitido a nuestro equipo centrarse en problemas complejos. El retorno de inversión ha sido increíble.",
-    "testimonials.client2.name": "Carlos Rodriguez",
-    "testimonials.client2.company": "Global Logistics",
-    "testimonials.client2.text": "La automatización de flujo de trabajo que implementamos con Automatízalo ha reducido nuestro tiempo de procesamiento en un 60%. Su equipo entendió nuestras necesidades específicas y entregó una solución que se integró perfectamente con nuestros sistemas existentes.",
-    "testimonials.client3.name": "Emma Thompson",
-    "testimonials.client3.company": "Creative Solutions",
-    "testimonials.client3.text": "Como pequeña empresa, necesitábamos una automatización asequible que pudiera crecer con nosotros. Automatízalo entregó exactamente eso - herramientas poderosas que simplificaron nuestras operaciones sin arruinar el banco.",
-    
-    // Footer
-    "footer.company": "Empresa",
-    "footer.about": "Sobre Nosotros",
-    "footer.careers": "Carreras",
-    "footer.blog": "Blog",
-    "footer.contact": "Contacto",
-    "footer.legal": "Légal",
-    "footer.terms": "Términos",
-    "footer.privacy": "Privacidad",
-    "footer.cookies": "Cookies",
-    "footer.resources": "Recursos",
-    "footer.documentation": "Documentación",
-    "footer.help": "Centro de Ayuda",
-    "footer.community": "Comunidad",
-    "footer.copyright": "© 2023 Automatízalo. Todos los derechos reservados.",
-    "footer.description": "Transformando empresas a través de soluciones de IA y automatización"
-  },
-};
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>(() => {
-    // Get stored language preference or default to 'en'
-    const storedLanguage = localStorage.getItem('language');
-    return (storedLanguage as Language) || "en";
-  });
-
-  useEffect(() => {
-    // Store language preference when it changes
-    localStorage.setItem('language', language);
-  }, [language]);
-
-  const t = (key: string): string => {
-    const currentTranslations = translations[language];
-    if (!currentTranslations || !currentTranslations[key as keyof typeof currentTranslations]) {
-      console.warn(`Translation key not found: ${key} for language ${language}`);
-      // Fallback to English if translation not found
-      return translations.en[key as keyof typeof translations.en] || key;
-    }
-    return currentTranslations[key as keyof typeof currentTranslations];
-  };
-
-  // Function to translate blog content and other dynamic content
-  const translateContent = (content: any, field: string, lang: Language): string => {
-    // If the requested language is English or no translations exist, return the original content
-    if (lang === 'en' || !content || !content.translations) {
-      return content[field] || '';
-    }
-    
-    // Check if we have a translation for the requested language
-    if (content.translations[lang] && content.translations[lang][field]) {
-      const translatedContent = content.translations[lang][field];
-      console.log(`Using ${lang} translation for ${field}. Length: ${translatedContent.length}`);
-      return translatedContent;
-    }
-    
-    // Fallback to original content if translation is not available
-    console.log(`No ${lang} translation found for ${field}, using original content`);
-    return content[field] || '';
-  };
-
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, translateContent }}>
-      {children}
-    </LanguageContext.Provider>
-  );
-};
-
-export const useLanguage = (): LanguageContextType => {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
-  }
-  return context;
-};
+    "solutions.leadGeneration.feature3": "Gestion de convers
 

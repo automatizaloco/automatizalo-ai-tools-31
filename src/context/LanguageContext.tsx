@@ -318,7 +318,7 @@ const translations = {
     "footer.documentation": "Documentation",
     "footer.help": "Centre d'Aide",
     "footer.community": "Communauté",
-    "footer.copyright": "© 2023 Automatízalo. Tous droits réserv��s.",
+    "footer.copyright": "© 2023 Automatízalo. Tous droits réservs.",
     "footer.description": "Transformer les entreprises grâce à des solutions d'IA et d'automatisation"
   },
   es: {
@@ -403,5 +403,58 @@ const translations = {
     "solutions.leadGeneration.description": "Encontramos leads, los involucramos y mantenemos la conversación hasta que obtienes la información que necesitas.",
     "solutions.leadGeneration.feature1": "Prospección y calificación automatizada",
     "solutions.leadGeneration.feature2": "Seguimientos por email personalizados",
-    "solutions.leadGeneration.feature3": "Gestion de convers
-
+    "solutions.leadGeneration.feature3": "Gestión de conversaciones impulsada por IA",
+    
+    "solutions.socialMedia.title": "Medios Sociales y Creación de Contenido",
+    "solutions.socialMedia.description": "Deja que la IA genere posts, blogs, historias de Instagram y contenido social para ti.",
+    "solutions.socialMedia.feature1": "Historias y posts de Instagram generados por IA",
+    "solutions.socialMedia.feature2": "Creación de blogs y artículos",
+    "solutions.socialMedia.feature3": "Programación de contenido multiplataforma",
+    
+    "solutions.aiAgents.title": "Agentes IA Personales",
+    "solutions.aiAgents.description": "Tu propio asistente virtual impulsado por IA para agilizar tareas diarias, gestionar emails, organizar reuniones y más.",
+    "solutions.aiAgents.feature1": "Se conecta a emails, calendario y WhatsApp",
+    "solutions.aiAgents.feature2": "Para empresas e individuos",
+    "solutions.aiAgents.feature3": "Aprende y se optimiza continuamente",
+    
+    // Home
+    "home.hero.tagline": "Soluciones de IA y Automatización",
+    "home.hero.title": "Deja de perder tiempo en tareas repetitivas",
+    "home.hero.description": "trae herramientas de IA y automatización de vanguardia para ayudarte a trabajar más inteligentemente, crecer más rápido y mantenerte por delante del futuro.",
+    "home.hero.getStarted": "Comenzar",
+    "home.hero.learnMore": "Saber Más",
+    "home.about.tagline": "Sobre Nosotros",
+    "home.about.title": "Estamos Construyendo el Futuro de la Automatización con IA",
+    "home.about.description": "En Automatízalo, somos un equipo de jóvenes especialistas apasionados por la IA y expertos en automatización. Conectamos, afinamos y optimizamos herramientas de automatización como Make.com, N8N, chatbots de IA y flujos de trabajo personalizados para ayudar a empresas e individuos a volverse más eficientes, escalables y preparados para el futuro.",
+    "home.about.mission": "Nuestra misión es empoderar a empresas de todos los tamaños con soluciones de IA de vanguardia que sean asequibles, escalables y fáciles de implementar. Creemos que la automatización debe ser accesible para todos, no solo para los gigantes tecnológicos.",
+    "home.about.feature1.title": "Flujos de Trabajo Automatizados",
+    "home.about.feature1.description": "Conecta y automatiza tus flujos de trabajo usando IA de vanguardia y herramientas Make.com/N8N.",
+    "home.about.feature2.title": "Chatbots IA",
+    "home.about.feature2.description": "Chatbots personalizados para manejar servicio al cliente, programación y captación de clientes potenciales.",
+    "home.about.feature3.title": "Sistemas Inteligentes",
+    "home.about.feature3.description": "Sistemas impulsados por IA que aprenden y se adaptan a las necesidades de tu negocio con el tiempo.",
+    "home.about.learnMore": "Saber Más",
+    "home.about.contactUs": "Contáctanos",
+    "home.about.whyWorkWithUs": "¿Por Qué Trabajar Con Nosotros?",
+    "home.about.reason1": "Asequible y escalable – Configuración única, mantenimiento de bajo costo",
+    "home.about.reason2": "Herramientas de IA personalizadas – Adaptamos soluciones para cada cliente",
+    "home.about.reason3": "Siempre mejorando – Nuevas características y automatizaciones afinadas cada mes",
+    
+    // Testimonials
+    "testimonials.title": "Testimonios",
+    "testimonials.subtitle": "Lo Que Dicen Nuestros Clientes",
+    "testimonials.description": "Descubre cómo Automatízalo ha ayudado a empresas e individuos a transformar sus flujos de trabajo y productividad.",
+    "testimonials.client1.name": "Sarah Johnson",
+    "testimonials.client1.company": "Tech Innovators Inc.",
+    "testimonials.client1.text": "Automatízalo ha transformado completamente cómo manejamos las consultas de clientes. Su solución de chatbot IA ha reducido los tiempos de respuesta en un 80% y ha permitido a nuestro equipo enfocarse en problemas complejos. El ROI ha sido increíble.",
+    "testimonials.client2.name": "Carlos Rodriguez",
+    "testimonials.client2.company": "Global Logistics",
+    "testimonials.client2.text": "La automatización de flujo de trabajo que implementamos con Automatízalo ha reducido nuestro tiempo de procesamiento en un 60%. Su equipo entendió nuestras necesidades específicas y entregó una solución que se integró perfectamente con nuestros sistemas existentes.",
+    "testimonials.client3.name": "Emma Thompson",
+    "testimonials.client3.company": "Creative Solutions",
+    "testimonials.client3.text": "Como pequeña empresa, necesitábamos una automatización asequible que pudiera crecer con nosotros. Automatízalo entregó exactamente eso - herramientas potentes que simplificaron nuestras operaciones sin arruinar nuestro presupuesto.",
+    
+    // Footer
+    "footer.company": "Empresa",
+    "footer.about": "Sobre Nosotros",
+    "footer.careers":

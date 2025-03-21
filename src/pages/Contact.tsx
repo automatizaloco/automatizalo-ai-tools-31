@@ -5,10 +5,11 @@ import { useContactInfo } from "@/stores/contactInfoStore";
 import ContactInfo from "@/components/contact/ContactInfo";
 import ContactHeader from "@/components/contact/ContactHeader";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Calendar, User, Bot, Clock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Define chat message types
 interface ChatMessage {
@@ -24,12 +25,20 @@ const Contact = () => {
   const { fetchContactInfo, contactInfo } = useContactInfo();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showMeetingConfirmation, setShowMeetingConfirmation] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   
   // Fetch contact info when the page loads
   useEffect(() => {
     console.log("Contact page: Fetching contact info");
     fetchContactInfo();
   }, [fetchContactInfo]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // Chat simulation logic with looping animation
   useEffect(() => {
@@ -50,6 +59,11 @@ const Contact = () => {
       // Clear messages to restart conversation
       setMessages([]);
       setShowMeetingConfirmation(false);
+      
+      // Reset scroll position to top
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = 0;
+      }
       
       // Schedule each message to appear with its delay
       let cumulativeDelay = 0;
@@ -145,10 +159,12 @@ const Contact = () => {
                     </div>
                   </div>
                   
-                  {/* Chat Messages - Fixed height without scrolling, content displays fully */}
-                  <div className="p-4 bg-[#E5DDD5] dark:bg-gray-700 flex flex-col">
-                    {/* Use CSS grid to ensure all messages are visible without scrolling */}
-                    <div className="grid grid-cols-1 gap-3 min-h-[350px]">
+                  {/* Chat Messages - Now with scrolling */}
+                  <div 
+                    ref={chatContainerRef}
+                    className="p-4 bg-[#E5DDD5] dark:bg-gray-700 h-[350px] overflow-y-auto"
+                  >
+                    <div className="flex flex-col gap-3">
                       <AnimatePresence>
                         {messages.map((msg) => (
                           <motion.div

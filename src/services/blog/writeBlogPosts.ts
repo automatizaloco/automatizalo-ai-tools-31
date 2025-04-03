@@ -115,7 +115,7 @@ export const deleteBlogPost = async (id: string): Promise<void> => {
 /**
  * Helper function to format a blog post for N8N webhook
  */
-export const formatPostForN8N = (post: BlogPost): any => {
+export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
   return {
     title: post.title,
     slug: post.slug,

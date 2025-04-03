@@ -18,10 +18,13 @@ const AutomaticBlog = () => {
     title: "",
     url: "",
   });
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear any previous error when user makes changes
+    if (error) setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,6 +36,7 @@ const AutomaticBlog = () => {
     }
 
     setIsLoading(true);
+    setError("");
     
     // Simulate progress for better UX
     const progressInterval = setInterval(() => {
@@ -78,6 +82,7 @@ const AutomaticBlog = () => {
       
     } catch (error) {
       console.error("Error generating blog post:", error);
+      setError(error instanceof Error ? error.message : "Unknown error occurred");
       toast.error("Failed to generate blog post");
       clearInterval(progressInterval);
     } finally {
@@ -136,6 +141,13 @@ const AutomaticBlog = () => {
               <div className="space-y-2">
                 <p className="text-sm text-gray-600">Generating blog post...</p>
                 <Progress value={progress} className="h-2" />
+              </div>
+            )}
+            
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                <p className="font-medium mb-1">Error:</p>
+                <p>{error}</p>
               </div>
             )}
           </CardContent>

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
@@ -137,7 +138,8 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
  */
 export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   try {
-    const response = await fetch('https://n8n.automatizalo.co/webhook/admin/blog/create', {
+    // Updated webhook URL to the correct one
+    const response = await fetch('https://n8n.automatizalo.co/webhook-test/admin/blog/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

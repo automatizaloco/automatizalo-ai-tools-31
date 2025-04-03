@@ -1,1 +1,40 @@
+
+# This file was generated with Lovable. Any changes to this file will be overwritten when running '@lovable/cli dev'
 project_id = "juwbamkqkawyibcvllvo"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+
+[realtime]
+enabled = true
+
+[storage]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+port = 54325
+
+[analytics]
+enabled = false
+port = 54327
+
+[vector]
+enabled = false
+port = 54328
+
+[functions.blog-webhook]
+verify_jwt = false

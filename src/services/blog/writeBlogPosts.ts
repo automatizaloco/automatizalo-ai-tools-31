@@ -111,3 +111,52 @@ export const deleteBlogPost = async (id: string): Promise<void> => {
   // Dispatch event to notify other components
   window.dispatchEvent(new CustomEvent('blogPostDeleted', { detail: { id } }));
 };
+
+/**
+ * Helper function to format a blog post for N8N webhook
+ */
+export const formatPostForN8N = (post: BlogPost): any => {
+  return {
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    category: post.category,
+    tags: post.tags,
+    author: post.author,
+    date: post.date,
+    readTime: post.readTime,
+    image: post.image,
+    featured: post.featured,
+    translations: post.translations
+  };
+};
+
+/**
+ * Send a blog post to the N8N webhook
+ */
+export const sendPostToN8N = async (post: BlogPost | NewBlogPost): Promise<void> => {
+  try {
+    const webhookUrl = "https://n8n.automatizalo.co/webhook/admin/blog/create";
+    const formattedPost = formatPostForN8N(post);
+    
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formattedPost)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`N8N webhook error: ${response.status} - ${errorText}`);
+    }
+    
+    toast.success("Post sent to N8N workflow successfully");
+  } catch (error) {
+    console.error("Error sending post to N8N:", error);
+    toast.error(`Failed to send post to N8N: ${error.message}`);
+    throw error;
+  }
+};

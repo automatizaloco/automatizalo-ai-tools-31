@@ -128,7 +128,8 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
     readTime: post.readTime,
     image: post.image,
     featured: post.featured,
-    translations: post.translations
+    translations: post.translations,
+    url: (post as any).url || "" // Add the url field for source reference
   };
 };
 

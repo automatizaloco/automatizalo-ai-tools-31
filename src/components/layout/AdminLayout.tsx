@@ -74,9 +74,10 @@ const AdminLayout = () => {
           className="w-full mb-8"
           onValueChange={handleTabChange}
         >
-          <TabsList className="grid grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-7 w-full">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
+            <TabsTrigger value="automatic-blog">Auto Blog</TabsTrigger>
             <TabsTrigger value="layout">Layout</TabsTrigger>
             <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
             <TabsTrigger value="newsletter">Newsletter</TabsTrigger>

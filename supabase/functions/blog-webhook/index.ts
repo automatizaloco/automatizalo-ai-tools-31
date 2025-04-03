@@ -46,6 +46,7 @@ const processNewBlogPost = async (payload: any) => {
     read_time: payload.readTime || '5 min',
     image: payload.image || 'https://via.placeholder.com/800x400',
     featured: payload.featured || false,
+    url: payload.url || null, // Store the source URL if provided
   };
 
   console.log('Creating blog post with data:', blogData);

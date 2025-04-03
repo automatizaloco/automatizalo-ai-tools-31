@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { PenSquare, MessageSquare, Mail, LayoutDashboard, Globe } from "lucide-react";
+import { PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Sparkles } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -28,6 +28,12 @@ const ContentManager = () => {
       description: "Create, edit, and manage blog posts",
       route: "/admin/blog",
       icon: PenSquare
+    },
+    {
+      title: "Automatic Blog",
+      description: "Generate blog posts automatically with AI",
+      route: "/admin/automatic-blog",
+      icon: Sparkles
     },
     {
       title: "Testimonials",

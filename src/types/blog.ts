@@ -12,6 +12,7 @@ export interface BlogPost {
   readTime: string;
   author: string;
   featured?: boolean;
+  url?: string; // Added URL field for source reference
   translations?: {
     fr?: {
       title?: string;

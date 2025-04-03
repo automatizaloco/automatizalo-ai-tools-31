@@ -10,6 +10,7 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>('content');
 
   useEffect(() => {
     const checkSession = async () => {
@@ -38,12 +39,22 @@ const AdminLayout = () => {
     };
   }, [navigate]);
   
+  useEffect(() => {
+    // Get the current path and set the active tab
+    const path = window.location.pathname;
+    const segment = path.split('/')[2]; // Get the segment after /admin/
+    if (segment) {
+      setActiveTab(segment);
+    }
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
   };
 
   const handleTabChange = (value: string) => {
+    setActiveTab(value);
     navigate(`/admin/${value}`);
   };
 
@@ -70,7 +81,7 @@ const AdminLayout = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs 
-          defaultValue="content" 
+          value={activeTab}
           className="w-full mb-8"
           onValueChange={handleTabChange}
         >

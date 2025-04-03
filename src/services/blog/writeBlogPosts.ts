@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
@@ -134,30 +133,28 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
 };
 
 /**
- * Send a blog post to the N8N webhook
+ * Sends a blog post to the n8n webhook for automatic generation
  */
-export const sendPostToN8N = async (post: BlogPost | NewBlogPost): Promise<void> => {
+export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   try {
-    const webhookUrl = "https://n8n.automatizalo.co/webhook/admin/blog/create";
-    const formattedPost = formatPostForN8N(post);
-    
-    const response = await fetch(webhookUrl, {
-      method: "POST",
+    const response = await fetch('https://n8n.automatizalo.co/webhook/admin/blog/create', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(formattedPost)
+      body: JSON.stringify(blogPostData),
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`N8N webhook error: ${response.status} - ${errorText}`);
+      throw new Error(`Failed to send post to webhook: ${errorText}`);
     }
-    
-    toast.success("Post sent to N8N workflow successfully");
+
+    const result = await response.json();
+    console.log('Webhook response:', result);
+    return result;
   } catch (error) {
-    console.error("Error sending post to N8N:", error);
-    toast.error(`Failed to send post to N8N: ${error.message}`);
+    console.error('Error sending post to webhook:', error);
     throw error;
   }
 };

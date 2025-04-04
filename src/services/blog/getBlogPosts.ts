@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation } from "@/types/blog";
+import { transformDatabasePost } from "./utils";
 
 /**
  * Fetch all blog posts from the database
@@ -15,11 +16,8 @@ export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
     throw new Error(`Failed to fetch blog posts: ${error.message}`);
   }
 
-  // Map the database field read_time to readTime in our BlogPost type
-  let posts = (data || []).map(post => ({
-    ...post,
-    readTime: post.read_time
-  })) as BlogPost[];
+  // Transform database posts to BlogPost type using utility function
+  let posts = (data || []).map(post => transformDatabasePost(post));
 
   // Fetch translations for all posts
   for (const post of posts) {
@@ -69,10 +67,8 @@ export const fetchBlogPostById = async (id: string): Promise<BlogPost | null> =>
 
   if (!data) return null;
   
-  const post = {
-    ...data,
-    readTime: data.read_time
-  } as BlogPost;
+  // Transform database post to BlogPost type using utility function
+  const post = transformDatabasePost(data);
 
   // Fetch translations for this post
   const { data: translations, error: translationsError } = await supabase
@@ -118,10 +114,8 @@ export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null
 
   if (!data) return null;
   
-  const post = {
-    ...data,
-    readTime: data.read_time
-  } as BlogPost;
+  // Transform database post to BlogPost type using utility function
+  const post = transformDatabasePost(data);
 
   // Fetch translations for this post
   const { data: translations, error: translationsError } = await supabase
@@ -207,11 +201,8 @@ export const fetchFeaturedBlogPosts = async (): Promise<BlogPost[]> => {
     throw new Error(`Failed to fetch featured blog posts: ${error.message}`);
   }
 
-  // Map the database field read_time to readTime in our BlogPost type
-  let posts = (data || []).map(post => ({
-    ...post,
-    readTime: post.read_time
-  })) as BlogPost[];
+  // Transform database posts to BlogPost type using utility function
+  let posts = (data || []).map(post => transformDatabasePost(post));
 
   // Fetch translations for all featured posts
   for (const post of posts) {

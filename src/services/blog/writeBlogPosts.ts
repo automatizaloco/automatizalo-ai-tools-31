@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
+import { transformDatabasePost } from "./utils";
 
 /**
  * Create a new blog post
@@ -26,11 +27,7 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
   }
 
   toast.success("Blog post created successfully");
-  return {
-    ...data,
-    readTime: data.read_time,
-    status: data.status || 'published'
-  } as BlogPost;
+  return transformDatabasePost(data);
 };
 
 /**
@@ -73,11 +70,7 @@ export const updateBlogPost = async (
   // Dispatch event to notify other components that blog data has changed
   window.dispatchEvent(new CustomEvent('blogPostUpdated', { detail: data }));
   
-  return {
-    ...data,
-    readTime: data.read_time,
-    status: data.status || 'published'
-  } as BlogPost;
+  return transformDatabasePost(data);
 };
 
 /**

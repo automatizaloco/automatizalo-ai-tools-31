@@ -15,6 +15,8 @@ export const transformDatabasePost = (post: any): BlogPost => ({
   readTime: post.read_time,
   author: post.author,
   featured: post.featured,
+  status: post.status || 'published', // Default to published if status isn't present
+  url: post.url,
   translations: post.blog_translations ? post.blog_translations.reduce((acc: any, trans: any) => {
     if (trans) {
       acc[trans.language] = {

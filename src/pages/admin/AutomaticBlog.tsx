@@ -99,6 +99,7 @@ const AutomaticBlog = () => {
       setError(error instanceof Error ? error.message : "Unknown error occurred");
       toast.error("Failed to generate blog post");
       clearInterval(progressInterval);
+      setProgress(0);
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +113,9 @@ const AutomaticBlog = () => {
         <CardHeader>
           <CardTitle className="text-xl">Create AI-Generated Blog Post</CardTitle>
           <CardDescription>
-            Enter a title and optional source URL to generate a complete blog post automatically. Posts will be saved as drafts for your review.
+            Enter a title and optional source URL to generate a complete blog post automatically. 
+            Posts will be saved as drafts for your review. Images from the generator will be 
+            downloaded automatically to prevent link expiration.
           </CardDescription>
         </CardHeader>
         

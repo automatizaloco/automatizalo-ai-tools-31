@@ -37,3 +37,26 @@ export const transformPostForDatabase = (postData: any) => {
     read_time: readTime
   };
 };
+
+// Download image from URL and convert to base64
+export const downloadImage = async (imageUrl: string): Promise<string | null> => {
+  try {
+    console.log("Downloading image from URL:", imageUrl);
+    const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
+    
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error downloading image:", error);
+    return null;
+  }
+};

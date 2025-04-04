@@ -1,7 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
-import { transformDatabasePost } from "./utils";
+import { downloadImage, transformDatabasePost } from "./utils";
 
 /**
  * Create a new blog post
@@ -162,64 +163,88 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
 export const processAndSaveWebhookResponse = async (response: any, defaultTitle: string, defaultSlug: string): Promise<BlogPost> => {
   console.log("Received webhook response to process:", response);
   
-  if (!response || !Array.isArray(response) || response.length === 0) {
-    console.error("Invalid webhook response format, not an array or empty array");
+  // First check if the response is valid
+  if (!response) {
+    console.error("Invalid webhook response: response is null or undefined");
     throw new Error("Invalid webhook response format");
   }
   
-  const responseItem = response[0];
-  
-  if (!responseItem.output) {
-    console.error("No output found in webhook response", responseItem);
-    throw new Error("No output found in webhook response");
-  }
-  
-  try {
-    // Extract the JSON content from the output string
-    // The output contains markdown code block with JSON inside it
-    const jsonMatch = responseItem.output.match(/```json\n([\s\S]*?)\n```/);
+  // Handle array response format
+  if (Array.isArray(response) && response.length > 0) {
+    console.log("Processing array response format");
+    const responseItem = response[0];
     
-    if (!jsonMatch || !jsonMatch[1]) {
-      console.error("Could not extract JSON content from webhook response", responseItem.output);
-      throw new Error("Could not extract JSON content from webhook response");
+    if (!responseItem.output) {
+      console.error("No output found in webhook response", responseItem);
+      throw new Error("No output found in webhook response");
     }
     
-    const jsonContent = jsonMatch[1].trim();
-    console.log("Extracted JSON content:", jsonContent);
-    
-    const generatedContent = JSON.parse(jsonContent);
-    console.log("Parsed generated content:", generatedContent);
-    
-    // Get image URL from the response data if available
-    let imageUrl = "https://via.placeholder.com/800x400";
-    if (responseItem.data && Array.isArray(responseItem.data) && responseItem.data.length > 0 && responseItem.data[0].url) {
-      imageUrl = responseItem.data[0].url;
+    try {
+      // Extract the JSON content from the output string (which contains a markdown code block)
+      const jsonMatch = responseItem.output.match(/```json\n([\s\S]*?)\n```/);
+      
+      if (!jsonMatch || !jsonMatch[1]) {
+        console.error("Could not extract JSON content from webhook response", responseItem.output);
+        throw new Error("Could not extract JSON content from webhook response");
+      }
+      
+      const jsonContent = jsonMatch[1].trim();
+      console.log("Extracted JSON content:", jsonContent);
+      
+      // Parse the JSON content
+      const generatedContent = JSON.parse(jsonContent);
+      console.log("Parsed generated content:", generatedContent);
+      
+      // Handle image URL from response data
+      let imageUrl = "https://via.placeholder.com/800x400";
+      let imageData = null;
+      
+      // Check if there's an image URL in the response
+      if (responseItem.data && Array.isArray(responseItem.data) && 
+          responseItem.data.length > 0 && responseItem.data[0].url) {
+        const tempImageUrl = responseItem.data[0].url;
+        console.log("Temporary image URL found:", tempImageUrl);
+        
+        // Download the image and convert to base64
+        imageData = await downloadImage(tempImageUrl);
+        
+        if (imageData) {
+          console.log("Image successfully downloaded and converted to base64");
+          imageUrl = imageData; // Use the base64 data as the image URL
+        } else {
+          console.warn("Failed to download image, using placeholder");
+        }
+      }
+      
+      // Create a new blog post with the generated content as a draft
+      const newBlogPost: NewBlogPost = {
+        title: generatedContent.title || defaultTitle,
+        slug: generatedContent.slug || defaultSlug,
+        excerpt: generatedContent.excerpt || "Auto-generated blog post",
+        content: generatedContent.content || "",
+        category: generatedContent.category || "Automatic",
+        tags: generatedContent.tags || ["automatic", "ai-generated"],
+        author: generatedContent.author || "AI Assistant",
+        date: generatedContent.date || new Date().toISOString().split('T')[0],
+        readTime: generatedContent.read_time || "3 min",
+        image: imageUrl, // Use the downloaded image or placeholder
+        featured: false,
+        status: 'draft' as const
+      };
+      
+      console.log("Creating new blog post with data:", newBlogPost);
+      
+      // Save the new blog post to the database
+      const savedPost = await createBlogPost(newBlogPost);
+      return savedPost;
+    } catch (error) {
+      console.error("Error processing webhook response:", error);
+      throw new Error(`Failed to process webhook response: ${error instanceof Error ? error.message : String(error)}`);
     }
-    
-    // Create a new blog post with the generated content as a draft
-    const newBlogPost: NewBlogPost = {
-      title: generatedContent.title || defaultTitle,
-      slug: generatedContent.slug || defaultSlug,
-      excerpt: generatedContent.excerpt || "Auto-generated blog post",
-      content: generatedContent.content || "",
-      category: generatedContent.category || "Automatic",
-      tags: generatedContent.tags || ["automatic", "ai-generated"],
-      author: generatedContent.author || "AI Assistant",
-      date: generatedContent.date || new Date().toISOString().split('T')[0],
-      readTime: generatedContent.read_time || "3 min",
-      image: imageUrl,
-      featured: false,
-      status: 'draft' as const
-    };
-    
-    console.log("Creating new blog post with data:", newBlogPost);
-    
-    // Save the new blog post to the database
-    const savedPost = await createBlogPost(newBlogPost);
-    return savedPost;
-  } catch (error) {
-    console.error("Error processing webhook response:", error);
-    throw new Error(`Failed to process webhook response: ${error instanceof Error ? error.message : String(error)}`);
+  } else {
+    // If response is not an array, try to process it directly
+    console.error("Invalid webhook response format, not an array:", response);
+    throw new Error("Invalid webhook response format");
   }
 };
 

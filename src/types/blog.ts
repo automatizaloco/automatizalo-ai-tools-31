@@ -13,7 +13,7 @@ export interface BlogPost {
   author: string;
   featured?: boolean;
   url?: string; // Added URL field for source reference
-  status?: 'draft' | 'published'; // Added status field to track draft posts
+  status: 'draft' | 'published'; // Changed to required field with specific types
   translations?: {
     fr?: {
       title?: string;

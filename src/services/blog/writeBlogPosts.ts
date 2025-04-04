@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
@@ -30,7 +29,7 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
   return {
     ...data,
     readTime: data.read_time,
-    status: data.status
+    status: data.status || 'published'
   } as BlogPost;
 };
 
@@ -77,7 +76,7 @@ export const updateBlogPost = async (
   return {
     ...data,
     readTime: data.read_time,
-    status: data.status
+    status: data.status || 'published'
   } as BlogPost;
 };
 
@@ -217,7 +216,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       readTime: generatedContent.read_time || "3 min",
       image: imageUrl,
       featured: false,
-      status: 'draft' // Set all automatically generated posts as drafts
+      status: 'draft' as const
     };
     
     console.log("Creating new blog post with data:", newBlogPost);

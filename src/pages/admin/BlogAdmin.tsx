@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Globe, Magic, FileText } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Globe, Wand2, FileText } from "lucide-react";
 import { fetchBlogPosts, deleteBlogPost, updateBlogPostStatus } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { toast } from "sonner";
@@ -114,7 +113,7 @@ const BlogAdmin = () => {
             onClick={handleCreateAutomatic}
             className="flex items-center gap-2"
           >
-            <Magic className="w-4 h-4" />
+            <Wand2 className="w-4 h-4" />
             AI Generate
           </Button>
           <Button 

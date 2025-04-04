@@ -144,7 +144,7 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(blogPostData),
+      body: JSON.stringify(formatPostForN8N(blogPostData)),
     });
 
     if (!response.ok) {
@@ -158,5 +158,52 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   } catch (error) {
     console.error('Error sending post to webhook:', error);
     throw error;
+  }
+};
+
+/**
+ * Process and save blog post from N8N webhook response
+ */
+export const processAndSaveWebhookResponse = async (response: any, defaultTitle: string, defaultSlug: string): Promise<BlogPost> => {
+  if (!response || !Array.isArray(response) || response.length === 0) {
+    throw new Error("Invalid webhook response format");
+  }
+  
+  const responseData = response[0];
+  
+  if (!responseData.output) {
+    throw new Error("No output found in webhook response");
+  }
+  
+  // Extract the JSON data from the response output (which is enclosed in ```json ... ```)
+  const jsonMatch = responseData.output.match(/```json\n([\s\S]*?)\n```/);
+  if (!jsonMatch || !jsonMatch[1]) {
+    throw new Error("Could not extract JSON content from webhook response");
+  }
+  
+  try {
+    const generatedContent = JSON.parse(jsonMatch[1]);
+    
+    // Create a new blog post with the generated content
+    const newBlogPost: NewBlogPost = {
+      title: generatedContent.title || defaultTitle,
+      slug: generatedContent.slug || defaultSlug,
+      excerpt: generatedContent.excerpt || "Auto-generated blog post",
+      content: generatedContent.content || "",
+      category: generatedContent.category || "Automatic",
+      tags: generatedContent.tags || ["automatic", "ai-generated"],
+      author: generatedContent.author || "AI Assistant",
+      date: generatedContent.date || new Date().toISOString().split('T')[0],
+      readTime: generatedContent.read_time || "3 min",
+      image: responseData.data?.[0]?.url || "https://via.placeholder.com/800x400",
+      featured: false
+    };
+    
+    // Save the new blog post to the database
+    const savedPost = await createBlogPost(newBlogPost);
+    return savedPost;
+  } catch (error) {
+    console.error("Error processing webhook response:", error);
+    throw new Error(`Failed to process webhook response: ${error.message}`);
   }
 };

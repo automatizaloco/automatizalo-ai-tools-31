@@ -135,10 +135,10 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
 
 /**
  * Sends a blog post to the n8n webhook for automatic generation
+ * and returns the response from the webhook
  */
 export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   try {
-    // Updated webhook URL to the correct one
     const response = await fetch('https://n8n.automatizalo.co/webhook-test/admin/blog/create', {
       method: 'POST',
       headers: {

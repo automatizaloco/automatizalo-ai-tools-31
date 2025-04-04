@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Globe } from "lucide-react";
-import { fetchBlogPosts, deleteBlogPost } from "@/services/blogService";
+import { PlusCircle, Edit, Trash2, Globe, Magic, FileText } from "lucide-react";
+import { fetchBlogPosts, deleteBlogPost, updateBlogPostStatus } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import { Badge } from "@/components/ui/badge";
 
 const BlogAdmin = () => {
   const { isAuthenticated } = useAuth();
@@ -35,6 +36,19 @@ const BlogAdmin = () => {
     };
     
     fetchPosts();
+    
+    // Listen for post updates
+    const handlePostUpdate = () => {
+      fetchPosts();
+    };
+    
+    window.addEventListener('blogPostUpdated', handlePostUpdate);
+    window.addEventListener('blogPostDeleted', handlePostUpdate);
+    
+    return () => {
+      window.removeEventListener('blogPostUpdated', handlePostUpdate);
+      window.removeEventListener('blogPostDeleted', handlePostUpdate);
+    };
   }, [isAuthenticated, navigate]);
 
   const handleDelete = async (id: string) => {
@@ -57,6 +71,28 @@ const BlogAdmin = () => {
   const handleCreate = () => {
     navigate("/admin/blog/new");
   };
+  
+  const handleCreateAutomatic = () => {
+    navigate("/admin/blog/automatic");
+  };
+  
+  const handleToggleStatus = async (post: BlogPost) => {
+    try {
+      const newStatus = post.status === 'draft' ? 'published' : 'draft';
+      await updateBlogPostStatus(post.id, newStatus);
+      // Update local state
+      setPosts(posts.map(p => {
+        if (p.id === post.id) {
+          return { ...p, status: newStatus };
+        }
+        return p;
+      }));
+      toast.success(`Post ${newStatus === 'published' ? 'published' : 'moved to drafts'} successfully`);
+    } catch (error) {
+      console.error("Error updating post status:", error);
+      toast.error("Failed to update post status");
+    }
+  };
 
   const hasTranslations = (post: BlogPost) => {
     return post.translations && Object.keys(post.translations).length > 0;
@@ -72,13 +108,23 @@ const BlogAdmin = () => {
     <div className="container mx-auto px-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Blog Management</h1>
-        <Button 
-          onClick={handleCreate}
-          className="bg-gray-900 hover:bg-gray-800"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create New Post
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            variant="outline"
+            onClick={handleCreateAutomatic}
+            className="flex items-center gap-2"
+          >
+            <Magic className="w-4 h-4" />
+            AI Generate
+          </Button>
+          <Button 
+            onClick={handleCreate}
+            className="bg-gray-900 hover:bg-gray-800"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create New Post
+          </Button>
+        </div>
       </div>
       
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -89,6 +135,7 @@ const BlogAdmin = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Featured</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Translations</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -100,6 +147,11 @@ const BlogAdmin = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{post.title}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{post.category}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{post.date}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <Badge className={post.status === 'draft' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}>
+                      {post.status === 'draft' ? 'Draft' : 'Published'}
+                    </Badge>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {post.featured ? "Yes" : "No"}
                   </td>
@@ -120,6 +172,14 @@ const BlogAdmin = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline"
+                        size="sm" 
+                        className={post.status === 'draft' ? 'text-green-600 hover:text-green-800 border-green-200 hover:bg-green-50' : 'text-amber-600 hover:text-amber-800 border-amber-200 hover:bg-amber-50'}
+                        onClick={() => handleToggleStatus(post)}
+                      >
+                        {post.status === 'draft' ? 'Publish' : 'To Draft'}
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm" 

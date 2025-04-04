@@ -64,12 +64,13 @@ const AutomaticBlog = () => {
         readTime: "3 min",
         image: "https://via.placeholder.com/800x400",
         featured: false,
+        status: 'draft', // Set as draft by default
         url: formData.url || "",
       };
 
       // Send to webhook and get response
       const response = await sendPostToN8N(blogPostData);
-      console.info("Webhook response received:", response);
+      console.log("Webhook response received:", response);
       
       // Process the response from N8N and save to database
       const savedBlogPost = await processAndSaveWebhookResponse(
@@ -78,16 +79,18 @@ const AutomaticBlog = () => {
         slug
       );
       
-      console.info("Blog post saved to database:", savedBlogPost);
+      console.log("Blog post saved to database:", savedBlogPost);
       
       // Set progress to 100% before redirecting
       setProgress(100);
       clearInterval(progressInterval);
       
-      toast.success("Blog post has been generated and saved successfully!");
+      toast.success("Blog post has been generated and saved as a draft");
       
       // Wait a moment to show the completed progress
       setTimeout(() => {
+        // Trigger an event to refresh the blog list
+        window.dispatchEvent(new CustomEvent('blogPostUpdated'));
         navigate("/admin/blog");
       }, 1000);
       
@@ -109,7 +112,7 @@ const AutomaticBlog = () => {
         <CardHeader>
           <CardTitle className="text-xl">Create AI-Generated Blog Post</CardTitle>
           <CardDescription>
-            Enter a title and optional source URL to generate a complete blog post automatically
+            Enter a title and optional source URL to generate a complete blog post automatically. Posts will be saved as drafts for your review.
           </CardDescription>
         </CardHeader>
         
@@ -150,7 +153,7 @@ const AutomaticBlog = () => {
             
             {isLoading && (
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">Generating blog post...</p>
+                <p className="text-sm text-gray-600">Generating blog post draft...</p>
                 <Progress value={progress} className="h-2" />
               </div>
             )}

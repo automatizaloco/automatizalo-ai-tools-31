@@ -10,7 +10,8 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
   // Map readTime to read_time for database consistency
   const dbPost = {
     ...post,
-    read_time: post.readTime
+    read_time: post.readTime,
+    status: post.status || 'published'
   };
   
   const { data, error } = await supabase
@@ -28,7 +29,8 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
   toast.success("Blog post created successfully");
   return {
     ...data,
-    readTime: data.read_time
+    readTime: data.read_time,
+    status: data.status
   } as BlogPost;
 };
 
@@ -74,7 +76,8 @@ export const updateBlogPost = async (
   
   return {
     ...data,
-    readTime: data.read_time
+    readTime: data.read_time,
+    status: data.status
   } as BlogPost;
 };
 
@@ -165,26 +168,43 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
  * Process and save blog post from N8N webhook response
  */
 export const processAndSaveWebhookResponse = async (response: any, defaultTitle: string, defaultSlug: string): Promise<BlogPost> => {
+  console.log("Received webhook response to process:", response);
+  
   if (!response || !Array.isArray(response) || response.length === 0) {
+    console.error("Invalid webhook response format, not an array or empty array");
     throw new Error("Invalid webhook response format");
   }
   
-  const responseData = response[0];
+  const responseItem = response[0];
   
-  if (!responseData.output) {
+  if (!responseItem.output) {
+    console.error("No output found in webhook response", responseItem);
     throw new Error("No output found in webhook response");
   }
   
-  // Extract the JSON data from the response output (which is enclosed in ```json ... ```)
-  const jsonMatch = responseData.output.match(/```json\n([\s\S]*?)\n```/);
-  if (!jsonMatch || !jsonMatch[1]) {
-    throw new Error("Could not extract JSON content from webhook response");
-  }
-  
   try {
-    const generatedContent = JSON.parse(jsonMatch[1]);
+    // Extract the JSON content from the output string
+    // The output contains markdown code block with JSON inside it
+    const jsonMatch = responseItem.output.match(/```json\n([\s\S]*?)\n```/);
     
-    // Create a new blog post with the generated content
+    if (!jsonMatch || !jsonMatch[1]) {
+      console.error("Could not extract JSON content from webhook response", responseItem.output);
+      throw new Error("Could not extract JSON content from webhook response");
+    }
+    
+    const jsonContent = jsonMatch[1].trim();
+    console.log("Extracted JSON content:", jsonContent);
+    
+    const generatedContent = JSON.parse(jsonContent);
+    console.log("Parsed generated content:", generatedContent);
+    
+    // Get image URL from the response data if available
+    let imageUrl = "https://via.placeholder.com/800x400";
+    if (responseItem.data && Array.isArray(responseItem.data) && responseItem.data.length > 0 && responseItem.data[0].url) {
+      imageUrl = responseItem.data[0].url;
+    }
+    
+    // Create a new blog post with the generated content as a draft
     const newBlogPost: NewBlogPost = {
       title: generatedContent.title || defaultTitle,
       slug: generatedContent.slug || defaultSlug,
@@ -195,15 +215,23 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       author: generatedContent.author || "AI Assistant",
       date: generatedContent.date || new Date().toISOString().split('T')[0],
       readTime: generatedContent.read_time || "3 min",
-      image: responseData.data?.[0]?.url || "https://via.placeholder.com/800x400",
-      featured: false
+      image: imageUrl,
+      featured: false,
+      status: 'draft' // Set all automatically generated posts as drafts
     };
+    
+    console.log("Creating new blog post with data:", newBlogPost);
     
     // Save the new blog post to the database
     const savedPost = await createBlogPost(newBlogPost);
     return savedPost;
   } catch (error) {
     console.error("Error processing webhook response:", error);
-    throw new Error(`Failed to process webhook response: ${error.message}`);
+    throw new Error(`Failed to process webhook response: ${error instanceof Error ? error.message : String(error)}`);
   }
+};
+
+// Add a function to change blog post status
+export const updateBlogPostStatus = async (id: string, status: 'draft' | 'published'): Promise<BlogPost> => {
+  return await updateBlogPost(id, { status });
 };

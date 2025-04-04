@@ -69,12 +69,12 @@ const AutomaticBlog = () => {
       };
 
       // Send to webhook and get response
-      const response = await sendPostToN8N(blogPostData);
-      console.log("Webhook response received:", response);
+      const responseText = await sendPostToN8N(blogPostData);
+      console.log("Webhook response received:", responseText);
       
       // Process the response from N8N and save to database
       const savedBlogPost = await processAndSaveWebhookResponse(
-        response, 
+        responseText, 
         formData.title,
         slug
       );

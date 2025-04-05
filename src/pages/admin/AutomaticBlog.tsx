@@ -68,6 +68,8 @@ const AutomaticBlog = () => {
         url: formData.url || "",
       };
 
+      console.log("Sending data to webhook:", blogPostData);
+
       // Send to webhook and get response
       const responseText = await sendPostToN8N(blogPostData);
       console.log("Webhook response received:", responseText);

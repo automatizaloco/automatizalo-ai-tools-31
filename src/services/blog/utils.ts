@@ -66,18 +66,33 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
   try {
     // First, try to parse the response as regular JSON
     const parsedResponse = JSON.parse(responseText);
+    console.log("Initially parsed response:", parsedResponse);
     
-    // Check if this is an array with the expected structure
+    // Check if this is an array with the expected structure from the specific webhook
     if (Array.isArray(parsedResponse) && parsedResponse.length > 0) {
       const firstItem = parsedResponse[0];
       
-      // Check if it has an output property that contains JSON
-      if (firstItem.output) {
-        // Try to extract JSON from the output string
+      // Check for the output and data properties (specific to your webhook format)
+      if (firstItem && firstItem.output && firstItem.data) {
+        console.log("Found webhook response with output and data");
+        
+        // Extract JSON content from the output string
         const jsonMatch = firstItem.output.match(/```json\n([\s\S]*?)\n```/);
+        
         if (jsonMatch && jsonMatch[1]) {
           try {
-            return JSON.parse(jsonMatch[1]);
+            const extractedContent = JSON.parse(jsonMatch[1]);
+            console.log("Successfully extracted content from output:", extractedContent);
+            
+            // Add image URL from the data property if available
+            if (firstItem.data && Array.isArray(firstItem.data) && firstItem.data.length > 0) {
+              if (firstItem.data[0].url) {
+                extractedContent.image = firstItem.data[0].url;
+                console.log("Added image URL to content:", extractedContent.image);
+              }
+            }
+            
+            return extractedContent;
           } catch (err) {
             console.error("Error parsing JSON inside output:", err);
           }

@@ -15,6 +15,8 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
     status: post.status || 'published'
   };
   
+  console.log("Creating blog post with data:", dbPost);
+  
   const { data, error } = await supabase
     .from('blog_posts')
     .insert(dbPost)
@@ -27,6 +29,7 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
     throw new Error(`Failed to create blog post: ${error.message}`);
   }
 
+  console.log("Blog post created successfully, data:", data);
   toast.success("Blog post created successfully");
   return transformDatabasePost(data);
 };
@@ -135,6 +138,8 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
  */
 export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   try {
+    console.log("Sending post to n8n webhook:", formatPostForN8N(blogPostData));
+    
     const response = await fetch('https://n8n.automatizalo.co/webhook-test/admin/blog/create', {
       method: 'POST',
       headers: {
@@ -149,7 +154,7 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
     }
 
     const responseText = await response.text();
-    console.log('Webhook response:', responseText);
+    console.log('Webhook raw response:', responseText);
     return responseText;
   } catch (error) {
     console.error('Error sending post to webhook:', error);
@@ -161,7 +166,7 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
  * Process and save blog post from N8N webhook response
  */
 export const processAndSaveWebhookResponse = async (response: any, defaultTitle: string, defaultSlug: string): Promise<BlogPost> => {
-  console.log("Received webhook response to process:", response);
+  console.log("Processing webhook response:", response);
   
   // First check if the response is valid
   if (!response) {
@@ -169,42 +174,23 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     throw new Error("Invalid webhook response format");
   }
   
-  let generatedContent;
-  let imageUrl = "https://via.placeholder.com/800x400";
-  
   try {
-    // If response is a string, try to parse it
-    if (typeof response === 'string') {
-      try {
-        // Parse the response text using our utility function
-        generatedContent = parseWebhookJsonResponse(response);
-        
-        // Try to extract image URL from the response if it exists
-        const parsedResponse = JSON.parse(response);
-        
-        if (Array.isArray(parsedResponse) && 
-            parsedResponse.length > 0 && 
-            parsedResponse[0]?.data && 
-            Array.isArray(parsedResponse[0].data) && 
-            parsedResponse[0].data.length > 0 && 
-            parsedResponse[0].data[0]?.url) {
-          imageUrl = parsedResponse[0].data[0].url;
-        }
-      } catch (e) {
-        console.error("Error parsing webhook response string:", e);
-        throw new Error("Failed to parse webhook response");
-      }
-    } else {
-      // If it's already an object, use it directly
-      generatedContent = response;
-    }
-    
+    // Parse the response using our enhanced utility function
+    let generatedContent = parseWebhookJsonResponse(response);
     console.log("Parsed generated content:", generatedContent);
     
-    // If we found an image URL, download it and convert to base64
+    if (!generatedContent) {
+      throw new Error("Failed to extract content from webhook response");
+    }
+    
+    // Get image URL from the parsed content or response
+    let imageUrl = generatedContent.image || "https://via.placeholder.com/800x400";
+    console.log("Image URL extracted:", imageUrl);
+    
+    // Download the image if it has a URL (not a placeholder)
     let imageData = null;
     if (imageUrl !== "https://via.placeholder.com/800x400") {
-      console.log("Downloading image from URL:", imageUrl);
+      console.log("Attempting to download image from:", imageUrl);
       imageData = await downloadImage(imageUrl);
       
       if (imageData) {
@@ -212,6 +198,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
         imageUrl = imageData;
       } else {
         console.warn("Failed to download image, using placeholder");
+        imageUrl = "https://via.placeholder.com/800x400";
       }
     }
     
@@ -226,7 +213,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       author: generatedContent.author || "AI Assistant",
       date: generatedContent.date || new Date().toISOString().split('T')[0],
       readTime: generatedContent.read_time || "3 min",
-      image: imageUrl, // Use the downloaded image or placeholder
+      image: imageUrl, // Use the downloaded image data or placeholder
       featured: false,
       status: 'draft' as const
     };
@@ -235,6 +222,8 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     
     // Save the new blog post to the database
     const savedPost = await createBlogPost(newBlogPost);
+    console.log("Blog post saved successfully:", savedPost);
+    
     return savedPost;
   } catch (error) {
     console.error("Error processing webhook response:", error);

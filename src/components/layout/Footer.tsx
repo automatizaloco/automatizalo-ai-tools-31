@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -5,8 +6,9 @@ import EditableText from '@/components/admin/EditableText';
 import { useContactInfo, ContactInfo } from '@/stores/contactInfoStore';
 import { useAuth } from '@/context/AuthContext';
 import { Instagram } from 'lucide-react';
-import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import MobileFooter from './MobileFooter';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -14,6 +16,7 @@ const Footer = () => {
   const { isAuthenticated } = useAuth();
   const { contactInfo, updateContactInfo, fetchContactInfo } = useContactInfo();
   const currentYear = new Date().getFullYear();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     console.log("Footer component: Fetching contact info");
@@ -47,6 +50,12 @@ const Footer = () => {
     }
   };
 
+  // Return the mobile version for small screens
+  if (isMobile) {
+    return <MobileFooter />;
+  }
+
+  // Return the desktop version for larger screens
   return (
     <footer className={theme === 'dark' ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-700'}>
       <div className="container mx-auto px-4 pt-16 pb-8">

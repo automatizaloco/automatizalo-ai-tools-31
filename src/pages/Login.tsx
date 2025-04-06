@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTheme } from "@/context/ThemeContext";
 import { AlertCircle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Login = () => {
   const [email, setEmail] = useState("contact@automatizalo.co");
@@ -16,6 +17,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +26,7 @@ const Login = () => {
     
     try {
       console.log("Attempting login with:", { email });
+      
       const success = await login(email, password);
       if (success) {
         navigate("/admin/blog");
@@ -39,14 +42,14 @@ const Login = () => {
   };
 
   return (
-    <main className="flex-grow pt-32 pb-16">
+    <main className="flex-grow pt-16 md:pt-32 pb-16">
       <div className="container max-w-md mx-auto px-4">
-        <div className={`p-8 rounded-xl shadow-md border ${
+        <div className={`p-5 md:p-8 rounded-xl shadow-md border ${
           theme === 'dark' 
             ? 'bg-gray-800 border-gray-700' 
             : 'bg-white border-gray-200'
         }`}>
-          <h1 className={`text-2xl font-bold text-center mb-6 ${
+          <h1 className={`text-xl md:text-2xl font-bold text-center mb-6 ${
             theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
           }`}>Admin Login</h1>
           
@@ -91,6 +94,7 @@ const Login = () => {
                 ? 'bg-blue-600 hover:bg-blue-700' 
                 : 'bg-automatizalo-blue hover:bg-automatizalo-blue/90'}`}
               disabled={isLoading}
+              size={isMobile ? "sm" : "default"}
             >
               {isLoading ? "Logging in..." : "Login"}
             </Button>

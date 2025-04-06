@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Sparkles } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ContentManager = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   // Redirect if not logged in
   React.useEffect(() => {
@@ -19,7 +19,11 @@ const ContentManager = () => {
   }, [user, navigate]);
 
   if (!user) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   const adminOptions = [
@@ -62,53 +66,48 @@ const ContentManager = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-              <Button onClick={() => navigate("/")}>Back to Homepage</Button>
-            </div>
-            
-            {user && (
-              <div className="text-sm text-gray-600">
-                Logged in as: {user.email}
-              </div>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {adminOptions.map((option) => {
-              const Icon = option.icon;
-              return (
-                <div 
-                  key={option.route} 
-                  className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition-shadow"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-gray-50 rounded-lg">
-                      <Icon className="h-6 w-6 text-gray-600" />
-                    </div>
-                    <h2 className="text-xl font-semibold">{option.title}</h2>
-                  </div>
-                  <p className="text-gray-600 mb-4">{option.description}</p>
-                  <Button 
-                    onClick={() => navigate(option.route)}
-                    className="w-full"
-                  >
-                    Manage {option.title}
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
+    <div className="container mx-auto px-0 md:px-4">
+      <div className="mb-4 md:mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl md:text-3xl font-bold">Admin Dashboard</h1>
+          {!isMobile && (
+            <Button onClick={() => navigate("/")}>Back to Homepage</Button>
+          )}
         </div>
-      </main>
+        
+        {user && (
+          <div className="text-sm text-gray-600">
+            Logged in as: {user.email}
+          </div>
+        )}
+      </div>
       
-      <Footer />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+        {adminOptions.map((option) => {
+          const Icon = option.icon;
+          return (
+            <div 
+              key={option.route} 
+              className="bg-white shadow-md rounded-lg p-4 md:p-6 hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-center gap-3 mb-3 md:mb-4">
+                <div className="p-2 bg-gray-50 rounded-lg">
+                  <Icon className="h-5 w-5 text-gray-600" />
+                </div>
+                <h2 className="text-lg md:text-xl font-semibold">{option.title}</h2>
+              </div>
+              <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4">{option.description}</p>
+              <Button 
+                onClick={() => navigate(option.route)}
+                className="w-full"
+                size={isMobile ? "sm" : "default"}
+              >
+                Manage {isMobile ? "" : option.title}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

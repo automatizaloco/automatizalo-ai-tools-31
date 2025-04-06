@@ -5,6 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const ContentManager = () => {
   const navigate = useNavigate();
@@ -60,7 +68,7 @@ const ContentManager = () => {
     {
       title: "Page Layout",
       description: "Manage page sections and their arrangements",
-      route: "/admin/layout-manager",
+      route: "/admin/layout",
       icon: LayoutDashboard
     }
   ];
@@ -86,25 +94,31 @@ const ContentManager = () => {
         {adminOptions.map((option) => {
           const Icon = option.icon;
           return (
-            <div 
+            <Card 
               key={option.route} 
-              className="bg-white shadow-md rounded-lg p-4 md:p-6 hover:shadow-lg transition-shadow"
+              className="hover:shadow-lg transition-shadow"
             >
-              <div className="flex items-center gap-3 mb-3 md:mb-4">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <Icon className="h-5 w-5 text-gray-600" />
+              <CardHeader className="pb-2 md:pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <Icon className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <CardTitle className="text-lg md:text-xl">{option.title}</CardTitle>
                 </div>
-                <h2 className="text-lg md:text-xl font-semibold">{option.title}</h2>
-              </div>
-              <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4">{option.description}</p>
-              <Button 
-                onClick={() => navigate(option.route)}
-                className="w-full"
-                size={isMobile ? "sm" : "default"}
-              >
-                Manage {isMobile ? "" : option.title}
-              </Button>
-            </div>
+              </CardHeader>
+              <CardContent className="pb-2 md:pb-4">
+                <CardDescription className="text-sm md:text-base">{option.description}</CardDescription>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => navigate(option.route)}
+                  className="w-full"
+                  size={isMobile ? "sm" : "default"}
+                >
+                  Manage {isMobile ? "" : option.title}
+                </Button>
+              </CardFooter>
+            </Card>
           );
         })}
       </div>

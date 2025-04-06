@@ -1,11 +1,10 @@
-
 import { Outlet } from 'react-router-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Sheet,
@@ -19,7 +18,6 @@ const AdminLayout = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('content');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -66,7 +64,6 @@ const AdminLayout = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     navigate(`/admin/${value}`);
-    setIsMenuOpen(false);
   };
 
   if (loading) {

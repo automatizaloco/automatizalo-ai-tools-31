@@ -63,7 +63,7 @@ function AppContent() {
             <Route path="blog" element={<BlogAdmin />} />
             <Route path="blog/new" element={<BlogPostForm />} />
             <Route path="blog/edit/:id" element={<BlogPostForm />} />
-            <Route path="blog/automatic" element={<AutomaticBlog />} />
+            <Route path="automatic-blog" element={<AutomaticBlog />} />
             <Route path="layout" element={<LayoutManager />} />
             <Route path="testimonials" element={<TestimonialManager />} />
             <Route path="newsletter" element={<NewsletterAdmin />} />

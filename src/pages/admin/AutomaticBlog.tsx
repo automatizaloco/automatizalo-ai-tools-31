@@ -9,6 +9,7 @@ import { sendPostToN8N, processAndSaveWebhookResponse } from "@/services/blog/wr
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { BlogPost, NewBlogPost } from "@/types/blog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const AutomaticBlog = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const AutomaticBlog = () => {
     url: "",
   });
   const [error, setError] = useState("");
+  const isMobile = useIsMobile();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -108,21 +110,21 @@ const AutomaticBlog = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Automatic Blog Generator</h1>
+    <div className="container mx-auto px-0 md:px-4 py-2 md:py-6 max-w-2xl">
+      <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
+        {isMobile ? "Auto Blog" : "Automatic Blog Generator"}
+      </h1>
       
       <Card className="border border-gray-200 shadow-sm bg-white">
-        <CardHeader>
-          <CardTitle className="text-xl">Create AI-Generated Blog Post</CardTitle>
+        <CardHeader className="pb-2 md:pb-4">
+          <CardTitle className="text-lg md:text-xl">Create AI-Generated Blog Post</CardTitle>
           <CardDescription>
-            Enter a title and optional source URL to generate a complete blog post automatically. 
-            Posts will be saved as drafts for your review. Images from the generator will be 
-            downloaded automatically to prevent link expiration.
+            Enter a title and optional source URL to generate a complete blog post automatically.
           </CardDescription>
         </CardHeader>
         
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 md:space-y-6">
             <div className="space-y-2">
               <Label htmlFor="title" className="text-sm font-medium">
                 Title
@@ -151,8 +153,8 @@ const AutomaticBlog = () => {
                 className="border-gray-200 focus:border-blue-500 transition-all duration-200"
                 disabled={isLoading}
               />
-              <p className="text-sm text-gray-500 mt-1">
-                If provided, the AI will use this URL as reference for the content
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
+                If provided, the AI will use this URL as reference
               </p>
             </div>
             
@@ -171,22 +173,22 @@ const AutomaticBlog = () => {
             )}
           </CardContent>
           
-          <CardFooter className="flex justify-end space-x-4 border-t border-gray-100 pt-4">
+          <CardFooter className="flex flex-col md:flex-row justify-end md:space-x-4 border-t border-gray-100 pt-4 space-y-2 md:space-y-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate("/admin/blog")}
               disabled={isLoading}
-              className="transition-all duration-200"
+              className="w-full md:w-auto transition-all duration-200"
             >
               Cancel
             </Button>
             <Button 
               type="submit"
               disabled={isLoading || !formData.title}
-              className="bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
+              className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
             >
-              {isLoading ? "Generating..." : "Generate Blog Post"}
+              {isLoading ? "Generating..." : isMobile ? "Generate" : "Generate Blog Post"}
             </Button>
           </CardFooter>
         </form>

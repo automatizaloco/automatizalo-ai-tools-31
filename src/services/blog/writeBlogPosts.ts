@@ -177,28 +177,22 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
 export const processAndSaveWebhookResponse = async (response: any, defaultTitle: string, defaultSlug: string): Promise<BlogPost> => {
   console.log("Processing webhook response:", response);
   
-  // First check if the response is valid
-  if (!response) {
-    console.error("Invalid webhook response: response is null or undefined");
-    throw new Error("Invalid webhook response format");
-  }
-  
   try {
     // Parse the response using our enhanced utility function
-    let generatedContent = parseWebhookJsonResponse(response);
-    console.log("Parsed generated content:", generatedContent);
+    const parsedContent = parseWebhookJsonResponse(response);
+    console.log("Parsed content from webhook:", parsedContent);
     
-    if (!generatedContent) {
-      throw new Error("Failed to extract content from webhook response");
+    if (!parsedContent) {
+      throw new Error("Failed to parse content from webhook response");
     }
     
-    // Get image URL from the parsed content or response
-    let imageUrl = generatedContent.image || "https://via.placeholder.com/800x400";
+    // Get image URL from the parsed content or set a placeholder
+    let imageUrl = parsedContent.image || "https://via.placeholder.com/800x400";
     console.log("Image URL extracted:", imageUrl);
     
     // Download the image if it has a URL (not a placeholder)
     let imageData = null;
-    if (imageUrl && imageUrl !== "https://via.placeholder.com/800x400") {
+    if (imageUrl && !imageUrl.includes("placeholder.com")) {
       console.log("Attempting to download image from:", imageUrl);
       imageData = await downloadImage(imageUrl);
       
@@ -213,18 +207,18 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     
     // Create a new blog post with the generated content as a draft
     const newBlogPost: NewBlogPost = {
-      title: generatedContent.title || defaultTitle,
-      slug: generatedContent.slug || defaultSlug,
-      excerpt: generatedContent.excerpt || "Auto-generated blog post",
-      content: generatedContent.content || "",
-      category: generatedContent.category || "Automatic",
-      tags: generatedContent.tags || ["automatic", "ai-generated"],
-      author: generatedContent.author || "AI Assistant",
-      date: generatedContent.date || new Date().toISOString().split('T')[0],
-      readTime: generatedContent.read_time || "3 min", // Use read_time from webhook response
-      image: imageUrl, // Use the downloaded image data or placeholder
+      title: parsedContent.title || defaultTitle,
+      slug: parsedContent.slug || defaultSlug,
+      excerpt: parsedContent.excerpt || "Auto-generated blog post",
+      content: parsedContent.content || "",
+      category: parsedContent.category || "Automatic",
+      tags: parsedContent.tags || ["automatic", "ai-generated"],
+      author: parsedContent.author || "AI Assistant",
+      date: parsedContent.date || new Date().toISOString().split('T')[0],
+      readTime: parsedContent.read_time || "3 min",
+      image: imageUrl,
       featured: false,
-      status: 'draft' as const // Always create as draft
+      status: 'draft' as const
     };
     
     console.log("Creating new blog post with data:", newBlogPost);

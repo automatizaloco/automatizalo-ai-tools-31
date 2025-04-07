@@ -61,22 +61,40 @@ export const downloadImage = async (imageUrl: string): Promise<string | null> =>
   }
 };
 
-// Parse webhook JSON response that might be nested in an unexpected format
+// Enhanced parse webhook JSON response function to better handle the AI-generated content
 export const parseWebhookJsonResponse = (responseText: string): any => {
   try {
-    // First, try to parse the response as regular JSON
-    const parsedResponse = JSON.parse(responseText);
-    console.log("Initially parsed response:", parsedResponse);
+    console.log("Parsing webhook response text:", responseText);
     
-    // Check if this is an array with the expected structure from the specific webhook
+    // First, try to parse the response as regular JSON
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(responseText);
+      console.log("Initially parsed response:", parsedResponse);
+    } catch (err) {
+      console.error("Error parsing response as JSON:", err);
+      // If it's not valid JSON but a string, try to check if it's a stringified JSON
+      if (typeof responseText === 'string' && responseText.startsWith('[') && responseText.endsWith(']')) {
+        try {
+          parsedResponse = JSON.parse(responseText);
+          console.log("Parsed string as JSON array:", parsedResponse);
+        } catch (nestedErr) {
+          console.error("Failed to parse string as JSON array:", nestedErr);
+          throw new Error("Invalid response format");
+        }
+      } else {
+        throw new Error("Invalid JSON response");
+      }
+    }
+    
+    // Check if this is an array with the expected structure from the webhook
     if (Array.isArray(parsedResponse) && parsedResponse.length > 0) {
       const firstItem = parsedResponse[0];
+      console.log("Processing first item in array:", firstItem);
       
-      // Check for the output and data properties (specific to your webhook format)
-      if (firstItem && firstItem.output && firstItem.data) {
-        console.log("Found webhook response with output and data");
-        
-        // Extract JSON content from the output string
+      // Extract content from output (which contains a JSON string inside markdown code block)
+      if (firstItem && firstItem.output) {
+        // Try to extract JSON from markdown code block
         const jsonMatch = firstItem.output.match(/```json\n([\s\S]*?)\n```/);
         
         if (jsonMatch && jsonMatch[1]) {
@@ -96,16 +114,19 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
           } catch (err) {
             console.error("Error parsing JSON inside output:", err);
           }
+        } else {
+          console.warn("No JSON code block found in output");
         }
       }
       
+      // If we couldn't extract from output, return the raw response
       return parsedResponse;
     }
     
     // If the response is a nested object with keys that look like JSON strings
     if (typeof parsedResponse === 'object' && parsedResponse !== null && !Array.isArray(parsedResponse)) {
       // Check for a key that looks like a JSON string (starting with ```json)
-      const jsonKeyPattern = Object.keys(parsedResponse).find(key => key.startsWith('```json'));
+      const jsonKeyPattern = Object.keys(parsedResponse).find(key => key.includes('```json'));
       
       if (jsonKeyPattern) {
         try {

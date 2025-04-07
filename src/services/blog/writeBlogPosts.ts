@@ -198,7 +198,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     
     // Download the image if it has a URL (not a placeholder)
     let imageData = null;
-    if (imageUrl !== "https://via.placeholder.com/800x400") {
+    if (imageUrl && imageUrl !== "https://via.placeholder.com/800x400") {
       console.log("Attempting to download image from:", imageUrl);
       imageData = await downloadImage(imageUrl);
       

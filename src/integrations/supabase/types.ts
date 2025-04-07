@@ -22,6 +22,7 @@ export type Database = {
           image: string
           read_time: string
           slug: string
+          status: string
           tags: string[]
           title: string
           updated_at: string
@@ -38,6 +39,7 @@ export type Database = {
           image: string
           read_time: string
           slug: string
+          status?: string
           tags?: string[]
           title: string
           updated_at?: string
@@ -54,6 +56,7 @@ export type Database = {
           image?: string
           read_time?: string
           slug?: string
+          status?: string
           tags?: string[]
           title?: string
           updated_at?: string

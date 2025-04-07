@@ -224,7 +224,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       readTime: generatedContent.read_time || "3 min", // Use read_time from webhook response
       image: imageUrl, // Use the downloaded image data or placeholder
       featured: false,
-      status: 'draft' as const
+      status: 'draft' as const // Always create as draft
     };
     
     console.log("Creating new blog post with data:", newBlogPost);

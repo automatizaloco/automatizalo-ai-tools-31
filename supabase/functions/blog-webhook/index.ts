@@ -47,6 +47,7 @@ const processNewBlogPost = async (payload: any) => {
     image: payload.image || 'https://via.placeholder.com/800x400',
     featured: payload.featured || false,
     url: payload.url || null, // Store the source URL if provided
+    status: payload.status || 'draft', // Handle the status field with a default value of draft
   };
 
   console.log('Creating blog post with data:', blogData);

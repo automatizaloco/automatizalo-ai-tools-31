@@ -187,7 +187,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     }
     
     // Get image URL from the parsed content or set a placeholder
-    let imageUrl = parsedContent.image || "https://via.placeholder.com/800x400";
+    let imageUrl = parsedContent.image || parsedContent.image_url || "https://via.placeholder.com/800x400";
     console.log("Image URL extracted:", imageUrl);
     
     // Download the image if it has a URL (not a placeholder)
@@ -215,7 +215,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       tags: parsedContent.tags || ["automatic", "ai-generated"],
       author: parsedContent.author || "AI Assistant",
       date: parsedContent.date || new Date().toISOString().split('T')[0],
-      readTime: parsedContent.read_time || "3 min",
+      readTime: parsedContent.readTime || parsedContent.read_time || "3 min",
       image: imageUrl,
       featured: false,
       status: 'draft' as const

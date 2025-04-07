@@ -61,7 +61,7 @@ export const downloadImage = async (imageUrl: string): Promise<string | null> =>
   }
 };
 
-// Enhanced parse webhook JSON response function to better handle the AI-generated content
+// Parse webhook JSON response function to handle the direct array response format
 export const parseWebhookJsonResponse = (responseText: string): any => {
   try {
     console.log("Parsing webhook response text:", responseText);
@@ -70,13 +70,35 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
     const parsedResponse = JSON.parse(responseText);
     console.log("Initially parsed response:", parsedResponse);
     
-    // Check if this is an array with the first item containing output and data
+    // Check if this is an array with blog post data
     if (Array.isArray(parsedResponse) && parsedResponse.length > 0) {
       const firstItem = parsedResponse[0];
       console.log("Processing first item in array:", firstItem);
       
-      // If we have output with a JSON block, extract it
-      if (firstItem && firstItem.output) {
+      // For new format - direct blog post object in the array
+      if (firstItem.title && firstItem.content) {
+        console.log("Found direct blog post object:", firstItem);
+        
+        // Create a result object with all data from the response
+        const result = { ...firstItem };
+        
+        // Handle different image URL property names
+        if (firstItem.image_url && !firstItem.image) {
+          result.image = firstItem.image_url;
+          console.log("Mapped image_url to image:", result.image);
+        }
+        
+        // Handle read_time vs readTime
+        if (firstItem.read_time && !firstItem.readTime) {
+          result.readTime = firstItem.read_time;
+          console.log("Mapped read_time to readTime:", result.readTime);
+        }
+        
+        return result;
+      }
+      
+      // Handle old format with output/data structure
+      if (firstItem.output) {
         const jsonMatch = firstItem.output.match(/```json\n([\s\S]*?)\n```/);
         
         if (jsonMatch && jsonMatch[1]) {

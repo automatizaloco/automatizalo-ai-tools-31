@@ -84,15 +84,23 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
             const extractedContent = JSON.parse(jsonMatch[1]);
             console.log("Successfully extracted content from output:", extractedContent);
             
+            // Create a result object with all the extracted content
+            const result = { ...extractedContent };
+            
             // Add image URL from the data property if available
             if (firstItem.data && Array.isArray(firstItem.data) && firstItem.data.length > 0) {
-              if (firstItem.data[0].url) {
-                extractedContent.image = firstItem.data[0].url;
-                console.log("Added image URL to content:", extractedContent.image);
+              // Check for different image URL properties
+              const dataItem = firstItem.data[0];
+              if (dataItem.url) {
+                result.image = dataItem.url;
+                console.log("Added image URL from data.url:", result.image);
+              } else if (dataItem.image_url) {
+                result.image = dataItem.image_url;
+                console.log("Added image URL from data.image_url:", result.image);
               }
             }
             
-            return extractedContent;
+            return result;
           } catch (err) {
             console.error("Error parsing JSON inside output:", err);
           }
@@ -102,10 +110,16 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
       // If we have data with an image URL, add it to the result
       if (firstItem.data && Array.isArray(firstItem.data) && firstItem.data.length > 0) {
         const result = { ...firstItem };
-        if (firstItem.data[0].url) {
-          result.image = firstItem.data[0].url;
-          console.log("Using image URL from data:", result.image);
+        const dataItem = firstItem.data[0];
+        
+        if (dataItem.url) {
+          result.image = dataItem.url;
+          console.log("Using image URL from data.url:", result.image);
+        } else if (dataItem.image_url) {
+          result.image = dataItem.image_url;
+          console.log("Using image URL from data.image_url:", result.image);
         }
+        
         return result;
       }
     }

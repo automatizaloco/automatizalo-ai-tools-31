@@ -8,10 +8,19 @@ import { downloadImage, parseWebhookJsonResponse, transformDatabasePost } from "
  * Create a new blog post
  */
 export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
-  // Map readTime to read_time for database consistency
+  // Map the blog post object to match the database schema
   const dbPost = {
-    ...post,
-    read_time: post.readTime,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    category: post.category,
+    tags: post.tags,
+    author: post.author,
+    date: post.date,
+    read_time: post.readTime, // Map readTime to read_time for database
+    image: post.image,
+    featured: post.featured,
     status: post.status || 'published'
   };
   
@@ -212,7 +221,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       tags: generatedContent.tags || ["automatic", "ai-generated"],
       author: generatedContent.author || "AI Assistant",
       date: generatedContent.date || new Date().toISOString().split('T')[0],
-      readTime: generatedContent.read_time || "3 min",
+      readTime: generatedContent.read_time || "3 min", // Use read_time from webhook response
       image: imageUrl, // Use the downloaded image data or placeholder
       featured: false,
       status: 'draft' as const

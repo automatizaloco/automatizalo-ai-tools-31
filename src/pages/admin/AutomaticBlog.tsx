@@ -63,7 +63,7 @@ const AutomaticBlog = () => {
         tags: ["automatic", "ai-generated"],
         author: "AI Assistant",
         date: new Date().toISOString().split('T')[0],
-        readTime: "3 min",
+        readTime: "3 min", // This will be mapped to read_time in createBlogPost
         image: "https://via.placeholder.com/800x400",
         featured: false,
         status: 'draft', // Set as draft by default

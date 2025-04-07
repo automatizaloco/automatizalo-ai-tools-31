@@ -43,7 +43,7 @@ const processNewBlogPost = async (payload: any) => {
     tags: payload.tags,
     author: payload.author,
     date: payload.date || new Date().toISOString().split('T')[0],
-    read_time: payload.readTime || '5 min',
+    read_time: payload.read_time || payload.readTime || '5 min', // Handle both read_time and readTime
     image: payload.image || 'https://via.placeholder.com/800x400',
     featured: payload.featured || false,
     url: payload.url || null, // Store the source URL if provided

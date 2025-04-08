@@ -171,7 +171,8 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   try {
     console.log("Sending post to n8n webhook:", formatPostForN8N(blogPostData));
     
-    const response = await fetch('https://n8n.automatizalo.co/webhook-test/admin/blog/create', {
+    // Updated to use the production webhook URL
+    const response = await fetch('https://n8n.automatizalo.co/webhook/admin/blog/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -44,6 +44,35 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
 };
 
 /**
+ * Send post data to social media webhook
+ */
+export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void> => {
+  try {
+    // Format the data for the social media webhook
+    const webhookData = {
+      title: post.title,
+      url: `${window.location.origin}/blog/${post.slug}`,
+      image: post.image
+    };
+    
+    console.log("Sending post to social media webhook:", webhookData);
+    
+    await fetch('https://n8n.automatizalo.co/webhook-test/blog-redes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(webhookData),
+    });
+    
+    console.log("Post data sent to social media webhook successfully");
+  } catch (error) {
+    console.error("Error sending post to social media webhook:", error);
+    // Don't throw error, just log it - we don't want to fail the update if webhook fails
+  }
+};
+
+/**
  * Update an existing blog post
  */
 export const updateBlogPost = async (
@@ -105,7 +134,16 @@ export const updateBlogPost = async (
   // Dispatch event to notify other components that blog data has changed
   window.dispatchEvent(new CustomEvent('blogPostUpdated', { detail: data }));
   
-  return transformDatabasePost(data);
+  // Get the complete post data to send to the social media webhook
+  const transformedPost = transformDatabasePost(data);
+  
+  // Send post data to social media webhook after successful update
+  // Only send if the post is published
+  if (transformedPost.status === 'published') {
+    await sendPostToSocialMediaWebhook(transformedPost);
+  }
+  
+  return transformedPost;
 };
 
 /**
@@ -263,5 +301,30 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
 
 // Add a function to change blog post status
 export const updateBlogPostStatus = async (id: string, status: 'draft' | 'published'): Promise<BlogPost> => {
-  return await updateBlogPost(id, { status });
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .update({ status })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating blog post status ${id}:`, error);
+    toast.error(`Failed to update blog post status: ${error.message}`);
+    throw new Error(`Failed to update blog post status: ${error.message}`);
+  }
+
+  toast.success(`Blog post ${status === 'published' ? 'published' : 'moved to draft'} successfully`);
+  
+  // Dispatch event to notify other components that blog data has changed
+  window.dispatchEvent(new CustomEvent('blogPostUpdated', { detail: data }));
+  
+  const transformedPost = transformDatabasePost(data);
+  
+  // Send post data to social media webhook if changing to published status
+  if (status === 'published') {
+    await sendPostToSocialMediaWebhook(transformedPost);
+  }
+  
+  return transformedPost;
 };

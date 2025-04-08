@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -60,7 +59,6 @@ const BlogAdmin = () => {
     
     fetchPosts();
     
-    // Listen for post updates
     const handlePostUpdate = () => {
       fetchPosts();
     };
@@ -103,7 +101,6 @@ const BlogAdmin = () => {
     try {
       const newStatus = post.status === 'draft' ? 'published' : 'draft';
       await updateBlogPostStatus(post.id, newStatus);
-      // Update local state
       setPosts(posts.map(p => {
         if (p.id === post.id) {
           return { ...p, status: newStatus };
@@ -129,7 +126,6 @@ const BlogAdmin = () => {
     );
   }
 
-  // Mobile post card view
   const MobilePostCard = ({ post }: { post: BlogPost }) => (
     <Card className="mb-4">
       <CardHeader className="pb-2">

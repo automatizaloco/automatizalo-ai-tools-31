@@ -42,6 +42,13 @@ export const transformPostForDatabase = (postData: any) => {
 export const downloadImage = async (imageUrl: string): Promise<string | null> => {
   try {
     console.log("Downloading image from URL:", imageUrl);
+    
+    // Check if URL is already a valid image URL
+    if (imageUrl.startsWith('data:image/') || imageUrl.includes('placeholder.com')) {
+      return imageUrl;
+    }
+    
+    // If it's an external URL, download it
     const response = await fetch(imageUrl);
     
     if (!response.ok) {

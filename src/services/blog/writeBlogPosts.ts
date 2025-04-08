@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
@@ -194,14 +193,18 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     let imageData = null;
     if (imageUrl && !imageUrl.includes("placeholder.com")) {
       console.log("Attempting to download image from:", imageUrl);
-      imageData = await downloadImage(imageUrl);
-      
-      if (imageData) {
-        console.log("Image successfully downloaded and converted to base64");
-        imageUrl = imageData;
-      } else {
-        console.warn("Failed to download image, using placeholder");
-        imageUrl = "https://via.placeholder.com/800x400";
+      try {
+        imageData = await downloadImage(imageUrl);
+        
+        if (imageData) {
+          console.log("Image successfully downloaded and converted to base64");
+          imageUrl = imageData;
+        } else {
+          console.warn("Failed to download image, using original URL", imageUrl);
+        }
+      } catch (imgError) {
+        console.error("Error downloading image:", imgError);
+        console.warn("Using original image URL due to download failure");
       }
     }
     

@@ -1,5 +1,6 @@
-
 import { BlogPost } from "@/types/blog";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
 
 // Utility function to transform database post to BlogPost type
 export const transformDatabasePost = (post: any): BlogPost => ({
@@ -15,7 +16,7 @@ export const transformDatabasePost = (post: any): BlogPost => ({
   readTime: post.read_time,
   author: post.author,
   featured: post.featured,
-  status: post.status || 'published', // Default to published if status isn't present
+  status: post.status || 'published',
   url: post.url,
   translations: post.blog_translations ? post.blog_translations.reduce((acc: any, trans: any) => {
     if (trans) {
@@ -159,5 +160,94 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
   } catch (error) {
     console.error("Error parsing webhook response:", error);
     throw new Error("Invalid JSON response from webhook");
+  }
+};
+
+// Upload image to Supabase storage from URL or base64
+export const uploadImageToStorage = async (imageSource: string, postTitle: string): Promise<string | null> => {
+  try {
+    console.log("Preparing to upload image to storage:", imageSource.substring(0, 50) + "...");
+    
+    // Check if it's already a Supabase storage URL
+    if (imageSource.includes('juwbamkqkawyibcvllvo.supabase.co/storage/v1/object/public/blog_images')) {
+      console.log("Image is already in Supabase storage, skipping upload");
+      return imageSource;
+    }
+    
+    let imageBlob: Blob;
+    
+    // If it's a base64 data URL
+    if (imageSource.startsWith('data:image/')) {
+      console.log("Converting base64 image to blob");
+      // Extract base64 data from the data URL
+      const base64Data = imageSource.split(',')[1];
+      
+      // Get the MIME type from the data URL
+      const mimeMatch = imageSource.match(/data:(.*?);/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      
+      // Convert base64 to blob
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+      
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+      
+      imageBlob = new Blob(byteArrays, { type: mimeType });
+    } 
+    // If it's an external URL
+    else {
+      console.log("Fetching image from external URL");
+      const response = await fetch(imageSource);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      }
+      
+      imageBlob = await response.blob();
+    }
+    
+    // Generate a unique filename with sanitized post title
+    const sanitizedTitle = postTitle.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 50);
+    const fileExtension = imageBlob.type.split('/')[1] || 'jpg';
+    const fileName = `${sanitizedTitle}-${uuidv4().substring(0, 8)}.${fileExtension}`;
+    
+    console.log(`Uploading image as ${fileName} (${imageBlob.size} bytes)`);
+    
+    // Upload to Supabase storage
+    const { data, error } = await supabase
+      .storage
+      .from('blog_images')
+      .upload(`blog/${fileName}`, imageBlob, {
+        contentType: imageBlob.type,
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (error) {
+      console.error("Error uploading image to storage:", error);
+      return null;
+    }
+    
+    // Get the public URL for the uploaded image
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from('blog_images')
+      .getPublicUrl(`blog/${fileName}`);
+    
+    console.log("Image uploaded successfully to:", publicUrl);
+    return publicUrl;
+  } catch (error) {
+    console.error("Error uploading image to storage:", error);
+    return null;
   }
 };

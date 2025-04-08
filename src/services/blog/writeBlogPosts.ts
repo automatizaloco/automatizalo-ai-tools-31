@@ -1,7 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
-import { downloadImage, parseWebhookJsonResponse, transformDatabasePost } from "./utils";
+import { downloadImage, parseWebhookJsonResponse, transformDatabasePost, uploadImageToStorage } from "./utils";
 
 /**
  * Create a new blog post
@@ -49,6 +50,28 @@ export const updateBlogPost = async (
   id: string, 
   updates: Partial<BlogPost>
 ): Promise<BlogPost> => {
+  // If the image URL is temporary (from webhook), upload it to permanent storage
+  if (updates.image && (
+      updates.image.includes('ideogram.ai') || 
+      updates.image.includes('ephemeral') || 
+      updates.image.startsWith('data:image/')
+    )) {
+    try {
+      console.log("Detected temporary image URL, uploading to permanent storage:", updates.image.substring(0, 50) + "...");
+      const permanentImageUrl = await uploadImageToStorage(updates.image, updates.title || id);
+      
+      if (permanentImageUrl) {
+        console.log("Image uploaded to permanent storage:", permanentImageUrl);
+        updates.image = permanentImageUrl;
+      } else {
+        console.warn("Failed to upload image to permanent storage, keeping original URL");
+      }
+    } catch (imageError) {
+      console.error("Error processing image for permanent storage:", imageError);
+      toast.error("Failed to save image to permanent storage, but will continue with post update");
+    }
+  }
+  
   // Map readTime to read_time for database consistency
   const dbUpdates = {
     ...updates

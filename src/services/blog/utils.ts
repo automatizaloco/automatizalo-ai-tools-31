@@ -82,8 +82,8 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
         // Create a result object with all data from the response
         const result = { ...firstItem };
         
-        // Handle different image URL property names
-        if (firstItem.image_url && !firstItem.image) {
+        // Handle image_url field explicitly
+        if (firstItem.image_url) {
           result.image = firstItem.image_url;
           console.log("Mapped image_url to image:", result.image);
         }
@@ -94,6 +94,7 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
           console.log("Mapped read_time to readTime:", result.readTime);
         }
         
+        console.log("Final processed result:", result);
         return result;
       }
       

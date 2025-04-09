@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Globe, Wand2, MoreVertical } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Globe, Wand2, MoreVertical, Webhook } from "lucide-react";
 import { fetchBlogPosts, deleteBlogPost, updateBlogPostStatus } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { toast } from "sonner";
@@ -94,7 +94,7 @@ const BlogAdmin = () => {
   };
   
   const handleCreateAutomatic = () => {
-    navigate("/admin/blog/automatic");
+    navigate("/admin/automatic-blog");
   };
   
   const handleToggleStatus = async (post: BlogPost) => {
@@ -109,12 +109,14 @@ const BlogAdmin = () => {
         }
         return p;
       }));
-      
-      toast.success(`Post ${newStatus === 'published' ? 'published' : 'moved to drafts'} successfully`);
     } catch (error) {
       console.error("Error updating post status:", error);
       toast.error("Failed to update post status");
     }
+  };
+  
+  const navigateToWebhookSettings = () => {
+    navigate("/admin/webhooks");
   };
 
   const hasTranslations = (post: BlogPost) => {
@@ -193,6 +195,15 @@ const BlogAdmin = () => {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-8 gap-3">
         <h1 className="text-xl md:text-3xl font-bold">Blog Management</h1>
         <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={navigateToWebhookSettings}
+            className="flex items-center gap-2 text-sm"
+            size={isMobile ? "sm" : "default"}
+          >
+            <Webhook className="w-4 h-4" />
+            {isMobile ? "Webhooks" : "Webhook Settings"}
+          </Button>
           <Button 
             variant="outline"
             onClick={handleCreateAutomatic}

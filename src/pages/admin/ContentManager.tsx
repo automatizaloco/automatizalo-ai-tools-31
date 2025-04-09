@@ -1,9 +1,8 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Sparkles } from "lucide-react";
+import { PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Sparkles, Webhook } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Card,
@@ -46,6 +45,12 @@ const ContentManager = () => {
       description: "Generate blog posts automatically with AI",
       route: "/admin/automatic-blog",
       icon: Sparkles
+    },
+    {
+      title: "Webhooks",
+      description: "Configure webhook endpoints for blog posts and social media",
+      route: "/admin/webhooks",
+      icon: Webhook
     },
     {
       title: "Testimonials",

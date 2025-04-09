@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, Suspense, lazy } from 'react';
 import { Toaster } from '@/components/ui/sonner';
@@ -20,6 +19,7 @@ import ContentEditor from '@/pages/admin/ContentEditor';
 import TestimonialManager from '@/pages/admin/TestimonialManager';
 import NewsletterAdmin from '@/pages/admin/NewsletterAdmin';
 import AutomaticBlog from '@/pages/admin/AutomaticBlog';
+import WebhookManager from '@/pages/admin/WebhookManager';
 import Unsubscribe from '@/pages/Unsubscribe';
 
 import { useContactInfo } from '@/stores/contactInfoStore';
@@ -64,6 +64,7 @@ function AppContent() {
             <Route path="blog/new" element={<BlogPostForm />} />
             <Route path="blog/edit/:id" element={<BlogPostForm />} />
             <Route path="automatic-blog" element={<AutomaticBlog />} />
+            <Route path="webhooks" element={<WebhookManager />} />
             <Route path="layout" element={<LayoutManager />} />
             <Route path="testimonials" element={<TestimonialManager />} />
             <Route path="newsletter" element={<NewsletterAdmin />} />

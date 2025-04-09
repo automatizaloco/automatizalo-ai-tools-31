@@ -1,8 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
 import { downloadImage, parseWebhookJsonResponse, transformDatabasePost, uploadImageToStorage } from "./utils";
+import { useWebhookStore } from "@/stores/webhookStore";
 
 /**
  * Create a new blog post
@@ -48,6 +48,9 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
  */
 export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void> => {
   try {
+    // Get the active webhook URL from the store
+    const webhookUrl = useWebhookStore.getState().getActiveBlogSocialShareUrl();
+    
     // Format the data for the social media webhook
     const webhookData = {
       title: post.title,
@@ -55,14 +58,14 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
       image: post.image
     };
     
-    console.log("Sending post to social media webhook:", webhookData);
+    console.log(`Sending post to social media webhook (${webhookUrl}):`, webhookData);
     
     // Use fetch with a timeout to ensure it doesn't hang
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
     
     try {
-      const response = await fetch('https://n8n.automatizalo.co/webhook/blog-redes', {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,25 +232,44 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
  */
 export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   try {
-    console.log("Sending post to n8n webhook:", formatPostForN8N(blogPostData));
+    // Get the active webhook URL from the store
+    const webhookUrl = useWebhookStore.getState().getActiveBlogCreationUrl();
     
-    // Updated to use the production webhook URL
-    const response = await fetch('https://n8n.automatizalo.co/webhook/admin/blog/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formatPostForN8N(blogPostData)),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to send post to webhook: ${errorText}`);
+    console.log(`Sending post to blog creation webhook (${webhookUrl}):`, formatPostForN8N(blogPostData));
+    
+    // Use fetch with a timeout to ensure it doesn't hang
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout for longer operations
+    
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formatPostForN8N(blogPostData)),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Webhook response error (${response.status}):`, errorText);
+        throw new Error(`Failed to send post to webhook: ${errorText}`);
+      }
+  
+      const responseText = await response.text();
+      console.log('Webhook raw response:', responseText);
+      return responseText;
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error("Fetch error sending to webhook:", fetchError);
+      if (fetchError.name === 'AbortError') {
+        throw new Error("Webhook request timed out");
+      }
+      throw fetchError;
     }
-
-    const responseText = await response.text();
-    console.log('Webhook raw response:', responseText);
-    return responseText;
   } catch (error) {
     console.error('Error sending post to webhook:', error);
     throw error;

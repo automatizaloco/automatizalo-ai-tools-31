@@ -48,9 +48,8 @@ const AdminLayout = () => {
   }, [navigate]);
   
   useEffect(() => {
-    // Get the current path and set the active tab
     const path = window.location.pathname;
-    const segment = path.split('/')[2]; // Get the segment after /admin/
+    const segment = path.split('/')[2];
     if (segment) {
       setActiveTab(segment);
     }
@@ -82,6 +81,7 @@ const AdminLayout = () => {
     { value: 'content', label: 'Content' },
     { value: 'blog', label: 'Blog' },
     { value: 'automatic-blog', label: 'Auto Blog' },
+    { value: 'webhooks', label: 'Webhooks' },
     { value: 'layout', label: 'Layout' },
     { value: 'testimonials', label: 'Testimonials' },
     { value: 'newsletter', label: 'Newsletter' }
@@ -89,7 +89,6 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
       {isMobile ? (
         <div className="bg-white shadow sticky top-0 z-50">
           <div className="px-4 h-16 flex justify-between items-center">
@@ -149,7 +148,7 @@ const AdminLayout = () => {
             className="w-full mb-8"
             onValueChange={handleTabChange}
           >
-            <TabsList className="grid grid-cols-6 w-full">
+            <TabsList className="grid grid-cols-7 w-full">
               {adminRoutes.map((route) => (
                 <TabsTrigger key={route.value} value={route.value}>
                   {route.label}

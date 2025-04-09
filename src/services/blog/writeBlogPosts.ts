@@ -57,7 +57,7 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
     
     console.log("Sending post to social media webhook:", webhookData);
     
-    await fetch('https://n8n.automatizalo.co/webhook-test/blog-redes', {
+    await fetch('https://n8n.automatizalo.co/webhook/blog-redes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

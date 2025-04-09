@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
@@ -56,19 +57,36 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
     
     console.log("Sending post to social media webhook:", webhookData);
     
-    const response = await fetch('https://n8n.automatizalo.co/webhook/blog-redes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(webhookData),
-    });
+    // Use fetch with a timeout to ensure it doesn't hang
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Webhook response error (${response.status}):`, errorText);
-    } else {
-      console.log("Post data sent to social media webhook successfully");
+    try {
+      const response = await fetch('https://n8n.automatizalo.co/webhook/blog-redes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Webhook response error (${response.status}):`, errorText);
+        toast.error(`Failed to send post to social media: ${response.statusText}`);
+      } else {
+        console.log("Post data sent to social media webhook successfully");
+        toast.success("Post shared to social media channels");
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error("Fetch error sending to webhook:", fetchError);
+      if (fetchError.name === 'AbortError') {
+        toast.error("Webhook request timed out");
+      }
     }
   } catch (error) {
     console.error("Error sending post to social media webhook:", error);
@@ -305,6 +323,8 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
 
 // Add a function to change blog post status
 export const updateBlogPostStatus = async (id: string, status: 'draft' | 'published'): Promise<BlogPost> => {
+  console.log(`Updating blog post ${id} status to ${status}`);
+  
   const { data, error } = await supabase
     .from('blog_posts')
     .update({ status })
@@ -327,7 +347,12 @@ export const updateBlogPostStatus = async (id: string, status: 'draft' | 'publis
   
   // Send post data to social media webhook if changing to published status
   if (status === 'published') {
+    console.log("Status is 'published', sending to social media webhook");
+    
+    // IMPORTANT: Call the webhook function directly here to ensure it's triggered
     await sendPostToSocialMediaWebhook(transformedPost);
+  } else {
+    console.log("Status is not 'published', skipping webhook");
   }
   
   return transformedPost;

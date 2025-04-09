@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit, Trash2, Globe, Wand2, MoreVertical } from "lucide-react";
-import { fetchBlogPosts, deleteBlogPost, updateBlogPostStatus, sendPostToSocialMediaWebhook } from "@/services/blogService";
+import { fetchBlogPosts, deleteBlogPost, updateBlogPostStatus } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
@@ -100,28 +100,6 @@ const BlogAdmin = () => {
   const handleToggleStatus = async (post: BlogPost) => {
     try {
       const newStatus = post.status === 'draft' ? 'published' : 'draft';
-      
-      if (newStatus === 'published') {
-        const webhookData = {
-          title: post.title,
-          url: `${window.location.origin}/blog/${post.slug}`,
-          image: post.image
-        };
-        
-        console.log("Sending post to social media webhook on status change:", webhookData);
-        try {
-          await fetch('https://n8n.automatizalo.co/webhook/blog-redes', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(webhookData),
-          });
-          console.log("Webhook sent successfully on status change");
-        } catch (webhookError) {
-          console.error("Error sending to webhook:", webhookError);
-        }
-      }
       
       await updateBlogPostStatus(post.id, newStatus);
       

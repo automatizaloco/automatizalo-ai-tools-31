@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
@@ -57,7 +56,7 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
     
     console.log("Sending post to social media webhook:", webhookData);
     
-    await fetch('https://n8n.automatizalo.co/webhook/blog-redes', {
+    const response = await fetch('https://n8n.automatizalo.co/webhook/blog-redes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -65,7 +64,12 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
       body: JSON.stringify(webhookData),
     });
     
-    console.log("Post data sent to social media webhook successfully");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Webhook response error (${response.status}):`, errorText);
+    } else {
+      console.log("Post data sent to social media webhook successfully");
+    }
   } catch (error) {
     console.error("Error sending post to social media webhook:", error);
     // Don't throw error, just log it - we don't want to fail the update if webhook fails

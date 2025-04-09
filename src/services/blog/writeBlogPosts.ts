@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
@@ -48,8 +49,10 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
  */
 export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void> => {
   try {
-    // Get the active webhook URL from the store
-    const webhookUrl = useWebhookStore.getState().getActiveBlogSocialShareUrl();
+    // Get the active webhook URL and method from the store
+    const webhookStore = useWebhookStore.getState();
+    const webhookUrl = webhookStore.getActiveBlogSocialShareUrl();
+    const webhookMethod = webhookStore.getActiveBlogSocialShareMethod();
     
     // Format the data for the social media webhook
     const webhookData = {
@@ -58,21 +61,39 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
       image: post.image
     };
     
-    console.log(`Sending post to social media webhook (${webhookUrl}):`, webhookData);
+    console.log(`Sending post to social media webhook (${webhookUrl}) using ${webhookMethod}:`, webhookData);
     
     // Use fetch with a timeout to ensure it doesn't hang
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
     
     try {
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData),
-        signal: controller.signal
-      });
+      let response;
+      
+      if (webhookMethod === "POST") {
+        response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookData),
+          signal: controller.signal
+        });
+      } else {
+        // For GET requests, append params to the URL
+        const params = new URLSearchParams();
+        Object.entries(webhookData).forEach(([key, value]) => {
+          params.append(key, String(value));
+        });
+        const getUrl = `${webhookUrl}?${params.toString()}`;
+        
+        console.log(`Using GET request with URL: ${getUrl}`);
+        
+        response = await fetch(getUrl, {
+          method: 'GET',
+          signal: controller.signal
+        });
+      }
       
       clearTimeout(timeoutId);
       
@@ -81,7 +102,8 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
         console.error(`Webhook response error (${response.status}):`, errorText);
         toast.error(`Failed to send post to social media: ${response.statusText}`);
       } else {
-        console.log("Post data sent to social media webhook successfully");
+        const responseText = await response.text();
+        console.log("Post data sent to social media webhook successfully. Response:", responseText);
         toast.success("Post shared to social media channels");
       }
     } catch (fetchError) {
@@ -89,6 +111,8 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
       console.error("Fetch error sending to webhook:", fetchError);
       if (fetchError.name === 'AbortError') {
         toast.error("Webhook request timed out");
+      } else {
+        toast.error(`Webhook error: ${fetchError.message}`);
       }
     }
   } catch (error) {
@@ -232,24 +256,48 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
  */
 export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   try {
-    // Get the active webhook URL from the store
-    const webhookUrl = useWebhookStore.getState().getActiveBlogCreationUrl();
+    // Get the active webhook URL and method from the store
+    const webhookStore = useWebhookStore.getState();
+    const webhookUrl = webhookStore.getActiveBlogCreationUrl();
+    const webhookMethod = webhookStore.getActiveBlogCreationMethod();
     
-    console.log(`Sending post to blog creation webhook (${webhookUrl}):`, formatPostForN8N(blogPostData));
+    const formattedData = formatPostForN8N(blogPostData);
+    console.log(`Sending post to blog creation webhook (${webhookUrl}) using ${webhookMethod}:`, formattedData);
     
     // Use fetch with a timeout to ensure it doesn't hang
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout for longer operations
     
     try {
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formatPostForN8N(blogPostData)),
-        signal: controller.signal
-      });
+      let response;
+      
+      if (webhookMethod === "POST") {
+        response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formattedData),
+          signal: controller.signal
+        });
+      } else {
+        // For GET requests, append params to the URL
+        const params = new URLSearchParams();
+        Object.entries(formattedData).forEach(([key, value]) => {
+          // Handle arrays and objects
+          if (typeof value === 'object') {
+            params.append(key, JSON.stringify(value));
+          } else {
+            params.append(key, String(value));
+          }
+        });
+        const getUrl = `${webhookUrl}?${params.toString()}`;
+        
+        response = await fetch(getUrl, {
+          method: 'GET',
+          signal: controller.signal
+        });
+      }
       
       clearTimeout(timeoutId);
       
@@ -372,7 +420,12 @@ export const updateBlogPostStatus = async (id: string, status: 'draft' | 'publis
     console.log("Status is 'published', sending to social media webhook");
     
     // IMPORTANT: Call the webhook function directly here to ensure it's triggered
-    await sendPostToSocialMediaWebhook(transformedPost);
+    try {
+      await sendPostToSocialMediaWebhook(transformedPost);
+    } catch (webhookError) {
+      console.error("Error sending to social media webhook:", webhookError);
+      toast.error("Post published, but failed to share to social media");
+    }
   } else {
     console.log("Status is not 'published', skipping webhook");
   }

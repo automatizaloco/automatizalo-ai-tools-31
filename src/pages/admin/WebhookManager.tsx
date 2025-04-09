@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Settings, Webhook, AlertTriangle, CheckCircle } from "lucide-react";
+import { Settings, Webhook, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { useWebhookStore, WebhookMode } from "@/stores/webhookStore";
 import {
   Card,
@@ -23,6 +23,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const WebhookManager = () => {
   const { isAuthenticated } = useAuth();
@@ -30,6 +37,10 @@ const WebhookManager = () => {
   const [testingStatus, setTestingStatus] = useState<Record<string, "idle" | "success" | "error">>({
     blogCreation: "idle",
     blogSocial: "idle",
+  });
+  const [requestMethods, setRequestMethods] = useState<Record<string, "POST" | "GET">>({
+    blogCreation: "POST",
+    blogSocial: "POST",
   });
 
   const {
@@ -69,10 +80,15 @@ const WebhookManager = () => {
       updateBlogSocialShareUrl({ [mode]: value });
     }
   };
+  
+  const handleMethodChange = (type: "blogCreation" | "blogSocial", method: "POST" | "GET") => {
+    setRequestMethods(prev => ({ ...prev, [type]: method }));
+  };
 
   const testWebhook = async (type: "blogCreation" | "blogSocial") => {
     let url = "";
     let testData = {};
+    const method = requestMethods[type];
 
     if (type === "blogCreation") {
       url = getActiveBlogCreationUrl();
@@ -93,29 +109,52 @@ const WebhookManager = () => {
     setTestingStatus(prev => ({ ...prev, [type]: "idle" }));
     
     try {
-      console.log(`Testing webhook: ${url}`, testData);
+      console.log(`Testing webhook: ${url} with ${method} request`, testData);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(testData),
-        signal: controller.signal
-      });
+      let response;
+      
+      if (method === "POST") {
+        response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(testData),
+          signal: controller.signal
+        });
+      } else {
+        // For GET requests, append params to the URL
+        const params = new URLSearchParams();
+        Object.entries(testData).forEach(([key, value]) => {
+          params.append(key, String(value));
+        });
+        const getUrl = `${url}?${params.toString()}`;
+        response = await fetch(getUrl, {
+          method: "GET",
+          signal: controller.signal
+        });
+      }
       
       clearTimeout(timeoutId);
       
       if (response.ok) {
         setTestingStatus(prev => ({ ...prev, [type]: "success" }));
         toast.success("Webhook test completed successfully");
+        
+        // Try to log the response for debugging
+        try {
+          const responseText = await response.text();
+          console.log("Webhook response:", responseText);
+        } catch (err) {
+          console.log("Could not parse webhook response");
+        }
       } else {
         setTestingStatus(prev => ({ ...prev, [type]: "error" }));
         const errorText = await response.text();
         console.error(`Webhook test failed: ${errorText}`);
-        toast.error("Webhook test failed");
+        toast.error(`Webhook test failed: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error(`Error testing webhook:`, error);
@@ -124,7 +163,7 @@ const WebhookManager = () => {
       if (error.name === 'AbortError') {
         toast.error("Webhook request timed out");
       } else {
-        toast.error("Failed to test webhook connection");
+        toast.error(`Failed to test webhook connection: ${error.message}`);
       }
     }
   };
@@ -226,9 +265,42 @@ const WebhookManager = () => {
               </div>
               
               <div>
+                <Label className="block mb-2">Request Method</Label>
+                <Select 
+                  value={requestMethods.blogSocial} 
+                  onValueChange={(value) => handleMethodChange("blogSocial", value as "POST" | "GET")}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="GET">GET</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select GET if the webhook requires a GET request instead of POST
+                </p>
+              </div>
+              
+              <div>
                 <Label className="block mb-2">Active Endpoint</Label>
                 <div className="p-2 bg-gray-50 rounded border border-gray-200 text-sm font-mono break-all">
                   {getActiveBlogSocialShareUrl()}
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 p-3 rounded border border-blue-100">
+                <div className="flex items-start gap-2">
+                  <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-800">Important Note</h4>
+                    <p className="text-xs text-blue-700 mt-1">
+                      If testing fails with a POST request, try changing to GET. Some webhook providers 
+                      only accept specific request methods. When publishing posts, the system will automatically use the method
+                      you configure here.
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -318,6 +390,22 @@ const WebhookManager = () => {
                     />
                   </div>
                 </div>
+              </div>
+              
+              <div>
+                <Label className="block mb-2">Request Method</Label>
+                <Select 
+                  value={requestMethods.blogCreation} 
+                  onValueChange={(value) => handleMethodChange("blogCreation", value as "POST" | "GET")}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="GET">GET</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>

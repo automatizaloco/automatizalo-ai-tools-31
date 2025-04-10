@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { getPageContent, updatePageContent } from "@/services/pageContentService";
-import { Input } from '@/components/ui/input';
 import { FileUploader } from '@/components/admin/FileUploader';
 
 interface PageSection {
@@ -21,6 +20,12 @@ interface PageSection {
 
 interface ImageMap {
   [key: string]: string;
+}
+
+// Type for directly working with storage
+interface SectionImage {
+  path: string;
+  url: string;
 }
 
 const ContentEditor = () => {
@@ -76,16 +81,20 @@ const ContentEditor = () => {
             contentData[pageName][section.sectionName] = sectionContent;
             
             // Get section images from storage
-            const { data: sectionImages } = await supabase
-              .from('page_images')
-              .select('section_id, image_url')
-              .eq('page', section.pageName)
-              .eq('section_name', section.sectionName);
+            for (const imageId of ['main', 'header', 'background']) {
+              // Create a unique key for each image
+              const imageKey = `${section.pageName}-${section.sectionName}-${imageId}`;
+              // Create the file path in storage
+              const filePath = `content-images/${imageKey}`;
               
-            if (sectionImages && sectionImages.length > 0) {
-              sectionImages.forEach(item => {
-                imagesData[`${section.pageName}-${section.sectionName}-${item.section_id}`] = item.image_url;
-              });
+              // Check if the file exists
+              const { data } = await supabase.storage
+                .from('content')
+                .getPublicUrl(filePath);
+              
+              if (data) {
+                imagesData[imageKey] = data.publicUrl;
+              }
             }
           }
         }
@@ -147,23 +156,12 @@ const ContentEditor = () => {
       
       const imageUrl = publicUrlData.publicUrl;
       
-      // Save to database
-      const { error: dbError } = await supabase
-        .from('page_images')
-        .upsert({ 
-          page: pageName, 
-          section_name: sectionName,
-          section_id: sectionId,
-          image_url: imageUrl
-        }, { onConflict: 'page,section_name,section_id' });
-      
-      if (dbError) throw dbError;
-      
       // Update local state
-      setImages({
-        ...images,
-        [`${pageName}-${sectionName}-${sectionId}`]: imageUrl
-      });
+      const imageKey = `${pageName}-${sectionName}-${sectionId}`;
+      setImages(prevImages => ({
+        ...prevImages,
+        [imageKey]: imageUrl
+      }));
       
       toast.success("Image updated successfully!");
       return imageUrl;

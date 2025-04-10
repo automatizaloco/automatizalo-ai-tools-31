@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { NewBlogPost } from "@/types/blog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AdminLayout from "@/components/layout/AdminLayout";
+import { useWebhookStore } from "@/stores/webhookStore";
 
 const AutomaticBlog = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const AutomaticBlog = () => {
   });
   const [error, setError] = useState("");
   const isMobile = useIsMobile();
+  const webhookUrl = useWebhookStore(state => state.getActiveBlogCreationUrl());
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -158,6 +160,10 @@ const AutomaticBlog = () => {
                 <p className="text-xs md:text-sm text-gray-500 mt-1">
                   If provided, the AI will use this URL as reference
                 </p>
+              </div>
+              
+              <div className="text-xs md:text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
+                Using webhook: {webhookUrl || "Default webhook URL"}
               </div>
               
               {isLoading && (

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -69,12 +70,6 @@ const ContentManager = () => {
       description: "Edit content, images, and text across all website pages",
       route: "/admin/content-editor",
       icon: Globe
-    },
-    {
-      title: "Page Layout",
-      description: "Manage page sections and their arrangements",
-      route: "/admin/layout",
-      icon: LayoutDashboard
     }
   ];
 

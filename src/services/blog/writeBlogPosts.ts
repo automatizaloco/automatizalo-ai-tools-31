@@ -1,13 +1,20 @@
 
 import { NewBlogPost, BlogPost } from '@/types/blog';
 import { extractBlogPostFromResponse, processImage, saveBlogPost } from './utils';
+import { useWebhookStore } from '@/stores/webhookStore';
 
 /**
  * Send post data to N8N webhook
  */
 export const sendPostToN8N = async (blogPostData: NewBlogPost): Promise<string> => {
   try {
-    const response = await fetch('https://automatizalo-n8n.automatizalo.co/webhook/blog-creation', {
+    // Get webhook URL from store or use fallback
+    const webhookUrl = useWebhookStore.getState().getActiveBlogCreationUrl() || 
+      'https://automatizalo-n8n.automatizalo.co/webhook/blog-creation';
+
+    console.log("Using webhook URL:", webhookUrl);
+    
+    const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

@@ -15,7 +15,7 @@ const WhatsAppButton = ({
 }: WhatsAppButtonProps) => {
   const { t } = useLanguage();
   
-  // Always use this WhatsApp number
+  // Use only WhatsApp number, no regular phone number
   const whatsappNumber = "+57 3192963363";
   
   const handleClick = () => {

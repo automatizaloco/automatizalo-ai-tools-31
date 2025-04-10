@@ -27,6 +27,7 @@ import NewsletterAdmin from './pages/admin/NewsletterAdmin.tsx'
 import ContentEditor from './pages/admin/ContentEditor.tsx'
 import BlogAdmin from './pages/admin/BlogAdmin.tsx'
 import Solutions from './pages/Solutions.tsx'
+import PrivacyPolicy from './pages/PrivacyPolicy.tsx'
 
 const queryClient = new QueryClient()
 
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
       {
         path: "solutions",
         element: <Solutions />
+      },
+      {
+        path: "privacy-policy",
+        element: <PrivacyPolicy />
       }
     ]
   },

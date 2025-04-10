@@ -54,16 +54,7 @@ export const PersistentToastProvider: React.FC<PersistentToastProviderProps> = (
     const handleExternalToast = (event: CustomEvent<PersistentToast>) => {
       console.log("Received external toast event:", event.detail);
       if (event.detail) {
-        setToasts((currentToasts) => {
-          const newToasts = [event.detail, ...currentToasts];
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(newToasts));
-            console.log("Saved external toast to localStorage, new count:", newToasts.length);
-          } catch (error) {
-            console.error("Error saving toasts to localStorage:", error);
-          }
-          return newToasts;
-        });
+        addToastInternal(event.detail);
       }
     };
     
@@ -73,6 +64,20 @@ export const PersistentToastProvider: React.FC<PersistentToastProviderProps> = (
       window.removeEventListener('persistentToastAdded', handleExternalToast as EventListener);
     };
   }, [storageKey]);
+  
+  // Internal function to add a toast that can be called from both addToast and the event listener
+  const addToastInternal = (toastData: PersistentToast) => {
+    setToasts((currentToasts) => {
+      const newToasts = [toastData, ...currentToasts];
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(newToasts));
+        console.log("Saved toast to localStorage, new count:", newToasts.length);
+      } catch (error) {
+        console.error("Error saving toasts to localStorage:", error);
+      }
+      return newToasts;
+    });
+  };
   
   // Add a new toast
   const addToast = (toastData: Omit<PersistentToast, "id" | "timestamp">) => {
@@ -87,20 +92,8 @@ export const PersistentToastProvider: React.FC<PersistentToastProviderProps> = (
     // Also show the toast via Sonner
     toast[toastData.type](toastData.title, { description: toastData.message });
     
-    // Update state and save to localStorage
-    setToasts((currentToasts) => {
-      const newToasts = [newToast, ...currentToasts];
-      
-      // Store in localStorage
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(newToasts));
-        console.log("Saved toasts to localStorage, new count:", newToasts.length);
-      } catch (error) {
-        console.error("Error saving toasts to localStorage:", error);
-      }
-      
-      return newToasts;
-    });
+    // Add to state and localStorage
+    addToastInternal(newToast);
     
     // Also dispatch custom event for other parts of the app
     const event = new CustomEvent('persistentToastAdded', { 

@@ -49,79 +49,102 @@ const processImage = async (imageUrl: string, title: string): Promise<string> =>
       return imageUrl;
     }
     
-    // Skip if empty or invalid URL
-    if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
-      console.log("Invalid image URL:", imageUrl);
+    // Validate URL format
+    if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.match(/^https?:\/\/.+/i)) {
+      console.log("Invalid image URL format:", imageUrl);
       return "https://via.placeholder.com/800x400";
     }
 
     console.log("Downloading image from:", imageUrl);
     
-    // Download the image with proper error handling
-    const imageResponse = await fetch(imageUrl, {
-      headers: {
-        'Accept': 'image/*'
-      }
-    });
+    // Use stricter timeout for fetch
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
     
-    if (!imageResponse.ok) {
-      console.error(`Failed to download image: ${imageResponse.status} - ${await imageResponse.text()}`);
-      throw new Error(`Failed to download image: ${imageResponse.status}`);
-    }
-    
-    const blob = await imageResponse.blob();
-    console.log(`Downloaded image: ${blob.size} bytes, type: ${blob.type}`);
-    
-    if (blob.size === 0) {
-      console.error("Downloaded image has 0 bytes");
-      return "https://via.placeholder.com/800x400";
-    }
-    
-    // Prepare file path and name
-    const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 30);
-    const fileExtension = blob.type.split('/')[1] || 'jpg';
-    const fileName = `blog/${sanitizedTitle}-webhook-${Date.now()}.${fileExtension}`;
-    
-    console.log(`Uploading image as ${fileName} (${blob.size} bytes)`);
-    
-    // Upload to Supabase storage
-    const { data, error } = await supabaseAdmin
-      .storage
-      .from('blog_images')
-      .upload(fileName, blob, {
-        contentType: blob.type,
-        upsert: false
+    try {
+      // Download the image with proper error handling
+      const imageResponse = await fetch(imageUrl, {
+        headers: {
+          'Accept': 'image/*',
+          'User-Agent': 'Mozilla/5.0 (compatible; AutomatizaloBlogBot/1.0)'
+        },
+        signal: controller.signal
       });
-
-    if (error) {
-      console.error("Storage upload error:", error);
       
-      // If the error is because the file already exists, try to get the URL
-      if (error.message && error.message.includes('already exists')) {
-        console.log("File already exists, getting existing URL");
-        
-        const { data: { publicUrl } } = supabaseAdmin
-          .storage
-          .from('blog_images')
-          .getPublicUrl(fileName);
-          
-        return publicUrl;
+      clearTimeout(timeoutId);
+      
+      if (!imageResponse.ok) {
+        console.error(`Failed to download image: ${imageResponse.status} - ${await imageResponse.text()}`);
+        throw new Error(`Failed to download image: ${imageResponse.status}`);
       }
       
-      return imageUrl; // Return original if upload fails
+      const contentType = imageResponse.headers.get('content-type');
+      if (!contentType || !contentType.startsWith('image/')) {
+        console.error("Response is not an image:", contentType);
+        throw new Error("Response is not an image");
+      }
+      
+      const blob = await imageResponse.blob();
+      console.log(`Downloaded image: ${blob.size} bytes, type: ${blob.type}`);
+      
+      if (blob.size < 100) { // Sanity check for minimum image size
+        console.error("Downloaded image too small:", blob.size);
+        throw new Error("Downloaded image is too small");
+      }
+      
+      // Prepare file path and name
+      const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 30);
+      const fileExtension = blob.type.split('/')[1] || 'jpg';
+      const fileName = `blog/${sanitizedTitle}-webhook-${Date.now()}.${fileExtension}`;
+      
+      console.log(`Uploading image as ${fileName} (${blob.size} bytes)`);
+      
+      // Ensure blog_images bucket exists
+      await ensureStorageBucket();
+      
+      // Upload to Supabase storage
+      const { data, error } = await supabaseAdmin
+        .storage
+        .from('blog_images')
+        .upload(fileName, blob, {
+          contentType: blob.type,
+          upsert: false
+        });
+
+      if (error) {
+        console.error("Storage upload error:", error);
+        
+        // If the error is because the file already exists, try to get the URL
+        if (error.message && error.message.includes('already exists')) {
+          console.log("File already exists, getting existing URL");
+          
+          const { data: { publicUrl } } = supabaseAdmin
+            .storage
+            .from('blog_images')
+            .getPublicUrl(fileName);
+            
+          return publicUrl;
+        }
+        
+        return imageUrl; // Return original if upload fails
+      }
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabaseAdmin
+        .storage
+        .from('blog_images')
+        .getPublicUrl(fileName);
+
+      console.log("Image stored at:", publicUrl);
+      return publicUrl;
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error("Fetch error:", fetchError);
+      throw fetchError;
     }
-
-    // Get the public URL
-    const { data: { publicUrl } } = supabaseAdmin
-      .storage
-      .from('blog_images')
-      .getPublicUrl(fileName);
-
-    console.log("Image stored at:", publicUrl);
-    return publicUrl;
   } catch (error) {
     console.error("Image processing error:", error);
-    return imageUrl; // Return original URL if processing fails
+    return "https://via.placeholder.com/800x400"; // Return placeholder on error
   }
 }
 
@@ -161,6 +184,49 @@ const processNewBlogPost = async (payload: any) => {
     }
   }
   
+  // Deep scan for image URL in nested objects
+  if (!imageUrl) {
+    const searchForImageUrl = (obj: any): string | null => {
+      if (!obj || typeof obj !== 'object') return null;
+      
+      for (const key of Object.keys(obj)) {
+        const value = obj[key];
+        
+        // Check if key includes common image field names
+        if (
+          typeof value === 'string' &&
+          /\.(jpg|jpeg|png|gif|webp|svg|bmp)/i.test(value) &&
+          /^https?:\/\//i.test(value)
+        ) {
+          if (
+            key.includes('image') || 
+            key.includes('img') || 
+            key.includes('cover') || 
+            key.includes('photo') || 
+            key.includes('picture') || 
+            key.includes('url')
+          ) {
+            console.log(`Found potential image URL in field ${key}:`, value);
+            return value;
+          }
+        }
+        
+        // Recursively search nested objects
+        if (typeof value === 'object' && value !== null) {
+          const nestedUrl = searchForImageUrl(value);
+          if (nestedUrl) return nestedUrl;
+        }
+      }
+      
+      return null;
+    };
+    
+    imageUrl = searchForImageUrl(payload);
+    if (imageUrl) {
+      console.log("Found image URL in deep scan:", imageUrl);
+    }
+  }
+  
   // Check if there's an image property in nested data
   if (!imageUrl && payload.data && Array.isArray(payload.data) && payload.data.length > 0) {
     imageUrl = 
@@ -196,7 +262,8 @@ const processNewBlogPost = async (payload: any) => {
   // Process image if present
   if (imageUrl) {
     try {
-      payload.image = await processImage(imageUrl, payload.title);
+      const processedImageUrl = await processImage(imageUrl, payload.title);
+      payload.image = processedImageUrl;
       console.log("Processed image URL:", payload.image);
     } catch (imageError) {
       console.error("Failed to process image:", imageError);

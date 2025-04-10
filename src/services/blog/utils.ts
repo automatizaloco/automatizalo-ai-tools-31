@@ -1,307 +1,165 @@
 
-import { BlogPost } from "@/types/blog";
-import { supabase } from "@/integrations/supabase/client";
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
+import { NewBlogPost, BlogPost } from '@/types/blog';
 
-// Utility function to transform database post to BlogPost type
-export const transformDatabasePost = (post: any): BlogPost => ({
-  id: post.id,
-  title: post.title,
-  slug: post.slug,
-  excerpt: post.excerpt,
-  content: post.content,
-  image: post.image,
-  category: post.category,
-  tags: post.tags || [],
-  date: post.date,
-  readTime: post.read_time,
-  author: post.author,
-  featured: post.featured,
-  status: post.status || 'published',
-  url: post.url,
-  translations: post.blog_translations ? post.blog_translations.reduce((acc: any, trans: any) => {
-    if (trans) {
-      acc[trans.language] = {
-        title: trans.title,
-        excerpt: trans.excerpt,
-        content: trans.content
+// Constants
+const API_URL = "https://juwbamkqkawyibcvllvo.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1d2JhbWtxa2F3eWliY3ZsbHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MDUxMDIsImV4cCI6MjA1NzI4MTEwMn0.uqwyR5lwp8JXa7qAZu6nZcCEdaoKOxX0XxQls2vg7Fk";
+
+/**
+ * Extract the blog post data from a webhook response
+ */
+export const extractBlogPostFromResponse = (responseText: string): Partial<NewBlogPost> | null => {
+  try {
+    console.log("Extracting blog post data from response text:", responseText);
+    
+    // Try to parse if it's direct JSON
+    try {
+      const jsonData = JSON.parse(responseText);
+      console.log("Response is valid JSON:", jsonData);
+      
+      if (Array.isArray(jsonData) && jsonData.length > 0) {
+        console.log("Response is an array, using first item");
+        return jsonData[0];
+      }
+      
+      return jsonData;
+    } catch (jsonError) {
+      console.log("Response is not valid JSON, trying to extract JSON from text");
+    }
+    
+    // If not direct JSON, try to find JSON blocks in the text
+    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      try {
+        const extractedJson = JSON.parse(jsonMatch[1]);
+        console.log("Extracted JSON from markdown code block:", extractedJson);
+        return extractedJson;
+      } catch (extractError) {
+        console.error("Failed to parse JSON from markdown code block:", extractError);
+      }
+    }
+    
+    // Try to find image information in the response
+    const imageMatch = responseText.match(/image(?:_url|Url)?\s*:\s*["']?(https?:\/\/[^"'\s]+)["']?/i);
+    const imageUrl = imageMatch ? imageMatch[1] : null;
+    console.log("Found image URL in text:", imageUrl);
+    
+    // If we found an image but couldn't parse JSON, create a basic object with the image
+    if (imageUrl) {
+      return {
+        image: imageUrl
       };
     }
-    return acc;
-  }, {}) : {}
-});
-
-// Utility function to transform BlogPost to database format
-export const transformPostForDatabase = (postData: any) => {
-  const { translations, readTime, ...rest } = postData;
-  return {
-    ...rest,
-    read_time: readTime
-  };
-};
-
-// Download image from URL and convert to base64
-export const downloadImage = async (imageUrl: string): Promise<string | null> => {
-  try {
-    console.log("Downloading image from URL:", imageUrl);
     
-    // Check if URL is already a valid image URL from Supabase storage
-    if (imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
-      console.log("Image is already in Supabase storage, no need to download:", imageUrl);
-      return imageUrl;
-    }
-    
-    // If it's a base64 data URL, return as is
-    if (imageUrl.startsWith('data:image/')) {
-      return imageUrl;
-    }
-    
-    // If it's a placeholder, return as is
-    if (imageUrl.includes('placeholder.com')) {
-      return imageUrl;
-    }
-    
-    // For external URLs, download the image
-    console.log("Fetching external image...");
-    const response = await fetch(imageUrl, {
-      headers: {
-        'Accept': 'image/*',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-    }
-    
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    console.log("Could not extract any usable data from the response");
+    return null;
   } catch (error) {
-    console.error("Error downloading image:", error);
+    console.error("Error extracting blog post data:", error);
     return null;
   }
 };
 
 /**
- * Parse webhook response JSON from various formats
+ * Extract image URL from various object formats
  */
-export const parseWebhookJsonResponse = (response: any): any => {
-  console.log("Parsing webhook response:", response);
+export const extractImageUrl = (data: any): string | null => {
+  if (!data) return null;
   
-  // If response is already a parsed object, return it directly
-  if (typeof response === 'object' && !Array.isArray(response) && response !== null) {
-    console.log("Response is already an object");
-    return response;
+  // Direct image fields
+  if (data.image_url) return data.image_url;
+  if (data.imageUrl) return data.imageUrl;
+  if (data.image) return data.image;
+  
+  // Nested image fields
+  if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+    const firstItem = data.data[0];
+    if (firstItem.url) return firstItem.url;
+    if (firstItem.image_url) return firstItem.image_url;
+    if (firstItem.imageUrl) return firstItem.imageUrl;
+    if (firstItem.image) return firstItem.image;
   }
   
-  // If response is an array, take the first item
-  if (Array.isArray(response)) {
-    console.log("Response is an array, returning first item:", response[0]);
-    
-    // Extract image_url from the first item if it exists
-    if (response[0] && response[0].image_url) {
-      console.log("Found image_url in response:", response[0].image_url);
-    }
-    
-    return response[0];
-  }
-  
-  // Try to parse response as JSON if it's a string
-  if (typeof response === 'string') {
-    try {
-      // Try direct parsing
-      const parsed = JSON.parse(response);
-      console.log("Successfully parsed response string as JSON:", parsed);
-      
-      // If parsed result is an array, take the first item
-      if (Array.isArray(parsed)) {
-        console.log("Parsed JSON is an array, returning first item:", parsed[0]);
-        return parsed[0];
-      }
-      
-      return parsed;
-    } catch (firstError) {
-      console.error("First parsing attempt failed:", firstError);
-      
-      try {
-        // Try to extract JSON from a markdown code block
-        const jsonMatch = response.match(/```(?:json)?\n([\s\S]*?)\n```/);
-        if (jsonMatch && jsonMatch[1]) {
-          const parsed = JSON.parse(jsonMatch[1].trim());
-          console.log("Extracted JSON from code block:", parsed);
-          
-          // If parsed result is an array, take the first item
-          if (Array.isArray(parsed)) {
-            console.log("Parsed JSON from code block is an array, returning first item:", parsed[0]);
-            return parsed[0];
-          }
-          
-          return parsed;
-        }
-      } catch (secondError) {
-        console.error("Second parsing attempt failed:", secondError);
-      }
-      
-      console.error("Failed to parse response as JSON:", response);
-      return null;
-    }
-  }
-  
-  console.error("Unknown response format:", response);
   return null;
 };
 
-// Upload image to Supabase storage from URL or base64
-export const uploadImageToStorage = async (imageSource: string, postTitle: string): Promise<string | null> => {
+/**
+ * Process an image from URL
+ * Downloads the image and uploads to Supabase storage
+ */
+export const processImage = async (imageUrl: string, title: string): Promise<string> => {
   try {
-    console.log("Preparing to upload image to storage from source:", imageSource);
+    console.log("Processing image from URL:", imageUrl);
     
-    // Check if it's already a Supabase storage URL for our project
-    if (imageSource.includes('juwbamkqkawyibcvllvo.supabase.co/storage/v1/object/public/blog_images')) {
-      console.log("Image is already in Supabase storage, skipping upload");
-      return imageSource;
+    // Skip if already a Supabase storage URL
+    if (imageUrl && imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
+      console.log("Image is already in Supabase storage");
+      return imageUrl;
     }
     
-    // Create a bucket if it doesn't exist
+    // Skip if not a valid URL
+    if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.match(/^https?:\/\/.+/i)) {
+      console.log("Invalid image URL:", imageUrl);
+      return "https://via.placeholder.com/800x400";
+    }
+    
+    console.log("Downloading and uploading image for:", title);
+    
+    // Use the blog webhook to process the image
     try {
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const blogBucketExists = buckets?.some(bucket => bucket.name === 'blog_images');
-      
-      if (!blogBucketExists) {
-        console.log("Creating blog_images bucket");
-        const { error } = await supabase.storage.createBucket('blog_images', {
-          public: true,
-          fileSizeLimit: 10485760 // 10MB
-        });
-        
-        if (error) {
-          console.error("Error creating bucket:", error);
-        } else {
-          console.log("Blog images bucket created successfully");
-        }
-      } else {
-        console.log("Blog images bucket already exists");
-      }
-    } catch (bucketError) {
-      console.error("Error checking/creating bucket:", bucketError);
-      // Continue anyway as the bucket might already exist
-    }
-    
-    let imageBlob: Blob;
-    let fileExtension = 'jpg'; // Default extension
-    
-    // If it's a base64 data URL
-    if (imageSource.startsWith('data:image/')) {
-      console.log("Converting base64 image to blob");
-      
-      // Extract base64 data from the data URL
-      const base64Data = imageSource.split(',')[1];
-      
-      // Get the MIME type from the data URL
-      const mimeMatch = imageSource.match(/data:(.*?);/);
-      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-      
-      // Get file extension from mime type
-      if (mimeType === 'image/png') fileExtension = 'png';
-      if (mimeType === 'image/gif') fileExtension = 'gif';
-      if (mimeType === 'image/webp') fileExtension = 'webp';
-      
-      // Convert base64 to blob
-      const byteCharacters = atob(base64Data);
-      const byteArrays = [];
-      
-      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-        const slice = byteCharacters.slice(offset, offset + 512);
-        
-        const byteNumbers = new Array(slice.length);
-        for (let i = 0; i < slice.length; i++) {
-          byteNumbers[i] = slice.charCodeAt(i);
-        }
-        
-        const byteArray = new Uint8Array(byteNumbers);
-        byteArrays.push(byteArray);
-      }
-      
-      imageBlob = new Blob(byteArrays, { type: mimeType });
-    } 
-    // If it's an external URL
-    else {
-      console.log("Fetching image from external URL:", imageSource);
-      try {
-        const response = await fetch(imageSource, {
-          headers: {
-            'Accept': 'image/*',
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-        }
-        
-        imageBlob = await response.blob();
-        
-        // Determine file extension from content type
-        const contentType = response.headers.get('content-type');
-        if (contentType) {
-          if (contentType.includes('png')) fileExtension = 'png';
-          if (contentType.includes('gif')) fileExtension = 'gif';
-          if (contentType.includes('webp')) fileExtension = 'webp';
-        }
-      } catch (fetchError) {
-        console.error("Error fetching external image:", fetchError);
-        return null;
-      }
-    }
-    
-    // Generate a unique filename with sanitized post title
-    const sanitizedTitle = (postTitle || 'image').toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 30);
-    const fileName = `${sanitizedTitle}-${uuidv4().substring(0, 8)}.${fileExtension}`;
-    const filePath = `blog/${fileName}`;
-    
-    console.log(`Uploading image as ${filePath} (${imageBlob.size} bytes)`);
-    
-    // Upload to Supabase storage
-    const { data, error } = await supabase
-      .storage
-      .from('blog_images')
-      .upload(filePath, imageBlob, {
-        contentType: imageBlob.type,
-        cacheControl: '3600',
-        upsert: false
+      const response = await fetch(`${API_URL}/functions/v1/blog-webhook`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          title: title,
+          slug: title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-'),
+          excerpt: "Processing image only",
+          content: "Processing image only",
+          category: "Image Processing",
+          author: "System",
+          image_url: imageUrl
+        })
       });
-    
-    if (error) {
-      console.error("Error uploading image to storage:", error);
       
-      // If the error is because the file already exists, try to get the URL
-      if (error.message.includes('already exists')) {
-        console.log("File already exists, getting existing URL");
-        
-        const { data: { publicUrl } } = supabase
-          .storage
-          .from('blog_images')
-          .getPublicUrl(filePath);
-          
-        return publicUrl;
+      if (!response.ok) {
+        console.error("Image processing webhook failed:", response.statusText);
+        throw new Error(`Webhook failed with status: ${response.status}`);
       }
       
-      return null;
+      const result = await response.json();
+      if (result.data && result.data.image) {
+        console.log("Processed image URL:", result.data.image);
+        return result.data.image;
+      }
+      
+      throw new Error("No image URL returned from webhook");
+    } catch (webhookError) {
+      console.error("Failed to process image through webhook:", webhookError);
+      return imageUrl; // Return original URL on error
     }
-    
-    // Get the public URL for the uploaded image
-    const { data: { publicUrl } } = supabase
-      .storage
-      .from('blog_images')
-      .getPublicUrl(data?.path || filePath);
-    
-    console.log("Image uploaded successfully to:", publicUrl);
-    return publicUrl;
   } catch (error) {
-    console.error("Error uploading image to storage:", error);
-    return null;
+    console.error("Failed to download image, using original URL:", error);
+    return imageUrl;
   }
+};
+
+/**
+ * Save a blog post to the database
+ */
+export const saveBlogPost = async (data: NewBlogPost): Promise<BlogPost> => {
+  const { data: savedPost, error } = await supabase
+    .from('blog_posts')
+    .insert(data)
+    .select('*')
+    .single();
+  
+  if (error) {
+    console.error("Error saving blog post:", error);
+    throw error;
+  }
+  
+  return savedPost as BlogPost;
 };

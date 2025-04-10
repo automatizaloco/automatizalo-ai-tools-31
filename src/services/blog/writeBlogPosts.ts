@@ -51,7 +51,7 @@ export const processAndSaveWebhookResponse = async (
     
     console.log("Extracted blog post data:", extractedData);
     
-    // Prepare blog post data
+    // Handle fields from webhook response with proper mapping
     const blogPostData: NewBlogPost = {
       title: extractedData.title || originalTitle,
       slug: extractedData.slug || originalSlug,
@@ -61,10 +61,11 @@ export const processAndSaveWebhookResponse = async (
       tags: extractedData.tags || ["automatic", "ai-generated"],
       author: extractedData.author || "AI Assistant",
       date: extractedData.date || new Date().toISOString().split('T')[0],
-      readTime: extractedData.readTime || "5 min",
+      // Map read_time to readTime if present
+      readTime: extractedData.readTime || extractedData.read_time || "5 min",
       status: 'draft',
       featured: false,
-      url: extractedData.url || "",
+      // Don't include url field if not supported by the database
       image: "https://via.placeholder.com/800x400" // Default placeholder, will be updated below
     };
     
@@ -93,8 +94,8 @@ export const processAndSaveWebhookResponse = async (
         const processedImageUrl = await processImage(imageUrl, blogPostData.title);
         blogPostData.image = processedImageUrl;
       } catch (imageError) {
-        console.error("Image Download Failed");
-        console.error("Failed to download image, using original URL");
+        console.error("Image Processing Failed:", imageError);
+        console.error("Using direct image URL instead");
         blogPostData.image = imageUrl;
       }
     } else {

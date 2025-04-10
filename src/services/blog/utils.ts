@@ -127,44 +127,57 @@ export const processImage = async (imageUrl: string, title: string): Promise<str
     
     console.log("Downloading and uploading image for:", title);
     
-    // Use the blog webhook to process the image
+    // Direct fetch approach instead of using webhook
     try {
-      const response = await fetch(`${API_URL}/functions/v1/blog-webhook`, {
-        method: 'POST',
+      // Fetch the image directly
+      const imageResponse = await fetch(imageUrl, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({
-          title: title,
-          slug: title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-'),
-          excerpt: "Processing image only",
-          content: "Processing image only",
-          category: "Image Processing",
-          author: "System",
-          image_url: imageUrl
-        })
+          'Accept': 'image/*',
+          'User-Agent': 'Mozilla/5.0 (compatible; AutomatizaloBlogBot/1.0)'
+        }
       });
       
-      if (!response.ok) {
-        console.error("Image processing webhook failed:", response.statusText);
-        throw new Error(`Webhook failed with status: ${response.status}`);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to download image: ${imageResponse.status}`);
       }
       
-      const result = await response.json();
-      if (result.data && result.data.image) {
-        console.log("Processed image URL:", result.data.image);
-        return result.data.image;
+      const contentType = imageResponse.headers.get('content-type');
+      if (!contentType || !contentType.startsWith('image/')) {
+        throw new Error("Response is not an image");
       }
       
-      throw new Error("No image URL returned from webhook");
-    } catch (webhookError) {
-      console.error("Failed to process image through webhook:", webhookError);
-      return imageUrl; // Return original URL on error
+      const blob = await imageResponse.blob();
+      
+      // Create a file object from blob
+      const fileExt = contentType.split('/')[1] || 'jpg';
+      const fileName = `blog-${Date.now()}.${fileExt}`;
+      const file = new File([blob], fileName, { type: contentType });
+      
+      // Upload directly to Supabase
+      const { data, error } = await supabase.storage
+        .from('blog_images')
+        .upload(`blogs/${fileName}`, file);
+      
+      if (error) {
+        console.error("Storage upload error:", error);
+        throw error;
+      }
+      
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('blog_images')
+        .getPublicUrl(`blogs/${fileName}`);
+        
+      return publicUrlData.publicUrl;
+    } catch (directError) {
+      console.error("Direct download failed:", directError);
+      
+      // Fallback to the original image URL
+      return imageUrl;
     }
   } catch (error) {
-    console.error("Failed to download image, using original URL:", error);
-    return imageUrl;
+    console.error("Failed to process image:", error);
+    return imageUrl; // Return original URL on error
   }
 };
 
@@ -172,48 +185,38 @@ export const processImage = async (imageUrl: string, title: string): Promise<str
  * Save a blog post to the database
  */
 export const saveBlogPost = async (data: NewBlogPost): Promise<BlogPost> => {
-  // Map readTime to read_time for database compatibility
-  const dbData = {
-    title: data.title,
-    slug: data.slug,
-    excerpt: data.excerpt,
-    content: data.content,
-    category: data.category,
-    tags: data.tags,
-    author: data.author,
-    date: data.date,
-    read_time: data.readTime,
-    image: data.image,
-    featured: data.featured,
-    status: data.status,
-    url: data.url || ""
-  };
-  
-  const { data: savedPost, error } = await supabase
-    .from('blog_posts')
-    .insert(dbData)
-    .select('*')
-    .single();
-  
-  if (error) {
-    console.error("Error saving blog post:", error);
-    throw error;
-  }
-  
-  return transformDatabasePost(savedPost);
-};
-
-/**
- * Delete a blog post from the database
- */
-export const deleteBlogPost = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('blog_posts')
-    .delete()
-    .eq('id', id);
-  
-  if (error) {
-    console.error("Error deleting blog post:", error);
+  try {
+    // Map readTime to read_time for database compatibility
+    const dbData = {
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.excerpt,
+      content: data.content,
+      category: data.category,
+      tags: data.tags,
+      author: data.author,
+      date: data.date,
+      read_time: data.readTime,
+      image: data.image,
+      featured: data.featured,
+      status: data.status
+      // Do not include url field if not in schema
+    };
+    
+    const { data: savedPost, error } = await supabase
+      .from('blog_posts')
+      .insert(dbData)
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error("Error saving blog post:", error);
+      throw error;
+    }
+    
+    return transformDatabasePost(savedPost);
+  } catch (error) {
+    console.error("Database error when saving blog post:", error);
     throw error;
   }
 };

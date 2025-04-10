@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { NewBlogPost } from "@/types/blog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useWebhookStore } from "@/stores/webhookStore";
+import { usePersistentToast } from "@/context/PersistentToastContext";
 
 const AutomaticBlog = () => {
   const navigate = useNavigate();
@@ -24,7 +24,8 @@ const AutomaticBlog = () => {
   const [error, setError] = useState("");
   const isMobile = useIsMobile();
   const webhookUrl = useWebhookStore(state => state.getActiveBlogCreationUrl());
-
+  const persistentToast = usePersistentToast();
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -74,6 +75,13 @@ const AutomaticBlog = () => {
       };
 
       console.log("Sending data to webhook:", blogPostData);
+      
+      // Add persistent toast for tracking
+      persistentToast.addToast({
+        type: "info",
+        title: "Blog Post Generation Started",
+        message: `Title: ${formData.title}`,
+      });
 
       // Send to webhook and get response
       const responseText = await sendPostToN8N(blogPostData);
@@ -94,6 +102,13 @@ const AutomaticBlog = () => {
       
       toast.success("Blog post has been generated and saved as a draft");
       
+      // Add to persistent notifications
+      persistentToast.addToast({
+        type: "success",
+        title: "Blog Post Created Successfully",
+        message: `${formData.title} has been saved as a draft`,
+      });
+      
       // Wait a moment to show the completed progress
       setTimeout(() => {
         // Trigger an event to refresh the blog list
@@ -103,8 +118,17 @@ const AutomaticBlog = () => {
       
     } catch (error) {
       console.error("Error generating blog post:", error);
-      setError(error instanceof Error ? error.message : "Unknown error occurred");
-      toast.error("Failed to generate blog post");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      setError(errorMessage);
+      toast.error("Failed to create blog post");
+      
+      // Add to persistent notifications
+      persistentToast.addToast({
+        type: "error",
+        title: "Failed to Create Blog Post",
+        message: errorMessage,
+      });
+      
       clearInterval(progressInterval);
       setProgress(0);
     } finally {

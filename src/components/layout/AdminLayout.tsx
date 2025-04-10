@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { Menu } from 'lucide-react';
+import { Menu, PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Sparkles, Webhook } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Sheet,
@@ -89,14 +89,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   const adminRoutes = [
-    { value: 'content', label: 'Content' },
-    { value: 'blog', label: 'Blog' },
-    { value: 'automatic-blog', label: 'Auto Blog' },
-    { value: 'webhooks', label: 'Webhooks' },
-    { value: 'layout', label: 'Layout' },
-    { value: 'testimonials', label: 'Testimonials' },
-    { value: 'newsletter', label: 'Newsletter' },
-    { value: 'notifications', label: 'Notifications' }
+    { value: 'content', label: 'Dashboard', icon: LayoutDashboard },
+    { value: 'blog', label: 'Blog', icon: PenSquare },
+    { value: 'automatic-blog', label: 'Auto Blog', icon: Sparkles },
+    { value: 'webhooks', label: 'Webhooks', icon: Webhook },
+    { value: 'testimonials', label: 'Testimonials', icon: MessageSquare },
+    { value: 'newsletter', label: 'Newsletter', icon: Mail },
+    { value: 'content-editor', label: 'Website Content', icon: Globe },
+    { value: 'notifications', label: 'Notifications', icon: Globe }
   ];
 
   return (
@@ -126,16 +126,20 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                       <h2 className="text-lg font-semibold">Navigation</h2>
                     </div>
                     <div className="flex flex-col py-2 flex-1">
-                      {adminRoutes.map((route) => (
-                        <Button
-                          key={route.value}
-                          variant={activeTab === route.value ? "default" : "ghost"}
-                          className="justify-start rounded-none h-12 px-4"
-                          onClick={() => handleTabChange(route.value)}
-                        >
-                          {route.label}
-                        </Button>
-                      ))}
+                      {adminRoutes.map((route) => {
+                        const Icon = route.icon || Globe;
+                        return (
+                          <Button
+                            key={route.value}
+                            variant={activeTab === route.value ? "default" : "ghost"}
+                            className="justify-start rounded-none h-12 px-4"
+                            onClick={() => handleTabChange(route.value)}
+                          >
+                            <Icon className="h-4 w-4 mr-2" />
+                            {route.label}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                 </SheetContent>
@@ -167,11 +171,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             onValueChange={handleTabChange}
           >
             <TabsList className="grid grid-cols-8 w-full">
-              {adminRoutes.map((route) => (
-                <TabsTrigger key={route.value} value={route.value}>
-                  {route.label}
-                </TabsTrigger>
-              ))}
+              {adminRoutes.map((route) => {
+                const Icon = route.icon || Globe;
+                return (
+                  <TabsTrigger key={route.value} value={route.value} className="flex items-center gap-1">
+                    <Icon className="h-4 w-4" />
+                    <span>{route.label}</span>
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
           </Tabs>
         )}

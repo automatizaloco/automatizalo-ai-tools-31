@@ -24,6 +24,8 @@ import ContentManager from './pages/admin/ContentManager.tsx'
 import TestimonialManager from './pages/admin/TestimonialManager.tsx'
 import AutomaticBlog from './pages/admin/AutomaticBlog.tsx'
 import NewsletterAdmin from './pages/admin/NewsletterAdmin.tsx'
+import ContentEditor from './pages/admin/ContentEditor.tsx'
+import BlogAdmin from './pages/admin/BlogAdmin.tsx'
 
 const queryClient = new QueryClient()
 
@@ -63,16 +65,20 @@ const router = createBrowserRouter([
     element: <ContentManager />,
   },
   {
+    path: "/admin/content-editor",
+    element: <ContentEditor />,
+  },
+  {
+    path: "/admin/blog",
+    element: <BlogAdmin />,
+  },
+  {
     path: "/admin/blog/:id",
     element: <BlogPostForm />,
   },
   {
     path: "/admin/blog/new",
     element: <BlogPostForm />,
-  },
-  {
-    path: "/admin/blog",
-    element: <Admin />,
   },
   {
     path: "/admin/notifications",

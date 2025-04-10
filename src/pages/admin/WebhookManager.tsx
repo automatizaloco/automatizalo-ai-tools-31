@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,18 +102,40 @@ const WebhookManager = () => {
 
       toast.info(`Testing ${type} webhook...`);
       
-      const response = await fetch(webhookUrl, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(testData),
-      });
-      
-      if (response.ok) {
-        toast.success(`${type} webhook test succeeded!`);
+      if (method === 'GET') {
+        const params = new URLSearchParams();
+        Object.entries(testData).forEach(([key, value]) => {
+          params.append(key, value as string);
+        });
+        
+        const urlWithParams = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}${params.toString()}`;
+        
+        const response = await fetch(urlWithParams, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          toast.success(`${type} webhook test succeeded!`);
+        } else {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
       } else {
-        throw new Error(`HTTP error: ${response.status}`);
+        const response = await fetch(webhookUrl, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(testData),
+        });
+        
+        if (response.ok) {
+          toast.success(`${type} webhook test succeeded!`);
+        } else {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
       }
     } catch (error) {
       console.error(`Error testing ${type} webhook:`, error);

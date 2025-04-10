@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { getPageContent, updatePageContent } from "@/services/pageContentService";
 import { FileUploader } from '@/components/admin/FileUploader';
+import { uploadPageSectionImage, getPageImages } from '@/services/imageService';
+
+const SUPABASE_URL = "https://juwbamkqkawyibcvllvo.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1d2JhbWtxa2F3eWliY3ZsbHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MDUxMDIsImV4cCI6MjA1NzI4MTEwMn0.uqwyR5lwp8JXa7qAZu6nZcCEdaoKOxX0XxQls2vg7Fk";
 
 interface PageSection {
   id: string;
@@ -22,17 +25,6 @@ interface ImageMap {
   [key: string]: string;
 }
 
-// Interface for page images from the database
-interface PageImage {
-  id: string;
-  page: string;
-  section_name: string;
-  section_id: string;
-  image_url: string;
-  created_at: string;
-  updated_at: string;
-}
-
 const ContentEditor = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -42,7 +34,6 @@ const ContentEditor = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Define the sections for each page
   const pageSections: Record<string, PageSection[]> = {
     home: [
       { id: "home-hero", pageName: "home", sectionName: "hero", displayName: "Hero Section" },
@@ -61,14 +52,12 @@ const ContentEditor = () => {
     ]
   };
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!user) {
       navigate('/login?redirect=/admin/content-editor');
     }
   }, [user, navigate]);
 
-  // Load content and images for all sections
   useEffect(() => {
     const loadAllContent = async () => {
       setLoading(true);
@@ -76,39 +65,16 @@ const ContentEditor = () => {
         const contentData: Record<string, Record<string, string>> = {};
         const imagesData: ImageMap = {};
         
-        // For each page
         for (const [pageName, sections] of Object.entries(pageSections)) {
           contentData[pageName] = {};
           
-          // Load content for each section
           for (const section of sections) {
             const sectionContent = await getPageContent(section.pageName, section.sectionName);
             contentData[pageName][section.sectionName] = sectionContent;
-            
-            try {
-              // Get images from the page_images table using a simple fetch
-              // This avoids TypeScript issues with supabase client types
-              const response = await fetch(`${supabase.supabaseUrl}/rest/v1/page_images?page=eq.${section.pageName}&section_name=eq.${section.sectionName}`, {
-                headers: {
-                  'apikey': supabase.supabaseKey,
-                  'Content-Type': 'application/json'
-                }
-              });
-              
-              if (response.ok) {
-                const sectionImages = await response.json() as PageImage[];
-                
-                if (sectionImages && sectionImages.length > 0) {
-                  sectionImages.forEach(item => {
-                    const imageKey = `${item.page}-${item.section_name}-${item.section_id}`;
-                    imagesData[imageKey] = item.image_url;
-                  });
-                }
-              }
-            } catch (error) {
-              console.error("Error fetching images:", error);
-            }
           }
+          
+          const pageImagesData = await getPageImages(pageName);
+          Object.assign(imagesData, pageImagesData);
         }
         
         setContent(contentData);
@@ -125,7 +91,6 @@ const ContentEditor = () => {
   }, []);
 
   const handleContentUpdate = async (pageName: string, sectionName: string, newContent: string) => {
-    // Update local state
     setContent(prev => ({
       ...prev,
       [pageName]: {
@@ -150,57 +115,18 @@ const ContentEditor = () => {
 
   const handleImageUpload = async (file: File, pageName: string, sectionName: string, sectionId: string) => {
     try {
-      // Upload image to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${pageName}-${sectionName}-${sectionId}.${fileExt}`;
-      const filePath = `content-images/${fileName}`;
+      const imageUrl = await uploadPageSectionImage(file, pageName, sectionName, sectionId);
       
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('content')
-        .upload(filePath, file, { upsert: true });
-      
-      if (uploadError) throw uploadError;
-      
-      // Get public URL
-      const { data: publicUrlData } = supabase.storage
-        .from('content')
-        .getPublicUrl(filePath);
-      
-      const imageUrl = publicUrlData.publicUrl;
-      
-      // Save to database using fetch API to bypass TypeScript issues
-      try {
-        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/page_images`, {
-          method: 'POST',
-          headers: {
-            'apikey': supabase.supabaseKey,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            page: pageName,
-            section_name: sectionName,
-            section_id: sectionId,
-            image_url: imageUrl
-          })
-        });
+      if (imageUrl) {
+        const imageKey = `${pageName}-${sectionName}-${sectionId}`;
+        setImages(prevImages => ({
+          ...prevImages,
+          [imageKey]: imageUrl
+        }));
         
-        if (!response.ok) {
-          throw new Error(`Failed to save image reference: ${response.statusText}`);
-        }
-      } catch (dbError) {
-        console.error("Error saving to database:", dbError);
-        // Continue anyway since we have the image URL
+        toast.success("Image updated successfully!");
       }
       
-      // Update local state
-      const imageKey = `${pageName}-${sectionName}-${sectionId}`;
-      setImages(prevImages => ({
-        ...prevImages,
-        [imageKey]: imageUrl
-      }));
-      
-      toast.success("Image updated successfully!");
       return imageUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -261,7 +187,6 @@ const ContentEditor = () => {
                     </Button>
                   </div>
                   
-                  {/* Image section */}
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
                     <h3 className="text-sm font-medium mb-2">Section Images</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

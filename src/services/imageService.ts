@@ -1,6 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// Get values from the client file
+const SUPABASE_URL = "https://juwbamkqkawyibcvllvo.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1d2JhbWtxa2F3eWliY3ZsbHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MDUxMDIsImV4cCI6MjA1NzI4MTEwMn0.uqwyR5lwp8JXa7qAZu6nZcCEdaoKOxX0XxQls2vg7Fk";
+
 /**
  * Uploads an image to storage and saves its reference in the database
  */
@@ -31,10 +35,10 @@ export const uploadPageSectionImage = async (
     
     // Save to database using fetch API to bypass TypeScript issues
     try {
-      const response = await fetch(`${supabase.supabaseUrl}/rest/v1/page_images`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/page_images`, {
         method: 'POST',
         headers: {
-          'apikey': supabase.supabaseKey,
+          'apikey': SUPABASE_ANON_KEY,
           'Content-Type': 'application/json',
           'Prefer': 'return=representation'
         },
@@ -67,9 +71,9 @@ export const uploadPageSectionImage = async (
 export const getPageImages = async (pageName: string): Promise<Record<string, string>> => {
   try {
     // Get images using fetch API to bypass TypeScript issues
-    const response = await fetch(`${supabase.supabaseUrl}/rest/v1/page_images?page=eq.${pageName}`, {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/page_images?page=eq.${pageName}`, {
       headers: {
-        'apikey': supabase.supabaseKey,
+        'apikey': SUPABASE_ANON_KEY,
         'Content-Type': 'application/json'
       }
     });

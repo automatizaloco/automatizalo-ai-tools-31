@@ -26,6 +26,7 @@ import AutomaticBlog from './pages/admin/AutomaticBlog.tsx'
 import NewsletterAdmin from './pages/admin/NewsletterAdmin.tsx'
 import ContentEditor from './pages/admin/ContentEditor.tsx'
 import BlogAdmin from './pages/admin/BlogAdmin.tsx'
+import Solutions from './pages/Solutions.tsx'
 
 const queryClient = new QueryClient()
 
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
       {
         path: "contact",
         element: <Contact />
+      },
+      {
+        path: "solutions",
+        element: <Solutions />
       }
     ]
   },

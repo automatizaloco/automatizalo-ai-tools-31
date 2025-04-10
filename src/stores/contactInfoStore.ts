@@ -21,11 +21,11 @@ interface ContactInfoState {
 
 // Default contact info to use as fallback
 const defaultContactInfo: ContactInfo = {
-  phone: '+1 (555) 123-4567',
+  phone: '+57 3192963363',
   email: 'contact@automatizalo.co',
   address: '123 AI Street, Tech City, TC 12345',
   website: 'https://automatizalo.co',
-  whatsapp: '+1 (555) 123-4567'
+  whatsapp: '+57 3192963363'
 };
 
 export const useContactInfo = create<ContactInfoState>((set, get) => ({

@@ -81,6 +81,29 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
       );
     }
   }
+
+  // Check if a post with this slug already exists
+  const { data: existingPost, error: existingError } = await supabase
+    .from('blog_posts')
+    .select('slug')
+    .eq('slug', post.slug)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("Error checking for existing slug:", existingError);
+  }
+
+  // If post exists, make the slug unique by adding a timestamp
+  if (existingPost) {
+    const timestamp = new Date().getTime().toString().slice(-4);
+    post.slug = `${post.slug}-${timestamp}`;
+    console.log(`Post with slug already exists. Using new slug: ${post.slug}`);
+    createToastWithPersistence(
+      "Slug Modified", 
+      `A post with this slug already exists. Using modified slug: ${post.slug}`, 
+      "info"
+    );
+  }
   
   const dbPost = {
     title: post.title,

@@ -32,7 +32,74 @@ const validateRequest = (req: Request, payload: any) => {
   return payload;
 };
 
+// Process and store image from URL to Supabase storage
+const processImage = async (imageUrl: string, title: string): Promise<string> => {
+  try {
+    // Skip if already a Supabase storage URL
+    if (imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
+      console.log("Image is already in Supabase storage");
+      return imageUrl;
+    }
+
+    // Skip if a placeholder
+    if (imageUrl.includes('placeholder.com')) {
+      return imageUrl;
+    }
+
+    console.log("Downloading image from:", imageUrl);
+    
+    // Download the image
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to download image: ${imageResponse.status}`);
+    }
+    
+    const blob = await imageResponse.blob();
+    
+    // Prepare file path and name
+    const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 30);
+    const fileExtension = blob.type.split('/')[1] || 'jpg';
+    const fileName = `blog/${sanitizedTitle}-webhook-${Date.now()}.${fileExtension}`;
+    
+    // Upload to Supabase storage
+    const { data, error } = await supabaseAdmin
+      .storage
+      .from('blog_images')
+      .upload(fileName, blob, {
+        contentType: blob.type,
+        upsert: false
+      });
+
+    if (error) {
+      console.error("Storage upload error:", error);
+      return imageUrl; // Return original if upload fails
+    }
+
+    // Get the public URL
+    const { data: { publicUrl } } = supabaseAdmin
+      .storage
+      .from('blog_images')
+      .getPublicUrl(fileName);
+
+    console.log("Image stored at:", publicUrl);
+    return publicUrl;
+  } catch (error) {
+    console.error("Image processing error:", error);
+    return imageUrl; // Return original URL if processing fails
+  }
+}
+
 const processNewBlogPost = async (payload: any) => {
+  // Process image if present
+  if (payload.image) {
+    try {
+      payload.image = await processImage(payload.image, payload.title);
+    } catch (imageError) {
+      console.error("Failed to process image:", imageError);
+      // Continue with original image URL
+    }
+  }
+
   // Map fields to match the database schema
   const blogData = {
     title: payload.title,
@@ -122,6 +189,29 @@ const processTranslations = async (blogPostId: string, translations: any) => {
   }
 };
 
+// Create blog_images bucket if it doesn't exist
+const ensureStorageBucket = async () => {
+  try {
+    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+    const bucketExists = buckets.some(b => b.name === 'blog_images');
+    
+    if (!bucketExists) {
+      const { data, error } = await supabaseAdmin.storage.createBucket('blog_images', {
+        public: true,
+        fileSizeLimit: 10485760 // 10MB
+      });
+      
+      if (error) {
+        console.error("Error creating storage bucket:", error);
+      } else {
+        console.log("Created blog_images bucket successfully");
+      }
+    }
+  } catch (error) {
+    console.error("Error checking/creating storage bucket:", error);
+  }
+};
+
 // Handle the webhook request
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -130,6 +220,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Ensure blog_images bucket exists
+    await ensureStorageBucket();
+    
     // Only allow POST requests
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {

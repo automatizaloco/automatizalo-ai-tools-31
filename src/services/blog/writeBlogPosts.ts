@@ -9,21 +9,33 @@ import { useWebhookStore } from "@/stores/webhookStore";
  * Create a new blog post
  */
 export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
-  // Process the image first to ensure it's stored in Supabase
+  // Always process the image to ensure it's stored in Supabase
   if (post.image) {
     try {
       console.log("Processing image for new blog post:", post.title);
-      const permanentImageUrl = await uploadImageToStorage(post.image, post.title || 'blog-post');
       
-      if (permanentImageUrl) {
-        console.log("Image uploaded to Supabase storage:", permanentImageUrl);
-        post.image = permanentImageUrl;
+      // First download the image if it's an external URL
+      const downloadedImage = await downloadImage(post.image);
+      
+      if (!downloadedImage) {
+        console.error("Failed to download image from URL");
+        toast.error("Failed to download image from URL, using placeholder image");
+        post.image = "https://via.placeholder.com/800x400";
       } else {
-        console.warn("Failed to upload image to Supabase storage, keeping original URL");
+        // Then upload to Supabase storage
+        const permanentImageUrl = await uploadImageToStorage(downloadedImage, post.title || 'blog-post');
+        
+        if (permanentImageUrl) {
+          console.log("Image uploaded to Supabase storage:", permanentImageUrl);
+          post.image = permanentImageUrl;
+        } else {
+          console.warn("Failed to upload image to Supabase storage");
+          toast.error("Failed to save image to permanent storage, using original URL");
+        }
       }
     } catch (imageError) {
       console.error("Error processing image for permanent storage:", imageError);
-      toast.error("Failed to save image to permanent storage, but will continue with post creation");
+      toast.error("Failed to process image, but will continue with post creation");
     }
   }
   
@@ -89,7 +101,7 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
     
     // Use fetch with a timeout to ensure it doesn't hang
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
     
     try {
       let response;
@@ -167,18 +179,29 @@ export const updateBlogPost = async (
   // Always process the image to ensure it's stored in Supabase
   if (updates.image) {
     try {
-      console.log("Processing image for blog post update:", updates.image.substring(0, 100));
-      const permanentImageUrl = await uploadImageToStorage(updates.image, updates.title || id);
+      console.log("Processing image for blog post update:", updates.title || id);
       
-      if (permanentImageUrl) {
-        console.log("Image uploaded to Supabase storage:", permanentImageUrl);
-        updates.image = permanentImageUrl;
+      // First download the image if it's an external URL
+      const downloadedImage = await downloadImage(updates.image);
+      
+      if (!downloadedImage) {
+        console.error("Failed to download image from URL");
+        toast.error("Failed to download image, using original URL");
       } else {
-        console.warn("Failed to upload image to Supabase storage, keeping original URL");
+        // Then upload to Supabase storage
+        const permanentImageUrl = await uploadImageToStorage(downloadedImage, updates.title || id);
+        
+        if (permanentImageUrl) {
+          console.log("Image uploaded to Supabase storage:", permanentImageUrl);
+          updates.image = permanentImageUrl;
+        } else {
+          console.warn("Failed to upload image to Supabase storage");
+          toast.error("Failed to save image to permanent storage, using original URL");
+        }
       }
     } catch (imageError) {
       console.error("Error processing image for permanent storage:", imageError);
-      toast.error("Failed to save image to permanent storage, but will continue with post update");
+      toast.error("Failed to process image, but will continue with post update");
     }
   }
   
@@ -376,14 +399,15 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     console.log("Image URL extracted:", imageUrl);
     
     // Always process the image to ensure it's stored in Supabase
-    if (imageUrl && !imageUrl.includes("placeholder.com")) {
+    if (imageUrl) {
       console.log("Processing image from webhook URL:", imageUrl);
+      
       try {
         // First download the image to base64
         const imageData = await downloadImage(imageUrl);
         
         if (imageData) {
-          console.log("Image downloaded, now uploading to Supabase storage");
+          console.log("Image downloaded successfully, now uploading to Supabase storage");
           // Then upload to Supabase storage
           const storedImageUrl = await uploadImageToStorage(
             imageData, 

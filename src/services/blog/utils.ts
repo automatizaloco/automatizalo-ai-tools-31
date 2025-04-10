@@ -1,3 +1,4 @@
+
 import { BlogPost } from "@/types/blog";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -44,13 +45,29 @@ export const downloadImage = async (imageUrl: string): Promise<string | null> =>
   try {
     console.log("Downloading image from URL:", imageUrl);
     
-    // Check if URL is already a valid image URL
-    if (imageUrl.startsWith('data:image/') || imageUrl.includes('placeholder.com')) {
+    // Check if URL is already a valid image URL from Supabase storage
+    if (imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
+      console.log("Image is already in Supabase storage, no need to download:", imageUrl);
       return imageUrl;
     }
     
-    // If it's an external URL, download it
-    const response = await fetch(imageUrl);
+    // If it's a base64 data URL, return as is
+    if (imageUrl.startsWith('data:image/')) {
+      return imageUrl;
+    }
+    
+    // If it's a placeholder, return as is
+    if (imageUrl.includes('placeholder.com')) {
+      return imageUrl;
+    }
+    
+    // For external URLs, download the image
+    console.log("Fetching external image...");
+    const response = await fetch(imageUrl, {
+      headers: {
+        'Accept': 'image/*',
+      },
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
@@ -166,7 +183,7 @@ export const parseWebhookJsonResponse = (responseText: string): any => {
 // Upload image to Supabase storage from URL or base64
 export const uploadImageToStorage = async (imageSource: string, postTitle: string): Promise<string | null> => {
   try {
-    console.log("Preparing to upload image to storage:", imageSource.substring(0, 50) + "...");
+    console.log("Preparing to upload image to storage");
     
     // Check if it's already a Supabase storage URL for our project
     if (imageSource.includes('juwbamkqkawyibcvllvo.supabase.co/storage/v1/object/public/blog_images')) {
@@ -174,14 +191,13 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
       return imageSource;
     }
     
-    // Create bucket if it doesn't exist (this is handled by Supabase, just checking)
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const blogBucketExists = buckets?.some(bucket => bucket.name === 'blog_images');
-    
-    if (!blogBucketExists) {
-      console.log("Blog images bucket doesn't exist, attempting to create it");
-      try {
-        // This will only succeed if the user has admin rights
+    // Create a bucket if it doesn't exist
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const blogBucketExists = buckets?.some(bucket => bucket.name === 'blog_images');
+      
+      if (!blogBucketExists) {
+        console.log("Creating blog_images bucket");
         const { error } = await supabase.storage.createBucket('blog_images', {
           public: true,
           fileSizeLimit: 10485760 // 10MB
@@ -189,27 +205,35 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
         
         if (error) {
           console.error("Error creating bucket:", error);
-          // Continue anyway, the bucket might be created by an admin
         } else {
           console.log("Blog images bucket created successfully");
         }
-      } catch (bucketError) {
-        console.error("Error creating bucket:", bucketError);
-        // Continue anyway, the bucket might be created by an admin
+      } else {
+        console.log("Blog images bucket already exists");
       }
+    } catch (bucketError) {
+      console.error("Error checking/creating bucket:", bucketError);
+      // Continue anyway as the bucket might already exist
     }
     
     let imageBlob: Blob;
+    let fileExtension = 'jpg'; // Default extension
     
     // If it's a base64 data URL
     if (imageSource.startsWith('data:image/')) {
       console.log("Converting base64 image to blob");
+      
       // Extract base64 data from the data URL
       const base64Data = imageSource.split(',')[1];
       
       // Get the MIME type from the data URL
       const mimeMatch = imageSource.match(/data:(.*?);/);
       const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      
+      // Get file extension from mime type
+      if (mimeType === 'image/png') fileExtension = 'png';
+      if (mimeType === 'image/gif') fileExtension = 'gif';
+      if (mimeType === 'image/webp') fileExtension = 'webp';
       
       // Convert base64 to blob
       const byteCharacters = atob(base64Data);
@@ -231,15 +255,27 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
     } 
     // If it's an external URL
     else {
-      console.log("Fetching image from external URL");
+      console.log("Fetching image from external URL:", imageSource);
       try {
-        const response = await fetch(imageSource);
+        const response = await fetch(imageSource, {
+          headers: {
+            'Accept': 'image/*',
+          }
+        });
         
         if (!response.ok) {
           throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
         }
         
         imageBlob = await response.blob();
+        
+        // Determine file extension from content type
+        const contentType = response.headers.get('content-type');
+        if (contentType) {
+          if (contentType.includes('png')) fileExtension = 'png';
+          if (contentType.includes('gif')) fileExtension = 'gif';
+          if (contentType.includes('webp')) fileExtension = 'webp';
+        }
       } catch (fetchError) {
         console.error("Error fetching external image:", fetchError);
         return null;
@@ -247,17 +283,17 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
     }
     
     // Generate a unique filename with sanitized post title
-    const sanitizedTitle = (postTitle || 'image').toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 50);
-    const fileExtension = imageBlob.type.split('/')[1] || 'jpg';
+    const sanitizedTitle = (postTitle || 'image').toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 30);
     const fileName = `${sanitizedTitle}-${uuidv4().substring(0, 8)}.${fileExtension}`;
+    const filePath = `blog/${fileName}`;
     
-    console.log(`Uploading image as ${fileName} (${imageBlob.size} bytes)`);
+    console.log(`Uploading image as ${filePath} (${imageBlob.size} bytes)`);
     
     // Upload to Supabase storage
     const { data, error } = await supabase
       .storage
       .from('blog_images')
-      .upload(`blog/${fileName}`, imageBlob, {
+      .upload(filePath, imageBlob, {
         contentType: imageBlob.type,
         cacheControl: '3600',
         upsert: false
@@ -273,7 +309,7 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
         const { data: { publicUrl } } = supabase
           .storage
           .from('blog_images')
-          .getPublicUrl(`blog/${fileName}`);
+          .getPublicUrl(filePath);
           
         return publicUrl;
       }
@@ -285,7 +321,7 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
     const { data: { publicUrl } } = supabase
       .storage
       .from('blog_images')
-      .getPublicUrl(`blog/${data?.path || `blog/${fileName}`}`);
+      .getPublicUrl(data?.path || filePath);
     
     console.log("Image uploaded successfully to:", publicUrl);
     return publicUrl;

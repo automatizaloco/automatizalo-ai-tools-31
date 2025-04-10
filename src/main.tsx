@@ -14,31 +14,45 @@ import BlogPostForm from './pages/admin/BlogPostForm.tsx'
 import BlogPost from './pages/BlogPost.tsx'
 import NotFound from './pages/NotFound.tsx'
 import { Toaster } from 'sonner'
-import NotificationAdmin from "@/pages/admin/NotificationAdmin";
+import NotificationAdmin from "@/pages/admin/NotificationAdmin"
 import Contact from './pages/Contact.tsx'
+import WebhookManager from './pages/admin/WebhookManager.tsx'
+import Index from './pages/Index.tsx'
+import Layout from './components/layout/Layout.tsx'
+import Admin from './pages/admin/Admin.tsx'
 
 const queryClient = new QueryClient()
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
-  },
-  {
-    path: "/blog",
-    element: <Blog />,
-  },
-  {
-    path: "/blog/:slug",
-    element: <BlogPost />,
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <Index />
+      },
+      {
+        path: "blog",
+        element: <Blog />
+      },
+      {
+        path: "blog/:slug",
+        element: <BlogPost />
+      },
+      {
+        path: "contact",
+        element: <Contact />
+      }
+    ]
   },
   {
     path: "/login",
     element: <Login />,
   },
   {
-    path: "/contact",
-    element: <Contact />,
+    path: "/admin",
+    element: <Admin />,
   },
   {
     path: "/admin/blog/:id",
@@ -49,12 +63,20 @@ const router = createBrowserRouter([
     element: <BlogPostForm />,
   },
   {
-    path: "*",
-    element: <NotFound />,
+    path: "/admin/blog",
+    element: <Admin />,
   },
   {
     path: "/admin/notifications",
     element: <NotificationAdmin />,
+  },
+  {
+    path: "/admin/webhooks",
+    element: <WebhookManager />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 

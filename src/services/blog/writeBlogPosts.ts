@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
@@ -140,7 +141,16 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
       url: postUrl,
       postUrl: postUrl,
       fullUrl: postUrl,
-      websiteUrl: websiteDomain
+      websiteUrl: websiteDomain,
+      // Ensure we're sending complete content
+      content: post.content,
+      title: post.title,
+      excerpt: post.excerpt,
+      image: post.image, // This should already be the permanent image URL
+      author: post.author,
+      category: post.category,
+      tags: post.tags,
+      slug: post.slug
     };
     
     console.log(`Sending post to social media webhook (${webhookUrl}) using ${webhookMethod}:`, webhookData);
@@ -168,10 +178,12 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
       } else {
         const params = new URLSearchParams();
         
+        // Ensure all essential fields are included
         params.append('title', String(webhookData.title));
         params.append('url', String(webhookData.url));
         params.append('image', String(webhookData.image));
         params.append('excerpt', String(webhookData.excerpt));
+        params.append('content', String(webhookData.content));
         params.append('author', String(webhookData.author));
         params.append('slug', String(webhookData.slug));
         params.append('category', String(webhookData.category));
@@ -492,35 +504,81 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       throw new Error("Failed to parse content from webhook response");
     }
     
-    let imageUrl = parsedContent.image_url || parsedContent.image || null;
+    // Enhanced image URL extraction to capture various URL formats
+    let imageUrl = parsedContent.image_url || 
+                  parsedContent.imageUrl || 
+                  parsedContent.image || 
+                  null;
     
     if (!imageUrl && parsedContent.data && Array.isArray(parsedContent.data) && parsedContent.data.length > 0) {
-      imageUrl = parsedContent.data[0].url || parsedContent.data[0].image_url;
+      imageUrl = parsedContent.data[0].url || 
+               parsedContent.data[0].image_url || 
+               parsedContent.data[0].imageUrl || 
+               parsedContent.data[0].image;
     }
     
+    // Look for URLs in output field content
     if (!imageUrl && parsedContent.output) {
       try {
+        // First try to find JSON in output
         const jsonMatch = parsedContent.output.match(/```json\n([\s\S]*?)\n```/);
         if (jsonMatch && jsonMatch[1]) {
           const extractedData = JSON.parse(jsonMatch[1]);
-          imageUrl = extractedData.image || extractedData.image_url;
+          imageUrl = extractedData.image || extractedData.image_url || extractedData.imageUrl;
+        }
+        
+        // If still no image, look for URLs directly in the output
+        if (!imageUrl) {
+          const urlMatch = parsedContent.output.match(/(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp))/i);
+          if (urlMatch) {
+            imageUrl = urlMatch[0];
+          }
         }
       } catch (err) {
         console.error("Error parsing JSON in output:", err);
       }
     }
     
+    // Additional logging for debugging
+    console.log("Initial image URL extraction:", imageUrl);
+    
+    if (!imageUrl) {
+      // Check if an image might be nested deeper in the response
+      if (Array.isArray(response) && response[0] && response[0].image_url) {
+        imageUrl = response[0].image_url;
+      } else if (typeof response === 'object' && response !== null) {
+        const searchForUrl = (obj: any) => {
+          for (const key in obj) {
+            if (typeof obj[key] === 'string' && 
+                (key.includes('image') || key.includes('url')) && 
+                obj[key].match(/^https?:\/\//)) {
+              return obj[key];
+            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+              const nestedUrl = searchForUrl(obj[key]);
+              if (nestedUrl) return nestedUrl;
+            }
+          }
+          return null;
+        };
+        
+        imageUrl = searchForUrl(response);
+      }
+      
+      console.log("Deep image URL search result:", imageUrl);
+    }
+    
     if (!imageUrl) {
       imageUrl = "https://via.placeholder.com/800x400";
     }
     
-    console.log("Image URL extracted:", imageUrl);
+    console.log("Final image URL extracted:", imageUrl);
     createToastWithPersistence(
       "Image Found", 
       "Found image URL in webhook response", 
       "info"
     );
     
+    // Process and store the image
     if (imageUrl && imageUrl !== "https://via.placeholder.com/800x400") {
       console.log("Processing image from webhook URL:", imageUrl);
       createToastWithPersistence(
@@ -580,6 +638,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       }
     }
     
+    // Create the blog post with all the extracted data
     const newBlogPost: NewBlogPost = {
       title: parsedContent.title || defaultTitle,
       slug: parsedContent.slug || defaultSlug,

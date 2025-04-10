@@ -61,8 +61,8 @@ export const processAndSaveWebhookResponse = async (
       tags: extractedData.tags || ["automatic", "ai-generated"],
       author: extractedData.author || "AI Assistant",
       date: extractedData.date || new Date().toISOString().split('T')[0],
-      // Map read_time to readTime if present
-      readTime: extractedData.readTime || extractedData.read_time || "5 min",
+      // Fix: Change read_time to readTime as per our type definition
+      readTime: extractedData.readTime || (extractedData as any).read_time || "5 min",
       status: 'draft',
       featured: false,
       // Don't include url field if not supported by the database

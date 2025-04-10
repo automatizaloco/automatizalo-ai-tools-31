@@ -54,7 +54,7 @@ export const processAndSaveWebhookResponse = async (
       tags: extractedData.tags || ["automatic", "ai-generated"],
       author: extractedData.author || "AI Assistant",
       date: extractedData.date || new Date().toISOString().split('T')[0],
-      readTime: extractedData.readTime || extractedData.read_time || "5 min",
+      readTime: extractedData.readTime || "5 min",
       status: 'draft',
       featured: false,
       url: extractedData.url || "",
@@ -64,13 +64,19 @@ export const processAndSaveWebhookResponse = async (
     // Process image if present
     let imageUrl = null;
     
-    // Check for image URLs in different possible fields
-    if (extractedData.image) {
-      imageUrl = extractedData.image;
-    } else if (extractedData.image_url) {
-      imageUrl = extractedData.image_url;
-    } else if (extractedData.imageUrl) {
-      imageUrl = extractedData.imageUrl;
+    // Extract image URL from response data
+    if (typeof extractedData === 'object' && extractedData !== null) {
+      // Check standard fields first
+      if ('image' in extractedData && typeof extractedData.image === 'string') {
+        imageUrl = extractedData.image;
+      } 
+      // Check alternate field names that might be in the response
+      else if ('image_url' in extractedData && typeof extractedData.image_url === 'string') {
+        imageUrl = extractedData.image_url as string;
+      } 
+      else if ('imageUrl' in extractedData && typeof extractedData.imageUrl === 'string') {
+        imageUrl = extractedData.imageUrl as string;
+      }
     }
     
     if (imageUrl) {

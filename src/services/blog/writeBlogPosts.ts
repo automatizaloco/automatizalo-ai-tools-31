@@ -1,45 +1,86 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation, NewBlogPost, NewBlogTranslation } from "@/types/blog";
 import { toast } from "sonner";
 import { downloadImage, parseWebhookJsonResponse, transformDatabasePost, uploadImageToStorage } from "./utils";
 import { useWebhookStore } from "@/stores/webhookStore";
 
+const createToastWithPersistence = (title: string, message: string, type: "success" | "error" | "info" | "warning") => {
+  toast[type](title, { description: message });
+  
+  try {
+    const existingToastsJson = localStorage.getItem("persistent-toasts");
+    const existingToasts = existingToastsJson ? JSON.parse(existingToastsJson) : [];
+    
+    const newToast = {
+      id: Date.now().toString(),
+      type,
+      title,
+      message,
+      timestamp: Date.now()
+    };
+    
+    const updatedToasts = [newToast, ...existingToasts].slice(0, 50);
+    localStorage.setItem("persistent-toasts", JSON.stringify(updatedToasts));
+    
+    window.dispatchEvent(new CustomEvent('persistentToastAdded', { detail: newToast }));
+  } catch (error) {
+    console.error("Failed to save persistent toast:", error);
+  }
+};
+
 /**
  * Create a new blog post
  */
 export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
-  // Always process the image to ensure it's stored in Supabase
   if (post.image) {
     try {
       console.log("Processing image for new blog post:", post.title);
+      createToastWithPersistence(
+        "Processing Image", 
+        `Downloading and uploading image for: ${post.title}`, 
+        "info"
+      );
       
-      // First download the image if it's an external URL
       const downloadedImage = await downloadImage(post.image);
       
       if (!downloadedImage) {
         console.error("Failed to download image from URL");
-        toast.error("Failed to download image from URL, using placeholder image");
+        createToastWithPersistence(
+          "Image Download Failed", 
+          "Failed to download image from URL, using placeholder image", 
+          "error"
+        );
         post.image = "https://via.placeholder.com/800x400";
       } else {
-        // Then upload to Supabase storage
         const permanentImageUrl = await uploadImageToStorage(downloadedImage, post.title || 'blog-post');
         
         if (permanentImageUrl) {
           console.log("Image uploaded to Supabase storage:", permanentImageUrl);
+          createToastWithPersistence(
+            "Image Stored", 
+            "Image successfully uploaded to permanent storage", 
+            "success"
+          );
           post.image = permanentImageUrl;
         } else {
           console.warn("Failed to upload image to Supabase storage");
-          toast.error("Failed to save image to permanent storage, using original URL");
+          createToastWithPersistence(
+            "Storage Error", 
+            "Failed to save image to permanent storage, using original URL", 
+            "error"
+          );
         }
       }
     } catch (imageError) {
       console.error("Error processing image for permanent storage:", imageError);
-      toast.error("Failed to process image, but will continue with post creation");
+      createToastWithPersistence(
+        "Image Processing Error", 
+        "Failed to process image, but will continue with post creation", 
+        "error"
+      );
     }
   }
   
-  // Map the blog post object to match the database schema
   const dbPost = {
     title: post.title,
     slug: post.slug,
@@ -49,7 +90,7 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
     tags: post.tags,
     author: post.author,
     date: post.date,
-    read_time: post.readTime, // Map readTime to read_time for database
+    read_time: post.readTime,
     image: post.image,
     featured: post.featured,
     status: post.status || 'published'
@@ -65,12 +106,20 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
 
   if (error) {
     console.error("Error creating blog post:", error);
-    toast.error(`Failed to create blog post: ${error.message}`);
+    createToastWithPersistence(
+      "Blog Post Creation Failed", 
+      `Error: ${error.message}`, 
+      "error"
+    );
     throw new Error(`Failed to create blog post: ${error.message}`);
   }
 
   console.log("Blog post created successfully, data:", data);
-  toast.success("Blog post created successfully");
+  createToastWithPersistence(
+    "Blog Post Created", 
+    "Your blog post was created successfully", 
+    "success"
+  );
   return transformDatabasePost(data);
 };
 
@@ -79,29 +128,30 @@ export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
  */
 export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void> => {
   try {
-    // Get the active webhook URL and method from the store
     const webhookStore = useWebhookStore.getState();
     const webhookUrl = webhookStore.getActiveBlogSocialShareUrl();
     const webhookMethod = webhookStore.getActiveBlogSocialShareMethod();
     const websiteDomain = webhookStore.getWebsiteDomain();
     
-    // Format the data for the social media webhook with complete post data
     const postUrl = `${websiteDomain}/blog/${post.slug}`;
     
-    // Send complete blog post data along with the formatted URL
     const webhookData = {
       ...post,
       url: postUrl,
-      postUrl: postUrl, // Adding both formats for compatibility
+      postUrl: postUrl,
       fullUrl: postUrl,
       websiteUrl: websiteDomain
     };
     
     console.log(`Sending post to social media webhook (${webhookUrl}) using ${webhookMethod}:`, webhookData);
+    createToastWithPersistence(
+      "Sharing to Social Media", 
+      "Sending post to social media channels...", 
+      "info"
+    );
     
-    // Use fetch with a timeout to ensure it doesn't hang
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     
     try {
       let response;
@@ -116,10 +166,8 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
           signal: controller.signal
         });
       } else {
-        // For GET requests, append params to the URL
         const params = new URLSearchParams();
         
-        // Add essential fields for GET request
         params.append('title', String(webhookData.title));
         params.append('url', String(webhookData.url));
         params.append('image', String(webhookData.image));
@@ -128,7 +176,6 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
         params.append('slug', String(webhookData.slug));
         params.append('category', String(webhookData.category));
         
-        // Add tags as a string
         if (webhookData.tags && Array.isArray(webhookData.tags)) {
           params.append('tags', webhookData.tags.join(','));
         }
@@ -148,24 +195,36 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Webhook response error (${response.status}):`, errorText);
-        toast.error(`Failed to send post to social media: ${response.statusText}`);
+        createToastWithPersistence(
+          "Social Media Sharing Failed", 
+          `Status: ${response.status} - ${response.statusText}`, 
+          "error"
+        );
       } else {
         const responseText = await response.text();
         console.log("Post data sent to social media webhook successfully. Response:", responseText);
-        toast.success("Post shared to social media channels");
+        createToastWithPersistence(
+          "Shared Successfully", 
+          "Post has been shared to social media channels", 
+          "success"
+        );
       }
     } catch (fetchError) {
       clearTimeout(timeoutId);
       console.error("Fetch error sending to webhook:", fetchError);
       if (fetchError.name === 'AbortError') {
-        toast.error("Webhook request timed out");
+        createToastWithPersistence("Webhook Timeout", "Social media webhook request timed out", "error");
       } else {
-        toast.error(`Webhook error: ${fetchError.message}`);
+        createToastWithPersistence("Webhook Error", `Error: ${fetchError.message}`, "error");
       }
     }
   } catch (error) {
     console.error("Error sending post to social media webhook:", error);
-    // Don't throw error, just log it - we don't want to fail the update if webhook fails
+    createToastWithPersistence(
+      "Social Media Error", 
+      `Failed to share post: ${error instanceof Error ? error.message : String(error)}`, 
+      "error"
+    );
   }
 };
 
@@ -176,36 +235,54 @@ export const updateBlogPost = async (
   id: string, 
   updates: Partial<BlogPost>
 ): Promise<BlogPost> => {
-  // Always process the image to ensure it's stored in Supabase
   if (updates.image) {
     try {
       console.log("Processing image for blog post update:", updates.title || id);
+      createToastWithPersistence(
+        "Processing Image", 
+        `Downloading and uploading image for: ${updates.title || id}`, 
+        "info"
+      );
       
-      // First download the image if it's an external URL
       const downloadedImage = await downloadImage(updates.image);
       
       if (!downloadedImage) {
         console.error("Failed to download image from URL");
-        toast.error("Failed to download image, using original URL");
+        createToastWithPersistence(
+          "Image Download Failed", 
+          "Failed to download image, using original URL", 
+          "error"
+        );
       } else {
-        // Then upload to Supabase storage
         const permanentImageUrl = await uploadImageToStorage(downloadedImage, updates.title || id);
         
         if (permanentImageUrl) {
           console.log("Image uploaded to Supabase storage:", permanentImageUrl);
+          createToastWithPersistence(
+            "Image Stored", 
+            "Image successfully uploaded to permanent storage", 
+            "success"
+          );
           updates.image = permanentImageUrl;
         } else {
           console.warn("Failed to upload image to Supabase storage");
-          toast.error("Failed to save image to permanent storage, using original URL");
+          createToastWithPersistence(
+            "Storage Error", 
+            "Failed to save image to permanent storage, using original URL", 
+            "error"
+          );
         }
       }
     } catch (imageError) {
       console.error("Error processing image for permanent storage:", imageError);
-      toast.error("Failed to process image, but will continue with post update");
+      createToastWithPersistence(
+        "Image Processing Error", 
+        "Failed to process image, but will continue with post update", 
+        "error"
+      );
     }
   }
   
-  // Map readTime to read_time for database consistency
   const dbUpdates = {
     ...updates
   } as any;
@@ -215,7 +292,6 @@ export const updateBlogPost = async (
     delete dbUpdates.readTime;
   }
   
-  // Remove translations from updates as they are handled separately
   if (dbUpdates.translations) {
     delete dbUpdates.translations;
   }
@@ -229,22 +305,34 @@ export const updateBlogPost = async (
 
   if (error) {
     console.error(`Error updating blog post ${id}:`, error);
-    toast.error(`Failed to update blog post: ${error.message}`);
+    createToastWithPersistence(
+      "Blog Post Update Failed", 
+      `Error: ${error.message}`, 
+      "error"
+    );
     throw new Error(`Failed to update blog post: ${error.message}`);
   }
 
   toast.success("Blog post updated successfully");
   
-  // Dispatch event to notify other components that blog data has changed
   window.dispatchEvent(new CustomEvent('blogPostUpdated', { detail: data }));
   
-  // Get the complete post data to send to the social media webhook
   const transformedPost = transformDatabasePost(data);
   
-  // Send post data to social media webhook after successful update
-  // Only send if the post is published
   if (transformedPost.status === 'published') {
-    await sendPostToSocialMediaWebhook(transformedPost);
+    console.log("Status is 'published', sending to social media webhook");
+    try {
+      await sendPostToSocialMediaWebhook(transformedPost);
+    } catch (webhookError) {
+      console.error("Error sending to social media webhook:", webhookError);
+      createToastWithPersistence(
+        "Webhook Error", 
+        "Post published, but failed to share to social media", 
+        "error"
+      );
+    }
+  } else {
+    console.log("Status is not 'published', skipping webhook");
   }
   
   return transformedPost;
@@ -254,7 +342,6 @@ export const updateBlogPost = async (
  * Delete a blog post and its translations
  */
 export const deleteBlogPost = async (id: string): Promise<void> => {
-  // First delete all translations (they have a foreign key constraint)
   const { error: translationsError } = await supabase
     .from('blog_translations')
     .delete()
@@ -262,11 +349,14 @@ export const deleteBlogPost = async (id: string): Promise<void> => {
 
   if (translationsError) {
     console.error(`Error deleting translations for blog post ${id}:`, translationsError);
-    toast.error(`Failed to delete blog post translations: ${translationsError.message}`);
+    createToastWithPersistence(
+      "Translation Deletion Failed", 
+      `Failed to delete blog post translations: ${translationsError.message}`, 
+      "error"
+    );
     throw new Error(`Failed to delete blog post translations: ${translationsError.message}`);
   }
 
-  // Then delete the blog post
   const { error } = await supabase
     .from('blog_posts')
     .delete()
@@ -274,13 +364,16 @@ export const deleteBlogPost = async (id: string): Promise<void> => {
 
   if (error) {
     console.error(`Error deleting blog post ${id}:`, error);
-    toast.error(`Failed to delete blog post: ${error.message}`);
+    createToastWithPersistence(
+      "Blog Post Deletion Failed", 
+      `Failed to delete blog post: ${error.message}`, 
+      "error"
+    );
     throw new Error(`Failed to delete blog post: ${error.message}`);
   }
 
   toast.success("Blog post deleted successfully");
   
-  // Dispatch event to notify other components
   window.dispatchEvent(new CustomEvent('blogPostDeleted', { detail: { id } }));
 };
 
@@ -301,7 +394,7 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
     image: post.image,
     featured: post.featured,
     translations: post.translations,
-    url: (post as any).url || "" // Add the url field for source reference
+    url: (post as any).url || ""
   };
 };
 
@@ -311,17 +404,20 @@ export const formatPostForN8N = (post: BlogPost | NewBlogPost): any => {
  */
 export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
   try {
-    // Get the active webhook URL and method from the store
     const webhookStore = useWebhookStore.getState();
     const webhookUrl = webhookStore.getActiveBlogCreationUrl();
     const webhookMethod = webhookStore.getActiveBlogCreationMethod();
     
     const formattedData = formatPostForN8N(blogPostData);
     console.log(`Sending post to blog creation webhook (${webhookUrl}) using ${webhookMethod}:`, formattedData);
+    createToastWithPersistence(
+      "Sending to N8N", 
+      "Sending post to N8N webhook...", 
+      "info"
+    );
     
-    // Use fetch with a timeout to ensure it doesn't hang
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout for longer operations
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     
     try {
       let response;
@@ -336,10 +432,8 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
           signal: controller.signal
         });
       } else {
-        // For GET requests, append params to the URL
         const params = new URLSearchParams();
         Object.entries(formattedData).forEach(([key, value]) => {
-          // Handle arrays and objects
           if (typeof value === 'object') {
             params.append(key, JSON.stringify(value));
           } else {
@@ -384,9 +478,13 @@ export const sendPostToN8N = async (blogPostData: BlogPost | NewBlogPost) => {
  */
 export const processAndSaveWebhookResponse = async (response: any, defaultTitle: string, defaultSlug: string): Promise<BlogPost> => {
   console.log("Processing webhook response:", response);
+  createToastWithPersistence(
+    "Processing Response", 
+    "Analyzing webhook response data...", 
+    "info"
+  );
   
   try {
-    // Parse the response using our enhanced utility function
     const parsedContent = parseWebhookJsonResponse(response);
     console.log("Parsed content from webhook:", parsedContent);
     
@@ -394,15 +492,12 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       throw new Error("Failed to parse content from webhook response");
     }
     
-    // Extract image URL from various possible locations in the response
-    let imageUrl = parsedContent.image || parsedContent.image_url || null;
+    let imageUrl = parsedContent.image_url || parsedContent.image || null;
     
-    // Check in data property if available
     if (!imageUrl && parsedContent.data && Array.isArray(parsedContent.data) && parsedContent.data.length > 0) {
       imageUrl = parsedContent.data[0].url || parsedContent.data[0].image_url;
     }
     
-    // Check in output JSON if available
     if (!imageUrl && parsedContent.output) {
       try {
         const jsonMatch = parsedContent.output.match(/```json\n([\s\S]*?)\n```/);
@@ -420,18 +515,31 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     }
     
     console.log("Image URL extracted:", imageUrl);
+    createToastWithPersistence(
+      "Image Found", 
+      "Found image URL in webhook response", 
+      "info"
+    );
     
-    // Always process the image to ensure it's stored in Supabase
     if (imageUrl && imageUrl !== "https://via.placeholder.com/800x400") {
       console.log("Processing image from webhook URL:", imageUrl);
+      createToastWithPersistence(
+        "Processing Image", 
+        "Downloading and storing image from webhook...", 
+        "info"
+      );
       
       try {
-        // First download the image to base64
         const imageData = await downloadImage(imageUrl);
         
         if (imageData) {
           console.log("Image downloaded successfully, now uploading to Supabase storage");
-          // Then upload to Supabase storage
+          createToastWithPersistence(
+            "Image Downloaded", 
+            "Image downloaded successfully, now uploading to storage", 
+            "info"
+          );
+          
           const storedImageUrl = await uploadImageToStorage(
             imageData, 
             parsedContent.title || defaultTitle
@@ -439,20 +547,39 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
           
           if (storedImageUrl) {
             console.log("Image successfully stored in Supabase:", storedImageUrl);
+            createToastWithPersistence(
+              "Image Stored", 
+              "Image successfully uploaded to permanent storage", 
+              "success"
+            );
             imageUrl = storedImageUrl;
           } else {
             console.warn("Failed to store image in Supabase, using original URL");
+            createToastWithPersistence(
+              "Storage Failed", 
+              "Could not store image, using original URL", 
+              "warning"
+            );
           }
         } else {
           console.warn("Failed to download image, using original URL");
+          createToastWithPersistence(
+            "Image Download Failed", 
+            "Failed to download image, using original URL", 
+            "warning"
+          );
         }
       } catch (imgError) {
         console.error("Error processing image:", imgError);
         console.warn("Using original image URL due to processing failure");
+        createToastWithPersistence(
+          "Image Processing Error", 
+          "Error processing image from webhook", 
+          "error"
+        );
       }
     }
     
-    // Create a new blog post with the generated content as a draft
     const newBlogPost: NewBlogPost = {
       title: parsedContent.title || defaultTitle,
       slug: parsedContent.slug || defaultSlug,
@@ -470,18 +597,29 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     
     console.log("Creating new blog post with data:", newBlogPost);
     
-    // Save the new blog post to the database
     const savedPost = await createBlogPost(newBlogPost);
     console.log("Blog post saved successfully:", savedPost);
+    createToastWithPersistence(
+      "Blog Created From Webhook", 
+      "Successfully created blog post from webhook data", 
+      "success"
+    );
     
     return savedPost;
   } catch (error) {
     console.error("Error processing webhook response:", error);
+    createToastWithPersistence(
+      "Webhook Processing Error", 
+      `Error: ${error instanceof Error ? error.message : String(error)}`, 
+      "error"
+    );
     throw new Error(`Failed to process webhook response: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
-// Add a function to change blog post status
+/**
+ * Change blog post status
+ */
 export const updateBlogPostStatus = async (id: string, status: 'draft' | 'published'): Promise<BlogPost> => {
   console.log(`Updating blog post ${id} status to ${status}`);
   
@@ -494,27 +632,31 @@ export const updateBlogPostStatus = async (id: string, status: 'draft' | 'publis
 
   if (error) {
     console.error(`Error updating blog post status ${id}:`, error);
-    toast.error(`Failed to update blog post status: ${error.message}`);
+    createToastWithPersistence(
+      "Blog Post Status Update Failed", 
+      `Error: ${error.message}`, 
+      "error"
+    );
     throw new Error(`Failed to update blog post status: ${error.message}`);
   }
 
   toast.success(`Blog post ${status === 'published' ? 'published' : 'moved to draft'} successfully`);
   
-  // Dispatch event to notify other components that blog data has changed
   window.dispatchEvent(new CustomEvent('blogPostUpdated', { detail: data }));
   
   const transformedPost = transformDatabasePost(data);
   
-  // Send post data to social media webhook if changing to published status
   if (status === 'published') {
     console.log("Status is 'published', sending to social media webhook");
-    
-    // IMPORTANT: Call the webhook function directly here to ensure it's triggered
     try {
       await sendPostToSocialMediaWebhook(transformedPost);
     } catch (webhookError) {
       console.error("Error sending to social media webhook:", webhookError);
-      toast.error("Post published, but failed to share to social media");
+      createToastWithPersistence(
+        "Webhook Error", 
+        "Post published, but failed to share to social media", 
+        "error"
+      );
     }
   } else {
     console.log("Status is not 'published', skipping webhook");

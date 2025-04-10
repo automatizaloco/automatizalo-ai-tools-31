@@ -38,14 +38,14 @@ const processImage = async (imageUrl: string, title: string): Promise<string> =>
     console.log("Processing image from URL:", imageUrl);
     
     // Skip if already a Supabase storage URL
-    if (imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
+    if (imageUrl && imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
       console.log("Image is already in Supabase storage");
       return imageUrl;
     }
 
-    // Skip if a placeholder
-    if (imageUrl.includes('placeholder.com')) {
-      console.log("Placeholder image detected, attempting to find real image in the payload");
+    // Skip if a placeholder and no other image URL is found
+    if (imageUrl && imageUrl.includes('placeholder.com')) {
+      console.log("Placeholder image detected, skipping processing");
       return imageUrl;
     }
     
@@ -128,12 +128,48 @@ const processImage = async (imageUrl: string, title: string): Promise<string> =>
 const processNewBlogPost = async (payload: any) => {
   console.log("Processing payload:", JSON.stringify(payload, null, 2));
 
-  // Look for image in various common fields
-  let imageUrl = payload.image || payload.image_url || payload.imageUrl || payload.url;
+  // Better image URL extraction - check for all common field names
+  // First check direct fields
+  let imageUrl = 
+    payload.image_url || 
+    payload.imageUrl || 
+    payload.image || 
+    payload.url || 
+    payload.coverImage || 
+    payload.cover_image || 
+    payload.featured_image;
+  
+  console.log("Initial image URL search found:", imageUrl);
+  
+  // If no image URL found, check response array format - webhook might return an array
+  if (!imageUrl && Array.isArray(payload) && payload.length > 0) {
+    const firstItem = payload[0];
+    imageUrl = 
+      firstItem.image_url || 
+      firstItem.imageUrl || 
+      firstItem.image || 
+      firstItem.url || 
+      firstItem.coverImage || 
+      firstItem.cover_image || 
+      firstItem.featured_image;
+      
+    console.log("Found image URL in array format:", imageUrl);
+    
+    // Update payload to use the first item if it's an array
+    if (typeof firstItem === 'object') {
+      payload = firstItem;
+    }
+  }
   
   // Check if there's an image property in nested data
   if (!imageUrl && payload.data && Array.isArray(payload.data) && payload.data.length > 0) {
-    imageUrl = payload.data[0].url || payload.data[0].image_url || payload.data[0].imageUrl;
+    imageUrl = 
+      payload.data[0].url || 
+      payload.data[0].image_url || 
+      payload.data[0].imageUrl ||
+      payload.data[0].image;
+    
+    console.log("Found image URL in nested data:", imageUrl);
   }
   
   // Check output property for JSON content with image
@@ -142,14 +178,20 @@ const processNewBlogPost = async (payload: any) => {
       const jsonMatch = payload.output.match(/```json\n([\s\S]*?)\n```/);
       if (jsonMatch && jsonMatch[1]) {
         const extractedContent = JSON.parse(jsonMatch[1]);
-        imageUrl = extractedContent.image || extractedContent.image_url || extractedContent.url;
+        imageUrl = 
+          extractedContent.image_url || 
+          extractedContent.imageUrl || 
+          extractedContent.image || 
+          extractedContent.url;
+          
+        console.log("Found image URL in JSON output:", imageUrl);
       }
     } catch (err) {
       console.error("Error parsing JSON in output:", err);
     }
   }
   
-  console.log("Image URL found:", imageUrl);
+  console.log("Final image URL found:", imageUrl);
 
   // Process image if present
   if (imageUrl) {
@@ -159,6 +201,7 @@ const processNewBlogPost = async (payload: any) => {
     } catch (imageError) {
       console.error("Failed to process image:", imageError);
       // Continue with original image URL
+      payload.image = imageUrl;
     }
   } else {
     console.log("No image URL found in payload, using placeholder");

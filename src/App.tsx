@@ -1,85 +1,102 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, Suspense, lazy } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import { Toaster } from '@/components/ui/sonner';
-import Layout from '@/components/layout/Layout';
-import Index from '@/pages/Index';
-import Solutions from '@/pages/Solutions';
+import { PersistentToastProvider } from "@/context/PersistentToastContext";
+
+// Import your pages
+import Home from '@/pages/Home';
+import About from '@/pages/About';
 import Contact from '@/pages/Contact';
-import Blog from '@/pages/Blog';
-import BlogPost from '@/pages/BlogPost';
 import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import Dashboard from '@/pages/Dashboard';
 import NotFound from '@/pages/NotFound';
-import PrivacyPolicy from '@/pages/PrivacyPolicy';
-import AdminLayout from '@/components/layout/AdminLayout';
-import ContentManager from '@/pages/admin/ContentManager';
-import BlogAdmin from '@/pages/admin/BlogAdmin';
+import BlogList from '@/pages/blog/BlogList';
+import BlogPost from '@/pages/blog/BlogPost';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminBlogList from '@/pages/admin/AdminBlogList';
 import BlogPostForm from '@/pages/admin/BlogPostForm';
-import LayoutManager from '@/pages/admin/LayoutManager';
-import ContentEditor from '@/pages/admin/ContentEditor';
-import TestimonialManager from '@/pages/admin/TestimonialManager';
-import NewsletterAdmin from '@/pages/admin/NewsletterAdmin';
-import AutomaticBlog from '@/pages/admin/AutomaticBlog';
-import WebhookManager from '@/pages/admin/WebhookManager';
-import Unsubscribe from '@/pages/Unsubscribe';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-import { useContactInfo } from '@/stores/contactInfoStore';
-
-import './App.css';
-
-function AppContent() {
-  const location = useLocation();
-  const { fetchContactInfo } = useContactInfo();
-
-  useEffect(() => {
-    fetchContactInfo();
-  }, [fetchContactInfo]);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
-
-  const isAdminRoute = location.pathname.startsWith('/admin');
-
-  return (
-    <>
-      <Toaster position="top-right" />
-      <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/solutions" element={<Solutions />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/unsubscribe" element={<Unsubscribe />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<ContentManager />} />
-            <Route path="content" element={<ContentManager />} />
-            <Route path="content/:id" element={<ContentEditor />} />
-            <Route path="blog" element={<BlogAdmin />} />
-            <Route path="blog/new" element={<BlogPostForm />} />
-            <Route path="blog/edit/:id" element={<BlogPostForm />} />
-            <Route path="automatic-blog" element={<AutomaticBlog />} />
-            <Route path="webhooks" element={<WebhookManager />} />
-            <Route path="layout" element={<LayoutManager />} />
-            <Route path="testimonials" element={<TestimonialManager />} />
-            <Route path="newsletter" element={<NewsletterAdmin />} />
-          </Route>
-        </Routes>
-      </Suspense>
-    </>
-  );
-}
+// Create a client
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <AuthProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <QueryClientProvider client={queryClient}>
+            <PersistentToastProvider>
+              <Router>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/blog" element={<BlogList />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  
+                  {/* Protected routes */}
+                  <Route 
+                    path="/dashboard" 
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Admin routes */}
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <ProtectedRoute adminOnly>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/blog" 
+                    element={
+                      <ProtectedRoute adminOnly>
+                        <AdminBlogList />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/blog/new" 
+                    element={
+                      <ProtectedRoute adminOnly>
+                        <BlogPostForm />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/blog/edit/:id" 
+                    element={
+                      <ProtectedRoute adminOnly>
+                        <BlogPostForm />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* 404 route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Router>
+              <Toaster />
+            </PersistentToastProvider>
+          </QueryClientProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

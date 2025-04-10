@@ -1,6 +1,6 @@
-import { Outlet } from 'react-router-dom';
+
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +12,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-const AdminLayout = () => {
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+
+const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [session, setSession] = useState<any>(null);
@@ -84,7 +88,8 @@ const AdminLayout = () => {
     { value: 'webhooks', label: 'Webhooks' },
     { value: 'layout', label: 'Layout' },
     { value: 'testimonials', label: 'Testimonials' },
-    { value: 'newsletter', label: 'Newsletter' }
+    { value: 'newsletter', label: 'Newsletter' },
+    { value: 'notifications', label: 'Notifications' }
   ];
 
   return (
@@ -148,7 +153,7 @@ const AdminLayout = () => {
             className="w-full mb-8"
             onValueChange={handleTabChange}
           >
-            <TabsList className="grid grid-cols-7 w-full">
+            <TabsList className="grid grid-cols-8 w-full">
               {adminRoutes.map((route) => (
                 <TabsTrigger key={route.value} value={route.value}>
                   {route.label}
@@ -159,7 +164,7 @@ const AdminLayout = () => {
         )}
         
         <div className={`bg-white shadow rounded-lg ${isMobile ? 'p-3' : 'p-6'}`}>
-          <Outlet />
+          {children}
         </div>
       </div>
     </div>

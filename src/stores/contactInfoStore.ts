@@ -21,7 +21,7 @@ interface ContactInfoState {
 
 // Default contact info to use as fallback
 const defaultContactInfo: ContactInfo = {
-  phone: '+57 3192963363',
+  phone: '',
   email: 'contact@automatizalo.co',
   address: '123 AI Street, Tech City, TC 12345',
   website: 'https://automatizalo.co',
@@ -40,10 +40,10 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
       const data = await fetchContactInfoService();
       
       if (data) {
-        // Make sure whatsapp is set, defaulting to phone if it's not
+        // Make sure whatsapp is set, defaulting to the new WhatsApp number if it's not
         const contactInfo: ContactInfo = {
           ...data,
-          whatsapp: data.whatsapp || data.phone
+          whatsapp: '+57 3192963363' // Always use this WhatsApp number
         };
         
         set({
@@ -75,10 +75,10 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       
-      // Make sure whatsapp is set, defaulting to phone if not explicitly set
+      // Always ensure WhatsApp is set to the correct number
       const updatedInfo = {
         ...info,
-        whatsapp: info.whatsapp || info.phone
+        whatsapp: '+57 3192963363'
       };
       
       await updateContactInfoService(updatedInfo);

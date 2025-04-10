@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import EditableText from '@/components/admin/EditableText';
 import { useContactInfo, ContactInfo } from '@/stores/contactInfoStore';
 import { useAuth } from '@/context/AuthContext';
-import { Instagram } from 'lucide-react';
+import { Instagram, MessageCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileFooter from './MobileFooter';
@@ -25,7 +25,6 @@ const Footer = () => {
 
   const handleContactInfoChange = async (id: string, value: string) => {
     const fieldMap: Record<string, keyof ContactInfo> = {
-      'footer-phone': 'phone',
       'footer-email': 'email',
       'footer-address': 'address',
       'footer-website': 'website'
@@ -39,15 +38,18 @@ const Footer = () => {
           [field]: value
         };
         
-        if (field === 'phone' && (contactInfo.whatsapp === contactInfo.phone)) {
-          updatedInfo.whatsapp = value;
-        }
-        
         await updateContactInfo(updatedInfo);
       } catch (error) {
         console.error("Error updating contact info:", error);
       }
     }
+  };
+
+  const handleWhatsAppClick = () => {
+    const whatsappNumber = "+57 3192963363";
+    const cleanPhone = whatsappNumber.replace(/\D/g, '');
+    const message = encodeURIComponent("Hello, I would like more information");
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
   // Return the mobile version for small screens
@@ -286,18 +288,13 @@ const Footer = () => {
               )}
             </h3>
             <div className="text-left">
-              <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
-                <span className="font-medium">Phone:</span> 
-                {isAuthenticated ? (
-                  <EditableText 
-                    id="footer-phone" 
-                    defaultText={contactInfo.phone}
-                    onSave={(value) => handleContactInfoChange('footer-phone', value)}
-                  />
-                ) : (
-                  <span> {contactInfo.phone}</span>
-                )}
-              </p>
+              <button 
+                onClick={handleWhatsAppClick}
+                className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors flex items-center gap-2 mb-2`}
+              >
+                <MessageCircle size={16} />
+                <span>WhatsApp: +57 3192963363</span>
+              </button>
               <p className={theme === 'dark' ? 'text-gray-400 mb-2' : 'text-gray-600 mb-2'}>
                 <span className="font-medium">Email:</span> 
                 {isAuthenticated ? (

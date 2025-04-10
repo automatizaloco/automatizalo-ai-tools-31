@@ -1,3 +1,4 @@
+
 import { BlogPost } from "@/types/blog";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -100,6 +101,12 @@ export const parseWebhookJsonResponse = (response: any): any => {
   // If response is an array, take the first item
   if (Array.isArray(response)) {
     console.log("Response is an array, returning first item:", response[0]);
+    
+    // Extract image_url from the first item if it exists
+    if (response[0] && response[0].image_url) {
+      console.log("Found image_url in response:", response[0].image_url);
+    }
+    
     return response[0];
   }
   
@@ -151,7 +158,7 @@ export const parseWebhookJsonResponse = (response: any): any => {
 // Upload image to Supabase storage from URL or base64
 export const uploadImageToStorage = async (imageSource: string, postTitle: string): Promise<string | null> => {
   try {
-    console.log("Preparing to upload image to storage");
+    console.log("Preparing to upload image to storage from source:", imageSource);
     
     // Check if it's already a Supabase storage URL for our project
     if (imageSource.includes('juwbamkqkawyibcvllvo.supabase.co/storage/v1/object/public/blog_images')) {

@@ -58,6 +58,7 @@ export const PersistentToastProvider: React.FC<PersistentToastProviderProps> = (
           const newToasts = [event.detail, ...currentToasts];
           try {
             localStorage.setItem(storageKey, JSON.stringify(newToasts));
+            console.log("Saved external toast to localStorage, new count:", newToasts.length);
           } catch (error) {
             console.error("Error saving toasts to localStorage:", error);
           }
@@ -83,10 +84,12 @@ export const PersistentToastProvider: React.FC<PersistentToastProviderProps> = (
     
     console.log("Adding persistent toast:", newToast);
     
+    // Also show the toast via Sonner
+    toast[toastData.type](toastData.title, { description: toastData.message });
+    
+    // Update state and save to localStorage
     setToasts((currentToasts) => {
       const newToasts = [newToast, ...currentToasts];
-      // Also show the toast via Sonner
-      toast[toastData.type](toastData.title, { description: toastData.message });
       
       // Store in localStorage
       try {
@@ -98,6 +101,13 @@ export const PersistentToastProvider: React.FC<PersistentToastProviderProps> = (
       
       return newToasts;
     });
+    
+    // Also dispatch custom event for other parts of the app
+    const event = new CustomEvent('persistentToastAdded', { 
+      detail: newToast 
+    });
+    
+    window.dispatchEvent(event);
   };
   
   // Clear all toasts

@@ -4,7 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useContactInfo } from '@/stores/contactInfoStore';
 import { useAuth } from '@/context/AuthContext';
-import { Instagram } from 'lucide-react';
+import { Instagram, MessageCircle } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -18,6 +18,13 @@ const MobileFooter = () => {
   const { isAuthenticated } = useAuth();
   const { contactInfo } = useContactInfo();
   const currentYear = new Date().getFullYear();
+
+  const handleWhatsAppClick = () => {
+    const whatsappNumber = "+57 3192963363";
+    const cleanPhone = whatsappNumber.replace(/\D/g, '');
+    const message = encodeURIComponent("Hello, I would like more information");
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+  };
 
   return (
     <footer className={theme === 'dark' ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-700'}>
@@ -166,9 +173,13 @@ const MobileFooter = () => {
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2 pl-2">
-                <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-                  <span className="font-medium">Phone:</span> {contactInfo.phone}
-                </p>
+                <button 
+                  onClick={handleWhatsAppClick}
+                  className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors flex items-center gap-2`}
+                >
+                  <MessageCircle size={16} />
+                  <span>WhatsApp: +57 3192963363</span>
+                </button>
                 <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
                   <span className="font-medium">Email:</span> {contactInfo.email}
                 </p>

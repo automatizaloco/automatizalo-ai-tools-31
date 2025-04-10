@@ -2,37 +2,25 @@
 import { MessageCircle, Calendar } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/context/LanguageContext";
-import { useContactInfo } from "@/stores/contactInfoStore";
 import { toast } from "sonner";
-import { useEffect } from "react";
 
 interface WhatsAppButtonProps {
-  phoneNumber?: string;
   message?: string;
   showCalendarConfirmation?: boolean;
 }
 
 const WhatsAppButton = ({
-  phoneNumber: propPhoneNumber,
   message = "Hello, I would like more information",
   showCalendarConfirmation = false
 }: WhatsAppButtonProps) => {
   const { t } = useLanguage();
-  const { contactInfo, fetchContactInfo } = useContactInfo();
   
-  // Fetch contact info when component mounts
-  useEffect(() => {
-    console.log("WhatsAppButton component: Fetching contact info");
-    fetchContactInfo();
-  }, [fetchContactInfo]);
-  
-  // Use the phone number from props if provided, otherwise use the one from contactInfo
-  // Prioritize whatsapp number if available
-  const phoneNumber = propPhoneNumber || contactInfo.whatsapp || contactInfo.phone;
+  // Always use this WhatsApp number
+  const whatsappNumber = "+57 3192963363";
   
   const handleClick = () => {
     // Clean the phone number - remove any non-digit characters
-    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    const cleanPhone = whatsappNumber.replace(/\D/g, '');
     const encodedMessage = encodeURIComponent(message);
 
     // If calendar confirmation is requested, show success toast first

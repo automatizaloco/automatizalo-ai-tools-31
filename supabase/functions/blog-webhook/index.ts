@@ -35,6 +35,8 @@ const validateRequest = (req: Request, payload: any) => {
 // Process and store image from URL to Supabase storage
 const processImage = async (imageUrl: string, title: string): Promise<string> => {
   try {
+    console.log("Processing image from URL:", imageUrl);
+    
     // Skip if already a Supabase storage URL
     if (imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
       console.log("Image is already in Supabase storage");
@@ -43,23 +45,44 @@ const processImage = async (imageUrl: string, title: string): Promise<string> =>
 
     // Skip if a placeholder
     if (imageUrl.includes('placeholder.com')) {
+      console.log("Placeholder image detected, attempting to find real image in the payload");
       return imageUrl;
+    }
+    
+    // Skip if empty or invalid URL
+    if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
+      console.log("Invalid image URL:", imageUrl);
+      return "https://via.placeholder.com/800x400";
     }
 
     console.log("Downloading image from:", imageUrl);
     
-    // Download the image
-    const imageResponse = await fetch(imageUrl);
+    // Download the image with proper error handling
+    const imageResponse = await fetch(imageUrl, {
+      headers: {
+        'Accept': 'image/*'
+      }
+    });
+    
     if (!imageResponse.ok) {
+      console.error(`Failed to download image: ${imageResponse.status} - ${await imageResponse.text()}`);
       throw new Error(`Failed to download image: ${imageResponse.status}`);
     }
     
     const blob = await imageResponse.blob();
+    console.log(`Downloaded image: ${blob.size} bytes, type: ${blob.type}`);
+    
+    if (blob.size === 0) {
+      console.error("Downloaded image has 0 bytes");
+      return "https://via.placeholder.com/800x400";
+    }
     
     // Prepare file path and name
     const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 30);
     const fileExtension = blob.type.split('/')[1] || 'jpg';
     const fileName = `blog/${sanitizedTitle}-webhook-${Date.now()}.${fileExtension}`;
+    
+    console.log(`Uploading image as ${fileName} (${blob.size} bytes)`);
     
     // Upload to Supabase storage
     const { data, error } = await supabaseAdmin
@@ -72,6 +95,19 @@ const processImage = async (imageUrl: string, title: string): Promise<string> =>
 
     if (error) {
       console.error("Storage upload error:", error);
+      
+      // If the error is because the file already exists, try to get the URL
+      if (error.message && error.message.includes('already exists')) {
+        console.log("File already exists, getting existing URL");
+        
+        const { data: { publicUrl } } = supabaseAdmin
+          .storage
+          .from('blog_images')
+          .getPublicUrl(fileName);
+          
+        return publicUrl;
+      }
+      
       return imageUrl; // Return original if upload fails
     }
 
@@ -90,14 +126,43 @@ const processImage = async (imageUrl: string, title: string): Promise<string> =>
 }
 
 const processNewBlogPost = async (payload: any) => {
-  // Process image if present
-  if (payload.image) {
+  console.log("Processing payload:", JSON.stringify(payload, null, 2));
+
+  // Look for image in various common fields
+  let imageUrl = payload.image || payload.image_url || payload.imageUrl || payload.url;
+  
+  // Check if there's an image property in nested data
+  if (!imageUrl && payload.data && Array.isArray(payload.data) && payload.data.length > 0) {
+    imageUrl = payload.data[0].url || payload.data[0].image_url || payload.data[0].imageUrl;
+  }
+  
+  // Check output property for JSON content with image
+  if (!imageUrl && payload.output) {
     try {
-      payload.image = await processImage(payload.image, payload.title);
+      const jsonMatch = payload.output.match(/```json\n([\s\S]*?)\n```/);
+      if (jsonMatch && jsonMatch[1]) {
+        const extractedContent = JSON.parse(jsonMatch[1]);
+        imageUrl = extractedContent.image || extractedContent.image_url || extractedContent.url;
+      }
+    } catch (err) {
+      console.error("Error parsing JSON in output:", err);
+    }
+  }
+  
+  console.log("Image URL found:", imageUrl);
+
+  // Process image if present
+  if (imageUrl) {
+    try {
+      payload.image = await processImage(imageUrl, payload.title);
+      console.log("Processed image URL:", payload.image);
     } catch (imageError) {
       console.error("Failed to process image:", imageError);
       // Continue with original image URL
     }
+  } else {
+    console.log("No image URL found in payload, using placeholder");
+    payload.image = "https://via.placeholder.com/800x400";
   }
 
   // Map fields to match the database schema
@@ -111,7 +176,7 @@ const processNewBlogPost = async (payload: any) => {
     author: payload.author,
     date: payload.date || new Date().toISOString().split('T')[0],
     read_time: payload.read_time || payload.readTime || '5 min', // Handle both read_time and readTime
-    image: payload.image || 'https://via.placeholder.com/800x400',
+    image: payload.image, // We've already processed this above
     featured: payload.featured || false,
     url: payload.url || null, // Store the source URL if provided
     status: payload.status || 'draft', // Handle the status field with a default value of draft

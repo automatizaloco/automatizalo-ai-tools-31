@@ -394,12 +394,35 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       throw new Error("Failed to parse content from webhook response");
     }
     
-    // Get image URL from the parsed content or set a placeholder
-    let imageUrl = parsedContent.image || parsedContent.image_url || "https://via.placeholder.com/800x400";
+    // Extract image URL from various possible locations in the response
+    let imageUrl = parsedContent.image || parsedContent.image_url || null;
+    
+    // Check in data property if available
+    if (!imageUrl && parsedContent.data && Array.isArray(parsedContent.data) && parsedContent.data.length > 0) {
+      imageUrl = parsedContent.data[0].url || parsedContent.data[0].image_url;
+    }
+    
+    // Check in output JSON if available
+    if (!imageUrl && parsedContent.output) {
+      try {
+        const jsonMatch = parsedContent.output.match(/```json\n([\s\S]*?)\n```/);
+        if (jsonMatch && jsonMatch[1]) {
+          const extractedData = JSON.parse(jsonMatch[1]);
+          imageUrl = extractedData.image || extractedData.image_url;
+        }
+      } catch (err) {
+        console.error("Error parsing JSON in output:", err);
+      }
+    }
+    
+    if (!imageUrl) {
+      imageUrl = "https://via.placeholder.com/800x400";
+    }
+    
     console.log("Image URL extracted:", imageUrl);
     
     // Always process the image to ensure it's stored in Supabase
-    if (imageUrl) {
+    if (imageUrl && imageUrl !== "https://via.placeholder.com/800x400") {
       console.log("Processing image from webhook URL:", imageUrl);
       
       try {

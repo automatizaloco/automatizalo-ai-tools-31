@@ -58,10 +58,20 @@ export const processAndSaveWebhookResponse = async (
       status: 'draft',
       featured: false,
       url: extractedData.url || "",
+      image: "https://via.placeholder.com/800x400" // Default placeholder, will be updated below
     };
     
     // Process image if present
-    let imageUrl = extractedData.image || extractedData.image_url || extractedData.imageUrl;
+    let imageUrl = null;
+    
+    // Check for image URLs in different possible fields
+    if (extractedData.image) {
+      imageUrl = extractedData.image;
+    } else if (extractedData.image_url) {
+      imageUrl = extractedData.image_url;
+    } else if (extractedData.imageUrl) {
+      imageUrl = extractedData.imageUrl;
+    }
     
     if (imageUrl) {
       console.log("Processing Image");

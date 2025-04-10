@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { NewBlogPost, BlogPost } from '@/types/blog';
 
@@ -246,6 +245,42 @@ export const updateBlogPost = async (id: string, data: Partial<NewBlogPost>): Pr
   }
   
   return transformDatabasePost(updatedPost);
+};
+
+/**
+ * Delete a blog post from the database
+ */
+export const deleteBlogPost = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('blog_posts')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error("Error deleting blog post:", error);
+      throw error;
+    }
+    
+    // Also delete any translations for this post
+    const { error: translationError } = await supabase
+      .from('blog_translations')
+      .delete()
+      .eq('blog_post_id', id);
+    
+    if (translationError) {
+      console.error("Error deleting blog translations:", translationError);
+      // Don't throw here, as the main post was already deleted
+    }
+    
+    // Dispatch an event to notify components of the deletion
+    const event = new Event('blogPostDeleted');
+    window.dispatchEvent(event);
+    
+  } catch (error) {
+    console.error("Database error when deleting blog post:", error);
+    throw error;
+  }
 };
 
 /**

@@ -23,7 +23,12 @@ const createToastWithPersistence = (title: string, message: string, type: "succe
     const updatedToasts = [newToast, ...existingToasts].slice(0, 50);
     localStorage.setItem("persistent-toasts", JSON.stringify(updatedToasts));
     
-    window.dispatchEvent(new CustomEvent('persistentToastAdded', { detail: newToast }));
+    // Dispatch event to notify the PersistentToastProvider
+    window.dispatchEvent(new CustomEvent('persistentToastAdded', { 
+      detail: newToast 
+    }));
+    
+    console.log("Persistent toast created and saved:", newToast);
   } catch (error) {
     console.error("Failed to save persistent toast:", error);
   }
@@ -520,6 +525,7 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
   );
   
   try {
+    // Parse the response to extract content
     const parsedContent = parseWebhookJsonResponse(response);
     console.log("Parsed content from webhook:", parsedContent);
     
@@ -527,17 +533,22 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       throw new Error("Failed to parse content from webhook response");
     }
     
-    // Enhanced image URL extraction to capture various URL formats
+    // Enhanced image URL extraction with more priority to image_url
     let imageUrl = parsedContent.image_url || 
                   parsedContent.imageUrl || 
                   parsedContent.image || 
                   null;
     
-    if (!imageUrl && parsedContent.data && Array.isArray(parsedContent.data) && parsedContent.data.length > 0) {
-      imageUrl = parsedContent.data[0].url || 
-               parsedContent.data[0].image_url || 
-               parsedContent.data[0].imageUrl || 
-               parsedContent.data[0].image;
+    console.log("Initial image URL extraction:", imageUrl);
+    
+    // If still no image found, look in nested data structures
+    if (!imageUrl) {
+      if (parsedContent.data && Array.isArray(parsedContent.data) && parsedContent.data.length > 0) {
+        imageUrl = parsedContent.data[0].url || 
+                parsedContent.data[0].image_url || 
+                parsedContent.data[0].imageUrl || 
+                parsedContent.data[0].image;
+      }
     }
     
     // Look for URLs in output field content
@@ -562,44 +573,40 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
       }
     }
     
-    // Additional logging for debugging
-    console.log("Initial image URL extraction:", imageUrl);
-    
+    // Deep search in nested objects
     if (!imageUrl) {
-      // Check if an image might be nested deeper in the response
-      if (Array.isArray(response) && response[0] && response[0].image_url) {
-        imageUrl = response[0].image_url;
-      } else if (typeof response === 'object' && response !== null) {
-        const searchForUrl = (obj: any) => {
-          for (const key in obj) {
-            if (typeof obj[key] === 'string' && 
-                (key.includes('image') || key.includes('url')) && 
-                obj[key].match(/^https?:\/\//)) {
-              return obj[key];
-            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-              const nestedUrl = searchForUrl(obj[key]);
-              if (nestedUrl) return nestedUrl;
-            }
-          }
-          return null;
-        };
+      const searchForUrl = (obj: any): string | null => {
+        if (!obj || typeof obj !== 'object') return null;
         
-        imageUrl = searchForUrl(response);
-      }
+        for (const key in obj) {
+          // Check if the key is related to an image and the value is a string URL
+          if (typeof obj[key] === 'string' && 
+              (key.includes('image') || key.includes('url')) && 
+              obj[key].match(/^https?:\/\//)) {
+            return obj[key];
+          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            const nestedUrl = searchForUrl(obj[key]);
+            if (nestedUrl) return nestedUrl;
+          }
+        }
+        return null;
+      };
       
-      console.log("Deep image URL search result:", imageUrl);
+      imageUrl = searchForUrl(parsedContent);
     }
     
+    // Fallback to placeholder if no image found
     if (!imageUrl) {
       imageUrl = "https://via.placeholder.com/800x400";
+      console.log("No image URL found, using placeholder");
+    } else {
+      console.log("Final image URL extracted:", imageUrl);
+      createToastWithPersistence(
+        "Image Found", 
+        "Found image URL in webhook response", 
+        "info"
+      );
     }
-    
-    console.log("Final image URL extracted:", imageUrl);
-    createToastWithPersistence(
-      "Image Found", 
-      "Found image URL in webhook response", 
-      "info"
-    );
     
     // Process and store the image
     if (imageUrl && imageUrl !== "https://via.placeholder.com/800x400") {
@@ -652,10 +659,9 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
         }
       } catch (imgError) {
         console.error("Error processing image:", imgError);
-        console.warn("Using original image URL due to processing failure");
         createToastWithPersistence(
           "Image Processing Error", 
-          "Error processing image from webhook", 
+          `Error processing image from webhook: ${imgError instanceof Error ? imgError.message : String(imgError)}`, 
           "error"
         );
       }

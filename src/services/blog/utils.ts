@@ -1,4 +1,3 @@
-
 import { BlogPost } from "@/types/blog";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -86,98 +85,67 @@ export const downloadImage = async (imageUrl: string): Promise<string | null> =>
   }
 };
 
-// Parse webhook JSON response function to handle the direct array response format
-export const parseWebhookJsonResponse = (responseText: string): any => {
-  try {
-    console.log("Parsing webhook response text:", responseText);
-    
-    // Parse the response as JSON
-    const parsedResponse = JSON.parse(responseText);
-    console.log("Initially parsed response:", parsedResponse);
-    
-    // Check if this is an array with blog post data
-    if (Array.isArray(parsedResponse) && parsedResponse.length > 0) {
-      const firstItem = parsedResponse[0];
-      console.log("Processing first item in array:", firstItem);
-      
-      // For new format - direct blog post object in the array
-      if (firstItem.title && firstItem.content) {
-        console.log("Found direct blog post object:", firstItem);
-        
-        // Create a result object with all data from the response
-        const result = { ...firstItem };
-        
-        // Handle image_url field explicitly
-        if (firstItem.image_url) {
-          result.image = firstItem.image_url;
-          console.log("Mapped image_url to image:", result.image);
-        }
-        
-        // Handle read_time vs readTime
-        if (firstItem.read_time && !firstItem.readTime) {
-          result.readTime = firstItem.read_time;
-          console.log("Mapped read_time to readTime:", result.readTime);
-        }
-        
-        console.log("Final processed result:", result);
-        return result;
-      }
-      
-      // Handle old format with output/data structure
-      if (firstItem.output) {
-        const jsonMatch = firstItem.output.match(/```json\n([\s\S]*?)\n```/);
-        
-        if (jsonMatch && jsonMatch[1]) {
-          try {
-            const extractedContent = JSON.parse(jsonMatch[1]);
-            console.log("Successfully extracted content from output:", extractedContent);
-            
-            // Create a result object with all the extracted content
-            const result = { ...extractedContent };
-            
-            // Add image URL from the data property if available
-            if (firstItem.data && Array.isArray(firstItem.data) && firstItem.data.length > 0) {
-              // Check for different image URL properties
-              const dataItem = firstItem.data[0];
-              if (dataItem.url) {
-                result.image = dataItem.url;
-                console.log("Added image URL from data.url:", result.image);
-              } else if (dataItem.image_url) {
-                result.image = dataItem.image_url;
-                console.log("Added image URL from data.image_url:", result.image);
-              }
-            }
-            
-            return result;
-          } catch (err) {
-            console.error("Error parsing JSON inside output:", err);
-          }
-        }
-      }
-      
-      // If we have data with an image URL, add it to the result
-      if (firstItem.data && Array.isArray(firstItem.data) && firstItem.data.length > 0) {
-        const result = { ...firstItem };
-        const dataItem = firstItem.data[0];
-        
-        if (dataItem.url) {
-          result.image = dataItem.url;
-          console.log("Using image URL from data.url:", result.image);
-        } else if (dataItem.image_url) {
-          result.image = dataItem.image_url;
-          console.log("Using image URL from data.image_url:", result.image);
-        }
-        
-        return result;
-      }
-    }
-    
-    // If nothing else works, return the original parsed response
-    return parsedResponse;
-  } catch (error) {
-    console.error("Error parsing webhook response:", error);
-    throw new Error("Invalid JSON response from webhook");
+/**
+ * Parse webhook response JSON from various formats
+ */
+export const parseWebhookJsonResponse = (response: any): any => {
+  console.log("Parsing webhook response:", response);
+  
+  // If response is already a parsed object, return it directly
+  if (typeof response === 'object' && !Array.isArray(response) && response !== null) {
+    console.log("Response is already an object");
+    return response;
   }
+  
+  // If response is an array, take the first item
+  if (Array.isArray(response)) {
+    console.log("Response is an array, returning first item:", response[0]);
+    return response[0];
+  }
+  
+  // Try to parse response as JSON if it's a string
+  if (typeof response === 'string') {
+    try {
+      // Try direct parsing
+      const parsed = JSON.parse(response);
+      console.log("Successfully parsed response string as JSON:", parsed);
+      
+      // If parsed result is an array, take the first item
+      if (Array.isArray(parsed)) {
+        console.log("Parsed JSON is an array, returning first item:", parsed[0]);
+        return parsed[0];
+      }
+      
+      return parsed;
+    } catch (firstError) {
+      console.error("First parsing attempt failed:", firstError);
+      
+      try {
+        // Try to extract JSON from a markdown code block
+        const jsonMatch = response.match(/```(?:json)?\n([\s\S]*?)\n```/);
+        if (jsonMatch && jsonMatch[1]) {
+          const parsed = JSON.parse(jsonMatch[1].trim());
+          console.log("Extracted JSON from code block:", parsed);
+          
+          // If parsed result is an array, take the first item
+          if (Array.isArray(parsed)) {
+            console.log("Parsed JSON from code block is an array, returning first item:", parsed[0]);
+            return parsed[0];
+          }
+          
+          return parsed;
+        }
+      } catch (secondError) {
+        console.error("Second parsing attempt failed:", secondError);
+      }
+      
+      console.error("Failed to parse response as JSON:", response);
+      return null;
+    }
+  }
+  
+  console.error("Unknown response format:", response);
+  return null;
 };
 
 // Upload image to Supabase storage from URL or base64

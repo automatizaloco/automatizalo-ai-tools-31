@@ -20,6 +20,10 @@ import WebhookManager from './pages/admin/WebhookManager.tsx'
 import Index from './pages/Index.tsx'
 import Layout from './components/layout/Layout.tsx'
 import Admin from './pages/admin/Admin.tsx'
+import ContentManager from './pages/admin/ContentManager.tsx'
+import TestimonialManager from './pages/admin/TestimonialManager.tsx'
+import AutomaticBlog from './pages/admin/AutomaticBlog.tsx'
+import NewsletterAdmin from './pages/admin/NewsletterAdmin.tsx'
 
 const queryClient = new QueryClient()
 
@@ -55,6 +59,10 @@ const router = createBrowserRouter([
     element: <Admin />,
   },
   {
+    path: "/admin/content",
+    element: <ContentManager />,
+  },
+  {
     path: "/admin/blog/:id",
     element: <BlogPostForm />,
   },
@@ -73,6 +81,18 @@ const router = createBrowserRouter([
   {
     path: "/admin/webhooks",
     element: <WebhookManager />,
+  },
+  {
+    path: "/admin/testimonials",
+    element: <TestimonialManager />,
+  },
+  {
+    path: "/admin/automatic-blog",
+    element: <AutomaticBlog />,
+  },
+  {
+    path: "/admin/newsletter",
+    element: <NewsletterAdmin />,
   },
   {
     path: "*",

@@ -31,7 +31,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       setLoading(false);
       
       if (!data.session) {
-        navigate('/login');
+        navigate('/login?redirect=/admin');
       }
     };
     
@@ -52,12 +52,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }, [navigate]);
   
   useEffect(() => {
-    const path = window.location.pathname;
-    const segment = path.split('/')[2];
-    if (segment) {
-      setActiveTab(segment);
+    // Extract the current admin section from the URL path
+    const path = location.pathname;
+    const segments = path.split('/');
+    if (segments.length > 2 && segments[1] === 'admin') {
+      setActiveTab(segments[2] || 'content');
+    } else {
+      setActiveTab('content');
     }
-  }, [location]);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -67,6 +70,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     navigate(`/admin/${value}`);
+  };
+
+  const handleHomeClick = () => {
+    navigate('/');
   };
 
   if (loading) {
@@ -101,6 +108,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <h1 className="text-lg font-bold">Admin</h1>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleHomeClick}>
+                Home
+              </Button>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Logout
               </Button>
@@ -140,7 +150,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <div className="flex-shrink-0 flex items-center">
                 <h1 className="text-xl font-bold">Admin Dashboard</h1>
               </div>
-              <Button variant="outline" onClick={handleLogout}>Logout</Button>
+              <div className="flex items-center gap-4">
+                <Button variant="outline" onClick={handleHomeClick}>Back to Homepage</Button>
+                <Button variant="outline" onClick={handleLogout}>Logout</Button>
+              </div>
             </div>
           </div>
         </div>

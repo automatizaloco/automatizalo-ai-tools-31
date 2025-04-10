@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -107,21 +106,22 @@ const BlogAdmin = () => {
       const method = webhookStore.getActiveBlogSocialShareMethod();
       const websiteDomain = webhookStore.getWebsiteDomain();
 
-      // Prepare data for social media sharing
       const postData = {
         title: post.title,
         slug: post.slug,
         url: `${websiteDomain}/blog/${post.slug}`,
         excerpt: post.excerpt,
+        content: post.content,
         image: post.image,
         category: post.category,
-        author: post.author
+        tags: post.tags?.join(','),
+        author: post.author,
+        readTime: post.readTime
       };
 
       toast.info("Sending to social media webhook...");
 
       if (method === 'GET') {
-        // For GET requests, append parameters to URL
         const params = new URLSearchParams();
         Object.entries(postData).forEach(([key, value]) => {
           if (value) params.append(key, value as string);
@@ -142,7 +142,6 @@ const BlogAdmin = () => {
           throw new Error(`HTTP error: ${response.status}`);
         }
       } else {
-        // For POST requests, send data in body
         const response = await fetch(webhookUrl, {
           method,
           headers: {
@@ -169,7 +168,6 @@ const BlogAdmin = () => {
       
       await updateBlogPostStatus(post.id, newStatus);
       
-      // Update local state
       setPosts(posts.map(p => {
         if (p.id === post.id) {
           return { ...p, status: newStatus };
@@ -177,7 +175,6 @@ const BlogAdmin = () => {
         return p;
       }));
 
-      // If the post is being published, trigger social media webhook
       if (newStatus === 'published') {
         await triggerSocialMediaWebhook(post);
       }

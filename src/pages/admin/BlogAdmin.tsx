@@ -11,6 +11,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AdminLayout from "@/components/layout/AdminLayout";
+import { useWebhookStore } from "@/stores/webhookStore";
 import {
   Table,
   TableBody,
@@ -40,6 +41,7 @@ const BlogAdmin = () => {
   const [loading, setLoading] = useState(true);
   const { language } = useLanguage();
   const isMobile = useIsMobile();
+  const webhookStore = useWebhookStore();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -98,6 +100,68 @@ const BlogAdmin = () => {
   const handleCreateAutomatic = () => {
     navigate("/admin/automatic-blog");
   };
+
+  const triggerSocialMediaWebhook = async (post: BlogPost) => {
+    try {
+      const webhookUrl = webhookStore.getActiveBlogSocialShareUrl();
+      const method = webhookStore.getActiveBlogSocialShareMethod();
+      const websiteDomain = webhookStore.getWebsiteDomain();
+
+      // Prepare data for social media sharing
+      const postData = {
+        title: post.title,
+        slug: post.slug,
+        url: `${websiteDomain}/blog/${post.slug}`,
+        excerpt: post.excerpt,
+        image: post.image,
+        category: post.category,
+        author: post.author
+      };
+
+      toast.info("Sending to social media webhook...");
+
+      if (method === 'GET') {
+        // For GET requests, append parameters to URL
+        const params = new URLSearchParams();
+        Object.entries(postData).forEach(([key, value]) => {
+          if (value) params.append(key, value as string);
+        });
+        
+        const urlWithParams = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}${params.toString()}`;
+        
+        const response = await fetch(urlWithParams, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          toast.success("Post shared to social media successfully");
+        } else {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+      } else {
+        // For POST requests, send data in body
+        const response = await fetch(webhookUrl, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(postData),
+        });
+        
+        if (response.ok) {
+          toast.success("Post shared to social media successfully");
+        } else {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error sharing to social media:", error);
+      toast.error(`Failed to share to social media: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
   
   const handleToggleStatus = async (post: BlogPost) => {
     try {
@@ -105,12 +169,18 @@ const BlogAdmin = () => {
       
       await updateBlogPostStatus(post.id, newStatus);
       
+      // Update local state
       setPosts(posts.map(p => {
         if (p.id === post.id) {
           return { ...p, status: newStatus };
         }
         return p;
       }));
+
+      // If the post is being published, trigger social media webhook
+      if (newStatus === 'published') {
+        await triggerSocialMediaWebhook(post);
+      }
     } catch (error) {
       console.error("Error updating post status:", error);
       toast.error("Failed to update post status");

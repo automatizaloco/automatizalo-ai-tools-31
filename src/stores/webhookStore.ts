@@ -48,6 +48,10 @@ interface WebhookState {
   
   // Helper to get website domain
   getWebsiteDomain: () => string;
+  
+  // Helper to check if webhooks are configured
+  isBlogSocialShareConfigured: () => boolean;
+  isBlogCreationConfigured: () => boolean;
 }
 
 export const useWebhookStore = create<WebhookState>()(
@@ -115,6 +119,22 @@ export const useWebhookStore = create<WebhookState>()(
       getWebsiteDomain: () => {
         const { websiteDomain } = get();
         return websiteDomain;
+      },
+      
+      isBlogSocialShareConfigured: () => {
+        const { blogSocialShareUrl } = get();
+        const activeUrl = blogSocialShareUrl.mode === "production" 
+          ? blogSocialShareUrl.production 
+          : blogSocialShareUrl.test;
+        return !!activeUrl && activeUrl.trim() !== '';
+      },
+      
+      isBlogCreationConfigured: () => {
+        const { blogCreationUrl } = get();
+        const activeUrl = blogCreationUrl.mode === "production" 
+          ? blogCreationUrl.production 
+          : blogCreationUrl.test;
+        return !!activeUrl && activeUrl.trim() !== '';
       }
     }),
     {

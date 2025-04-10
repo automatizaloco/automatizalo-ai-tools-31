@@ -20,6 +20,8 @@ interface WebhookState {
     mode: WebhookMode;
     method: RequestMethod;
   };
+  // Website domain for correct link generation
+  websiteDomain: string;
   
   // Actions
   updateBlogCreationUrl: (params: { 
@@ -34,6 +36,7 @@ interface WebhookState {
     mode?: WebhookMode;
     method?: RequestMethod;
   }) => void;
+  updateWebsiteDomain: (domain: string) => void;
   
   // Helper to get active URLs
   getActiveBlogCreationUrl: () => string;
@@ -42,6 +45,9 @@ interface WebhookState {
   // Helper to get active request methods
   getActiveBlogCreationMethod: () => RequestMethod;
   getActiveBlogSocialShareMethod: () => RequestMethod;
+  
+  // Helper to get website domain
+  getWebsiteDomain: () => string;
 }
 
 export const useWebhookStore = create<WebhookState>()(
@@ -57,8 +63,9 @@ export const useWebhookStore = create<WebhookState>()(
         test: "https://n8n.automatizalo.co/webhook-test/blog-redes",
         production: "https://n8n.automatizalo.co/webhook/blog-redes",
         mode: "test" as WebhookMode,
-        method: "GET" as RequestMethod  // Changed to GET based on error in console logs
+        method: "GET" as RequestMethod
       },
+      websiteDomain: "https://automatizalo.co",
       
       updateBlogCreationUrl: (params) => 
         set((state) => ({
@@ -74,6 +81,11 @@ export const useWebhookStore = create<WebhookState>()(
             ...state.blogSocialShareUrl,
             ...params
           }
+        })),
+      
+      updateWebsiteDomain: (domain) => 
+        set(() => ({
+          websiteDomain: domain
         })),
       
       getActiveBlogCreationUrl: () => {
@@ -98,6 +110,11 @@ export const useWebhookStore = create<WebhookState>()(
       getActiveBlogSocialShareMethod: () => {
         const { blogSocialShareUrl } = get();
         return blogSocialShareUrl.method;
+      },
+      
+      getWebsiteDomain: () => {
+        const { websiteDomain } = get();
+        return websiteDomain;
       }
     }),
     {

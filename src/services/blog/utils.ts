@@ -168,10 +168,35 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
   try {
     console.log("Preparing to upload image to storage:", imageSource.substring(0, 50) + "...");
     
-    // Check if it's already a Supabase storage URL
+    // Check if it's already a Supabase storage URL for our project
     if (imageSource.includes('juwbamkqkawyibcvllvo.supabase.co/storage/v1/object/public/blog_images')) {
       console.log("Image is already in Supabase storage, skipping upload");
       return imageSource;
+    }
+    
+    // Create bucket if it doesn't exist (this is handled by Supabase, just checking)
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const blogBucketExists = buckets?.some(bucket => bucket.name === 'blog_images');
+    
+    if (!blogBucketExists) {
+      console.log("Blog images bucket doesn't exist, attempting to create it");
+      try {
+        // This will only succeed if the user has admin rights
+        const { error } = await supabase.storage.createBucket('blog_images', {
+          public: true,
+          fileSizeLimit: 10485760 // 10MB
+        });
+        
+        if (error) {
+          console.error("Error creating bucket:", error);
+          // Continue anyway, the bucket might be created by an admin
+        } else {
+          console.log("Blog images bucket created successfully");
+        }
+      } catch (bucketError) {
+        console.error("Error creating bucket:", bucketError);
+        // Continue anyway, the bucket might be created by an admin
+      }
     }
     
     let imageBlob: Blob;
@@ -207,17 +232,22 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
     // If it's an external URL
     else {
       console.log("Fetching image from external URL");
-      const response = await fetch(imageSource);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      try {
+        const response = await fetch(imageSource);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+        }
+        
+        imageBlob = await response.blob();
+      } catch (fetchError) {
+        console.error("Error fetching external image:", fetchError);
+        return null;
       }
-      
-      imageBlob = await response.blob();
     }
     
     // Generate a unique filename with sanitized post title
-    const sanitizedTitle = postTitle.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 50);
+    const sanitizedTitle = (postTitle || 'image').toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 50);
     const fileExtension = imageBlob.type.split('/')[1] || 'jpg';
     const fileName = `${sanitizedTitle}-${uuidv4().substring(0, 8)}.${fileExtension}`;
     
@@ -235,6 +265,19 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
     
     if (error) {
       console.error("Error uploading image to storage:", error);
+      
+      // If the error is because the file already exists, try to get the URL
+      if (error.message.includes('already exists')) {
+        console.log("File already exists, getting existing URL");
+        
+        const { data: { publicUrl } } = supabase
+          .storage
+          .from('blog_images')
+          .getPublicUrl(`blog/${fileName}`);
+          
+        return publicUrl;
+      }
+      
       return null;
     }
     
@@ -242,7 +285,7 @@ export const uploadImageToStorage = async (imageSource: string, postTitle: strin
     const { data: { publicUrl } } = supabase
       .storage
       .from('blog_images')
-      .getPublicUrl(`blog/${fileName}`);
+      .getPublicUrl(`blog/${data?.path || `blog/${fileName}`}`);
     
     console.log("Image uploaded successfully to:", publicUrl);
     return publicUrl;

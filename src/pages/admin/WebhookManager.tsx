@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Settings, Webhook, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { Settings, Webhook, AlertTriangle, CheckCircle, Info, Globe } from "lucide-react";
 import { useWebhookStore, WebhookMode } from "@/stores/webhookStore";
 import {
   Card,
@@ -40,16 +40,19 @@ const WebhookManager = () => {
   });
   const [requestMethods, setRequestMethods] = useState<Record<string, "POST" | "GET">>({
     blogCreation: "POST",
-    blogSocial: "POST",
+    blogSocial: "GET",
   });
+  const [websiteDomain, setWebsiteDomain] = useState("https://automatizalo.co");
 
   const {
     blogCreationUrl,
     blogSocialShareUrl,
     updateBlogCreationUrl,
     updateBlogSocialShareUrl,
+    updateWebsiteDomain,
     getActiveBlogCreationUrl,
-    getActiveBlogSocialShareUrl
+    getActiveBlogSocialShareUrl,
+    getWebsiteDomain
   } = useWebhookStore();
 
   useEffect(() => {
@@ -57,7 +60,16 @@ const WebhookManager = () => {
       navigate("/login");
       return;
     }
-  }, [isAuthenticated, navigate]);
+    
+    // Initialize the website domain from the store
+    setWebsiteDomain(getWebsiteDomain());
+    
+    // Initialize the request methods from the store
+    setRequestMethods({
+      blogCreation: blogCreationUrl.method,
+      blogSocial: blogSocialShareUrl.method
+    });
+  }, [isAuthenticated, navigate, getWebsiteDomain, blogCreationUrl.method, blogSocialShareUrl.method]);
 
   const handleModeChange = (type: "blogCreation" | "blogSocial", newMode: WebhookMode) => {
     if (type === "blogCreation") {
@@ -83,6 +95,16 @@ const WebhookManager = () => {
   
   const handleMethodChange = (type: "blogCreation" | "blogSocial", method: "POST" | "GET") => {
     setRequestMethods(prev => ({ ...prev, [type]: method }));
+    
+    if (type === "blogCreation") {
+      updateBlogCreationUrl({ method });
+    } else {
+      updateBlogSocialShareUrl({ method });
+    }
+  };
+  
+  const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setWebsiteDomain(e.target.value);
   };
 
   const testWebhook = async (type: "blogCreation" | "blogSocial") => {
@@ -101,8 +123,12 @@ const WebhookManager = () => {
       url = getActiveBlogSocialShareUrl();
       testData = {
         title: "Test Social Share",
-        url: window.location.origin + "/blog/test-post",
-        image: "https://via.placeholder.com/800x400"
+        url: `${websiteDomain}/blog/test-post`,
+        image: "https://via.placeholder.com/800x400",
+        excerpt: "This is a test excerpt for social sharing",
+        category: "Test",
+        tags: ["test", "webhook"],
+        author: "Test User"
       };
     }
 
@@ -128,7 +154,11 @@ const WebhookManager = () => {
         // For GET requests, append params to the URL
         const params = new URLSearchParams();
         Object.entries(testData).forEach(([key, value]) => {
-          params.append(key, String(value));
+          if (Array.isArray(value)) {
+            params.append(key, value.join(','));
+          } else {
+            params.append(key, String(value));
+          }
         });
         const getUrl = `${url}?${params.toString()}`;
         response = await fetch(getUrl, {
@@ -169,6 +199,13 @@ const WebhookManager = () => {
   };
 
   const saveChanges = () => {
+    // Save the website domain
+    updateWebsiteDomain(websiteDomain);
+    
+    // Save the request methods if they've changed
+    updateBlogCreationUrl({ method: requestMethods.blogCreation });
+    updateBlogSocialShareUrl({ method: requestMethods.blogSocial });
+    
     toast.success("Webhook settings saved successfully");
   };
 
@@ -189,6 +226,34 @@ const WebhookManager = () => {
             when specific events occur, such as creating a new blog post or changing a post's status.
           </CardDescription>
         </CardHeader>
+      </Card>
+      
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Globe className="h-5 w-5 mr-2" />
+            Website Domain Settings
+          </CardTitle>
+          <CardDescription>
+            Define the domain of your website to ensure correct URLs are sent in webhooks.
+            This is used to create proper links to blog posts.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="websiteDomain">Website Domain</Label>
+            <Input
+              id="websiteDomain"
+              value={websiteDomain}
+              onChange={handleDomainChange}
+              placeholder="https://automatizalo.co"
+              className="mt-1"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Include the protocol (https://) but no trailing slash
+            </p>
+          </div>
+        </CardContent>
       </Card>
 
       <Tabs defaultValue="blogSocial">

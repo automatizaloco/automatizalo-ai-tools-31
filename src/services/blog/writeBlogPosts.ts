@@ -9,6 +9,24 @@ import { useWebhookStore } from "@/stores/webhookStore";
  * Create a new blog post
  */
 export const createBlogPost = async (post: NewBlogPost): Promise<BlogPost> => {
+  // Process the image first to ensure it's stored in Supabase
+  if (post.image) {
+    try {
+      console.log("Processing image for new blog post:", post.title);
+      const permanentImageUrl = await uploadImageToStorage(post.image, post.title || 'blog-post');
+      
+      if (permanentImageUrl) {
+        console.log("Image uploaded to Supabase storage:", permanentImageUrl);
+        post.image = permanentImageUrl;
+      } else {
+        console.warn("Failed to upload image to Supabase storage, keeping original URL");
+      }
+    } catch (imageError) {
+      console.error("Error processing image for permanent storage:", imageError);
+      toast.error("Failed to save image to permanent storage, but will continue with post creation");
+    }
+  }
+  
   // Map the blog post object to match the database schema
   const dbPost = {
     title: post.title,
@@ -53,12 +71,18 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
     const webhookStore = useWebhookStore.getState();
     const webhookUrl = webhookStore.getActiveBlogSocialShareUrl();
     const webhookMethod = webhookStore.getActiveBlogSocialShareMethod();
+    const websiteDomain = webhookStore.getWebsiteDomain();
     
-    // Format the data for the social media webhook
+    // Format the data for the social media webhook with complete post data
+    const postUrl = `${websiteDomain}/blog/${post.slug}`;
+    
+    // Send complete blog post data along with the formatted URL
     const webhookData = {
-      title: post.title,
-      url: `${window.location.origin}/blog/${post.slug}`,
-      image: post.image
+      ...post,
+      url: postUrl,
+      postUrl: postUrl, // Adding both formats for compatibility
+      fullUrl: postUrl,
+      websiteUrl: websiteDomain
     };
     
     console.log(`Sending post to social media webhook (${webhookUrl}) using ${webhookMethod}:`, webhookData);
@@ -82,9 +106,21 @@ export const sendPostToSocialMediaWebhook = async (post: BlogPost): Promise<void
       } else {
         // For GET requests, append params to the URL
         const params = new URLSearchParams();
-        Object.entries(webhookData).forEach(([key, value]) => {
-          params.append(key, String(value));
-        });
+        
+        // Add essential fields for GET request
+        params.append('title', String(webhookData.title));
+        params.append('url', String(webhookData.url));
+        params.append('image', String(webhookData.image));
+        params.append('excerpt', String(webhookData.excerpt));
+        params.append('author', String(webhookData.author));
+        params.append('slug', String(webhookData.slug));
+        params.append('category', String(webhookData.category));
+        
+        // Add tags as a string
+        if (webhookData.tags && Array.isArray(webhookData.tags)) {
+          params.append('tags', webhookData.tags.join(','));
+        }
+        
         const getUrl = `${webhookUrl}?${params.toString()}`;
         
         console.log(`Using GET request with URL: ${getUrl}`);
@@ -128,21 +164,17 @@ export const updateBlogPost = async (
   id: string, 
   updates: Partial<BlogPost>
 ): Promise<BlogPost> => {
-  // If the image URL is temporary (from webhook), upload it to permanent storage
-  if (updates.image && (
-      updates.image.includes('ideogram.ai') || 
-      updates.image.includes('ephemeral') || 
-      updates.image.startsWith('data:image/')
-    )) {
+  // Always process the image to ensure it's stored in Supabase
+  if (updates.image) {
     try {
-      console.log("Detected temporary image URL, uploading to permanent storage:", updates.image.substring(0, 50) + "...");
+      console.log("Processing image for blog post update:", updates.image.substring(0, 100));
       const permanentImageUrl = await uploadImageToStorage(updates.image, updates.title || id);
       
       if (permanentImageUrl) {
-        console.log("Image uploaded to permanent storage:", permanentImageUrl);
+        console.log("Image uploaded to Supabase storage:", permanentImageUrl);
         updates.image = permanentImageUrl;
       } else {
-        console.warn("Failed to upload image to permanent storage, keeping original URL");
+        console.warn("Failed to upload image to Supabase storage, keeping original URL");
       }
     } catch (imageError) {
       console.error("Error processing image for permanent storage:", imageError);
@@ -343,22 +375,33 @@ export const processAndSaveWebhookResponse = async (response: any, defaultTitle:
     let imageUrl = parsedContent.image || parsedContent.image_url || "https://via.placeholder.com/800x400";
     console.log("Image URL extracted:", imageUrl);
     
-    // Download the image if it has a URL (not a placeholder)
-    let imageData = null;
+    // Always process the image to ensure it's stored in Supabase
     if (imageUrl && !imageUrl.includes("placeholder.com")) {
-      console.log("Attempting to download image from:", imageUrl);
+      console.log("Processing image from webhook URL:", imageUrl);
       try {
-        imageData = await downloadImage(imageUrl);
+        // First download the image to base64
+        const imageData = await downloadImage(imageUrl);
         
         if (imageData) {
-          console.log("Image successfully downloaded and converted to base64");
-          imageUrl = imageData;
+          console.log("Image downloaded, now uploading to Supabase storage");
+          // Then upload to Supabase storage
+          const storedImageUrl = await uploadImageToStorage(
+            imageData, 
+            parsedContent.title || defaultTitle
+          );
+          
+          if (storedImageUrl) {
+            console.log("Image successfully stored in Supabase:", storedImageUrl);
+            imageUrl = storedImageUrl;
+          } else {
+            console.warn("Failed to store image in Supabase, using original URL");
+          }
         } else {
-          console.warn("Failed to download image, using original URL", imageUrl);
+          console.warn("Failed to download image, using original URL");
         }
       } catch (imgError) {
-        console.error("Error downloading image:", imgError);
-        console.warn("Using original image URL due to download failure");
+        console.error("Error processing image:", imgError);
+        console.warn("Using original image URL due to processing failure");
       }
     }
     

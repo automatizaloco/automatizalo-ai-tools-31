@@ -1,5 +1,4 @@
-
-import { Phone, Mail, MapPin, Globe, Save, X, Edit } from "lucide-react";
+import { Mail, MapPin, Globe, Save, X, Edit } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -8,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 
 const ContactInfo = () => {
   const { theme } = useTheme();
@@ -125,18 +123,6 @@ const ContactInfo = () => {
       </div>
       
       <div className="space-y-6">
-        <InfoItem
-          icon={<Phone className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />}
-          title={t('contact.phone')}
-          value={contactInfo.phone}
-          id="phone"
-          isEditing={isEditing && isAuthenticated}
-          onChange={(value) => handleInputChange('phone', value)}
-          currentValue={formData.phone}
-          isDisabled={loading}
-          theme={theme}
-        />
-        
         <InfoItem
           icon={<Mail className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />}
           title={t('contact.email')}

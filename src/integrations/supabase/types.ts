@@ -288,6 +288,36 @@ export type Database = {
         }
         Relationships: []
       }
+      page_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          page: string
+          section_id: string
+          section_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          page: string
+          section_id: string
+          section_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          page?: string
+          section_id?: string
+          section_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           company: string | null

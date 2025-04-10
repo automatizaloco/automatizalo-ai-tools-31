@@ -22,10 +22,15 @@ interface ImageMap {
   [key: string]: string;
 }
 
-// Type for directly working with storage
-interface SectionImage {
-  path: string;
-  url: string;
+// Interface for page images from the database
+interface PageImage {
+  id: string;
+  page: string;
+  section_name: string;
+  section_id: string;
+  image_url: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const ContentEditor = () => {
@@ -80,21 +85,28 @@ const ContentEditor = () => {
             const sectionContent = await getPageContent(section.pageName, section.sectionName);
             contentData[pageName][section.sectionName] = sectionContent;
             
-            // Get section images from storage
-            for (const imageId of ['main', 'header', 'background']) {
-              // Create a unique key for each image
-              const imageKey = `${section.pageName}-${section.sectionName}-${imageId}`;
-              // Create the file path in storage
-              const filePath = `content-images/${imageKey}`;
+            try {
+              // Get images from the page_images table using a simple fetch
+              // This avoids TypeScript issues with supabase client types
+              const response = await fetch(`${supabase.supabaseUrl}/rest/v1/page_images?page=eq.${section.pageName}&section_name=eq.${section.sectionName}`, {
+                headers: {
+                  'apikey': supabase.supabaseKey,
+                  'Content-Type': 'application/json'
+                }
+              });
               
-              // Check if the file exists
-              const { data } = await supabase.storage
-                .from('content')
-                .getPublicUrl(filePath);
-              
-              if (data) {
-                imagesData[imageKey] = data.publicUrl;
+              if (response.ok) {
+                const sectionImages = await response.json() as PageImage[];
+                
+                if (sectionImages && sectionImages.length > 0) {
+                  sectionImages.forEach(item => {
+                    const imageKey = `${item.page}-${item.section_name}-${item.section_id}`;
+                    imagesData[imageKey] = item.image_url;
+                  });
+                }
               }
+            } catch (error) {
+              console.error("Error fetching images:", error);
             }
           }
         }
@@ -155,6 +167,31 @@ const ContentEditor = () => {
         .getPublicUrl(filePath);
       
       const imageUrl = publicUrlData.publicUrl;
+      
+      // Save to database using fetch API to bypass TypeScript issues
+      try {
+        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/page_images`, {
+          method: 'POST',
+          headers: {
+            'apikey': supabase.supabaseKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            page: pageName,
+            section_name: sectionName,
+            section_id: sectionId,
+            image_url: imageUrl
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to save image reference: ${response.statusText}`);
+        }
+      } catch (dbError) {
+        console.error("Error saving to database:", dbError);
+        // Continue anyway since we have the image URL
+      }
       
       // Update local state
       const imageKey = `${pageName}-${sectionName}-${sectionId}`;

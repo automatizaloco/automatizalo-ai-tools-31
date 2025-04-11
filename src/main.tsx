@@ -28,6 +28,7 @@ import ContentEditor from './pages/admin/ContentEditor.tsx'
 import BlogAdmin from './pages/admin/BlogAdmin.tsx'
 import Solutions from './pages/Solutions.tsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.tsx'
+import AdminLayout from './components/layout/AdminLayout.tsx'
 
 const queryClient = new QueryClient()
 
@@ -69,46 +70,52 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <Admin />,
-  },
-  {
-    path: "/admin/content",
-    element: <ContentManager />,
-  },
-  {
-    path: "/admin/content-editor",
-    element: <ContentEditor />,
-  },
-  {
-    path: "/admin/blog",
-    element: <BlogAdmin />,
-  },
-  {
-    path: "/admin/blog/:id",
-    element: <BlogPostForm />,
-  },
-  {
-    path: "/admin/blog/new",
-    element: <BlogPostForm />,
-  },
-  {
-    path: "/admin/notifications",
-    element: <NotificationAdmin />,
-  },
-  {
-    path: "/admin/webhooks",
-    element: <WebhookManager />,
-  },
-  {
-    path: "/admin/testimonials",
-    element: <TestimonialManager />,
-  },
-  {
-    path: "/admin/automatic-blog",
-    element: <AutomaticBlog />,
-  },
-  {
-    path: "/admin/newsletter",
-    element: <NewsletterAdmin />,
+    children: [
+      {
+        index: true,
+        element: <ContentManager />,
+      },
+      {
+        path: "content",
+        element: <ContentManager />,
+      },
+      {
+        path: "content-editor",
+        element: <ContentEditor />,
+      },
+      {
+        path: "blog",
+        element: <BlogAdmin />,
+      },
+      {
+        path: "blog/:id",
+        element: <BlogPostForm />,
+      },
+      {
+        path: "blog/new",
+        element: <BlogPostForm />,
+      },
+      {
+        path: "notifications",
+        element: <NotificationAdmin />,
+      },
+      {
+        path: "webhooks",
+        element: <WebhookManager />,
+      },
+      {
+        path: "testimonials",
+        element: <TestimonialManager />,
+      },
+      {
+        path: "automatic-blog",
+        element: <AutomaticBlog />,
+      },
+      {
+        path: "newsletter",
+        element: <NewsletterAdmin />,
+      },
+    ]
   },
   {
     path: "*",

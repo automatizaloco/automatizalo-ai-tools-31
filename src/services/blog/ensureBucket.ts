@@ -2,9 +2,9 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Ensure the blog_images bucket exists
+ * Ensure the content bucket exists
  */
-export const ensureBlogImagesBucket = async (): Promise<void> => {
+export const ensureContentBucket = async (): Promise<void> => {
   try {
     // Check if the bucket already exists
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -15,20 +15,20 @@ export const ensureBlogImagesBucket = async (): Promise<void> => {
     }
     
     // If bucket doesn't exist, create it
-    const bucketExists = buckets.some(bucket => bucket.name === 'blog_images');
+    const bucketExists = buckets.some(bucket => bucket.name === 'content');
     if (!bucketExists) {
       const { error: createError } = await supabase.storage.createBucket(
-        'blog_images',
+        'content',
         { public: true }
       );
       
       if (createError) {
-        console.error("Error creating blog_images bucket:", createError);
+        console.error("Error creating content bucket:", createError);
       } else {
-        console.log("Created blog_images bucket successfully");
+        console.log("Created content bucket successfully");
       }
     }
   } catch (error) {
-    console.error("Error ensuring blog_images bucket exists:", error);
+    console.error("Error ensuring content bucket exists:", error);
   }
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -9,10 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { getPageContent, updatePageContent } from "@/services/pageContentService";
 import { FileUploader } from '@/components/admin/FileUploader';
-import { uploadPageSectionImage, getPageImages } from '@/services/imageService';
-
-const SUPABASE_URL = "https://juwbamkqkawyibcvllvo.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1d2JhbWtxa2F3eWliY3ZsbHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MDUxMDIsImV4cCI6MjA1NzI4MTEwMn0.uqwyR5lwp8JXa7qAZu6nZcCEdaoKOxX0XxQls2vg7Fk";
+import { uploadPageSectionImage, getPageImages, getAllContentImages } from '@/services/imageService';
+import { ensureContentBucket } from '@/services/blog/ensureBucket';
 
 interface PageSection {
   id: string;
@@ -33,6 +32,7 @@ const ContentEditor = () => {
   const [images, setImages] = useState<ImageMap>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
 
   const pageSections: Record<string, PageSection[]> = {
     home: [
@@ -59,6 +59,15 @@ const ContentEditor = () => {
   }, [user, navigate]);
 
   useEffect(() => {
+    // Ensure the content bucket exists when component loads
+    const initializeStorage = async () => {
+      await ensureContentBucket();
+    };
+    
+    initializeStorage();
+  }, []);
+
+  useEffect(() => {
     const loadAllContent = async () => {
       setLoading(true);
       try {
@@ -69,13 +78,25 @@ const ContentEditor = () => {
           contentData[pageName] = {};
           
           for (const section of sections) {
-            const sectionContent = await getPageContent(section.pageName, section.sectionName);
-            contentData[pageName][section.sectionName] = sectionContent;
+            try {
+              const sectionContent = await getPageContent(section.pageName, section.sectionName);
+              contentData[pageName][section.sectionName] = sectionContent;
+            } catch (error) {
+              console.log(`Error loading content for ${section.pageName}-${section.sectionName}, using default`);
+              contentData[pageName][section.sectionName] = `<h2>Content for ${section.sectionName} on ${section.pageName} page</h2>`;
+            }
           }
           
-          const pageImagesData = await getPageImages(pageName);
-          Object.assign(imagesData, pageImagesData);
+          try {
+            const pageImagesData = await getPageImages(pageName);
+            Object.assign(imagesData, pageImagesData);
+          } catch (error) {
+            console.error(`Error loading images for page ${pageName}:`, error);
+          }
         }
+        
+        console.log("Loaded content data:", contentData);
+        console.log("Loaded images data:", imagesData);
         
         setContent(contentData);
         setImages(imagesData);
@@ -114,11 +135,13 @@ const ContentEditor = () => {
   };
 
   const handleImageUpload = async (file: File, pageName: string, sectionName: string, sectionId: string) => {
+    const imageKey = `${pageName}-${sectionName}-${sectionId}`;
+    setUploadingImage(imageKey);
+    
     try {
       const imageUrl = await uploadPageSectionImage(file, pageName, sectionName, sectionId);
       
       if (imageUrl) {
-        const imageKey = `${pageName}-${sectionName}-${sectionId}`;
         setImages(prevImages => ({
           ...prevImages,
           [imageKey]: imageUrl
@@ -132,6 +155,8 @@ const ContentEditor = () => {
       console.error("Error uploading image:", error);
       toast.error("Failed to upload image");
       return null;
+    } finally {
+      setUploadingImage(null);
     }
   };
 
@@ -193,6 +218,7 @@ const ContentEditor = () => {
                       {['main', 'header', 'background'].map(imageId => {
                         const imageKey = `${section.pageName}-${section.sectionName}-${imageId}`;
                         const imageUrl = images[imageKey];
+                        const isUploading = uploadingImage === imageKey;
                         
                         return (
                           <div key={imageKey} className="bg-white p-3 border rounded-lg">
@@ -215,7 +241,7 @@ const ContentEditor = () => {
                             
                             <FileUploader
                               onUpload={(file) => handleImageUpload(file, section.pageName, section.sectionName, imageId)}
-                              label="Change image"
+                              label={isUploading ? "Uploading..." : "Change image"}
                               buttonVariant="outline"
                               buttonSize="sm"
                               acceptedFileTypes={['image/png', 'image/jpeg', 'image/webp']}

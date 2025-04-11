@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Upload, X, FileIcon, Check } from 'lucide-react';
+import { Upload, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface FileUploaderProps {
@@ -33,7 +33,7 @@ export const FileUploader = ({
     
     // Validate file type
     if (!acceptedFileTypes.includes(file.type)) {
-      toast.error(`Invalid file type. Accepted types: ${acceptedFileTypes.join(', ')}`);
+      toast.error(`Invalid file type. Accepted types: ${acceptedFileTypes.map(type => type.split('/')[1]).join(', ')}`);
       return;
     }
     
@@ -56,6 +56,7 @@ export const FileUploader = ({
         });
       }, 300);
       
+      console.log("Uploading file:", file.name);
       const result = await onUpload(file);
       
       clearInterval(progressInterval);
@@ -65,6 +66,7 @@ export const FileUploader = ({
         throw new Error('Upload failed');
       }
       
+      console.log("Upload successful:", result);
       toast.success('File uploaded successfully');
       
     } catch (error) {
@@ -83,13 +85,13 @@ export const FileUploader = ({
     <div className={cn("w-full", className)}>
       <input
         type="file"
-        id="file-upload"
+        id={`file-upload-${Math.random().toString(36).substring(7)}`}
         onChange={handleFileChange}
         accept={acceptedFileTypes.join(',')}
         className="hidden"
         disabled={isLoading}
       />
-      <label htmlFor="file-upload" className="w-full cursor-pointer">
+      <label htmlFor={`file-upload-${Math.random().toString(36).substring(7)}`} className="w-full cursor-pointer">
         <Button
           type="button"
           variant={buttonVariant}

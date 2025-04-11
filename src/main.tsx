@@ -43,11 +43,16 @@ const router = createBrowserRouter([
       },
       {
         path: "blog",
-        element: <Blog />
-      },
-      {
-        path: "blog/:slug",
-        element: <BlogPost />
+        children: [
+          {
+            index: true,
+            element: <Blog />
+          },
+          {
+            path: ":slug",
+            element: <BlogPost />
+          }
+        ]
       },
       {
         path: "contact",

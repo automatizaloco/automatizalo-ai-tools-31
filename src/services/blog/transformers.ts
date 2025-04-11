@@ -107,8 +107,10 @@ export const formatContentFromWebhook = (content: string): string => {
   formattedContent = formattedContent.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
   formattedContent = formattedContent.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
   formattedContent = formattedContent.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+  formattedContent = formattedContent.replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+  formattedContent = formattedContent.replace(/^##### (.*?)$/gm, '<h5>$1</h5>');
   
-  // Preserve bold formatting
+  // Preserve bold and italic formatting
   formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   formattedContent = formattedContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
   

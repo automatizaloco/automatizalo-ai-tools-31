@@ -32,3 +32,6 @@ export const ensureContentBucket = async (): Promise<void> => {
     console.error("Error ensuring content bucket exists:", error);
   }
 };
+
+// Adding an alias for the function to maintain compatibility
+export const ensureBlogImagesBucket = ensureContentBucket;

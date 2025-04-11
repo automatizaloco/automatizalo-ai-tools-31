@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { ensureBlogImagesBucket } from '@/services/blog/ensureBucket';
+import { ensureContentBucket } from '@/services/blog/ensureBucket';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const Admin = () => {
     }
 
     // Ensure storage buckets exist when admin loads
-    ensureBlogImagesBucket().catch(error => {
+    ensureContentBucket().catch(error => {
       console.error("Error ensuring storage buckets exist:", error);
     });
   }, [user, navigate]);

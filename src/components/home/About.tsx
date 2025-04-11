@@ -3,8 +3,13 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
+import withEditableImage from '@/components/admin/withEditableImage';
 
-const About = () => {
+interface AboutProps {
+  isEditable?: boolean;
+}
+
+const About: React.FC<AboutProps> = ({ isEditable }) => {
   const [isVisible, setIsVisible] = useState(false);
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
@@ -25,6 +30,11 @@ const About = () => {
     
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Create an editable image component using withEditableImage HOC
+  const EditableImage = withEditableImage(({ src, alt, className }: { src: string; alt: string; className?: string }) => (
+    <img src={src} alt={alt} className={className} />
+  ));
 
   return (
     <section id="about-section" className="py-20 md:py-28 overflow-hidden">
@@ -118,11 +128,22 @@ const About = () => {
             <div className="relative">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-xl"></div>
               <div className="relative rounded-3xl overflow-hidden shadow-xl">
-                <img 
-                  src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800" 
-                  alt={t("home.about.imageAlt")}
-                  className="w-full h-auto"
-                />
+                {isEditable ? (
+                  <EditableImage 
+                    src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800" 
+                    alt={t("home.about.imageAlt")}
+                    pageName="home"
+                    sectionName="about"
+                    imageId="main"
+                    className="w-full h-auto"
+                  />
+                ) : (
+                  <img 
+                    src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800" 
+                    alt={t("home.about.imageAlt")}
+                    className="w-full h-auto"
+                  />
+                )}
               </div>
             </div>
           </div>

@@ -10,6 +10,10 @@ import EditableText from '@/components/admin/EditableText';
 import { fetchTestimonials } from '@/services/supabaseService';
 import { useQuery } from '@tanstack/react-query';
 
+interface TestimonialsSectionProps {
+  isEditable?: boolean;
+}
+
 interface Testimonial {
   id: string;
   name: string;
@@ -17,7 +21,7 @@ interface Testimonial {
   text: string;
 }
 
-const TestimonialsSection: React.FC = () => {
+const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable }) => {
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);

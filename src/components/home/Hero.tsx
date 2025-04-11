@@ -1,10 +1,16 @@
+
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Link } from 'react-router-dom';
+import withEditableImage from '@/components/admin/withEditableImage';
 
-const Hero = () => {
+interface HeroProps {
+  isEditable?: boolean;
+}
+
+const Hero: React.FC<HeroProps> = ({ isEditable }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [animationStep, setAnimationStep] = useState(0);
   const { t, language } = useLanguage();
@@ -116,6 +122,11 @@ const Hero = () => {
   const automationSteps = getAutomationSteps();
   const assistantSteps = getAssistantSteps();
 
+  // Create an editable image component using withEditableImage HOC
+  const EditableImage = withEditableImage(({ src, alt, className }: { src: string; alt: string; className?: string }) => (
+    <img src={src} alt={alt} className={className} />
+  ));
+
   return (
     <section className="relative pt-28 pb-20 md:pt-40 md:pb-28 overflow-hidden">
       {/* Background elements */}
@@ -164,11 +175,22 @@ const Hero = () => {
           <div className={`relative w-full max-w-md transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             {/* Main Computer Image */}
             <div className="rounded-xl overflow-hidden mb-8 shadow-lg border border-gray-200">
-              <img 
-                src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80&w=800" 
-                alt="Person using computer" 
-                className="w-full h-auto object-cover"
-              />
+              {isEditable ? (
+                <EditableImage 
+                  src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80&w=800"
+                  alt="Person using computer"
+                  pageName="home"
+                  sectionName="hero"
+                  imageId="main"
+                  className="w-full h-auto object-cover"
+                />
+              ) : (
+                <img 
+                  src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80&w=800" 
+                  alt="Person using computer" 
+                  className="w-full h-auto object-cover"
+                />
+              )}
             </div>
             
             {/* Animation Card 1: Process Automation */}

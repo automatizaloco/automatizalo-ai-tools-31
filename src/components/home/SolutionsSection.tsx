@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MessageSquare, PieChart, Smartphone, Brain } from 'lucide-react';
@@ -6,6 +7,10 @@ import SolutionCard from '@/components/ui/SolutionCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
+
+interface SolutionsSectionProps {
+  isEditable?: boolean;
+}
 
 interface Solution {
   id: string;
@@ -16,7 +21,7 @@ interface Solution {
   imageUrl: string;
 }
 
-const SolutionsSection: React.FC = () => {
+const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
   const [isVisible, setIsVisible] = useState(false);
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
@@ -127,6 +132,10 @@ const SolutionsSection: React.FC = () => {
               imageUrl={solution.imageUrl}
               delay={index * 100}
               index={index}
+              isEditable={isEditable}
+              pageName="home"
+              sectionName="solutions"
+              imageId={solution.id}
             />
           ))}
         </div>

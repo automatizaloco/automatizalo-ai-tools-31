@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.37.0';
 
 // Define allowed origins for CORS
@@ -33,12 +32,14 @@ const validateRequest = (req: Request, payload: any) => {
 };
 
 // Process and store image from URL to Supabase storage
+// Note: This function remains in case the webhook implementation still uses it
+// but we now assume the image URL is already a permanent Supabase URL
 const processImage = async (imageUrl: string, title: string): Promise<string> => {
   try {
-    console.log("Processing image from URL:", imageUrl);
+    console.log("Processing image URL:", imageUrl);
     
     // Skip if already a Supabase storage URL
-    if (imageUrl && imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
+    if (imageUrl && imageUrl.includes('supabase.co/storage/v1/object/public/')) {
       console.log("Image is already in Supabase storage");
       return imageUrl;
     }
@@ -49,104 +50,14 @@ const processImage = async (imageUrl: string, title: string): Promise<string> =>
       return imageUrl;
     }
     
-    // Validate URL format
-    if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.match(/^https?:\/\/.+/i)) {
-      console.log("Invalid image URL format:", imageUrl);
-      return "https://via.placeholder.com/800x400";
-    }
-
-    console.log("Downloading image from:", imageUrl);
-    
-    // Use stricter timeout for fetch
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-    
-    try {
-      // Download the image with proper error handling
-      const imageResponse = await fetch(imageUrl, {
-        headers: {
-          'Accept': 'image/*',
-          'User-Agent': 'Mozilla/5.0 (compatible; AutomatizaloBlogBot/1.0)'
-        },
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!imageResponse.ok) {
-        console.error(`Failed to download image: ${imageResponse.status} - ${await imageResponse.text()}`);
-        throw new Error(`Failed to download image: ${imageResponse.status}`);
-      }
-      
-      const contentType = imageResponse.headers.get('content-type');
-      if (!contentType || !contentType.startsWith('image/')) {
-        console.error("Response is not an image:", contentType);
-        throw new Error("Response is not an image");
-      }
-      
-      const blob = await imageResponse.blob();
-      console.log(`Downloaded image: ${blob.size} bytes, type: ${blob.type}`);
-      
-      if (blob.size < 100) { // Sanity check for minimum image size
-        console.error("Downloaded image too small:", blob.size);
-        throw new Error("Downloaded image is too small");
-      }
-      
-      // Prepare file path and name
-      const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 30);
-      const fileExtension = blob.type.split('/')[1] || 'jpg';
-      const fileName = `blog/${sanitizedTitle}-webhook-${Date.now()}.${fileExtension}`;
-      
-      console.log(`Uploading image as ${fileName} (${blob.size} bytes)`);
-      
-      // Ensure blog_images bucket exists
-      await ensureStorageBucket();
-      
-      // Upload to Supabase storage
-      const { data, error } = await supabaseAdmin
-        .storage
-        .from('blog_images')
-        .upload(fileName, blob, {
-          contentType: blob.type,
-          upsert: false
-        });
-
-      if (error) {
-        console.error("Storage upload error:", error);
-        
-        // If the error is because the file already exists, try to get the URL
-        if (error.message && error.message.includes('already exists')) {
-          console.log("File already exists, getting existing URL");
-          
-          const { data: { publicUrl } } = supabaseAdmin
-            .storage
-            .from('blog_images')
-            .getPublicUrl(fileName);
-            
-          return publicUrl;
-        }
-        
-        return imageUrl; // Return original if upload fails
-      }
-
-      // Get the public URL
-      const { data: { publicUrl } } = supabaseAdmin
-        .storage
-        .from('blog_images')
-        .getPublicUrl(fileName);
-
-      console.log("Image stored at:", publicUrl);
-      return publicUrl;
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      console.error("Fetch error:", fetchError);
-      throw fetchError;
-    }
+    // Just return the image URL as we assume it's now a permanent URL
+    console.log("Using direct image URL:", imageUrl);
+    return imageUrl;
   } catch (error) {
     console.error("Image processing error:", error);
     return "https://via.placeholder.com/800x400"; // Return placeholder on error
   }
-}
+};
 
 const processNewBlogPost = async (payload: any) => {
   console.log("Processing payload:", JSON.stringify(payload, null, 2));
@@ -259,17 +170,10 @@ const processNewBlogPost = async (payload: any) => {
   
   console.log("Final image URL found:", imageUrl);
 
-  // Process image if present
+  // Use the image URL directly, assuming it's already a permanent URL
   if (imageUrl) {
-    try {
-      const processedImageUrl = await processImage(imageUrl, payload.title);
-      payload.image = processedImageUrl;
-      console.log("Processed image URL:", payload.image);
-    } catch (imageError) {
-      console.error("Failed to process image:", imageError);
-      // Continue with original image URL
-      payload.image = imageUrl;
-    }
+    payload.image = imageUrl;
+    console.log("Using image URL:", payload.image);
   } else {
     console.log("No image URL found in payload, using placeholder");
     payload.image = "https://via.placeholder.com/800x400";
@@ -286,7 +190,7 @@ const processNewBlogPost = async (payload: any) => {
     author: payload.author,
     date: payload.date || new Date().toISOString().split('T')[0],
     read_time: payload.read_time || payload.readTime || '5 min', // Handle both read_time and readTime
-    image: payload.image, // We've already processed this above
+    image: payload.image, // We're using the image URL directly now
     featured: payload.featured || false,
     url: payload.url || null, // Store the source URL if provided
     status: payload.status || 'draft', // Handle the status field with a default value of draft
@@ -395,7 +299,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Ensure blog_images bucket exists
+    // Ensure blog_images bucket exists - keeping this for backward compatibility
     await ensureStorageBucket();
     
     // Only allow POST requests

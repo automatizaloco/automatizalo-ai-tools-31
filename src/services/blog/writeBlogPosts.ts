@@ -1,6 +1,6 @@
 
 import { NewBlogPost, BlogPost } from '@/types/blog';
-import { extractBlogPostFromResponse, processImage, saveBlogPost } from './utils';
+import { extractBlogPostFromResponse, saveBlogPost } from './utils';
 import { useWebhookStore } from '@/stores/webhookStore';
 
 /**
@@ -65,11 +65,11 @@ export const processAndSaveWebhookResponse = async (
       readTime: extractedData.readTime || (extractedData as any).read_time || "5 min",
       status: 'draft',
       featured: false,
-      // Don't include url field if not supported by the database
+      // Use the image URL directly from the webhook response
       image: "https://via.placeholder.com/800x400" // Default placeholder, will be updated below
     };
     
-    // Process image if present
+    // Get image URL from the extracted data
     let imageUrl = null;
     
     // Extract image URL from response data
@@ -87,17 +87,10 @@ export const processAndSaveWebhookResponse = async (
       }
     }
     
+    // Use the image URL directly if available
     if (imageUrl) {
-      console.log("Processing Image");
-      console.log("Downloading and storing image from webhook...");
-      try {
-        const processedImageUrl = await processImage(imageUrl, blogPostData.title);
-        blogPostData.image = processedImageUrl;
-      } catch (imageError) {
-        console.error("Image Processing Failed:", imageError);
-        console.error("Using direct image URL instead");
-        blogPostData.image = imageUrl;
-      }
+      console.log("Using image URL from webhook:", imageUrl);
+      blogPostData.image = imageUrl;
     } else {
       console.log("No image URL found in webhook response");
       blogPostData.image = "https://via.placeholder.com/800x400";

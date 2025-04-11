@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { NewBlogPost, BlogPost } from '@/types/blog';
 
@@ -104,81 +105,7 @@ export const extractImageUrl = (data: any): string | null => {
   return null;
 };
 
-/**
- * Process an image from URL
- * Downloads the image and uploads to Supabase storage
- */
-export const processImage = async (imageUrl: string, title: string): Promise<string> => {
-  try {
-    console.log("Processing image from URL:", imageUrl);
-    
-    // Skip if already a Supabase storage URL
-    if (imageUrl && imageUrl.includes('supabase.co/storage/v1/object/public/blog_images')) {
-      console.log("Image is already in Supabase storage");
-      return imageUrl;
-    }
-    
-    // Skip if not a valid URL
-    if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.match(/^https?:\/\/.+/i)) {
-      console.log("Invalid image URL:", imageUrl);
-      return "https://via.placeholder.com/800x400";
-    }
-    
-    console.log("Downloading and uploading image for:", title);
-    
-    // Direct fetch approach instead of using webhook
-    try {
-      // Fetch the image directly
-      const imageResponse = await fetch(imageUrl, {
-        headers: {
-          'Accept': 'image/*',
-          'User-Agent': 'Mozilla/5.0 (compatible; AutomatizaloBlogBot/1.0)'
-        }
-      });
-      
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download image: ${imageResponse.status}`);
-      }
-      
-      const contentType = imageResponse.headers.get('content-type');
-      if (!contentType || !contentType.startsWith('image/')) {
-        throw new Error("Response is not an image");
-      }
-      
-      const blob = await imageResponse.blob();
-      
-      // Create a file object from blob
-      const fileExt = contentType.split('/')[1] || 'jpg';
-      const fileName = `blog-${Date.now()}.${fileExt}`;
-      const file = new File([blob], fileName, { type: contentType });
-      
-      // Upload directly to Supabase
-      const { data, error } = await supabase.storage
-        .from('blog_images')
-        .upload(`blogs/${fileName}`, file);
-      
-      if (error) {
-        console.error("Storage upload error:", error);
-        throw error;
-      }
-      
-      // Get public URL
-      const { data: publicUrlData } = supabase.storage
-        .from('blog_images')
-        .getPublicUrl(`blogs/${fileName}`);
-        
-      return publicUrlData.publicUrl;
-    } catch (directError) {
-      console.error("Direct download failed:", directError);
-      
-      // Fallback to the original image URL
-      return imageUrl;
-    }
-  } catch (error) {
-    console.error("Failed to process image:", error);
-    return imageUrl; // Return original URL on error
-  }
-};
+// Removing the processImage function since we now use the direct URL from the webhook
 
 /**
  * Save a blog post to the database
@@ -301,3 +228,4 @@ export const updateBlogPostStatus = async (id: string, status: 'draft' | 'publis
   
   return transformDatabasePost(updatedPost);
 };
+

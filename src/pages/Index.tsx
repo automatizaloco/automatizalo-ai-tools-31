@@ -6,6 +6,7 @@ import Hero from '@/components/home/Hero';
 import About from '@/components/home/About';
 import SolutionsSection from '@/components/home/SolutionsSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
+import { useAuth } from '@/context/AuthContext';
 
 interface SectionState {
   id: number;
@@ -22,6 +23,8 @@ const Index = () => {
     { id: 3, name: 'Solutions Section', visible: true, component: 'SolutionsSection', order: 3 },
     { id: 4, name: 'Testimonials Section', visible: true, component: 'TestimonialsSection', order: 4 },
   ]);
+  const { user } = useAuth();
+  const isAdmin = !!user;
 
   useEffect(() => {
     // Load section layout from localStorage (in a real app, from the database)
@@ -48,11 +51,20 @@ const Index = () => {
     };
   }, []);
 
+  // Inform admin users they can edit content
+  useEffect(() => {
+    if (isAdmin) {
+      toast.info("You're logged in as admin. Click on any image to edit it.", {
+        duration: 5000,
+      });
+    }
+  }, [isAdmin]);
+
   const componentMap: Record<string, React.ReactNode> = {
-    'Hero': <Hero />,
-    'About': <About />,
-    'SolutionsSection': <SolutionsSection />,
-    'TestimonialsSection': <TestimonialsSection />
+    'Hero': <Hero isEditable={isAdmin} />,
+    'About': <About isEditable={isAdmin} />,
+    'SolutionsSection': <SolutionsSection isEditable={isAdmin} />,
+    'TestimonialsSection': <TestimonialsSection isEditable={isAdmin} />
   };
 
   const visibleSections = sections

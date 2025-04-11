@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import EditableImage from '@/components/admin/EditableImage';
 
 interface BlogCardProps {
   id: string;
@@ -33,6 +35,8 @@ const BlogCard = ({
 }: BlogCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = !!user;
   
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -64,11 +68,22 @@ const BlogCard = ({
     >
       <Link to={`/blog/${id}`} className="block">
         <div className={`relative ${featured ? 'h-64' : 'h-48'} overflow-hidden`}>
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-          />
+          {isAdmin ? (
+            <EditableImage
+              src={imageUrl}
+              alt={title}
+              pageName="blog"
+              sectionName="blog-card"
+              imageId={id}
+              className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+            />
+          ) : (
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+            />
+          )}
           <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium">
             {category}
           </div>

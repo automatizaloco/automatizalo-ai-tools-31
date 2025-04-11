@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import EditableText from "@/components/admin/EditableText";
+import EditableImage from '@/components/admin/EditableImage';
+import { useAuth } from '@/context/AuthContext';
 
 interface SolutionCardProps {
   title: string;
@@ -26,6 +28,8 @@ const SolutionCard = ({
 }: SolutionCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = !!user;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -58,11 +62,22 @@ const SolutionCard = ({
       style={{ transitionDelay: `${(delay + 100) * 1}ms` }}
     >
       <div className="h-48 overflow-hidden">
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-        />
+        {isAdmin ? (
+          <EditableImage
+            src={imageUrl}
+            alt={title}
+            pageName="solutions"
+            sectionName="solution-card"
+            imageId={`solution-${index}`}
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+          />
+        ) : (
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+          />
+        )}
       </div>
 
       <div className="p-6">

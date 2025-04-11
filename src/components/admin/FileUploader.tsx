@@ -1,8 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Upload, Check } from 'lucide-react';
+import { Upload, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface FileUploaderProps {
@@ -26,21 +26,30 @@ export const FileUploader = ({
 }: FileUploaderProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uniqueId = `file-upload-${Math.random().toString(36).substring(7)}`;
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
+    setError(null);
+    
     // Validate file type
     if (!acceptedFileTypes.includes(file.type)) {
-      toast.error(`Invalid file type. Accepted types: ${acceptedFileTypes.map(type => type.split('/')[1]).join(', ')}`);
+      const errorMsg = `Invalid file type. Accepted types: ${acceptedFileTypes.map(type => type.split('/')[1]).join(', ')}`;
+      setError(errorMsg);
+      toast.error(errorMsg);
       return;
     }
     
     // Validate file size
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      toast.error(`File too large. Maximum size: ${maxSizeMB}MB`);
+      const errorMsg = `File too large. Maximum size: ${maxSizeMB}MB`;
+      setError(errorMsg);
+      toast.error(errorMsg);
       return;
     }
     
@@ -71,13 +80,17 @@ export const FileUploader = ({
       
     } catch (error) {
       console.error('Error uploading file:', error);
+      setError('Upload failed. Please try again.');
       toast.error('Failed to upload file');
     } finally {
       setIsLoading(false);
       // Reset the input
       e.target.value = '';
       // Reset progress after a delay
-      setTimeout(() => setUploadProgress(0), 1000);
+      setTimeout(() => {
+        setUploadProgress(0);
+        setError(null);
+      }, 2000);
     }
   };
   
@@ -85,13 +98,14 @@ export const FileUploader = ({
     <div className={cn("w-full", className)}>
       <input
         type="file"
-        id={`file-upload-${Math.random().toString(36).substring(7)}`}
+        id={uniqueId}
+        ref={fileInputRef}
         onChange={handleFileChange}
         accept={acceptedFileTypes.join(',')}
         className="hidden"
         disabled={isLoading}
       />
-      <label htmlFor={`file-upload-${Math.random().toString(36).substring(7)}`} className="w-full cursor-pointer">
+      <label htmlFor={uniqueId} className="w-full cursor-pointer">
         <Button
           type="button"
           variant={buttonVariant}
@@ -103,6 +117,11 @@ export const FileUploader = ({
             <div className="flex items-center space-x-2">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></div>
               <span>{Math.round(uploadProgress)}%</span>
+            </div>
+          ) : error ? (
+            <div className="flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2 text-destructive" />
+              <span>Try again</span>
             </div>
           ) : (
             <div className="flex items-center">
@@ -116,10 +135,14 @@ export const FileUploader = ({
       {uploadProgress > 0 && (
         <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
           <div
-            className={`h-1 rounded-full ${uploadProgress === 100 ? 'bg-green-500' : 'bg-blue-600'}`}
+            className={`h-1 rounded-full ${uploadProgress === 100 ? 'bg-green-500' : error ? 'bg-red-500' : 'bg-blue-600'}`}
             style={{ width: `${uploadProgress}%` }}
           ></div>
         </div>
+      )}
+      
+      {error && (
+        <p className="text-xs text-destructive mt-1">{error}</p>
       )}
     </div>
   );

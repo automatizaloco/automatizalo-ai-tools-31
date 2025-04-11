@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatContentFromWebhook } from "./blog/transformers";
 
 /**
  * Translates blog post content to the target language
@@ -47,7 +48,8 @@ export const translateBlogContent = async (
             excerpt: i === 0 ? excerpt : "", // Only send excerpt with first chunk
             targetLang: targetLang,
             isChunk: true,
-            chunkIndex: i
+            chunkIndex: i,
+            preserveFormatting: true  // Request to preserve formatting
           },
         });
         
@@ -74,7 +76,8 @@ export const translateBlogContent = async (
           title: title,
           excerpt: excerpt,
           targetLang: targetLang,
-          onlyMetadata: true
+          onlyMetadata: true,
+          preserveFormatting: true
         },
       });
       
@@ -86,7 +89,7 @@ export const translateBlogContent = async (
       return {
         title: firstChunkData.title || '',
         excerpt: firstChunkData.excerpt || '',
-        content: translatedContent
+        content: processTranslatedContent(translatedContent)
       };
     } else {
       // Standard translation for shorter content or French
@@ -95,7 +98,8 @@ export const translateBlogContent = async (
           text: content,
           title: title,
           excerpt: excerpt,
-          targetLang: targetLang
+          targetLang: targetLang,
+          preserveFormatting: true
         },
       });
 
@@ -120,7 +124,7 @@ export const translateBlogContent = async (
       return {
         title: data.title || '',
         excerpt: data.excerpt || '',
-        content: data.content || ''
+        content: processTranslatedContent(data.content || '')
       };
     }
   } catch (error: any) {
@@ -128,4 +132,23 @@ export const translateBlogContent = async (
     toast.error(`Failed to translate content: ${error.message}`);
     throw error;
   }
+};
+
+/**
+ * Process translated content to ensure formatting is preserved
+ */
+const processTranslatedContent = (content: string): string => {
+  // Check if content already has HTML formatting
+  if (content.includes('<h1>') || content.includes('<p>') || 
+      content.includes('<strong>') || content.includes('<em>')) {
+    return content;
+  }
+  
+  // If content doesn't have HTML but has markdown-like syntax, process it
+  if (content.includes('#') || content.includes('*') || 
+      content.includes('\n\n') || content.match(/^\d+\./m)) {
+    return formatContentFromWebhook(content);
+  }
+  
+  return content;
 };

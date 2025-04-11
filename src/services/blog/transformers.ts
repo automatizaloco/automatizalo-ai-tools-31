@@ -37,7 +37,19 @@ export const extractBlogPostFromResponse = (responseText: string): Partial<BlogP
       
       if (Array.isArray(jsonData) && jsonData.length > 0) {
         console.log("Response is an array, using first item");
-        return jsonData[0];
+        const data = jsonData[0];
+        
+        // Process content formatting if available
+        if (data.content) {
+          data.content = formatContentFromWebhook(data.content);
+        }
+        
+        return data;
+      }
+      
+      // Process content formatting for single object
+      if (jsonData.content) {
+        jsonData.content = formatContentFromWebhook(jsonData.content);
       }
       
       return jsonData;
@@ -51,6 +63,12 @@ export const extractBlogPostFromResponse = (responseText: string): Partial<BlogP
       try {
         const extractedJson = JSON.parse(jsonMatch[1]);
         console.log("Extracted JSON from markdown code block:", extractedJson);
+        
+        // Process content formatting if available
+        if (extractedJson.content) {
+          extractedJson.content = formatContentFromWebhook(extractedJson.content);
+        }
+        
         return extractedJson;
       } catch (extractError) {
         console.error("Failed to parse JSON from markdown code block:", extractError);
@@ -75,6 +93,47 @@ export const extractBlogPostFromResponse = (responseText: string): Partial<BlogP
     console.error("Error extracting blog post data:", error);
     return null;
   }
+};
+
+/**
+ * Format content from webhook to preserve markdown-like formatting
+ */
+export const formatContentFromWebhook = (content: string): string => {
+  if (!content) return '';
+  
+  let formattedContent = content;
+  
+  // Preserve heading formatting
+  formattedContent = formattedContent.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+  formattedContent = formattedContent.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+  formattedContent = formattedContent.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+  
+  // Preserve bold formatting
+  formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  formattedContent = formattedContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Preserve paragraph breaks (double newlines)
+  formattedContent = formattedContent.replace(/\n\n/g, '</p><p>');
+  
+  // Preserve list formatting
+  formattedContent = formattedContent.replace(/^- (.*?)$/gm, '<ul><li>$1</li></ul>');
+  formattedContent = formattedContent.replace(/^(\d+)\. (.*?)$/gm, '<ol><li>$2</li></ol>');
+  
+  // Ensure content is properly wrapped
+  if (!formattedContent.startsWith('<')) {
+    formattedContent = '<p>' + formattedContent;
+  }
+  
+  if (!formattedContent.endsWith('>')) {
+    formattedContent = formattedContent + '</p>';
+  }
+  
+  // Fix consecutive lists (remove extra tags)
+  formattedContent = formattedContent.replace(/<\/ul><ul>/g, '');
+  formattedContent = formattedContent.replace(/<\/ol><ol>/g, '');
+  
+  console.log("Formatted content:", formattedContent.substring(0, 100) + '...');
+  return formattedContent;
 };
 
 /**

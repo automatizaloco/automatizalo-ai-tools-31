@@ -59,6 +59,49 @@ const processImage = async (imageUrl: string, title: string): Promise<string> =>
   }
 };
 
+// Format content to preserve markdown-like elements
+const formatMarkdownContent = (content: string): string => {
+  if (!content) return '';
+  
+  // Preserve the original structure but add HTML formatting where needed
+  
+  // First check if content already has HTML formatting
+  if (content.includes('<h1>') || content.includes('<p>') || content.includes('<strong>')) {
+    return content;
+  }
+  
+  // Replace markdown headers with HTML
+  let formattedContent = content;
+  formattedContent = formattedContent.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+  formattedContent = formattedContent.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+  formattedContent = formattedContent.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+  
+  // Replace markdown bold and italic with HTML
+  formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  formattedContent = formattedContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Convert double line breaks to paragraphs
+  formattedContent = formattedContent.replace(/\n\n/g, '</p><p>');
+  
+  // Process lists
+  formattedContent = formattedContent.replace(/^- (.*?)$/gm, '<ul><li>$1</li></ul>');
+  formattedContent = formattedContent.replace(/^(\d+)\. (.*?)$/gm, '<ol><li>$2</li></ol>');
+  
+  // Fix consecutive lists to be properly nested
+  formattedContent = formattedContent.replace(/<\/ul><ul>/g, '');
+  formattedContent = formattedContent.replace(/<\/ol><ol>/g, '');
+  
+  // Wrap content in paragraph tags if not already formatted
+  if (!formattedContent.startsWith('<')) {
+    formattedContent = '<p>' + formattedContent;
+  }
+  if (!formattedContent.endsWith('>')) {
+    formattedContent = formattedContent + '</p>';
+  }
+  
+  return formattedContent;
+};
+
 const processNewBlogPost = async (payload: any) => {
   console.log("Processing payload:", JSON.stringify(payload, null, 2));
 
@@ -179,6 +222,12 @@ const processNewBlogPost = async (payload: any) => {
     payload.image = "https://via.placeholder.com/800x400";
   }
 
+  // Process the content to maintain proper formatting (markdown to HTML)
+  if (payload.content) {
+    payload.content = formatMarkdownContent(payload.content);
+    console.log("Formatted content sample:", payload.content.substring(0, 100) + "...");
+  }
+
   // Map fields to match the database schema
   const blogData = {
     title: payload.title,
@@ -190,7 +239,7 @@ const processNewBlogPost = async (payload: any) => {
     author: payload.author,
     date: payload.date || new Date().toISOString().split('T')[0],
     read_time: payload.read_time || payload.readTime || '5 min', // Handle both read_time and readTime
-    image: payload.image, // We're using the image URL directly now
+    image: payload.image, 
     featured: payload.featured || false,
     url: payload.url || null, // Store the source URL if provided
     status: payload.status || 'draft', // Handle the status field with a default value of draft
@@ -215,6 +264,14 @@ const processNewBlogPost = async (payload: any) => {
   // Handle translations if provided
   if (payload.translations) {
     try {
+      // Format translation content as well
+      if (payload.translations.fr && payload.translations.fr.content) {
+        payload.translations.fr.content = formatMarkdownContent(payload.translations.fr.content);
+      }
+      if (payload.translations.es && payload.translations.es.content) {
+        payload.translations.es.content = formatMarkdownContent(payload.translations.es.content);
+      }
+      
       await processTranslations(data.id, payload.translations);
     } catch (translationError) {
       console.error('Error processing translations:', translationError);

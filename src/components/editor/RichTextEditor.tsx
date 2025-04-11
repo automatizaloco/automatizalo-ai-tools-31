@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 
 interface RichTextEditorProps {
@@ -35,14 +34,55 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
   const [showHTML, setShowHTML] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const [selectionRange, setSelectionRange] = useState<Range | null>(null);
+  const [isInitialRender, setIsInitialRender] = useState(true);
+  const [currentCursorPosition, setCurrentCursorPosition] = useState<number | null>(null);
   
+  // Load initial content
   useEffect(() => {
-    if (editorRef.current && !editorRef.current.innerHTML && value) {
-      editorRef.current.innerHTML = value;
+    if (editorRef.current && isInitialRender && value) {
+      // Process the initial content for proper formatting
+      const processedContent = processMarkdownLikeContent(value);
+      editorRef.current.innerHTML = processedContent;
+      setIsInitialRender(false);
+      onChange(processedContent);
     }
-  }, [value]);
+  }, [value, isInitialRender, onChange]);
+
+  // Process markdown-like syntax in content
+  const processMarkdownLikeContent = (content: string): string => {
+    if (!content) return '';
+    
+    let processedContent = content;
+    
+    // Handle headings
+    processedContent = processedContent.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    processedContent = processedContent.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    processedContent = processedContent.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    
+    // Handle bold text
+    processedContent = processedContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    processedContent = processedContent.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    
+    // Handle line breaks - preserve double line breaks as paragraphs
+    processedContent = processedContent.replace(/\n\n/g, '</p><p>');
+    
+    // Ensure content is wrapped in paragraph tags
+    if (!processedContent.startsWith('<h1>') && !processedContent.startsWith('<h2>') && 
+        !processedContent.startsWith('<h3>') && !processedContent.startsWith('<p>')) {
+      processedContent = '<p>' + processedContent;
+    }
+    if (!processedContent.endsWith('</p>') && !processedContent.endsWith('</h1>') && 
+        !processedContent.endsWith('</h2>') && !processedContent.endsWith('</h3>')) {
+      processedContent += '</p>';
+    }
+    
+    return processedContent;
+  };
 
   const execCommand = (command: string, value: string = "") => {
+    // Store current selection position
+    saveSelection();
+    
     // Restore selection if we have one saved
     if (selectionRange) {
       const selection = window.getSelection();
@@ -58,16 +98,36 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
     }
   };
 
-  const handleKeyUp = () => {
+  const handleKeyUp = (e: React.KeyboardEvent) => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      // Only update if the content actually changed
+      const newContent = editorRef.current.innerHTML;
+      
+      // Prevent jumping by storing selection position
+      saveSelection();
+      
+      onChange(newContent);
     }
   };
 
+  // Save the current cursor position and selection
   const saveSelection = () => {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
-      setSelectionRange(selection.getRangeAt(0).cloneRange());
+      const range = selection.getRangeAt(0);
+      setSelectionRange(range.cloneRange());
+      
+      // Store cursor position for restoration
+      if (editorRef.current) {
+        const editorElement = editorRef.current;
+        
+        // Create a range from the beginning of the editor to the cursor
+        const cursorRange = document.createRange();
+        cursorRange.setStart(editorElement, 0);
+        cursorRange.setEnd(range.startContainer, range.startOffset);
+        
+        setCurrentCursorPosition(cursorRange.toString().length);
+      }
     }
   };
 
@@ -79,6 +139,32 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
   const insertLink = (url: string, text: string) => {
     if (!url) return;
     execCommand('insertHTML', `<a href="${url}" target="_blank" class="text-primary hover:underline">${text || url}</a>`);
+  };
+
+  // Focus handler to prevent cursor jumping
+  const handleFocus = () => {
+    // Do not try to restore the cursor position during initial content load
+    if (isInitialRender) return;
+    
+    // If we've stored a cursor position, try to restore it
+    if (currentCursorPosition !== null && editorRef.current) {
+      try {
+        // Use a slight delay to ensure the editor is ready
+        setTimeout(() => {
+          // Find the right node and position
+          const selection = window.getSelection();
+          if (selection) {
+            // Try to restore from saved range first
+            if (selectionRange) {
+              selection.removeAllRanges();
+              selection.addRange(selectionRange);
+            }
+          }
+        }, 10);
+      } catch (error) {
+        console.error("Error restoring cursor position:", error);
+      }
+    }
   };
 
   return (
@@ -433,7 +519,9 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
             contentEditable
             suppressContentEditableWarning
             onKeyUp={handleKeyUp}
-            onBlur={handleKeyUp}
+            onBlur={saveSelection}
+            onFocus={handleFocus}
+            onClick={saveSelection}
             dangerouslySetInnerHTML={{ __html: value }}
             data-placeholder={placeholder || "Write your content here..."}
           />
@@ -452,3 +540,4 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
     </div>
   );
 };
+

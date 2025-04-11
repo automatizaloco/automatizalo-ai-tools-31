@@ -2,6 +2,7 @@
 // Re-export transformers and CRUD operations
 export * from './transformers';
 export * from './crudOperations';
+export * from './translationService';
 
 // Constants are kept in utils
 export const API_URL = "https://juwbamkqkawyibcvllvo.supabase.co";

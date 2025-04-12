@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { ensureContentBucket } from '@/services/blog/ensureBucket';
-import AdminLayout from '@/components/layout/AdminLayout';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -30,11 +29,7 @@ const Admin = () => {
     );
   }
 
-  return (
-    <AdminLayout>
-      <Outlet />
-    </AdminLayout>
-  );
+  return <Outlet />;
 };
 
 export default Admin;

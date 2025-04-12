@@ -3,10 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ensureContentBucket } from './blog/ensureBucket';
 
-// Constants for Supabase access - already defined in client.ts
-const SUPABASE_URL = "https://juwbamkqkawyibcvllvo.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1d2JhbWtxa2F3eWliY3ZsbHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MDUxMDIsImV4cCI6MjA1NzI4MTEwMn0.uqwyR5lwp8JXa7qAZu6nZcCEdaoKOxX0XxQls2vg7Fk";
-
 /**
  * Uploads an image to storage and saves its reference in the database
  */
@@ -33,6 +29,13 @@ export const uploadPageSectionImage = async (
     
     if (uploadError) {
       console.error("Upload error:", uploadError);
+      
+      // If error is related to bucket/permissions, try to simply return a generic URL
+      if (uploadError.message?.includes('permission denied') || uploadError.message?.includes('row-level security')) {
+        toast.error("Storage permission denied. Please check your Supabase permissions.");
+        return null;
+      }
+      
       throw uploadError;
     }
     
@@ -40,6 +43,10 @@ export const uploadPageSectionImage = async (
     const { data: publicUrlData } = supabase.storage
       .from('content')
       .getPublicUrl(filePath);
+    
+    if (!publicUrlData || !publicUrlData.publicUrl) {
+      throw new Error("Could not get public URL");
+    }
     
     const imageUrl = publicUrlData.publicUrl;
     console.log("Image uploaded successfully. URL:", imageUrl);
@@ -66,7 +73,7 @@ export const uploadPageSectionImage = async (
   } catch (error) {
     console.error("Error uploading page section image:", error);
     toast.error("Failed to upload image");
-    throw error;
+    return null;
   }
 };
 
@@ -118,6 +125,10 @@ export const getAllContentImages = async (): Promise<string[]> => {
     
     if (error) {
       console.error("Error listing content images:", error);
+      return [];
+    }
+    
+    if (!data) {
       return [];
     }
     

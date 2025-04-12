@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { updatePageContent } from '@/services/pageContentService';
 
 interface EditableTextProps {
   id: string;
@@ -12,9 +13,19 @@ interface EditableTextProps {
   multiline?: boolean;
   onSave?: (value: string) => void;
   disabled?: boolean;
+  pageName?: string;
+  sectionName?: string;
 }
 
-const EditableText = ({ id, defaultText, multiline = false, onSave, disabled = false }: EditableTextProps) => {
+const EditableText = ({ 
+  id, 
+  defaultText, 
+  multiline = false, 
+  onSave, 
+  disabled = false,
+  pageName,
+  sectionName
+}: EditableTextProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(defaultText);
   const [pendingText, setPendingText] = useState(defaultText);
@@ -30,9 +41,19 @@ const EditableText = ({ id, defaultText, multiline = false, onSave, disabled = f
     setPendingText(text);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setText(pendingText);
     setIsEditing(false);
+    
+    // Try to save to database if page name and section name are provided
+    if (pageName && sectionName) {
+      try {
+        await updatePageContent(pageName, sectionName, pendingText);
+        console.log(`Content updated for ${pageName}-${sectionName}`);
+      } catch (error) {
+        console.error('Error saving content:', error);
+      }
+    }
     
     // Call the onSave callback if provided
     if (onSave) {

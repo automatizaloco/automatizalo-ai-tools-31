@@ -46,6 +46,8 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                 <EditableText 
                   id="about-section-tag"
                   defaultText={t("home.about.tagline")}
+                  pageName="home"
+                  sectionName="about-tagline"
                 />
               ) : (
                 t("home.about.tagline")
@@ -57,6 +59,8 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                 <EditableText 
                   id="about-section-title"
                   defaultText={t("home.about.title")}
+                  pageName="home"
+                  sectionName="about-title"
                 />
               ) : (
                 t("home.about.title")
@@ -69,6 +73,8 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                   id="about-section-paragraph1"
                   defaultText={t("home.about.description")}
                   multiline={true}
+                  pageName="home"
+                  sectionName="about-description"
                 />
               ) : (
                 t("home.about.description")
@@ -81,6 +87,8 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                   id="about-section-paragraph2"
                   defaultText={t("home.about.mission")}
                   multiline={true}
+                  pageName="home"
+                  sectionName="about-mission"
                 />
               ) : (
                 t("home.about.mission")
@@ -102,6 +110,8 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                         <EditableText 
                           id={`about-feature${index}-title`}
                           defaultText={t(`home.about.feature${index}.title`)}
+                          pageName="home"
+                          sectionName={`about-feature${index}-title`}
                         />
                       ) : (
                         t(`home.about.feature${index}.title`)
@@ -112,6 +122,8 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                         <EditableText 
                           id={`about-feature${index}-description`}
                           defaultText={t(`home.about.feature${index}.description`)}
+                          pageName="home"
+                          sectionName={`about-feature${index}-description`}
                         />
                       ) : (
                         t(`home.about.feature${index}.description`)

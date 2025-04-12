@@ -34,6 +34,8 @@ export const FileUploader = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
+    console.log("File selected:", file.name, file.type, file.size);
+    
     setError(null);
     
     // Validate file type
@@ -85,12 +87,20 @@ export const FileUploader = ({
     } finally {
       setIsLoading(false);
       // Reset the input
-      e.target.value = '';
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       // Reset progress after a delay
       setTimeout(() => {
         setUploadProgress(0);
         setError(null);
       }, 2000);
+    }
+  };
+
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
   
@@ -105,32 +115,32 @@ export const FileUploader = ({
         className="hidden"
         disabled={isLoading}
       />
-      <label htmlFor={uniqueId} className="w-full cursor-pointer">
-        <Button
-          type="button"
-          variant={buttonVariant}
-          size={buttonSize}
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center space-x-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></div>
-              <span>{Math.round(uploadProgress)}%</span>
-            </div>
-          ) : error ? (
-            <div className="flex items-center">
-              <AlertCircle className="w-4 h-4 mr-2 text-destructive" />
-              <span>Try again</span>
-            </div>
-          ) : (
-            <div className="flex items-center">
-              <Upload className="w-4 h-4 mr-2" />
-              <span>{label}</span>
-            </div>
-          )}
-        </Button>
-      </label>
+      
+      <Button
+        type="button"
+        variant={buttonVariant}
+        size={buttonSize}
+        className="w-full"
+        disabled={isLoading}
+        onClick={handleButtonClick}
+      >
+        {isLoading ? (
+          <div className="flex items-center space-x-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></div>
+            <span>{Math.round(uploadProgress)}%</span>
+          </div>
+        ) : error ? (
+          <div className="flex items-center">
+            <AlertCircle className="w-4 h-4 mr-2 text-destructive" />
+            <span>Try again</span>
+          </div>
+        ) : (
+          <div className="flex items-center">
+            <Upload className="w-4 h-4 mr-2" />
+            <span>{label}</span>
+          </div>
+        )}
+      </Button>
       
       {uploadProgress > 0 && (
         <div className="w-full bg-gray-200 rounded-full h-1 mt-2">

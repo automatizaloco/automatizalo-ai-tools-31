@@ -54,7 +54,7 @@ const Index = () => {
   // Inform admin users they can edit content
   useEffect(() => {
     if (isAdmin) {
-      toast.info("You're logged in as admin. Click on any image to edit it.", {
+      toast.info("You're logged in as admin. Click on any text or image to edit it.", {
         duration: 5000,
       });
     }

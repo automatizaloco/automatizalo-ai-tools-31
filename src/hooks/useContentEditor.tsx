@@ -100,11 +100,11 @@ export const useContentEditor = () => {
     }));
   };
 
-  const handleSaveContent = async (pageName: string, sectionName: string) => {
+  const handleSaveContent = async (pageName: string, sectionName: string): Promise<void> => {
     try {
       await updatePageContent(pageName, sectionName, content[pageName][sectionName]);
       toast.success("Content updated successfully!");
-      return true;
+      // Return void instead of boolean
     } catch (error) {
       console.error("Error saving content:", error);
       toast.error("Failed to save content");

@@ -36,7 +36,7 @@ const PageSectionEditor: React.FC<PageSectionEditorProps> = ({
     setSaving(true);
     try {
       await onSave(section.pageName, section.sectionName);
-      toast.success("Content updated successfully!");
+      // We don't need to check return value anymore since it's void
     } catch (error) {
       console.error("Error saving content:", error);
       toast.error("Failed to save content");

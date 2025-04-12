@@ -29,6 +29,7 @@ const Admin = () => {
     );
   }
 
+  // Render only the Outlet to prevent duplicate navigation
   return <Outlet />;
 };
 

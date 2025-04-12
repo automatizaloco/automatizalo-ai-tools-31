@@ -13,6 +13,8 @@ export const uploadPageSectionImage = async (
   sectionId: string
 ): Promise<string | null> => {
   try {
+    console.log(`Uploading image for ${pageName}/${sectionName}/${sectionId}`);
+    
     // Ensure the content bucket exists before uploading
     await ensureContentBucket();
     
@@ -67,6 +69,8 @@ export const uploadPageSectionImage = async (
     if (error) {
       console.error("Error saving image reference:", error);
       toast.error("Image uploaded but reference not saved. Please try again.");
+    } else {
+      console.log("Image reference saved successfully");
     }
     
     return imageUrl;
@@ -82,6 +86,8 @@ export const uploadPageSectionImage = async (
  */
 export const getPageImages = async (pageName: string): Promise<Record<string, string>> => {
   try {
+    console.log(`Fetching images for page: ${pageName}`);
+    
     const { data: pageImages, error } = await supabase
       .from('page_images')
       .select('*')
@@ -144,5 +150,36 @@ export const getAllContentImages = async (): Promise<string[]> => {
   } catch (error) {
     console.error("Error getting all content images:", error);
     return [];
+  }
+};
+
+/**
+ * Gets a specific image by page, section, and id
+ */
+export const getPageSectionImage = async (
+  pageName: string,
+  sectionName: string,
+  imageId: string
+): Promise<string | null> => {
+  try {
+    console.log(`Getting image for ${pageName}/${sectionName}/${imageId}`);
+    
+    const { data: image, error } = await supabase
+      .from('page_images')
+      .select('image_url')
+      .eq('page', pageName)
+      .eq('section_name', sectionName)
+      .eq('section_id', imageId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error fetching image:", error);
+      return null;
+    }
+    
+    return image?.image_url || null;
+  } catch (error) {
+    console.error("Error getting page section image:", error);
+    return null;
   }
 };

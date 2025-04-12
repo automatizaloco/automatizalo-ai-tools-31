@@ -1,8 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { FileUploader } from '@/components/admin/FileUploader';
-import { uploadPageSectionImage } from '@/services/imageService';
+import { uploadPageSectionImage, getPageSectionImage } from '@/services/imageService';
 import { Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,10 +31,33 @@ const EditableImage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load image from database when component mounts
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const storedImage = await getPageSectionImage(pageName, sectionName, imageId);
+        
+        if (storedImage) {
+          console.log(`Loaded image from database for ${pageName}/${sectionName}/${imageId}:`, storedImage);
+          setCurrentSrc(storedImage);
+        } else {
+          console.log(`No stored image found for ${pageName}/${sectionName}/${imageId}, using default:`, src);
+        }
+      } catch (error) {
+        console.error(`Error loading image for ${pageName}/${sectionName}/${imageId}:`, error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    
+    loadImage();
+  }, [pageName, sectionName, imageId, src]);
 
   // If user is not authenticated, just render the regular image
   if (!user) {
-    return <img src={src} alt={alt} className={className} width={width} height={height} />;
+    return <img src={isLoaded && currentSrc ? currentSrc : src} alt={alt} className={className} width={width} height={height} />;
   }
 
   const handleUpload = async (file: File) => {
@@ -61,11 +84,15 @@ const EditableImage = ({
   return (
     <div className="relative group">
       <img 
-        src={currentSrc} 
+        src={isLoaded ? currentSrc : src} 
         alt={alt} 
         className={`${className} ${isEditing ? 'opacity-50' : ''}`} 
         width={width}
         height={height}
+        onError={(e) => {
+          console.error(`Image failed to load: ${currentSrc}`);
+          e.currentTarget.src = src; // Fallback to default
+        }}
       />
       
       {/* Edit overlay button */}

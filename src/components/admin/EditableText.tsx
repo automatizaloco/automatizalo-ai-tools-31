@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PencilIcon, CheckIcon, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { updatePageContent } from '@/services/pageContentService';
+import { updatePageContent, getPageContent } from '@/services/pageContentService';
 
 interface EditableTextProps {
   id: string;
@@ -29,6 +29,25 @@ const EditableText = ({
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(defaultText);
   const [pendingText, setPendingText] = useState(defaultText);
+  
+  // Load content from database on component mount if page and section name are provided
+  useEffect(() => {
+    if (pageName && sectionName) {
+      const loadContent = async () => {
+        try {
+          const content = await getPageContent(pageName, sectionName);
+          if (content) {
+            setText(content);
+            setPendingText(content);
+          }
+        } catch (error) {
+          console.error('Error loading content for', pageName, sectionName, error);
+        }
+      };
+      
+      loadContent();
+    }
+  }, [pageName, sectionName]);
 
   const handleEdit = () => {
     if (disabled) return;
@@ -45,13 +64,15 @@ const EditableText = ({
     setText(pendingText);
     setIsEditing(false);
     
-    // Try to save to database if page name and section name are provided
+    // Save to database if page name and section name are provided
     if (pageName && sectionName) {
       try {
         await updatePageContent(pageName, sectionName, pendingText);
         console.log(`Content updated for ${pageName}-${sectionName}`);
+        toast.success("Content updated successfully");
       } catch (error) {
         console.error('Error saving content:', error);
+        toast.error("Failed to save content. Please try again.");
       }
     }
     
@@ -60,8 +81,11 @@ const EditableText = ({
       onSave(pendingText);
     }
     
-    // Show a toast success message
-    toast.success('Content updated successfully!');
+    // Dispatch custom event for compatibility with existing code
+    const customEvent = new CustomEvent('editableTextChanged', {
+      detail: { id, newText: pendingText }
+    });
+    window.dispatchEvent(customEvent);
   };
 
   if (isEditing) {

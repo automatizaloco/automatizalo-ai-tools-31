@@ -7,6 +7,7 @@ import About from '@/components/home/About';
 import SolutionsSection from '@/components/home/SolutionsSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import { useAuth } from '@/context/AuthContext';
+import { ensureContentBucket } from '@/services/blog/ensureBucket';
 
 interface SectionState {
   id: number;
@@ -38,6 +39,13 @@ const Index = () => {
       }
     }
 
+    // Ensure content bucket exists for image uploads
+    if (isAdmin) {
+      ensureContentBucket().catch(error => {
+        console.error('Error ensuring content bucket exists:', error);
+      });
+    }
+
     const handleEditableTextChange = (event: CustomEvent) => {
       const { id, newText } = event.detail;
       console.log(`Content edited: ${id} = ${newText}`);
@@ -49,7 +57,7 @@ const Index = () => {
     return () => {
       window.removeEventListener('editableTextChanged', handleEditableTextChange as EventListener);
     };
-  }, []);
+  }, [isAdmin]);
 
   // Inform admin users they can edit content
   useEffect(() => {

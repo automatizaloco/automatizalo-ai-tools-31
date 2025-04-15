@@ -363,6 +363,51 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_configs: {
+        Row: {
+          blog_creation_method: Database["public"]["Enums"]["request_method"]
+          blog_creation_mode: Database["public"]["Enums"]["webhook_mode"]
+          blog_creation_prod_url: string
+          blog_creation_test_url: string
+          blog_social_method: Database["public"]["Enums"]["request_method"]
+          blog_social_mode: Database["public"]["Enums"]["webhook_mode"]
+          blog_social_prod_url: string
+          blog_social_test_url: string
+          created_at: string
+          id: string
+          updated_at: string
+          website_domain: string
+        }
+        Insert: {
+          blog_creation_method?: Database["public"]["Enums"]["request_method"]
+          blog_creation_mode?: Database["public"]["Enums"]["webhook_mode"]
+          blog_creation_prod_url?: string
+          blog_creation_test_url?: string
+          blog_social_method?: Database["public"]["Enums"]["request_method"]
+          blog_social_mode?: Database["public"]["Enums"]["webhook_mode"]
+          blog_social_prod_url?: string
+          blog_social_test_url?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          website_domain?: string
+        }
+        Update: {
+          blog_creation_method?: Database["public"]["Enums"]["request_method"]
+          blog_creation_mode?: Database["public"]["Enums"]["webhook_mode"]
+          blog_creation_prod_url?: string
+          blog_creation_test_url?: string
+          blog_social_method?: Database["public"]["Enums"]["request_method"]
+          blog_social_mode?: Database["public"]["Enums"]["webhook_mode"]
+          blog_social_prod_url?: string
+          blog_social_test_url?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          website_domain?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -386,6 +431,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      request_method: "POST" | "GET"
+      webhook_mode: "test" | "production"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -502,6 +549,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      request_method: ["POST", "GET"],
+      webhook_mode: ["test", "production"],
     },
   },
 } as const

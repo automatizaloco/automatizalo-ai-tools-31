@@ -1,6 +1,5 @@
-
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { supabase } from "@/integrations/supabase/client";
 
 export type WebhookMode = "test" | "production";
 export type RequestMethod = "POST" | "GET";
@@ -29,14 +28,14 @@ interface WebhookState {
     production?: string;
     mode?: WebhookMode;
     method?: RequestMethod;
-  }) => void;
+  }) => Promise<void>;
   updateBlogSocialShareUrl: (params: { 
     test?: string; 
     production?: string;
     mode?: WebhookMode;
     method?: RequestMethod;
-  }) => void;
-  updateWebsiteDomain: (domain: string) => void;
+  }) => Promise<void>;
+  updateWebsiteDomain: (domain: string) => Promise<void>;
   
   // Helper to get active URLs
   getActiveBlogCreationUrl: () => string;
@@ -52,116 +51,182 @@ interface WebhookState {
   // Helper to check if webhooks are configured
   isBlogSocialShareConfigured: () => boolean;
   isBlogCreationConfigured: () => boolean;
+
+  // Initialize store from Supabase
+  initializeFromSupabase: () => Promise<void>;
 }
 
-export const useWebhookStore = create<WebhookState>()(
-  persist(
-    (set, get) => ({
-      blogCreationUrl: {
-        test: "https://n8n.automatizalo.co/webhook/admin/blog/create",
-        production: "https://n8n.automatizalo.co/webhook/admin/blog/create",
-        mode: "production" as WebhookMode,
-        method: "POST" as RequestMethod
-      },
-      blogSocialShareUrl: {
-        test: "https://n8n.automatizalo.co/webhook-test/blog-redes",
-        production: "https://n8n.automatizalo.co/webhook/blog-redes",
-        mode: "test" as WebhookMode,
-        method: "GET" as RequestMethod
-      },
-      websiteDomain: "https://automatizalo.co",
-      
-      updateBlogCreationUrl: (params) => {
-        console.log("Updating blog creation URL with params:", params);
-        set((state) => ({
-          blogCreationUrl: {
-            ...state.blogCreationUrl,
-            ...(params.test !== undefined ? { test: params.test } : {}),
-            ...(params.production !== undefined ? { production: params.production } : {}),
-            ...(params.mode !== undefined ? { mode: params.mode } : {}),
-            ...(params.method !== undefined ? { method: params.method } : {})
-          }
-        }));
-        
-        // Log the current state after update for verification
-        console.log("Blog creation URL after update:", get().blogCreationUrl);
-      },
-        
-      updateBlogSocialShareUrl: (params) => {
-        console.log("Updating blog social share URL with params:", params);
-        set((state) => ({
-          blogSocialShareUrl: {
-            ...state.blogSocialShareUrl,
-            ...(params.test !== undefined ? { test: params.test } : {}),
-            ...(params.production !== undefined ? { production: params.production } : {}),
-            ...(params.mode !== undefined ? { mode: params.mode } : {}),
-            ...(params.method !== undefined ? { method: params.method } : {})
-          }
-        }));
-        
-        // Log the current state after update for verification
-        console.log("Blog social share URL after update:", get().blogSocialShareUrl);
-      },
-      
-      updateWebsiteDomain: (domain) => {
-        console.log("Updating website domain to:", domain);
-        set({ websiteDomain: domain });
-      },
-      
-      getActiveBlogCreationUrl: () => {
-        const { blogCreationUrl } = get();
-        return blogCreationUrl.mode === "production" 
-          ? blogCreationUrl.production 
-          : blogCreationUrl.test;
-      },
-      
-      getActiveBlogSocialShareUrl: () => {
-        const { blogSocialShareUrl } = get();
-        return blogSocialShareUrl.mode === "production" 
-          ? blogSocialShareUrl.production 
-          : blogSocialShareUrl.test;
-      },
-      
-      getActiveBlogCreationMethod: () => {
-        const { blogCreationUrl } = get();
-        return blogCreationUrl.method;
-      },
-      
-      getActiveBlogSocialShareMethod: () => {
-        const { blogSocialShareUrl } = get();
-        return blogSocialShareUrl.method;
-      },
-      
-      getWebsiteDomain: () => {
-        const { websiteDomain } = get();
-        return websiteDomain;
-      },
-      
-      isBlogSocialShareConfigured: () => {
-        const { blogSocialShareUrl } = get();
-        const activeUrl = blogSocialShareUrl.mode === "production" 
-          ? blogSocialShareUrl.production 
-          : blogSocialShareUrl.test;
-        return !!activeUrl && activeUrl.trim() !== '';
-      },
-      
-      isBlogCreationConfigured: () => {
-        const { blogCreationUrl } = get();
-        const activeUrl = blogCreationUrl.mode === "production" 
-          ? blogCreationUrl.production 
-          : blogCreationUrl.test;
-        return !!activeUrl && activeUrl.trim() !== '';
+export const useWebhookStore = create<WebhookState>()((set, get) => ({
+  blogCreationUrl: {
+    test: "",
+    production: "",
+    mode: "production",
+    method: "POST"
+  },
+  blogSocialShareUrl: {
+    test: "",
+    production: "",
+    mode: "test",
+    method: "GET"
+  },
+  websiteDomain: "",
+  
+  initializeFromSupabase: async () => {
+    try {
+      const { data: configs, error } = await supabase
+        .from('webhook_configs')
+        .select('*')
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('Error fetching webhook configs:', error);
+        return;
       }
-    }),
-    {
-      name: "webhook-settings-v4", // Increased version to force new storage
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        blogCreationUrl: state.blogCreationUrl,
-        blogSocialShareUrl: state.blogSocialShareUrl,
-        websiteDomain: state.websiteDomain,
-      }),
-      version: 4, // Increased version number
+
+      if (configs) {
+        set({
+          blogCreationUrl: {
+            test: configs.blog_creation_test_url,
+            production: configs.blog_creation_prod_url,
+            mode: configs.blog_creation_mode,
+            method: configs.blog_creation_method
+          },
+          blogSocialShareUrl: {
+            test: configs.blog_social_test_url,
+            production: configs.blog_social_prod_url,
+            mode: configs.blog_social_mode,
+            method: configs.blog_social_method
+          },
+          websiteDomain: configs.website_domain
+        });
+      }
+    } catch (error) {
+      console.error('Error initializing webhook store:', error);
     }
-  )
-);
+  },
+  
+  updateBlogCreationUrl: async (params) => {
+    console.log("Updating blog creation URL with params:", params);
+    
+    const currentState = get();
+    const updatedBlogCreationUrl = {
+      ...currentState.blogCreationUrl,
+      ...(params.test !== undefined ? { test: params.test } : {}),
+      ...(params.production !== undefined ? { production: params.production } : {}),
+      ...(params.mode !== undefined ? { mode: params.mode } : {}),
+      ...(params.method !== undefined ? { method: params.method } : {})
+    };
+
+    // Update local state
+    set({ blogCreationUrl: updatedBlogCreationUrl });
+
+    // Update Supabase
+    const { error } = await supabase
+      .from('webhook_configs')
+      .update({
+        blog_creation_test_url: updatedBlogCreationUrl.test,
+        blog_creation_prod_url: updatedBlogCreationUrl.production,
+        blog_creation_mode: updatedBlogCreationUrl.mode,
+        blog_creation_method: updatedBlogCreationUrl.method
+      })
+      .eq('id', (await supabase.from('webhook_configs').select('id').single()).data?.id);
+
+    if (error) {
+      console.error('Error updating blog creation URL:', error);
+    }
+  },
+    
+  updateBlogSocialShareUrl: async (params) => {
+    console.log("Updating blog social share URL with params:", params);
+    
+    const currentState = get();
+    const updatedBlogSocialShareUrl = {
+      ...currentState.blogSocialShareUrl,
+      ...(params.test !== undefined ? { test: params.test } : {}),
+      ...(params.production !== undefined ? { production: params.production } : {}),
+      ...(params.mode !== undefined ? { mode: params.mode } : {}),
+      ...(params.method !== undefined ? { method: params.method } : {})
+    };
+
+    // Update local state
+    set({ blogSocialShareUrl: updatedBlogSocialShareUrl });
+
+    // Update Supabase
+    const { error } = await supabase
+      .from('webhook_configs')
+      .update({
+        blog_social_test_url: updatedBlogSocialShareUrl.test,
+        blog_social_prod_url: updatedBlogSocialShareUrl.production,
+        blog_social_mode: updatedBlogSocialShareUrl.mode,
+        blog_social_method: updatedBlogSocialShareUrl.method
+      })
+      .eq('id', (await supabase.from('webhook_configs').select('id').single()).data?.id);
+
+    if (error) {
+      console.error('Error updating blog social share URL:', error);
+    }
+  },
+  
+  updateWebsiteDomain: async (domain) => {
+    console.log("Updating website domain to:", domain);
+    
+    // Update local state
+    set({ websiteDomain: domain });
+
+    // Update Supabase
+    const { error } = await supabase
+      .from('webhook_configs')
+      .update({ website_domain: domain })
+      .eq('id', (await supabase.from('webhook_configs').select('id').single()).data?.id);
+
+    if (error) {
+      console.error('Error updating website domain:', error);
+    }
+  },
+  
+  getActiveBlogCreationUrl: () => {
+    const { blogCreationUrl } = get();
+    return blogCreationUrl.mode === "production" 
+      ? blogCreationUrl.production 
+      : blogCreationUrl.test;
+  },
+  
+  getActiveBlogSocialShareUrl: () => {
+    const { blogSocialShareUrl } = get();
+    return blogSocialShareUrl.mode === "production" 
+      ? blogSocialShareUrl.production 
+      : blogSocialShareUrl.test;
+  },
+  
+  getActiveBlogCreationMethod: () => {
+    const { blogCreationUrl } = get();
+    return blogCreationUrl.method;
+  },
+  
+  getActiveBlogSocialShareMethod: () => {
+    const { blogSocialShareUrl } = get();
+    return blogSocialShareUrl.method;
+  },
+  
+  getWebsiteDomain: () => {
+    const { websiteDomain } = get();
+    return websiteDomain;
+  },
+  
+  isBlogSocialShareConfigured: () => {
+    const { blogSocialShareUrl } = get();
+    const activeUrl = blogSocialShareUrl.mode === "production" 
+      ? blogSocialShareUrl.production 
+      : blogSocialShareUrl.test;
+    return !!activeUrl && activeUrl.trim() !== '';
+  },
+  
+  isBlogCreationConfigured: () => {
+    const { blogCreationUrl } = get();
+    const activeUrl = blogCreationUrl.mode === "production" 
+      ? blogCreationUrl.production 
+      : blogCreationUrl.test;
+    return !!activeUrl && activeUrl.trim() !== '';
+  }
+}));

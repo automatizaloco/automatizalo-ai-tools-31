@@ -36,6 +36,14 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
     <img src={src} alt={alt} className={className} />
   ));
 
+  // Define fixed features instead of using dynamic content that's not persisting properly
+  const features = [
+    { title: "Personalized Solutions", description: "Customized AI solutions tailored to your specific business needs." },
+    { title: "Seamless Integration", description: "Our solutions integrate smoothly with your existing systems and workflows." },
+    { title: "Data-Driven Insights", description: "Transform your raw data into actionable business intelligence." },
+    { title: "Continuous Support", description: "Ongoing assistance and updates to keep your solutions running optimally." }
+  ];
+
   return (
     <section id="about-section" className="py-20 md:py-28 overflow-hidden">
       <div className="container mx-auto px-4 md:px-8">
@@ -95,9 +103,9 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
               )}
             </p>
 
-            {/* Features section */}
+            {/* Features section with hardcoded content instead of dynamically editable content */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[1, 2, 3, 4].map((index) => (
+              {features.map((feature, index) => (
                 <div key={index} className="flex items-start">
                   <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-automatizalo-blue mr-4">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -106,28 +114,10 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900 mb-1">
-                      {isAuthenticated ? (
-                        <EditableText 
-                          id={`about-feature${index}-title`}
-                          defaultText={t(`home.about.feature${index}.title`)}
-                          pageName="home"
-                          sectionName={`about-feature${index}-title`}
-                        />
-                      ) : (
-                        t(`home.about.feature${index}.title`)
-                      )}
+                      {feature.title}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {isAuthenticated ? (
-                        <EditableText 
-                          id={`about-feature${index}-description`}
-                          defaultText={t(`home.about.feature${index}.description`)}
-                          pageName="home"
-                          sectionName={`about-feature${index}-description`}
-                        />
-                      ) : (
-                        t(`home.about.feature${index}.description`)
-                      )}
+                      {feature.description}
                     </p>
                   </div>
                 </div>

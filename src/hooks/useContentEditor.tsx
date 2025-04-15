@@ -61,9 +61,18 @@ export const useContentEditor = () => {
             try {
               const sectionContent = await getPageContent(section.pageName, section.sectionName);
               contentData[pageName][section.sectionName] = sectionContent;
+              
+              // Also store in localStorage as backup
+              const key = `page_content_${section.pageName}_${section.sectionName}`;
+              localStorage.setItem(key, sectionContent);
             } catch (error) {
               console.log(`Error loading content for ${section.pageName}-${section.sectionName}, using default`);
-              contentData[pageName][section.sectionName] = `<h2>Content for ${section.sectionName} on ${section.pageName} page</h2>`;
+              const defaultContent = `<h2>Content for ${section.sectionName} on ${section.pageName} page</h2>`;
+              contentData[pageName][section.sectionName] = defaultContent;
+              
+              // Store default in localStorage too
+              const key = `page_content_${section.pageName}_${section.sectionName}`;
+              localStorage.setItem(key, defaultContent);
             }
           }
           
@@ -76,7 +85,6 @@ export const useContentEditor = () => {
         }
         
         console.log("Loaded content data:", contentData);
-        console.log("Loaded images data:", imagesData);
         
         setContent(contentData);
         setImages(imagesData);
@@ -115,6 +123,11 @@ export const useContentEditor = () => {
     try {
       setSavingContent({ pageName, sectionName });
       console.log(`Saving content for ${pageName}.${sectionName}:`, content[pageName][sectionName].substring(0, 50) + "...");
+      
+      // Ensure content is loaded
+      if (!content[pageName] || !content[pageName][sectionName]) {
+        throw new Error(`Content for ${pageName}.${sectionName} not found`);
+      }
       
       await updatePageContent(pageName, sectionName, content[pageName][sectionName]);
       toast.success("Content updated successfully!");

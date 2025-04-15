@@ -29,7 +29,31 @@ export const getPageContent = async (page: string, section: string): Promise<str
         throw error;
       }
       
-      // If no content exists in database, use default
+      // If no content exists in database, use default/fallback
+      // Check localStorage first
+      const key = `page_content_${page}_${section}`;
+      const storedContent = localStorage.getItem(key);
+      
+      if (storedContent) {
+        console.log(`Retrieved content from localStorage for ${page}/${section}`);
+        
+        // Store the localStorage content in Supabase for future edits
+        const { error: insertError } = await supabase.from('page_content').insert({
+          page,
+          section_name: section,
+          content: storedContent
+        });
+        
+        if (insertError) {
+          console.error('Error inserting localStorage content to Supabase:', insertError);
+        } else {
+          console.log(`Saved localStorage content to Supabase for ${page}/${section}`);
+        }
+        
+        return storedContent;
+      }
+      
+      // If nothing in localStorage, use default content
       const defaultContent = getDefaultContent(page, section);
       
       // Store the default content in Supabase for future edits
@@ -44,6 +68,9 @@ export const getPageContent = async (page: string, section: string): Promise<str
       } else {
         console.log(`Default content inserted for ${page}/${section}`);
       }
+      
+      // Also store in localStorage as a backup
+      localStorage.setItem(key, defaultContent);
       
       return defaultContent;
     }
@@ -63,15 +90,18 @@ export const getPageContent = async (page: string, section: string): Promise<str
     const defaultContent = getDefaultContent(page, section);
     
     // Store the default content in Supabase if not already there
-    const { error: insertError } = await supabase.from('page_content').insert({
+    const { error: insertError } = await supabase.from('page_content').upsert({
       page,
       section_name: section,
       content: defaultContent
-    });
+    }, { onConflict: 'page,section_name' });
     
     if (insertError) {
       console.error('Error inserting default content:', insertError);
     }
+    
+    // Also update localStorage
+    localStorage.setItem(`page_content_${page}_${section}`, defaultContent);
     
     return defaultContent;
   } catch (error) {
@@ -98,15 +128,7 @@ export const updatePageContent = async (page: string, section: string, content: 
   try {
     console.log(`Updating content for ${page}/${section}`);
     
-    // First, check if the content entry exists
-    const { data: existingContent } = await supabase
-      .from('page_content')
-      .select('id')
-      .eq('page', page)
-      .eq('section_name', section)
-      .single();
-    
-    // If the content exists, update it using upsert to ensure it works
+    // Always use upsert to ensure it works whether the entry exists or not
     const { error } = await supabase.from('page_content')
       .upsert({
         page,

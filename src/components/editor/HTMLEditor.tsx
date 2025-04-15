@@ -8,8 +8,9 @@ const HTMLEditor = () => {
   
   useEffect(() => {
     // When value changes from outside, update the textarea
-    if (textareaRef.current) {
+    if (textareaRef.current && textareaRef.current.value !== value) {
       textareaRef.current.value = value;
+      console.log("Updated textarea with new value from context");
     }
   }, [value]);
   
@@ -20,22 +21,6 @@ const HTMLEditor = () => {
     // Log content changes to verify they're being captured
     console.log("HTML content updated:", e.target.value.substring(0, 50) + "...");
   };
-  
-  // Force textarea to update if its value doesn't match the context value
-  useEffect(() => {
-    const syncContentWithValue = () => {
-      if (textareaRef.current && textareaRef.current.value !== value) {
-        console.log("Syncing HTML editor with context value");
-        textareaRef.current.value = value;
-      }
-    };
-    
-    // Run immediately and also set up an interval to check periodically
-    syncContentWithValue();
-    const intervalId = setInterval(syncContentWithValue, 1000);
-    
-    return () => clearInterval(intervalId);
-  }, [value]);
   
   return (
     <textarea

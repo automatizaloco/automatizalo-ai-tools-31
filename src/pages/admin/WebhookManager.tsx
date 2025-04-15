@@ -13,113 +13,133 @@ import { Webhook, Globe, Send, Server } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const WebhookManager = () => {
-  const webhookStore = useWebhookStore();
   const [activeTab, setActiveTab] = useState('blog-creation');
+  
+  // Get webhook store state
+  const webhookStore = useWebhookStore();
+  const { 
+    blogCreationUrl, 
+    blogSocialShareUrl, 
+    websiteDomain,
+    updateBlogCreationUrl,
+    updateBlogSocialShareUrl,
+    updateWebsiteDomain
+  } = webhookStore;
 
   // Initialize local state from the store
-  const [blogCreation, setBlogCreation] = useState({
-    test: webhookStore.blogCreationUrl.test,
-    production: webhookStore.blogCreationUrl.production,
-    mode: webhookStore.blogCreationUrl.mode,
-    method: webhookStore.blogCreationUrl.method
+  const [localBlogCreation, setLocalBlogCreation] = useState({
+    test: blogCreationUrl.test,
+    production: blogCreationUrl.production,
+    mode: blogCreationUrl.mode,
+    method: blogCreationUrl.method
   });
 
-  const [blogSocialShare, setBlogSocialShare] = useState({
-    test: webhookStore.blogSocialShareUrl.test,
-    production: webhookStore.blogSocialShareUrl.production,
-    mode: webhookStore.blogSocialShareUrl.mode,
-    method: webhookStore.blogSocialShareUrl.method
+  const [localBlogSocialShare, setLocalBlogSocialShare] = useState({
+    test: blogSocialShareUrl.test,
+    production: blogSocialShareUrl.production,
+    mode: blogSocialShareUrl.mode,
+    method: blogSocialShareUrl.method
   });
 
-  const [websiteDomain, setWebsiteDomain] = useState(webhookStore.websiteDomain);
+  const [localWebsiteDomain, setLocalWebsiteDomain] = useState(websiteDomain);
 
-  // Effect to sync with store whenever it changes
+  // Sync local state whenever store changes
   useEffect(() => {
-    console.log("Webhook store updated, syncing local state");
-    console.log("Current store state:", {
-      blogCreation: webhookStore.blogCreationUrl,
-      blogSocial: webhookStore.blogSocialShareUrl,
-      domain: webhookStore.websiteDomain
+    console.log("Syncing local state with store:", {
+      blogCreation: blogCreationUrl,
+      blogSocial: blogSocialShareUrl,
+      domain: websiteDomain
     });
     
-    setBlogCreation({
-      test: webhookStore.blogCreationUrl.test,
-      production: webhookStore.blogCreationUrl.production,
-      mode: webhookStore.blogCreationUrl.mode,
-      method: webhookStore.blogCreationUrl.method
+    setLocalBlogCreation({
+      test: blogCreationUrl.test,
+      production: blogCreationUrl.production,
+      mode: blogCreationUrl.mode,
+      method: blogCreationUrl.method
     });
     
-    setBlogSocialShare({
-      test: webhookStore.blogSocialShareUrl.test,
-      production: webhookStore.blogSocialShareUrl.production,
-      mode: webhookStore.blogSocialShareUrl.mode,
-      method: webhookStore.blogSocialShareUrl.method
+    setLocalBlogSocialShare({
+      test: blogSocialShareUrl.test,
+      production: blogSocialShareUrl.production,
+      mode: blogSocialShareUrl.mode,
+      method: blogSocialShareUrl.method
     });
     
-    setWebsiteDomain(webhookStore.websiteDomain);
-  }, [
-    webhookStore.blogCreationUrl,
-    webhookStore.blogSocialShareUrl,
-    webhookStore.websiteDomain
-  ]);
+    setLocalWebsiteDomain(websiteDomain);
+  }, [blogCreationUrl, blogSocialShareUrl, websiteDomain]);
 
   const handleBlogCreationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving blog creation webhook with:", blogCreation);
+    console.log("Saving blog creation webhook with:", localBlogCreation);
     
-    // Save values individually to ensure update
-    webhookStore.updateBlogCreationUrl({
-      test: blogCreation.test,
-      production: blogCreation.production,
-      mode: blogCreation.mode,
-      method: blogCreation.method
+    // Update store with complete object
+    updateBlogCreationUrl({
+      test: localBlogCreation.test,
+      production: localBlogCreation.production,
+      mode: localBlogCreation.mode,
+      method: localBlogCreation.method
     });
     
-    // Verify the update was applied
-    const current = useWebhookStore.getState().blogCreationUrl;
-    console.log("After save - current state:", current);
-    
-    toast.success("Blog creation webhook settings saved");
-    
-    // Force a local storage sync
-    localStorage.setItem('webhook-settings-sync', Date.now().toString());
+    // Verify the update was applied by fetching fresh state
+    setTimeout(() => {
+      const currentState = useWebhookStore.getState().blogCreationUrl;
+      console.log("After save - verified state:", currentState);
+      
+      if (currentState.test === localBlogCreation.test && 
+          currentState.production === localBlogCreation.production &&
+          currentState.mode === localBlogCreation.mode &&
+          currentState.method === localBlogCreation.method) {
+        toast.success("Blog creation webhook settings saved successfully");
+      } else {
+        toast.error("Failed to save settings. Please try again.");
+      }
+    }, 100);
   };
 
   const handleBlogSocialShareSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving blog social share webhook with:", blogSocialShare);
+    console.log("Saving blog social share webhook with:", localBlogSocialShare);
     
-    // Save values individually to ensure update
-    webhookStore.updateBlogSocialShareUrl({
-      test: blogSocialShare.test,
-      production: blogSocialShare.production,
-      mode: blogSocialShare.mode,
-      method: blogSocialShare.method
+    // Update store with complete object
+    updateBlogSocialShareUrl({
+      test: localBlogSocialShare.test,
+      production: localBlogSocialShare.production,
+      mode: localBlogSocialShare.mode,
+      method: localBlogSocialShare.method
     });
     
-    // Verify the update was applied
-    const current = useWebhookStore.getState().blogSocialShareUrl;
-    console.log("After save - current state:", current);
-    
-    toast.success("Blog social share webhook settings saved");
-    
-    // Force a local storage sync
-    localStorage.setItem('webhook-settings-sync', Date.now().toString());
+    // Verify the update was applied by fetching fresh state
+    setTimeout(() => {
+      const currentState = useWebhookStore.getState().blogSocialShareUrl;
+      console.log("After save - verified state:", currentState);
+      
+      if (currentState.test === localBlogSocialShare.test && 
+          currentState.production === localBlogSocialShare.production &&
+          currentState.mode === localBlogSocialShare.mode &&
+          currentState.method === localBlogSocialShare.method) {
+        toast.success("Blog social share webhook settings saved successfully");
+      } else {
+        toast.error("Failed to save settings. Please try again.");
+      }
+    }, 100);
   };
 
   const handleDomainSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving website domain:", websiteDomain);
-    webhookStore.updateWebsiteDomain(websiteDomain);
+    console.log("Saving website domain:", localWebsiteDomain);
+    updateWebsiteDomain(localWebsiteDomain);
     
     // Verify the update was applied
-    const current = useWebhookStore.getState().websiteDomain;
-    console.log("After save - current domain:", current);
-    
-    toast.success("Website domain saved");
-    
-    // Force a local storage sync
-    localStorage.setItem('webhook-settings-sync', Date.now().toString());
+    setTimeout(() => {
+      const currentDomain = useWebhookStore.getState().websiteDomain;
+      console.log("After save - verified domain:", currentDomain);
+      
+      if (currentDomain === localWebsiteDomain) {
+        toast.success("Website domain saved successfully");
+      } else {
+        toast.error("Failed to save domain. Please try again.");
+      }
+    }, 100);
   };
 
   const handleTestWebhook = async (type: 'blog-creation' | 'blog-social') => {
@@ -240,8 +260,8 @@ const WebhookManager = () => {
                     <Label htmlFor="blog-creation-test">Test URL</Label>
                     <Input 
                       id="blog-creation-test"
-                      value={blogCreation.test}
-                      onChange={(e) => setBlogCreation({...blogCreation, test: e.target.value})}
+                      value={localBlogCreation.test}
+                      onChange={(e) => setLocalBlogCreation({...localBlogCreation, test: e.target.value})}
                       placeholder="https://test-webhook.example.com/blog-creation"
                     />
                     <p className="text-xs text-gray-500">Used for testing in development</p>
@@ -251,8 +271,8 @@ const WebhookManager = () => {
                     <Label htmlFor="blog-creation-production">Production URL</Label>
                     <Input 
                       id="blog-creation-production"
-                      value={blogCreation.production}
-                      onChange={(e) => setBlogCreation({...blogCreation, production: e.target.value})}
+                      value={localBlogCreation.production}
+                      onChange={(e) => setLocalBlogCreation({...localBlogCreation, production: e.target.value})}
                       placeholder="https://webhook.example.com/blog-creation"
                     />
                     <p className="text-xs text-gray-500">Used in production environment</p>
@@ -261,8 +281,8 @@ const WebhookManager = () => {
                   <div className="space-y-2">
                     <Label>Request Method</Label>
                     <RadioGroup 
-                      value={blogCreation.method}
-                      onValueChange={(value) => setBlogCreation({...blogCreation, method: value as RequestMethod})}
+                      value={localBlogCreation.method}
+                      onValueChange={(value) => setLocalBlogCreation({...localBlogCreation, method: value as RequestMethod})}
                       className="flex space-x-4"
                     >
                       <div className="flex items-center space-x-2">
@@ -281,9 +301,9 @@ const WebhookManager = () => {
                       <Label htmlFor="blog-creation-mode">Production Mode</Label>
                       <Switch 
                         id="blog-creation-mode" 
-                        checked={blogCreation.mode === 'production'}
+                        checked={localBlogCreation.mode === 'production'}
                         onCheckedChange={(checked) => 
-                          setBlogCreation({...blogCreation, mode: checked ? 'production' : 'test'})
+                          setLocalBlogCreation({...localBlogCreation, mode: checked ? 'production' : 'test'})
                         }
                       />
                     </div>
@@ -324,8 +344,8 @@ const WebhookManager = () => {
                     <Label htmlFor="social-test">Test URL</Label>
                     <Input 
                       id="social-test"
-                      value={blogSocialShare.test}
-                      onChange={(e) => setBlogSocialShare({...blogSocialShare, test: e.target.value})}
+                      value={localBlogSocialShare.test}
+                      onChange={(e) => setLocalBlogSocialShare({...localBlogSocialShare, test: e.target.value})}
                       placeholder="https://test-webhook.example.com/social-share"
                     />
                     <p className="text-xs text-gray-500">Used for testing in development</p>
@@ -335,8 +355,8 @@ const WebhookManager = () => {
                     <Label htmlFor="social-production">Production URL</Label>
                     <Input 
                       id="social-production"
-                      value={blogSocialShare.production}
-                      onChange={(e) => setBlogSocialShare({...blogSocialShare, production: e.target.value})}
+                      value={localBlogSocialShare.production}
+                      onChange={(e) => setLocalBlogSocialShare({...localBlogSocialShare, production: e.target.value})}
                       placeholder="https://webhook.example.com/social-share"
                     />
                     <p className="text-xs text-gray-500">Used in production environment</p>
@@ -345,8 +365,8 @@ const WebhookManager = () => {
                   <div className="space-y-2">
                     <Label>Request Method</Label>
                     <RadioGroup 
-                      value={blogSocialShare.method}
-                      onValueChange={(value) => setBlogSocialShare({...blogSocialShare, method: value as RequestMethod})}
+                      value={localBlogSocialShare.method}
+                      onValueChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, method: value as RequestMethod})}
                       className="flex space-x-4"
                     >
                       <div className="flex items-center space-x-2">
@@ -365,9 +385,9 @@ const WebhookManager = () => {
                       <Label htmlFor="social-mode">Production Mode</Label>
                       <Switch 
                         id="social-mode" 
-                        checked={blogSocialShare.mode === 'production'}
+                        checked={localBlogSocialShare.mode === 'production'}
                         onCheckedChange={(checked) => 
-                          setBlogSocialShare({...blogSocialShare, mode: checked ? 'production' : 'test'})
+                          setLocalBlogSocialShare({...localBlogSocialShare, mode: checked ? 'production' : 'test'})
                         }
                       />
                     </div>
@@ -408,8 +428,8 @@ const WebhookManager = () => {
                     <Label htmlFor="website-domain">Website Domain</Label>
                     <Input 
                       id="website-domain"
-                      value={websiteDomain}
-                      onChange={(e) => setWebsiteDomain(e.target.value)}
+                      value={localWebsiteDomain}
+                      onChange={(e) => setLocalWebsiteDomain(e.target.value)}
                       placeholder="https://www.example.com"
                     />
                     <p className="text-xs text-gray-500">

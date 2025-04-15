@@ -8,7 +8,7 @@ import { useWebhookStore } from '@/stores/webhookStore';
  */
 export const sendPostToN8N = async (blogPostData: NewBlogPost): Promise<string> => {
   try {
-    // Get webhook URL from store or use fallback - using getState to ensure fresh values
+    // Get webhook URL from store - using getState to ensure fresh values
     const webhookStore = useWebhookStore.getState();
     const webhookUrl = webhookStore.getActiveBlogCreationUrl();
     const method = webhookStore.getActiveBlogCreationMethod();
@@ -16,6 +16,10 @@ export const sendPostToN8N = async (blogPostData: NewBlogPost): Promise<string> 
     console.log("Using webhook URL:", webhookUrl);
     console.log("Using method:", method);
     console.log("Sending blog post data:", blogPostData);
+    
+    if (!webhookUrl) {
+      throw new Error("Blog creation webhook URL not configured");
+    }
     
     let response;
     

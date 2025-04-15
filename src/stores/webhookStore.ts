@@ -1,6 +1,6 @@
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 export type WebhookMode = "test" | "production";
 export type RequestMethod = "POST" | "GET";
@@ -73,47 +73,39 @@ export const useWebhookStore = create<WebhookState>()(
       
       updateBlogCreationUrl: (params) => {
         console.log("Updating blog creation URL with params:", params);
-        set((state) => {
-          // Create a new object with the updated values to trigger state change
-          const updatedCreationUrl = {
+        set((state) => ({
+          blogCreationUrl: {
             ...state.blogCreationUrl,
             ...(params.test !== undefined ? { test: params.test } : {}),
             ...(params.production !== undefined ? { production: params.production } : {}),
             ...(params.mode !== undefined ? { mode: params.mode } : {}),
             ...(params.method !== undefined ? { method: params.method } : {})
-          };
-          
-          console.log("New blog creation URL state:", updatedCreationUrl);
-          
-          return {
-            blogCreationUrl: updatedCreationUrl
-          };
-        });
+          }
+        }), false);
+        
+        // Log the current state after update for verification
+        console.log("Blog creation URL after update:", get().blogCreationUrl);
       },
         
       updateBlogSocialShareUrl: (params) => {
         console.log("Updating blog social share URL with params:", params);
-        set((state) => {
-          // Create a new object with the updated values to trigger state change
-          const updatedSocialShareUrl = {
+        set((state) => ({
+          blogSocialShareUrl: {
             ...state.blogSocialShareUrl,
             ...(params.test !== undefined ? { test: params.test } : {}),
             ...(params.production !== undefined ? { production: params.production } : {}),
             ...(params.mode !== undefined ? { mode: params.mode } : {}),
             ...(params.method !== undefined ? { method: params.method } : {})
-          };
-          
-          console.log("New blog social share URL state:", updatedSocialShareUrl);
-          
-          return {
-            blogSocialShareUrl: updatedSocialShareUrl
-          };
-        });
+          }
+        }), false);
+        
+        // Log the current state after update for verification
+        console.log("Blog social share URL after update:", get().blogSocialShareUrl);
       },
       
       updateWebsiteDomain: (domain) => {
         console.log("Updating website domain to:", domain);
-        set({ websiteDomain: domain });
+        set({ websiteDomain: domain }, false);
       },
       
       getActiveBlogCreationUrl: () => {
@@ -162,35 +154,14 @@ export const useWebhookStore = create<WebhookState>()(
       }
     }),
     {
-      name: "webhook-settings-v2", // Changed name to force new storage
-      storage: {
-        getItem: (name) => {
-          try {
-            const value = localStorage.getItem(name);
-            console.log(`Retrieved webhook settings from localStorage: ${name}`, value);
-            return value ? JSON.parse(value) : null;
-          } catch (e) {
-            console.error('Error retrieving persistent state from localStorage', e);
-            return null;
-          }
-        },
-        setItem: (name, value) => {
-          try {
-            console.log(`Storing webhook settings to localStorage: ${name}`, value);
-            localStorage.setItem(name, JSON.stringify(value));
-          } catch (e) {
-            console.error('Error storing persistent state to localStorage', e);
-          }
-        },
-        removeItem: (name) => {
-          try {
-            localStorage.removeItem(name);
-          } catch (e) {
-            console.error('Error removing persistent state from localStorage', e);
-          }
-        },
-      },
-      version: 2, // Increased version number
+      name: "webhook-settings-v3", // Increased version to force new storage
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        blogCreationUrl: state.blogCreationUrl,
+        blogSocialShareUrl: state.blogSocialShareUrl,
+        websiteDomain: state.websiteDomain,
+      }),
+      version: 3, // Increased version number
     }
   )
 );

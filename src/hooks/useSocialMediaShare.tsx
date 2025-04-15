@@ -6,15 +6,13 @@ import { useWebhookStore } from '@/stores/webhookStore';
 
 export const useSocialMediaShare = () => {
   const [isSharing, setIsSharing] = useState(false);
-  // Get a fresh reference to the webhook store
-  const webhookStore = useWebhookStore();
 
   const shareToSocialMedia = async (post: BlogPost): Promise<boolean> => {
     try {
       setIsSharing(true);
       console.log("Starting social media share process");
       
-      // Get values directly from the store to ensure we have the latest values
+      // Get fresh values directly from the store to ensure we have the latest values
       const webhookUrl = useWebhookStore.getState().getActiveBlogSocialShareUrl();
       const method = useWebhookStore.getState().getActiveBlogSocialShareMethod();
       const websiteDomain = useWebhookStore.getState().getWebsiteDomain();
@@ -22,6 +20,11 @@ export const useSocialMediaShare = () => {
       console.log("Using webhook URL:", webhookUrl);
       console.log("Using method:", method);
       console.log("Using website domain:", websiteDomain);
+
+      if (!webhookUrl) {
+        toast.error("Social media webhook URL not configured");
+        return false;
+      }
 
       const postData = {
         title: post.title,

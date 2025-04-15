@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
 const WebhookManager = () => {
   const [activeTab, setActiveTab] = useState('blog-creation');
   
-  const webhookStore = useWebhookStore();
+  // Get webhook store values and updaters
   const { 
     blogCreationUrl, 
     blogSocialShareUrl, 
@@ -21,8 +22,9 @@ const WebhookManager = () => {
     updateBlogCreationUrl,
     updateBlogSocialShareUrl,
     updateWebsiteDomain
-  } = webhookStore;
+  } = useWebhookStore();
 
+  // Initialize local state with values from store
   const [localBlogCreation, setLocalBlogCreation] = useState({
     test: blogCreationUrl.test,
     production: blogCreationUrl.production,
@@ -39,6 +41,7 @@ const WebhookManager = () => {
 
   const [localWebsiteDomain, setLocalWebsiteDomain] = useState(websiteDomain);
 
+  // Sync local state when store values change
   useEffect(() => {
     console.log("Syncing local state with store");
     setLocalBlogCreation({
@@ -78,6 +81,9 @@ const WebhookManager = () => {
 
   const handleTestWebhook = async (type: 'blog-creation' | 'blog-social') => {
     try {
+      // Get fresh values directly from the store for testing
+      const webhookStore = useWebhookStore.getState();
+      
       const webhookUrl = type === 'blog-creation' 
         ? webhookStore.getActiveBlogCreationUrl() 
         : webhookStore.getActiveBlogSocialShareUrl();

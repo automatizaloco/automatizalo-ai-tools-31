@@ -81,7 +81,7 @@ export const useWebhookStore = create<WebhookState>()(
             ...(params.mode !== undefined ? { mode: params.mode } : {}),
             ...(params.method !== undefined ? { method: params.method } : {})
           }
-        }), false);
+        }));
         
         // Log the current state after update for verification
         console.log("Blog creation URL after update:", get().blogCreationUrl);
@@ -97,7 +97,7 @@ export const useWebhookStore = create<WebhookState>()(
             ...(params.mode !== undefined ? { mode: params.mode } : {}),
             ...(params.method !== undefined ? { method: params.method } : {})
           }
-        }), false);
+        }));
         
         // Log the current state after update for verification
         console.log("Blog social share URL after update:", get().blogSocialShareUrl);
@@ -105,7 +105,7 @@ export const useWebhookStore = create<WebhookState>()(
       
       updateWebsiteDomain: (domain) => {
         console.log("Updating website domain to:", domain);
-        set({ websiteDomain: domain }, false);
+        set({ websiteDomain: domain });
       },
       
       getActiveBlogCreationUrl: () => {
@@ -154,14 +154,14 @@ export const useWebhookStore = create<WebhookState>()(
       }
     }),
     {
-      name: "webhook-settings-v3", // Increased version to force new storage
+      name: "webhook-settings-v4", // Increased version to force new storage
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         blogCreationUrl: state.blogCreationUrl,
         blogSocialShareUrl: state.blogSocialShareUrl,
         websiteDomain: state.websiteDomain,
       }),
-      version: 3, // Increased version number
+      version: 4, // Increased version number
     }
   )
 );

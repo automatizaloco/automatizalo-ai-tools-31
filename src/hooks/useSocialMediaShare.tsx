@@ -13,9 +13,10 @@ export const useSocialMediaShare = () => {
       console.log("Starting social media share process");
       
       // Get fresh values directly from the store to ensure we have the latest values
-      const webhookUrl = useWebhookStore.getState().getActiveBlogSocialShareUrl();
-      const method = useWebhookStore.getState().getActiveBlogSocialShareMethod();
-      const websiteDomain = useWebhookStore.getState().getWebsiteDomain();
+      const webhookStore = useWebhookStore.getState();
+      const webhookUrl = webhookStore.getActiveBlogSocialShareUrl();
+      const method = webhookStore.getActiveBlogSocialShareMethod();
+      const websiteDomain = webhookStore.getWebsiteDomain();
       
       console.log("Using webhook URL:", webhookUrl);
       console.log("Using method:", method);

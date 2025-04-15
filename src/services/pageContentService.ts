@@ -79,6 +79,16 @@ export const getPageContent = async (page: string, section: string): Promise<str
 export const updatePageContent = async (page: string, section: string, content: string): Promise<void> => {
   try {
     console.log(`Updating content for ${page}/${section}`);
+    
+    // First, check if the content entry exists
+    const { data: existingContent } = await supabase
+      .from('page_content')
+      .select('id')
+      .eq('page', page)
+      .eq('section_name', section)
+      .single();
+    
+    // If the content exists, update it using upsert to ensure it works
     const { error } = await supabase.from('page_content')
       .upsert({
         page,
@@ -105,6 +115,9 @@ export const updatePageContent = async (page: string, section: string, content: 
     // Fallback to localStorage if Supabase fails
     const key = `page_content_${page}_${section}`;
     localStorage.setItem(key, content);
+    
+    // Re-throw the error so the UI can handle it
+    throw error;
   }
 };
 

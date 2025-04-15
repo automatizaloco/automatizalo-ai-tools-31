@@ -104,7 +104,6 @@ export const useContentEditor = () => {
     try {
       await updatePageContent(pageName, sectionName, content[pageName][sectionName]);
       toast.success("Content updated successfully!");
-      // Return void instead of boolean
     } catch (error) {
       console.error("Error saving content:", error);
       toast.error("Failed to save content");

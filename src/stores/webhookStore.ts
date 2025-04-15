@@ -139,6 +139,33 @@ export const useWebhookStore = create<WebhookState>()(
     }),
     {
       name: "webhook-settings",
+      // Add storage configuration to ensure settings persist across sessions
+      // Setting this explicitly to make sure it's not using sessionStorage
+      storage: {
+        getItem: (name) => {
+          try {
+            const value = localStorage.getItem(name);
+            return value ? JSON.parse(value) : null;
+          } catch (e) {
+            console.error('Error retrieving persistent state from localStorage', e);
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          try {
+            localStorage.setItem(name, JSON.stringify(value));
+          } catch (e) {
+            console.error('Error storing persistent state to localStorage', e);
+          }
+        },
+        removeItem: (name) => {
+          try {
+            localStorage.removeItem(name);
+          } catch (e) {
+            console.error('Error removing persistent state from localStorage', e);
+          }
+        },
+      },
     }
   )
 );

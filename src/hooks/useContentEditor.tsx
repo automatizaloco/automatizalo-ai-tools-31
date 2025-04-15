@@ -18,6 +18,7 @@ export const useContentEditor = () => {
   const [images, setImages] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+  const [savingContent, setSavingContent] = useState<{pageName: string, sectionName: string} | null>(null);
 
   const pageSections: Record<string, PageSection[]> = {
     home: [
@@ -91,6 +92,8 @@ export const useContentEditor = () => {
   }, []);
 
   const handleContentUpdate = (pageName: string, sectionName: string, newContent: string) => {
+    console.log(`Updating content for ${pageName}.${sectionName}`, newContent.substring(0, 50) + "...");
+    
     setContent(prev => ({
       ...prev,
       [pageName]: {
@@ -98,16 +101,35 @@ export const useContentEditor = () => {
         [sectionName]: newContent
       }
     }));
+    
+    // Also update in localStorage as a fallback
+    const key = `page_content_${pageName}_${sectionName}`;
+    try {
+      localStorage.setItem(key, newContent);
+    } catch (e) {
+      console.error("Failed to update localStorage:", e);
+    }
   };
 
   const handleSaveContent = async (pageName: string, sectionName: string): Promise<void> => {
     try {
+      setSavingContent({ pageName, sectionName });
+      console.log(`Saving content for ${pageName}.${sectionName}:`, content[pageName][sectionName].substring(0, 50) + "...");
+      
       await updatePageContent(pageName, sectionName, content[pageName][sectionName]);
       toast.success("Content updated successfully!");
+      
+      // Double-check the content was actually saved in localStorage
+      const key = `page_content_${pageName}_${sectionName}`;
+      localStorage.setItem(key, content[pageName][sectionName]);
+      
+      console.log(`Content saved successfully for ${pageName}.${sectionName}`);
     } catch (error) {
       console.error("Error saving content:", error);
       toast.error("Failed to save content");
       throw error;
+    } finally {
+      setSavingContent(null);
     }
   };
 
@@ -122,5 +144,6 @@ export const useContentEditor = () => {
     pageSections,
     handleContentUpdate,
     handleSaveContent,
+    savingContent,
   };
 };

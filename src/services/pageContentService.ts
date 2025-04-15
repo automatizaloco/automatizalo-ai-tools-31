@@ -12,6 +12,8 @@ export interface PageSection {
 export const getPageContent = async (page: string, section: string): Promise<string> => {
   try {
     console.log(`Fetching content for ${page}/${section}`);
+    
+    // First try to get from Supabase
     const { data, error } = await supabase
       .from('page_content')
       .select('content')
@@ -31,11 +33,17 @@ export const getPageContent = async (page: string, section: string): Promise<str
       const defaultContent = getDefaultContent(page, section);
       
       // Store the default content in Supabase for future edits
-      await supabase.from('page_content').insert({
+      const { error: insertError } = await supabase.from('page_content').insert({
         page,
         section_name: section,
         content: defaultContent
       });
+      
+      if (insertError) {
+        console.error('Error inserting default content:', insertError);
+      } else {
+        console.log(`Default content inserted for ${page}/${section}`);
+      }
       
       return defaultContent;
     }
@@ -43,6 +51,11 @@ export const getPageContent = async (page: string, section: string): Promise<str
     // If content exists in the database, return it
     if (data?.content) {
       console.log(`Found content in database for ${page}/${section}`);
+      
+      // Also update localStorage as a fallback
+      const key = `page_content_${page}_${section}`;
+      localStorage.setItem(key, data.content);
+      
       return data.content;
     }
     
@@ -50,11 +63,15 @@ export const getPageContent = async (page: string, section: string): Promise<str
     const defaultContent = getDefaultContent(page, section);
     
     // Store the default content in Supabase if not already there
-    await supabase.from('page_content').insert({
+    const { error: insertError } = await supabase.from('page_content').insert({
       page,
       section_name: section,
       content: defaultContent
     });
+    
+    if (insertError) {
+      console.error('Error inserting default content:', insertError);
+    }
     
     return defaultContent;
   } catch (error) {
@@ -65,6 +82,7 @@ export const getPageContent = async (page: string, section: string): Promise<str
     const storedContent = localStorage.getItem(key);
     
     if (storedContent) {
+      console.log(`Retrieved content from localStorage for ${page}/${section}`);
       return storedContent;
     }
     
@@ -100,7 +118,7 @@ export const updatePageContent = async (page: string, section: string, content: 
       });
     
     if (error) {
-      console.error('Error updating page content:', error);
+      console.error('Error updating page content in Supabase:', error);
       throw error;
     }
     
@@ -108,13 +126,14 @@ export const updatePageContent = async (page: string, section: string, content: 
     const key = `page_content_${page}_${section}`;
     localStorage.setItem(key, content);
     
-    console.log(`Content updated for ${page}/${section}`);
+    console.log(`Content updated successfully for ${page}/${section}`);
   } catch (error) {
     console.error('Error updating page content in Supabase:', error);
     
     // Fallback to localStorage if Supabase fails
     const key = `page_content_${page}_${section}`;
     localStorage.setItem(key, content);
+    console.log(`Content saved to localStorage for ${page}/${section} (Supabase failed)`);
     
     // Re-throw the error so the UI can handle it
     throw error;

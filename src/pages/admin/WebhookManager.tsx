@@ -16,6 +16,7 @@ const WebhookManager = () => {
   const webhookStore = useWebhookStore();
   const [activeTab, setActiveTab] = useState('blog-creation');
 
+  // Initialize local state from the store
   const [blogCreation, setBlogCreation] = useState({
     test: webhookStore.blogCreationUrl.test,
     production: webhookStore.blogCreationUrl.production,
@@ -35,6 +36,12 @@ const WebhookManager = () => {
   // Effect to sync with store whenever it changes
   useEffect(() => {
     console.log("Webhook store updated, syncing local state");
+    console.log("Current store state:", {
+      blogCreation: webhookStore.blogCreationUrl,
+      blogSocial: webhookStore.blogSocialShareUrl,
+      domain: webhookStore.websiteDomain
+    });
+    
     setBlogCreation({
       test: webhookStore.blogCreationUrl.test,
       production: webhookStore.blogCreationUrl.production,
@@ -51,46 +58,68 @@ const WebhookManager = () => {
     
     setWebsiteDomain(webhookStore.websiteDomain);
   }, [
-    webhookStore.blogCreationUrl.test,
-    webhookStore.blogCreationUrl.production,
-    webhookStore.blogCreationUrl.mode,
-    webhookStore.blogCreationUrl.method,
-    webhookStore.blogSocialShareUrl.test,
-    webhookStore.blogSocialShareUrl.production,
-    webhookStore.blogSocialShareUrl.mode,
-    webhookStore.blogSocialShareUrl.method,
+    webhookStore.blogCreationUrl,
+    webhookStore.blogSocialShareUrl,
     webhookStore.websiteDomain
   ]);
 
   const handleBlogCreationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Saving blog creation webhook with:", blogCreation);
+    
+    // Save values individually to ensure update
     webhookStore.updateBlogCreationUrl({
       test: blogCreation.test,
       production: blogCreation.production,
       mode: blogCreation.mode,
       method: blogCreation.method
     });
+    
+    // Verify the update was applied
+    const current = useWebhookStore.getState().blogCreationUrl;
+    console.log("After save - current state:", current);
+    
     toast.success("Blog creation webhook settings saved");
+    
+    // Force a local storage sync
+    localStorage.setItem('webhook-settings-sync', Date.now().toString());
   };
 
   const handleBlogSocialShareSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Saving blog social share webhook with:", blogSocialShare);
+    
+    // Save values individually to ensure update
     webhookStore.updateBlogSocialShareUrl({
       test: blogSocialShare.test,
       production: blogSocialShare.production,
       mode: blogSocialShare.mode,
       method: blogSocialShare.method
     });
+    
+    // Verify the update was applied
+    const current = useWebhookStore.getState().blogSocialShareUrl;
+    console.log("After save - current state:", current);
+    
     toast.success("Blog social share webhook settings saved");
+    
+    // Force a local storage sync
+    localStorage.setItem('webhook-settings-sync', Date.now().toString());
   };
 
   const handleDomainSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Saving website domain:", websiteDomain);
     webhookStore.updateWebsiteDomain(websiteDomain);
+    
+    // Verify the update was applied
+    const current = useWebhookStore.getState().websiteDomain;
+    console.log("After save - current domain:", current);
+    
     toast.success("Website domain saved");
+    
+    // Force a local storage sync
+    localStorage.setItem('webhook-settings-sync', Date.now().toString());
   };
 
   const handleTestWebhook = async (type: 'blog-creation' | 'blog-social') => {
@@ -102,6 +131,8 @@ const WebhookManager = () => {
       const method = type === 'blog-creation' 
         ? webhookStore.getActiveBlogCreationMethod()
         : webhookStore.getActiveBlogSocialShareMethod();
+      
+      console.log(`Testing ${type} webhook with URL: ${webhookUrl} and method: ${method}`);
 
       const testData = type === 'blog-creation' 
         ? {
@@ -124,6 +155,7 @@ const WebhookManager = () => {
         });
         
         const urlWithParams = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}${params.toString()}`;
+        console.log("Making GET request to:", urlWithParams);
         
         const response = await fetch(urlWithParams, {
           method: 'GET',
@@ -132,12 +164,17 @@ const WebhookManager = () => {
           }
         });
         
+        console.log("Response status:", response.status);
+        
         if (response.ok) {
           toast.success(`${type} webhook test succeeded!`);
         } else {
           throw new Error(`HTTP error: ${response.status}`);
         }
       } else {
+        console.log("Making POST request to:", webhookUrl);
+        console.log("With test data:", testData);
+        
         const response = await fetch(webhookUrl, {
           method,
           headers: {
@@ -145,6 +182,8 @@ const WebhookManager = () => {
           },
           body: JSON.stringify(testData),
         });
+        
+        console.log("Response status:", response.status);
         
         if (response.ok) {
           toast.success(`${type} webhook test succeeded!`);

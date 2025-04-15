@@ -8,7 +8,7 @@ import { useWebhookStore } from '@/stores/webhookStore';
  */
 export const sendPostToN8N = async (blogPostData: NewBlogPost): Promise<string> => {
   try {
-    // Get webhook URL from store or use fallback
+    // Get webhook URL from store or use fallback - using getState to ensure fresh values
     const webhookStore = useWebhookStore.getState();
     const webhookUrl = webhookStore.getActiveBlogCreationUrl();
     const method = webhookStore.getActiveBlogCreationMethod();

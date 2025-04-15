@@ -73,29 +73,47 @@ export const useWebhookStore = create<WebhookState>()(
       
       updateBlogCreationUrl: (params) => {
         console.log("Updating blog creation URL with params:", params);
-        set((state) => ({
-          blogCreationUrl: {
+        set((state) => {
+          // Create a new object with the updated values to trigger state change
+          const updatedCreationUrl = {
             ...state.blogCreationUrl,
-            ...params
-          }
-        }));
+            ...(params.test !== undefined ? { test: params.test } : {}),
+            ...(params.production !== undefined ? { production: params.production } : {}),
+            ...(params.mode !== undefined ? { mode: params.mode } : {}),
+            ...(params.method !== undefined ? { method: params.method } : {})
+          };
+          
+          console.log("New blog creation URL state:", updatedCreationUrl);
+          
+          return {
+            blogCreationUrl: updatedCreationUrl
+          };
+        });
       },
         
       updateBlogSocialShareUrl: (params) => {
         console.log("Updating blog social share URL with params:", params);
-        set((state) => ({
-          blogSocialShareUrl: {
+        set((state) => {
+          // Create a new object with the updated values to trigger state change
+          const updatedSocialShareUrl = {
             ...state.blogSocialShareUrl,
-            ...params
-          }
-        }));
+            ...(params.test !== undefined ? { test: params.test } : {}),
+            ...(params.production !== undefined ? { production: params.production } : {}),
+            ...(params.mode !== undefined ? { mode: params.mode } : {}),
+            ...(params.method !== undefined ? { method: params.method } : {})
+          };
+          
+          console.log("New blog social share URL state:", updatedSocialShareUrl);
+          
+          return {
+            blogSocialShareUrl: updatedSocialShareUrl
+          };
+        });
       },
       
       updateWebsiteDomain: (domain) => {
         console.log("Updating website domain to:", domain);
-        set(() => ({
-          websiteDomain: domain
-        }));
+        set({ websiteDomain: domain });
       },
       
       getActiveBlogCreationUrl: () => {
@@ -144,11 +162,12 @@ export const useWebhookStore = create<WebhookState>()(
       }
     }),
     {
-      name: "webhook-settings",
+      name: "webhook-settings-v2", // Changed name to force new storage
       storage: {
         getItem: (name) => {
           try {
             const value = localStorage.getItem(name);
+            console.log(`Retrieved webhook settings from localStorage: ${name}`, value);
             return value ? JSON.parse(value) : null;
           } catch (e) {
             console.error('Error retrieving persistent state from localStorage', e);
@@ -157,6 +176,7 @@ export const useWebhookStore = create<WebhookState>()(
         },
         setItem: (name, value) => {
           try {
+            console.log(`Storing webhook settings to localStorage: ${name}`, value);
             localStorage.setItem(name, JSON.stringify(value));
           } catch (e) {
             console.error('Error storing persistent state to localStorage', e);
@@ -170,7 +190,7 @@ export const useWebhookStore = create<WebhookState>()(
           }
         },
       },
-      version: 1, // Add a version number to ensure we're using the latest format
+      version: 2, // Increased version number
     }
   )
 );

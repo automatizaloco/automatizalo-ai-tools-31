@@ -11,9 +11,15 @@ export const useSocialMediaShare = () => {
   const shareToSocialMedia = async (post: BlogPost): Promise<boolean> => {
     try {
       setIsSharing(true);
+      console.log("Starting social media share process");
+      
       const webhookUrl = webhookStore.getActiveBlogSocialShareUrl();
       const method = webhookStore.getActiveBlogSocialShareMethod();
       const websiteDomain = webhookStore.getWebsiteDomain();
+      
+      console.log("Using webhook URL:", webhookUrl);
+      console.log("Using method:", method);
+      console.log("Using website domain:", websiteDomain);
 
       const postData = {
         title: post.title,
@@ -37,6 +43,7 @@ export const useSocialMediaShare = () => {
         });
         
         const urlWithParams = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}${params.toString()}`;
+        console.log("Making GET request to:", urlWithParams);
         
         const response = await fetch(urlWithParams, {
           method: 'GET',
@@ -45,6 +52,8 @@ export const useSocialMediaShare = () => {
           }
         });
         
+        console.log("Response status:", response.status);
+        
         if (response.ok) {
           toast.success("Post shared to social media successfully");
           return true;
@@ -52,6 +61,9 @@ export const useSocialMediaShare = () => {
           throw new Error(`HTTP error: ${response.status}`);
         }
       } else {
+        console.log("Making POST request to:", webhookUrl);
+        console.log("With payload:", postData);
+        
         const response = await fetch(webhookUrl, {
           method,
           headers: {
@@ -59,6 +71,8 @@ export const useSocialMediaShare = () => {
           },
           body: JSON.stringify(postData),
         });
+        
+        console.log("Response status:", response.status);
         
         if (response.ok) {
           toast.success("Post shared to social media successfully");

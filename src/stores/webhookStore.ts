@@ -71,26 +71,32 @@ export const useWebhookStore = create<WebhookState>()(
       },
       websiteDomain: "https://automatizalo.co",
       
-      updateBlogCreationUrl: (params) => 
+      updateBlogCreationUrl: (params) => {
+        console.log("Updating blog creation URL with params:", params);
         set((state) => ({
           blogCreationUrl: {
             ...state.blogCreationUrl,
             ...params
           }
-        })),
+        }));
+      },
         
-      updateBlogSocialShareUrl: (params) => 
+      updateBlogSocialShareUrl: (params) => {
+        console.log("Updating blog social share URL with params:", params);
         set((state) => ({
           blogSocialShareUrl: {
             ...state.blogSocialShareUrl,
             ...params
           }
-        })),
+        }));
+      },
       
-      updateWebsiteDomain: (domain) => 
+      updateWebsiteDomain: (domain) => {
+        console.log("Updating website domain to:", domain);
         set(() => ({
           websiteDomain: domain
-        })),
+        }));
+      },
       
       getActiveBlogCreationUrl: () => {
         const { blogCreationUrl } = get();
@@ -139,8 +145,6 @@ export const useWebhookStore = create<WebhookState>()(
     }),
     {
       name: "webhook-settings",
-      // Add storage configuration to ensure settings persist across sessions
-      // Setting this explicitly to make sure it's not using sessionStorage
       storage: {
         getItem: (name) => {
           try {
@@ -166,6 +170,7 @@ export const useWebhookStore = create<WebhookState>()(
           }
         },
       },
+      version: 1, // Add a version number to ensure we're using the latest format
     }
   )
 );

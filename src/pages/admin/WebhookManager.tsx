@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,8 +32,9 @@ const WebhookManager = () => {
 
   const [websiteDomain, setWebsiteDomain] = useState(webhookStore.websiteDomain);
 
+  // Effect to sync with store whenever it changes
   useEffect(() => {
-    // Sync with store
+    console.log("Webhook store updated, syncing local state");
     setBlogCreation({
       test: webhookStore.blogCreationUrl.test,
       production: webhookStore.blogCreationUrl.production,
@@ -48,10 +50,21 @@ const WebhookManager = () => {
     });
     
     setWebsiteDomain(webhookStore.websiteDomain);
-  }, [webhookStore]);
+  }, [
+    webhookStore.blogCreationUrl.test,
+    webhookStore.blogCreationUrl.production,
+    webhookStore.blogCreationUrl.mode,
+    webhookStore.blogCreationUrl.method,
+    webhookStore.blogSocialShareUrl.test,
+    webhookStore.blogSocialShareUrl.production,
+    webhookStore.blogSocialShareUrl.mode,
+    webhookStore.blogSocialShareUrl.method,
+    webhookStore.websiteDomain
+  ]);
 
   const handleBlogCreationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Saving blog creation webhook with:", blogCreation);
     webhookStore.updateBlogCreationUrl({
       test: blogCreation.test,
       production: blogCreation.production,
@@ -63,6 +76,7 @@ const WebhookManager = () => {
 
   const handleBlogSocialShareSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Saving blog social share webhook with:", blogSocialShare);
     webhookStore.updateBlogSocialShareUrl({
       test: blogSocialShare.test,
       production: blogSocialShare.production,
@@ -74,6 +88,7 @@ const WebhookManager = () => {
 
   const handleDomainSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Saving website domain:", websiteDomain);
     webhookStore.updateWebsiteDomain(websiteDomain);
     toast.success("Website domain saved");
   };

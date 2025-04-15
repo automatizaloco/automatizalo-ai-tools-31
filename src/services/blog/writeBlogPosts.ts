@@ -9,23 +9,54 @@ import { useWebhookStore } from '@/stores/webhookStore';
 export const sendPostToN8N = async (blogPostData: NewBlogPost): Promise<string> => {
   try {
     // Get webhook URL from store or use fallback
-    const webhookUrl = useWebhookStore.getState().getActiveBlogCreationUrl() || 
-      'https://automatizalo-n8n.automatizalo.co/webhook/blog-creation';
-
-    console.log("Using webhook URL:", webhookUrl);
+    const webhookStore = useWebhookStore.getState();
+    const webhookUrl = webhookStore.getActiveBlogCreationUrl();
+    const method = webhookStore.getActiveBlogCreationMethod();
     
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(blogPostData)
-    });
+    console.log("Using webhook URL:", webhookUrl);
+    console.log("Using method:", method);
+    console.log("Sending blog post data:", blogPostData);
+    
+    let response;
+    
+    if (method === 'GET') {
+      const params = new URLSearchParams();
+      Object.entries(blogPostData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            params.append(key, value.join(','));
+          } else {
+            params.append(key, String(value));
+          }
+        }
+      });
+      
+      const urlWithParams = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}${params.toString()}`;
+      console.log("Making GET request to:", urlWithParams);
+      
+      response = await fetch(urlWithParams, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    } else {
+      console.log("Making POST request to:", webhookUrl);
+      
+      response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(blogPostData)
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`N8N webhook failed with status: ${response.status}`);
     }
-
+    
+    console.log("Webhook response received");
     return await response.text();
   } catch (error) {
     console.error("Error sending post to N8N:", error);

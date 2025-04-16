@@ -36,6 +36,26 @@ export const fetchTestimonials = async () => {
 };
 
 /**
+ * Fetch testimonial translations
+ */
+export const fetchTestimonialTranslations = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('testimonials_translations')
+      .select('*');
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching testimonial translations:', error);
+    throw error;
+  }
+};
+
+/**
  * Create a new testimonial with auto-translation
  */
 export const createTestimonial = async (testimonial: { name: string; company: string | null; text: string; }) => {
@@ -102,6 +122,18 @@ export const updateTestimonial = async (id: string, updates: Partial<{ name: str
  */
 export const deleteTestimonial = async (id: string) => {
   try {
+    // First delete translations
+    const { error: translationError } = await supabase
+      .from('testimonials_translations')
+      .delete()
+      .eq('testimonial_id', id);
+      
+    if (translationError) {
+      console.error('Error deleting testimonial translations:', translationError);
+      // Continue with deleting the main testimonial even if translations deletion fails
+    }
+    
+    // Then delete the main testimonial
     const { error } = await supabase
       .from('testimonials')
       .delete()

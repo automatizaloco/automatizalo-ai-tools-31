@@ -9,20 +9,31 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { Trash2, Loader2, AlertTriangle, Languages, Globe } from "lucide-react";
 import { 
   fetchTestimonials, 
   createTestimonial, 
   updateTestimonial, 
-  deleteTestimonial 
+  deleteTestimonial,
+  fetchTestimonialTranslations
 } from "@/services/supabaseService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/layout/AdminLayout";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Testimonial {
   id: string;
   name: string;
   company: string | null;
+  text: string;
+  language?: string;
+}
+
+interface TranslatedTestimonial {
+  id: string;
+  testimonial_id: string;
+  language: string;
   text: string;
 }
 
@@ -45,12 +56,20 @@ const TestimonialManager = () => {
     // Only attempt to fetch if the user is authenticated
     enabled: isAuthenticated,
   });
+  
+  // Fetch translations
+  const { data: translations = [], isLoading: translationsLoading } = useQuery({
+    queryKey: ['testimonial-translations'],
+    queryFn: fetchTestimonialTranslations,
+    enabled: isAuthenticated && testimonials.length > 0,
+  });
 
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (testimonial: Omit<Testimonial, 'id'>) => createTestimonial(testimonial),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      queryClient.invalidateQueries({ queryKey: ['testimonial-translations'] });
       toast.success("Testimonial added successfully!");
       setNewTestimonial({
         name: "",
@@ -70,6 +89,7 @@ const TestimonialManager = () => {
       updateTestimonial(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      queryClient.invalidateQueries({ queryKey: ['testimonial-translations'] });
       toast.success("Testimonial updated successfully!");
     },
     onError: (error: any) => {
@@ -83,6 +103,7 @@ const TestimonialManager = () => {
     mutationFn: (id: string) => deleteTestimonial(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      queryClient.invalidateQueries({ queryKey: ['testimonial-translations'] });
       toast.success("Testimonial deleted successfully!");
     },
     onError: (error: any) => {
@@ -127,6 +148,11 @@ const TestimonialManager = () => {
     }
     
     deleteMutation.mutate(id);
+  };
+
+  // Get translations for a specific testimonial
+  const getTranslationsForTestimonial = (testimonialId: string) => {
+    return translations.filter(t => t.testimonial_id === testimonialId);
   };
 
   useEffect(() => {
@@ -256,14 +282,65 @@ const TestimonialManager = () => {
                               />
                             </div>
                             
-                            <div>
-                              <Label htmlFor={`text-${testimonial.id}`}>Testimonial Text</Label>
+                            <div className="mb-4">
+                              <div className="flex items-center justify-between mb-1">
+                                <Label htmlFor={`text-${testimonial.id}`}>Testimonial Text</Label>
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                  <Globe className="h-3 w-3" />
+                                  <span>EN</span>
+                                </Badge>
+                              </div>
                               <Textarea
                                 id={`text-${testimonial.id}`}
                                 value={testimonial.text}
                                 onChange={(e) => handleTestimonialChange(testimonial.id, 'text', e.target.value)}
                                 rows={3}
                               />
+                            </div>
+                            
+                            {/* Translations section */}
+                            <div className="mt-4">
+                              <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
+                                <Languages className="h-4 w-4" />
+                                Translations
+                              </h4>
+                              
+                              {translationsLoading ? (
+                                <p className="text-sm text-gray-500">Loading translations...</p>
+                              ) : (
+                                <Tabs defaultValue="fr">
+                                  <TabsList className="mb-2">
+                                    <TabsTrigger value="fr">French</TabsTrigger>
+                                    <TabsTrigger value="es">Spanish</TabsTrigger>
+                                  </TabsList>
+                                  
+                                  <TabsContent value="fr">
+                                    {getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'fr') ? (
+                                      <Textarea
+                                        value={getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'fr')?.text || ''}
+                                        readOnly
+                                        rows={3}
+                                        className="bg-gray-50"
+                                      />
+                                    ) : (
+                                      <p className="text-sm text-gray-500 italic">No French translation available</p>
+                                    )}
+                                  </TabsContent>
+                                  
+                                  <TabsContent value="es">
+                                    {getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'es') ? (
+                                      <Textarea
+                                        value={getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'es')?.text || ''}
+                                        readOnly
+                                        rows={3}
+                                        className="bg-gray-50"
+                                      />
+                                    ) : (
+                                      <p className="text-sm text-gray-500 italic">No Spanish translation available</p>
+                                    )}
+                                  </TabsContent>
+                                </Tabs>
+                              )}
                             </div>
                           </div>
                           

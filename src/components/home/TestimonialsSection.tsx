@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
-import { fetchTestimonials } from '@/services/supabaseService';
+import { fetchTestimonials, fetchTestimonialTranslations } from '@/services/supabaseService';
 import { useQuery } from '@tanstack/react-query';
 
 interface TestimonialsSectionProps {
@@ -19,18 +19,47 @@ interface Testimonial {
   name: string;
   company: string | null;
   text: string;
+  language: string;
+}
+
+interface TranslatedTestimonial {
+  id: string;
+  testimonial_id: string;
+  language: string;
+  text: string;
 }
 
 const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [maxSlides, setMaxSlides] = useState(0);
 
-  const { data: testimonials = [], isLoading } = useQuery({
+  // Fetch testimonials
+  const { data: testimonials = [], isLoading: testimonialsLoading } = useQuery({
     queryKey: ['testimonials'],
     queryFn: fetchTestimonials
   });
+  
+  // Fetch translations
+  const { data: translations = [], isLoading: translationsLoading } = useQuery({
+    queryKey: ['testimonial-translations'],
+    queryFn: fetchTestimonialTranslations,
+    enabled: language !== 'en' // Only fetch translations if not in English
+  });
+
+  // Get the text for a testimonial based on current language
+  const getTestimonialText = (testimonial: Testimonial) => {
+    if (language === 'en') {
+      return testimonial.text;
+    }
+    
+    const translation = translations.find(
+      t => t.testimonial_id === testimonial.id && t.language === language
+    );
+    
+    return translation ? translation.text : testimonial.text;
+  };
 
   useEffect(() => {
     setMaxSlides(Math.max(0, Math.ceil(testimonials.length / 3) - 1));
@@ -60,6 +89,8 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
     setCurrentSlide(prev => Math.min(maxSlides, prev + 1));
   };
 
+  const isLoading = testimonialsLoading || (language !== 'en' && translationsLoading);
+  
   if (isLoading) {
     return (
       <section className="py-16 md:py-24 bg-gray-50">
@@ -81,6 +112,8 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
               <EditableText 
                 id="testimonials-section-tag"
                 defaultText={t("testimonials.title")}
+                pageName="home"
+                sectionName="testimonials-tag"
               />
             ) : (
               t("testimonials.title")
@@ -91,6 +124,8 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
               <EditableText 
                 id="testimonials-section-title"
                 defaultText={t("testimonials.subtitle")}
+                pageName="home"
+                sectionName="testimonials-subtitle"
               />
             ) : (
               t("testimonials.subtitle")
@@ -101,6 +136,8 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
               <EditableText 
                 id="testimonials-section-description"
                 defaultText={t("testimonials.description")}
+                pageName="home"
+                sectionName="testimonials-description"
               />
             ) : (
               t("testimonials.description")
@@ -128,7 +165,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
                           </div>
                           <div>
                             <h4 className="font-medium">
-                              {isAuthenticated ? (
+                              {isAuthenticated && language === 'en' ? (
                                 <EditableText 
                                   id={`testimonial-name-${testimonial.id}`}
                                   defaultText={testimonial.name}
@@ -137,7 +174,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
                             </h4>
                             {testimonial.company && (
                               <p className="text-sm text-gray-500">
-                                {isAuthenticated ? (
+                                {isAuthenticated && language === 'en' ? (
                                   <EditableText 
                                     id={`testimonial-company-${testimonial.id}`}
                                     defaultText={testimonial.company}
@@ -149,13 +186,13 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
                         </div>
                         
                         <p className="text-gray-600 italic">
-                          {isAuthenticated ? (
+                          {isAuthenticated && language === 'en' ? (
                             <EditableText 
                               id={`testimonial-text-${testimonial.id}`}
                               defaultText={testimonial.text}
                               multiline={true}
                             />
-                          ) : testimonial.text}
+                          ) : getTestimonialText(testimonial)}
                         </p>
                       </div>
                     ))}

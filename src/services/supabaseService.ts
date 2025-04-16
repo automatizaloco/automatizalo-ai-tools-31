@@ -1,5 +1,18 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { translateBlogContent } from "./translationService";
+import { toast } from "sonner";
+
+/**
+ * Interface for contact information
+ */
+export interface ContactInfo {
+  phone: string;
+  email: string;
+  address: string;
+  website: string;
+  whatsapp: string;
+}
 
 /**
  * Fetch all testimonials
@@ -126,7 +139,7 @@ const autoTranslateTestimonial = async (id: string, text: string, name: string) 
         );
         
         // Update or create the translated testimonial
-        await supabase
+        const { error } = await supabase
           .from('testimonials_translations')
           .upsert({
             testimonial_id: id,
@@ -136,6 +149,11 @@ const autoTranslateTestimonial = async (id: string, text: string, name: string) 
           }, {
             onConflict: 'testimonial_id,language'
           });
+          
+        if (error) {
+          console.error(`Error storing ${lang} translation:`, error);
+          continue;
+        }
         
         console.log(`Testimonial translated to ${lang} successfully`);
       } catch (error) {

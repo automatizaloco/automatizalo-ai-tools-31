@@ -326,6 +326,7 @@ export type Database = {
           company: string | null
           created_at: string
           id: string
+          language: string
           name: string
           text: string
           updated_at: string
@@ -334,6 +335,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           id?: string
+          language?: string
           name: string
           text: string
           updated_at?: string
@@ -342,11 +344,47 @@ export type Database = {
           company?: string | null
           created_at?: string
           id?: string
+          language?: string
           name?: string
           text?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      testimonials_translations: {
+        Row: {
+          created_at: string
+          id: string
+          language: string
+          testimonial_id: string
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language: string
+          testimonial_id: string
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string
+          testimonial_id?: string
+          text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimonials_translations_testimonial_id_fkey"
+            columns: ["testimonial_id"]
+            isOneToOne: false
+            referencedRelation: "testimonials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

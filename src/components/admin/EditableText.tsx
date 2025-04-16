@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { PencilIcon, CheckIcon, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -31,6 +32,7 @@ const EditableText = ({
   const [pendingText, setPendingText] = useState(defaultText);
   const [isLoading, setIsLoading] = useState(true);
   const { language } = useLanguage();
+  const [isTranslating, setIsTranslating] = useState(false);
   
   useEffect(() => {
     if (pageName && sectionName) {
@@ -72,12 +74,21 @@ const EditableText = ({
     
     if (pageName && sectionName) {
       try {
+        setIsTranslating(true);
         await updatePageContent(pageName, sectionName, pendingText, language);
         console.log(`Content updated for ${pageName}-${sectionName} in ${language}`);
-        toast.success("Content updated successfully");
+        
+        // If the current language is English, notify that auto-translation is occurring
+        if (language === 'en') {
+          toast.success("Content updated successfully. Auto-translating to other languages...");
+        } else {
+          toast.success("Content updated successfully");
+        }
       } catch (error) {
         console.error('Error saving content:', error);
         toast.error("Failed to save content. Please try again.");
+      } finally {
+        setIsTranslating(false);
       }
     }
     
@@ -129,7 +140,7 @@ const EditableText = ({
             size="sm"
             className="p-1 h-8 w-8 bg-green-600 hover:bg-green-700"
             onClick={handleSave}
-            disabled={disabled}
+            disabled={disabled || isTranslating}
           >
             <CheckIcon className="h-4 w-4" />
           </Button>

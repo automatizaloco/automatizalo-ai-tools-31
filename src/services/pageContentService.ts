@@ -1,5 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { translateBlogContent } from "./translationService";
+import { toast } from "sonner";
 
 export interface PageSection {
   id: string;
@@ -96,8 +98,73 @@ export const updatePageContent = async (
     }
     
     console.log(`Content updated successfully for ${page}/${section} in ${language}`);
+    
+    // If the updated language is English, auto-translate to other languages
+    if (language === 'en') {
+      autoTranslatePageContent(page, section, content);
+    }
   } catch (error) {
     console.error('Error updating page content in Supabase:', error);
     throw error;
+  }
+};
+
+// Auto-translate content from English to other languages
+const autoTranslatePageContent = async (page: string, section: string, englishContent: string): Promise<void> => {
+  try {
+    console.log(`Auto-translating content for ${page}/${section}...`);
+    const languages = ['fr', 'es'];
+    
+    // Create a fake title and excerpt for the translation function which expects these fields
+    const dummyTitle = `${page}-${section}`;
+    const dummyExcerpt = "Placeholder excerpt";
+    
+    // Translate to each language and store in the database
+    for (const targetLang of languages) {
+      try {
+        console.log(`Translating content to ${targetLang}`);
+        toast.info(`Translating content to ${targetLang === 'fr' ? 'French' : 'Spanish'}...`, {
+          id: `translate-${page}-${section}-${targetLang}`,
+          duration: 3000
+        });
+        
+        const translated = await translateBlogContent(
+          englishContent,
+          dummyTitle,
+          dummyExcerpt,
+          targetLang as 'fr' | 'es'
+        );
+        
+        console.log(`Translation to ${targetLang} completed. Storing in database...`);
+        
+        // Store the translated content
+        const { error } = await supabase.from('page_content')
+          .upsert({
+            page,
+            section_name: section,
+            content: translated.content,
+            language: targetLang,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'page,section_name,language'
+          });
+        
+        if (error) {
+          console.error(`Error storing ${targetLang} translation for ${page}/${section}:`, error);
+          toast.error(`Failed to save ${targetLang === 'fr' ? 'French' : 'Spanish'} translation`);
+        } else {
+          console.log(`${targetLang} translation stored successfully for ${page}/${section}`);
+          toast.success(`${targetLang === 'fr' ? 'French' : 'Spanish'} translation saved successfully`, {
+            id: `translate-${page}-${section}-${targetLang}`
+          });
+        }
+      } catch (error) {
+        console.error(`Error translating to ${targetLang}:`, error);
+        toast.error(`Failed to translate to ${targetLang === 'fr' ? 'French' : 'Spanish'}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error in autoTranslatePageContent:', error);
+    toast.error('An error occurred during auto-translation');
   }
 };

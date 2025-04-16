@@ -1,170 +1,79 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { ensureContentBucket } from './blog/ensureBucket';
 
-/**
- * Uploads an image to storage and saves its reference in the database
- */
+// Upload an image for a page section
 export const uploadPageSectionImage = async (
-  file: File,
-  pageName: string,
-  sectionName: string,
-  sectionId: string
+  file: File, 
+  pageName: string, 
+  sectionName: string, 
+  imageId: string
 ): Promise<string | null> => {
   try {
-    console.log(`Uploading image for ${pageName}/${sectionName}/${sectionId}`);
-    
-    // Ensure the content bucket exists before uploading
+    // Ensure the bucket exists
     await ensureContentBucket();
     
-    // Upload image to storage
+    // Create a unique file path
     const fileExt = file.name.split('.').pop();
-    const fileName = `${pageName}-${sectionName}-${sectionId}-${Date.now()}.${fileExt}`;
-    const filePath = `content-images/${fileName}`;
+    const filePath = `page-images/${pageName}/${sectionName}/${imageId}-${uuidv4()}.${fileExt}`;
     
-    console.log("Uploading file to path:", filePath);
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Upload the file to Supabase Storage
+    const { error: uploadError } = await supabase.storage
       .from('content')
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
     
     if (uploadError) {
-      console.error("Upload error:", uploadError);
-      
-      // If error is related to bucket/permissions, try to simply return a generic URL
-      if (uploadError.message?.includes('permission denied') || uploadError.message?.includes('row-level security')) {
-        toast.error("Storage permission denied. Please check your Supabase permissions.");
-        return null;
-      }
-      
-      throw uploadError;
+      console.error('Error uploading image:', uploadError);
+      return null;
     }
     
-    // Get public URL
-    const { data: publicUrlData } = supabase.storage
+    // Get the public URL for the uploaded file
+    const { data: { publicUrl } } = supabase.storage
       .from('content')
       .getPublicUrl(filePath);
     
-    if (!publicUrlData || !publicUrlData.publicUrl) {
-      throw new Error("Could not get public URL");
-    }
-    
-    const imageUrl = publicUrlData.publicUrl;
-    console.log("Image uploaded successfully. URL:", imageUrl);
-    
-    // Save to database
-    const { data, error } = await supabase
+    // Update or insert the image record in the database
+    const { error: dbError } = await supabase
       .from('page_images')
       .upsert({
         page: pageName,
         section_name: sectionName,
-        section_id: sectionId,
-        image_url: imageUrl,
+        section_id: imageId,
+        image_url: publicUrl,
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'page,section_name,section_id'
       });
     
-    if (error) {
-      console.error("Error saving image reference:", error);
-      toast.error("Image uploaded but reference not saved. Please try again.");
-    } else {
-      console.log("Image reference saved successfully");
+    if (dbError) {
+      console.error('Error saving image data to database:', dbError);
+      toast.error('Failed to save image data to database');
+      return null;
     }
     
-    return imageUrl;
+    toast.success('Image uploaded successfully!');
+    return publicUrl;
   } catch (error) {
-    console.error("Error uploading page section image:", error);
-    toast.error("Failed to upload image");
+    console.error('Error in uploadPageSectionImage:', error);
+    toast.error('Failed to upload image');
     return null;
   }
 };
 
-/**
- * Gets all images for a specific page
- */
-export const getPageImages = async (pageName: string): Promise<Record<string, string>> => {
-  try {
-    console.log(`Fetching images for page: ${pageName}`);
-    
-    const { data: pageImages, error } = await supabase
-      .from('page_images')
-      .select('*')
-      .eq('page', pageName);
-    
-    if (error) {
-      console.error("Error fetching page images:", error);
-      return {};
-    }
-    
-    // Convert to a map for easy access
-    const imageMap: Record<string, string> = {};
-    
-    if (pageImages) {
-      pageImages.forEach(image => {
-        const key = `${image.page}-${image.section_name}-${image.section_id}`;
-        imageMap[key] = image.image_url;
-      });
-    }
-    
-    console.log("Retrieved images for page", pageName, ":", imageMap);
-    return imageMap;
-  } catch (error) {
-    console.error("Error getting page images:", error);
-    return {};
-  }
-};
-
-/**
- * Get all available images from the content bucket
- */
-export const getAllContentImages = async (): Promise<string[]> => {
-  try {
-    // Ensure the bucket exists
-    await ensureContentBucket();
-    
-    // List all files in the content-images folder
-    const { data, error } = await supabase.storage
-      .from('content')
-      .list('content-images');
-    
-    if (error) {
-      console.error("Error listing content images:", error);
-      return [];
-    }
-    
-    if (!data) {
-      return [];
-    }
-    
-    // Get public URLs for all files
-    const imageUrls = data.map(file => {
-      const { data } = supabase.storage
-        .from('content')
-        .getPublicUrl(`content-images/${file.name}`);
-      return data.publicUrl;
-    });
-    
-    return imageUrls;
-  } catch (error) {
-    console.error("Error getting all content images:", error);
-    return [];
-  }
-};
-
-/**
- * Gets a specific image by page, section, and id
- */
+// Get an image for a page section
 export const getPageSectionImage = async (
   pageName: string,
   sectionName: string,
   imageId: string
 ): Promise<string | null> => {
   try {
-    console.log(`Getting image for ${pageName}/${sectionName}/${imageId}`);
-    
-    const { data: image, error } = await supabase
+    // Get the image record from the database
+    const { data, error } = await supabase
       .from('page_images')
       .select('image_url')
       .eq('page', pageName)
@@ -173,13 +82,49 @@ export const getPageSectionImage = async (
       .maybeSingle();
     
     if (error) {
-      console.error("Error fetching image:", error);
+      console.error('Error fetching image:', error);
       return null;
     }
     
-    return image?.image_url || null;
-  } catch (error) {
-    console.error("Error getting page section image:", error);
+    if (data) {
+      return data.image_url;
+    }
+    
     return null;
+  } catch (error) {
+    console.error('Error in getPageSectionImage:', error);
+    return null;
+  }
+};
+
+// Get all images for a page
+export const getPageImages = async (
+  pageName: string
+): Promise<Record<string, string>> => {
+  try {
+    // Get all image records for the page from the database
+    const { data, error } = await supabase
+      .from('page_images')
+      .select('section_name, section_id, image_url')
+      .eq('page', pageName);
+    
+    if (error) {
+      console.error('Error fetching page images:', error);
+      return {};
+    }
+    
+    // Convert the array of records to a dictionary
+    const images: Record<string, string> = {};
+    if (data) {
+      data.forEach((record) => {
+        const key = `${record.section_name}-${record.section_id}`;
+        images[key] = record.image_url;
+      });
+    }
+    
+    return images;
+  } catch (error) {
+    console.error('Error in getPageImages:', error);
+    return {};
   }
 };

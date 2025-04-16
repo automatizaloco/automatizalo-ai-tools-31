@@ -9,10 +9,17 @@ interface AboutProps {
   isEditable?: boolean;
 }
 
+interface Feature {
+  id: string;
+  title: string;
+  description: string;
+}
+
 const About: React.FC<AboutProps> = ({ isEditable }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const [features, setFeatures] = useState<Feature[]>([]);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -31,18 +38,22 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Load features from translations
+  useEffect(() => {
+    const featureKeys = ['feature1', 'feature2', 'feature3', 'feature4'];
+    const translatedFeatures = featureKeys.map((key, index) => ({
+      id: `feature-${index + 1}`,
+      title: t(`home.about.${key}.title`),
+      description: t(`home.about.${key}.description`)
+    }));
+    
+    setFeatures(translatedFeatures);
+  }, [t, language]);
+
   // Create an editable image component using withEditableImage HOC
   const EditableImage = withEditableImage(({ src, alt, className }: { src: string; alt: string; className?: string }) => (
     <img src={src} alt={alt} className={className} />
   ));
-
-  // Define fixed features instead of using dynamic content that's not persisting properly
-  const features = [
-    { title: "Personalized Solutions", description: "Customized AI solutions tailored to your specific business needs." },
-    { title: "Seamless Integration", description: "Our solutions integrate smoothly with your existing systems and workflows." },
-    { title: "Data-Driven Insights", description: "Transform your raw data into actionable business intelligence." },
-    { title: "Continuous Support", description: "Ongoing assistance and updates to keep your solutions running optimally." }
-  ];
 
   return (
     <section id="about-section" className="py-20 md:py-28 overflow-hidden">
@@ -103,10 +114,10 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
               )}
             </p>
 
-            {/* Features section with hardcoded content instead of dynamically editable content */}
+            {/* Features section with translatable content */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-start">
+              {features.map((feature) => (
+                <div key={feature.id} className="flex items-start">
                   <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-automatizalo-blue mr-4">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -114,10 +125,28 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900 mb-1">
-                      {feature.title}
+                      {isAuthenticated ? (
+                        <EditableText 
+                          id={`about-section-${feature.id}-title`}
+                          defaultText={feature.title}
+                          pageName="home"
+                          sectionName={`about-${feature.id}-title`}
+                        />
+                      ) : (
+                        feature.title
+                      )}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {feature.description}
+                      {isAuthenticated ? (
+                        <EditableText 
+                          id={`about-section-${feature.id}-description`}
+                          defaultText={feature.description}
+                          pageName="home"
+                          sectionName={`about-${feature.id}-description`}
+                        />
+                      ) : (
+                        feature.description
+                      )}
                     </p>
                   </div>
                 </div>

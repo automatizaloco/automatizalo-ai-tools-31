@@ -29,11 +29,13 @@ const EditableText = ({
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(defaultText);
   const [pendingText, setPendingText] = useState(defaultText);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Load content from database on component mount if page and section name are provided
   useEffect(() => {
     if (pageName && sectionName) {
       const loadContent = async () => {
+        setIsLoading(true);
         try {
           const content = await getPageContent(pageName, sectionName);
           if (content) {
@@ -42,15 +44,19 @@ const EditableText = ({
           }
         } catch (error) {
           console.error('Error loading content for', pageName, sectionName, error);
+        } finally {
+          setIsLoading(false);
         }
       };
       
       loadContent();
+    } else {
+      setIsLoading(false);
     }
   }, [pageName, sectionName]);
 
   const handleEdit = () => {
-    if (disabled) return;
+    if (disabled || isLoading) return;
     setIsEditing(true);
     setPendingText(text);
   };
@@ -87,6 +93,10 @@ const EditableText = ({
     });
     window.dispatchEvent(customEvent);
   };
+
+  if (isLoading) {
+    return <span className="text-gray-400">Loading...</span>;
+  }
 
   if (isEditing) {
     return (

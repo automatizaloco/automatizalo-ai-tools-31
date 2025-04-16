@@ -13,7 +13,7 @@ export const getPageContent = async (page: string, section: string): Promise<str
   try {
     console.log(`Fetching content for ${page}/${section}`);
     
-    // First try to get from Supabase
+    // Get content from Supabase
     const { data, error } = await supabase
       .from('page_content')
       .select('content')
@@ -24,65 +24,32 @@ export const getPageContent = async (page: string, section: string): Promise<str
     if (error) {
       console.error('Error fetching page content:', error);
       
-      // Only throw if it's not a "no rows returned" error
-      if (!error.message.includes('No rows found')) {
-        throw error;
-      }
-      
       // If no content exists in database, use default/fallback
-      // Check localStorage first
-      const key = `page_content_${page}_${section}`;
-      const storedContent = localStorage.getItem(key);
-      
-      if (storedContent) {
-        console.log(`Retrieved content from localStorage for ${page}/${section}`);
+      if (error.message.includes('No rows found')) {
+        // Store the default content in Supabase for future edits
+        const defaultContent = getDefaultContent(page, section);
         
-        // Store the localStorage content in Supabase for future edits
         const { error: insertError } = await supabase.from('page_content').insert({
           page,
           section_name: section,
-          content: storedContent
+          content: defaultContent
         });
         
         if (insertError) {
-          console.error('Error inserting localStorage content to Supabase:', insertError);
+          console.error('Error inserting default content:', insertError);
         } else {
-          console.log(`Saved localStorage content to Supabase for ${page}/${section}`);
+          console.log(`Default content inserted for ${page}/${section}`);
         }
         
-        return storedContent;
+        return defaultContent;
       }
       
-      // If nothing in localStorage, use default content
-      const defaultContent = getDefaultContent(page, section);
-      
-      // Store the default content in Supabase for future edits
-      const { error: insertError } = await supabase.from('page_content').insert({
-        page,
-        section_name: section,
-        content: defaultContent
-      });
-      
-      if (insertError) {
-        console.error('Error inserting default content:', insertError);
-      } else {
-        console.log(`Default content inserted for ${page}/${section}`);
-      }
-      
-      // Also store in localStorage as a backup
-      localStorage.setItem(key, defaultContent);
-      
-      return defaultContent;
+      throw error;
     }
     
     // If content exists in the database, return it
     if (data?.content) {
       console.log(`Found content in database for ${page}/${section}`);
-      
-      // Also update localStorage as a fallback
-      const key = `page_content_${page}_${section}`;
-      localStorage.setItem(key, data.content);
-      
       return data.content;
     }
     
@@ -100,25 +67,23 @@ export const getPageContent = async (page: string, section: string): Promise<str
       console.error('Error inserting default content:', insertError);
     }
     
-    // Also update localStorage
-    localStorage.setItem(`page_content_${page}_${section}`, defaultContent);
-    
     return defaultContent;
   } catch (error) {
     console.error('Error in getPageContent:', error);
     
-    // Fallback to localStorage if Supabase fails
-    const key = `page_content_${page}_${section}`;
-    const storedContent = localStorage.getItem(key);
-    
-    if (storedContent) {
-      console.log(`Retrieved content from localStorage for ${page}/${section}`);
-      return storedContent;
-    }
-    
     // Default content as last resort
     const defaultContent = getDefaultContent(page, section);
-    localStorage.setItem(key, defaultContent);
+    
+    // Try to save it to the database
+    try {
+      await supabase.from('page_content').upsert({
+        page,
+        section_name: section,
+        content: defaultContent
+      }, { onConflict: 'page,section_name' });
+    } catch (insertError) {
+      console.error('Error inserting default content after fetch error:', insertError);
+    }
     
     return defaultContent;
   }
@@ -144,18 +109,9 @@ export const updatePageContent = async (page: string, section: string, content: 
       throw error;
     }
     
-    // Also update localStorage as backup
-    const key = `page_content_${page}_${section}`;
-    localStorage.setItem(key, content);
-    
     console.log(`Content updated successfully for ${page}/${section}`);
   } catch (error) {
     console.error('Error updating page content in Supabase:', error);
-    
-    // Fallback to localStorage if Supabase fails
-    const key = `page_content_${page}_${section}`;
-    localStorage.setItem(key, content);
-    console.log(`Content saved to localStorage for ${page}/${section} (Supabase failed)`);
     
     // Re-throw the error so the UI can handle it
     throw error;
@@ -180,6 +136,14 @@ const getDefaultContent = (page: string, section: string): string => {
       "about-feature3-description": "Transform your raw data into actionable business intelligence.",
       "about-feature4-title": "Continuous Support",
       "about-feature4-description": "Ongoing assistance and updates to keep your solutions running optimally.",
+      "about-feature-1-title": "Personalized Solutions",
+      "about-feature-1-description": "Customized AI solutions tailored to your specific business needs.",
+      "about-feature-2-title": "Seamless Integration",
+      "about-feature-2-description": "Our solutions integrate smoothly with your existing systems and workflows.",
+      "about-feature-3-title": "Data-Driven Insights",
+      "about-feature-3-description": "Transform your raw data into actionable business intelligence.",
+      "about-feature-4-title": "Continuous Support",
+      "about-feature-4-description": "Ongoing assistance and updates to keep your solutions running optimally.",
       solutions: '<h2 class="text-3xl font-bold">Our Solutions</h2><p class="mt-4">Discover how our AI-powered tools can streamline your workflow</p>',
       cta: '<h2 class="text-3xl font-bold">Ready to transform your business?</h2><p class="mt-4">Contact us today to learn how we can help you automate and grow</p>'
     },

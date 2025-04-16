@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PencilIcon, CheckIcon, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -33,13 +32,11 @@ const EditableText = ({
   const [isLoading, setIsLoading] = useState(true);
   const { language } = useLanguage();
   
-  // Load content from database on component mount or language change
   useEffect(() => {
     if (pageName && sectionName) {
       const loadContent = async () => {
         setIsLoading(true);
         try {
-          // Include language code when fetching content
           const content = await getPageContent(pageName, sectionName, language);
           if (content) {
             setText(content);
@@ -73,10 +70,8 @@ const EditableText = ({
     setText(pendingText);
     setIsEditing(false);
     
-    // Save to database if page name and section name are provided
     if (pageName && sectionName) {
       try {
-        // Include language code when updating content
         await updatePageContent(pageName, sectionName, pendingText, language);
         console.log(`Content updated for ${pageName}-${sectionName} in ${language}`);
         toast.success("Content updated successfully");
@@ -86,12 +81,10 @@ const EditableText = ({
       }
     }
     
-    // Call the onSave callback if provided
     if (onSave) {
       onSave(pendingText);
     }
     
-    // Dispatch custom event for compatibility with existing code
     const customEvent = new CustomEvent('editableTextChanged', {
       detail: { id, newText: pendingText }
     });

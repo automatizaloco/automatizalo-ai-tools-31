@@ -268,6 +268,7 @@ export type Database = {
         Row: {
           content: string
           id: string
+          language: string
           page: string
           section_name: string
           updated_at: string | null
@@ -275,6 +276,7 @@ export type Database = {
         Insert: {
           content: string
           id?: string
+          language?: string
           page: string
           section_name: string
           updated_at?: string | null
@@ -282,6 +284,7 @@ export type Database = {
         Update: {
           content?: string
           id?: string
+          language?: string
           page?: string
           section_name?: string
           updated_at?: string | null

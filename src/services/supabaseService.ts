@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { translateBlogContent } from "./translationService";
 import { toast } from "sonner";
@@ -113,6 +112,39 @@ export const updateTestimonial = async (id: string, updates: Partial<{ name: str
     return data;
   } catch (error) {
     console.error('Error updating testimonial:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update a testimonial translation directly
+ */
+export const updateTestimonialTranslation = async (
+  testimonialId: string,
+  language: string, 
+  updatedText: string
+) => {
+  try {
+    const { data, error } = await supabase
+      .from('testimonials_translations')
+      .update({
+        text: updatedText,
+        updated_at: new Date().toISOString()
+      })
+      .eq('testimonial_id', testimonialId)
+      .eq('language', language)
+      .select('*')
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    toast.success(`${language === 'fr' ? 'French' : 'Spanish'} translation updated successfully`);
+    return data;
+  } catch (error) {
+    console.error(`Error updating ${language} translation:`, error);
+    toast.error(`Failed to update translation: ${error instanceof Error ? error.message : String(error)}`);
     throw error;
   }
 };

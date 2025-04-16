@@ -34,7 +34,10 @@ serve(async (req) => {
     const requestBody = {
       q: text,
       target: targetLang,
-      format: "text"
+      format: "text", // Using text format to preserve original formatting
+      // Request raw HTML to be preserved, if it exists
+      // This helps prevent HTML entities from being created
+      html: text.includes('<') && text.includes('>') ? true : false
     };
     
     // Make the API request

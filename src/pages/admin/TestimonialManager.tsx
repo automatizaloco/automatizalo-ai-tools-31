@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Trash2, Loader2, AlertTriangle, Languages, Globe } from "lucide-react";
+import { Trash2, Loader2, AlertTriangle, Languages, Globe, Save } from "lucide-react";
 import { 
   fetchTestimonials, 
   createTestimonial, 
   updateTestimonial, 
   deleteTestimonial,
-  fetchTestimonialTranslations
+  fetchTestimonialTranslations,
+  updateTestimonialTranslation
 } from "@/services/supabaseService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -48,6 +49,9 @@ const TestimonialManager = () => {
     company: "",
     text: ""
   });
+
+  // State to track edited translations
+  const [editedTranslations, setEditedTranslations] = useState<{[key: string]: {[lang: string]: string}}>({});
 
   // Fetch testimonials from Supabase
   const { data: testimonials = [], isLoading, error: fetchError } = useQuery({
@@ -98,6 +102,19 @@ const TestimonialManager = () => {
     }
   });
 
+  // Update translation mutation
+  const updateTranslationMutation = useMutation({
+    mutationFn: ({ testimonialId, language, text }: { testimonialId: string; language: string; text: string }) => 
+      updateTestimonialTranslation(testimonialId, language, text),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testimonial-translations'] });
+    },
+    onError: (error: any) => {
+      console.error('Error updating translation:', error);
+      toast.error(`Failed to update translation: ${error.message || "Unknown error"}`);
+    }
+  });
+
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteTestimonial(id),
@@ -127,6 +144,28 @@ const TestimonialManager = () => {
     });
   };
 
+  const handleTranslationChange = (testimonialId: string, language: string, text: string) => {
+    // Store the edited translation in state
+    setEditedTranslations(prev => ({
+      ...prev,
+      [testimonialId]: {
+        ...prev[testimonialId],
+        [language]: text
+      }
+    }));
+  };
+
+  const handleSaveTranslation = (testimonialId: string, language: string) => {
+    const translationText = editedTranslations[testimonialId]?.[language];
+    if (!translationText) return;
+    
+    updateTranslationMutation.mutate({
+      testimonialId,
+      language,
+      text: translationText
+    });
+  };
+
   const handleAddTestimonial = () => {
     if (!isAuthenticated) {
       toast.error("You must be logged in to add testimonials");
@@ -153,6 +192,22 @@ const TestimonialManager = () => {
   // Get translations for a specific testimonial
   const getTranslationsForTestimonial = (testimonialId: string) => {
     return translations.filter(t => t.testimonial_id === testimonialId);
+  };
+
+  // Get edited translation text or use the original
+  const getTranslationText = (testimonialId: string, language: string) => {
+    if (
+      editedTranslations[testimonialId] && 
+      editedTranslations[testimonialId][language] !== undefined
+    ) {
+      return editedTranslations[testimonialId][language];
+    }
+    
+    const translation = getTranslationsForTestimonial(testimonialId).find(
+      t => t.language === language
+    );
+    
+    return translation?.text || '';
   };
 
   useEffect(() => {
@@ -316,12 +371,27 @@ const TestimonialManager = () => {
                                   
                                   <TabsContent value="fr">
                                     {getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'fr') ? (
-                                      <Textarea
-                                        value={getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'fr')?.text || ''}
-                                        readOnly
-                                        rows={3}
-                                        className="bg-gray-50"
-                                      />
+                                      <div>
+                                        <Textarea
+                                          value={getTranslationText(testimonial.id, 'fr')}
+                                          onChange={(e) => handleTranslationChange(testimonial.id, 'fr', e.target.value)}
+                                          rows={3}
+                                          className="mb-2"
+                                        />
+                                        <Button 
+                                          size="sm"
+                                          onClick={() => handleSaveTranslation(testimonial.id, 'fr')}
+                                          disabled={updateTranslationMutation.isPending}
+                                          className="flex items-center gap-1"
+                                        >
+                                          {updateTranslationMutation.isPending ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <Save className="h-4 w-4" />
+                                          )}
+                                          Save French Translation
+                                        </Button>
+                                      </div>
                                     ) : (
                                       <p className="text-sm text-gray-500 italic">No French translation available</p>
                                     )}
@@ -329,12 +399,27 @@ const TestimonialManager = () => {
                                   
                                   <TabsContent value="es">
                                     {getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'es') ? (
-                                      <Textarea
-                                        value={getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'es')?.text || ''}
-                                        readOnly
-                                        rows={3}
-                                        className="bg-gray-50"
-                                      />
+                                      <div>
+                                        <Textarea
+                                          value={getTranslationText(testimonial.id, 'es')}
+                                          onChange={(e) => handleTranslationChange(testimonial.id, 'es', e.target.value)}
+                                          rows={3}
+                                          className="mb-2"
+                                        />
+                                        <Button 
+                                          size="sm"
+                                          onClick={() => handleSaveTranslation(testimonial.id, 'es')}
+                                          disabled={updateTranslationMutation.isPending}
+                                          className="flex items-center gap-1"
+                                        >
+                                          {updateTranslationMutation.isPending ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <Save className="h-4 w-4" />
+                                          )}
+                                          Save Spanish Translation
+                                        </Button>
+                                      </div>
                                     ) : (
                                       <p className="text-sm text-gray-500 italic">No Spanish translation available</p>
                                     )}

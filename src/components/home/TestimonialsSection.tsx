@@ -48,6 +48,13 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
     enabled: language !== 'en' // Only fetch translations if not in English
   });
 
+  // Helper function to decode HTML entities
+  const decodeHTMLEntities = (text: string): string => {
+    const element = document.createElement('div');
+    element.innerHTML = text;
+    return element.textContent || text;
+  };
+
   // Get the text for a testimonial based on current language
   const getTestimonialText = (testimonial: Testimonial) => {
     if (language === 'en') {
@@ -58,7 +65,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
       t => t.testimonial_id === testimonial.id && t.language === language
     );
     
-    return translation ? translation.text : testimonial.text;
+    return translation ? decodeHTMLEntities(translation.text) : testimonial.text;
   };
 
   useEffect(() => {

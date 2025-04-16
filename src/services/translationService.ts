@@ -135,20 +135,34 @@ export const translateBlogContent = async (
 };
 
 /**
- * Process translated content to ensure formatting is preserved
+ * Process translated content to ensure formatting is preserved and HTML entities are decoded
  */
 const processTranslatedContent = (content: string): string => {
+  // First decode HTML entities (like &#39; to ', &amp; to &, etc.)
+  let decodedContent = decodeHTMLEntities(content);
+  
   // Check if content already has HTML formatting
-  if (content.includes('<h1>') || content.includes('<p>') || 
-      content.includes('<strong>') || content.includes('<em>')) {
-    return content;
+  if (decodedContent.includes('<h1>') || decodedContent.includes('<p>') || 
+      decodedContent.includes('<strong>') || decodedContent.includes('<em>')) {
+    return decodedContent;
   }
   
   // If content doesn't have HTML but has markdown-like syntax, process it
-  if (content.includes('#') || content.includes('*') || 
-      content.includes('\n\n') || content.match(/^\d+\./m)) {
-    return formatContentFromWebhook(content);
+  if (decodedContent.includes('#') || decodedContent.includes('*') || 
+      decodedContent.includes('\n\n') || decodedContent.match(/^\d+\./m)) {
+    return formatContentFromWebhook(decodedContent);
   }
   
-  return content;
+  return decodedContent;
 };
+
+/**
+ * Decode HTML entities like &#39; to '
+ */
+const decodeHTMLEntities = (text: string): string => {
+  const element = document.createElement('div');
+  // This is a safe way to decode HTML entities
+  element.innerHTML = text;
+  return element.textContent || text;
+};
+

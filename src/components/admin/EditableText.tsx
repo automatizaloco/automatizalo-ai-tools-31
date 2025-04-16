@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { updatePageContent, getPageContent } from '@/services/pageContentService';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface EditableTextProps {
   id: string;
@@ -30,14 +31,16 @@ const EditableText = ({
   const [text, setText] = useState(defaultText);
   const [pendingText, setPendingText] = useState(defaultText);
   const [isLoading, setIsLoading] = useState(true);
+  const { language } = useLanguage();
   
-  // Load content from database on component mount if page and section name are provided
+  // Load content from database on component mount or language change
   useEffect(() => {
     if (pageName && sectionName) {
       const loadContent = async () => {
         setIsLoading(true);
         try {
-          const content = await getPageContent(pageName, sectionName);
+          // Include language code when fetching content
+          const content = await getPageContent(pageName, sectionName, language);
           if (content) {
             setText(content);
             setPendingText(content);
@@ -53,7 +56,7 @@ const EditableText = ({
     } else {
       setIsLoading(false);
     }
-  }, [pageName, sectionName]);
+  }, [pageName, sectionName, language]);
 
   const handleEdit = () => {
     if (disabled || isLoading) return;
@@ -73,8 +76,9 @@ const EditableText = ({
     // Save to database if page name and section name are provided
     if (pageName && sectionName) {
       try {
-        await updatePageContent(pageName, sectionName, pendingText);
-        console.log(`Content updated for ${pageName}-${sectionName}`);
+        // Include language code when updating content
+        await updatePageContent(pageName, sectionName, pendingText, language);
+        console.log(`Content updated for ${pageName}-${sectionName} in ${language}`);
         toast.success("Content updated successfully");
       } catch (error) {
         console.error('Error saving content:', error);

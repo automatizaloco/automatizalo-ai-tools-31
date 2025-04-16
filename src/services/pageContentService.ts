@@ -7,38 +7,45 @@ export interface PageSection {
   section_name: string;
   content: string;
   updated_at: string;
+  language?: string;
 }
 
-export const getPageContent = async (page: string, section: string): Promise<string> => {
+export const getPageContent = async (page: string, section: string, language: string = 'en'): Promise<string> => {
   try {
-    console.log(`Fetching content for ${page}/${section}`);
+    console.log(`Fetching content for ${page}/${section} in language ${language}`);
     
-    // Get content from Supabase
+    // Get content from Supabase for the specified language
     const { data, error } = await supabase
       .from('page_content')
       .select('content')
       .eq('page', page)
       .eq('section_name', section)
-      .single();
+      .eq('language', language)
+      .maybeSingle();
     
     if (error) {
       console.error('Error fetching page content:', error);
       
-      // If no content exists in database, use default/fallback
-      if (error.message.includes('No rows found')) {
+      // If no content exists in database for this language, check if we have it in English
+      if (error.message.includes('No rows found') && language !== 'en') {
+        console.log(`No content found for ${language}, trying English as fallback`);
+        return getPageContent(page, section, 'en');
+      } else if (error.message.includes('No rows found')) {
+        // If no content for any language, use default/fallback
         // Store the default content in Supabase for future edits
         const defaultContent = getDefaultContent(page, section);
         
         const { error: insertError } = await supabase.from('page_content').insert({
           page,
           section_name: section,
-          content: defaultContent
+          content: defaultContent,
+          language: language
         });
         
         if (insertError) {
           console.error('Error inserting default content:', insertError);
         } else {
-          console.log(`Default content inserted for ${page}/${section}`);
+          console.log(`Default content inserted for ${page}/${section} in ${language}`);
         }
         
         return defaultContent;
@@ -49,7 +56,7 @@ export const getPageContent = async (page: string, section: string): Promise<str
     
     // If content exists in the database, return it
     if (data?.content) {
-      console.log(`Found content in database for ${page}/${section}`);
+      console.log(`Found content in database for ${page}/${section} in ${language}`);
       return data.content;
     }
     
@@ -60,8 +67,9 @@ export const getPageContent = async (page: string, section: string): Promise<str
     const { error: insertError } = await supabase.from('page_content').upsert({
       page,
       section_name: section,
-      content: defaultContent
-    }, { onConflict: 'page,section_name' });
+      content: defaultContent,
+      language: language
+    }, { onConflict: 'page,section_name,language' });
     
     if (insertError) {
       console.error('Error inserting default content:', insertError);
@@ -79,8 +87,9 @@ export const getPageContent = async (page: string, section: string): Promise<str
       await supabase.from('page_content').upsert({
         page,
         section_name: section,
-        content: defaultContent
-      }, { onConflict: 'page,section_name' });
+        content: defaultContent,
+        language: language
+      }, { onConflict: 'page,section_name,language' });
     } catch (insertError) {
       console.error('Error inserting default content after fetch error:', insertError);
     }
@@ -89,9 +98,14 @@ export const getPageContent = async (page: string, section: string): Promise<str
   }
 };
 
-export const updatePageContent = async (page: string, section: string, content: string): Promise<void> => {
+export const updatePageContent = async (
+  page: string, 
+  section: string, 
+  content: string, 
+  language: string = 'en'
+): Promise<void> => {
   try {
-    console.log(`Updating content for ${page}/${section}`);
+    console.log(`Updating content for ${page}/${section} in language ${language}`);
     
     // Always use upsert to ensure it works whether the entry exists or not
     const { error } = await supabase.from('page_content')
@@ -99,9 +113,10 @@ export const updatePageContent = async (page: string, section: string, content: 
         page,
         section_name: section,
         content,
+        language,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'page,section_name'
+        onConflict: 'page,section_name,language'
       });
     
     if (error) {
@@ -109,7 +124,7 @@ export const updatePageContent = async (page: string, section: string, content: 
       throw error;
     }
     
-    console.log(`Content updated successfully for ${page}/${section}`);
+    console.log(`Content updated successfully for ${page}/${section} in ${language}`);
   } catch (error) {
     console.error('Error updating page content in Supabase:', error);
     

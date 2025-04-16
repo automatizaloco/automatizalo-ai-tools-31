@@ -17,7 +17,7 @@ interface Feature {
 
 const About: React.FC<AboutProps> = ({ isEditable }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const [features, setFeatures] = useState<Feature[]>([]);
   
@@ -38,17 +38,18 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Load features from translations
+  // Create features list - they're loaded from the database directly by EditableText now
   useEffect(() => {
-    const featureKeys = ['feature1', 'feature2', 'feature3', 'feature4'];
-    const translatedFeatures = featureKeys.map((key, index) => ({
-      id: `feature-${index + 1}`,
-      title: t(`home.about.${key}.title`),
-      description: t(`home.about.${key}.description`)
-    }));
+    // Define fixed feature IDs for consistent database storage
+    const featureList = [
+      { id: 'feature-1', title: '', description: '' },
+      { id: 'feature-2', title: '', description: '' },
+      { id: 'feature-3', title: '', description: '' },
+      { id: 'feature-4', title: '', description: '' }
+    ];
     
-    setFeatures(translatedFeatures);
-  }, [t, language]);
+    setFeatures(featureList);
+  }, [language]);
 
   // Create an editable image component using withEditableImage HOC
   const EditableImage = withEditableImage(({ src, alt, className }: { src: string; alt: string; className?: string }) => (
@@ -64,12 +65,18 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
               {isAuthenticated ? (
                 <EditableText 
                   id="about-section-tag"
-                  defaultText={t("home.about.tagline")}
+                  defaultText="About Us"
                   pageName="home"
                   sectionName="about-tagline"
                 />
               ) : (
-                t("home.about.tagline")
+                <EditableText 
+                  id="about-section-tag"
+                  defaultText="About Us"
+                  pageName="home"
+                  sectionName="about-tagline"
+                  disabled={true}
+                />
               )}
             </span>
             
@@ -77,12 +84,18 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
               {isAuthenticated ? (
                 <EditableText 
                   id="about-section-title"
-                  defaultText={t("home.about.title")}
+                  defaultText="Transform Your Business with AI"
                   pageName="home"
                   sectionName="about-title"
                 />
               ) : (
-                t("home.about.title")
+                <EditableText 
+                  id="about-section-title"
+                  defaultText="Transform Your Business with AI"
+                  pageName="home"
+                  sectionName="about-title"
+                  disabled={true}
+                />
               )}
             </h2>
             
@@ -90,13 +103,20 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
               {isAuthenticated ? (
                 <EditableText 
                   id="about-section-paragraph1"
-                  defaultText={t("home.about.description")}
+                  defaultText="We specialize in creating intelligent automation solutions that help businesses streamline operations, reduce costs, and improve customer experiences."
                   multiline={true}
                   pageName="home"
                   sectionName="about-description"
                 />
               ) : (
-                t("home.about.description")
+                <EditableText 
+                  id="about-section-paragraph1"
+                  defaultText="We specialize in creating intelligent automation solutions that help businesses streamline operations, reduce costs, and improve customer experiences."
+                  multiline={true}
+                  pageName="home"
+                  sectionName="about-description"
+                  disabled={true}
+                />
               )}
             </p>
             
@@ -104,17 +124,24 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
               {isAuthenticated ? (
                 <EditableText 
                   id="about-section-paragraph2"
-                  defaultText={t("home.about.mission")}
+                  defaultText="Our mission is to make AI technology accessible to businesses of all sizes, helping them stay competitive in the digital age."
                   multiline={true}
                   pageName="home"
                   sectionName="about-mission"
                 />
               ) : (
-                t("home.about.mission")
+                <EditableText 
+                  id="about-section-paragraph2"
+                  defaultText="Our mission is to make AI technology accessible to businesses of all sizes, helping them stay competitive in the digital age."
+                  multiline={true}
+                  pageName="home"
+                  sectionName="about-mission"
+                  disabled={true}
+                />
               )}
             </p>
 
-            {/* Features section with translatable content */}
+            {/* Features section with database-stored content */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {features.map((feature) => (
                 <div key={feature.id} className="flex items-start">
@@ -128,24 +155,36 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                       {isAuthenticated ? (
                         <EditableText 
                           id={`about-section-${feature.id}-title`}
-                          defaultText={feature.title}
+                          defaultText={`Feature ${feature.id} Title`}
                           pageName="home"
                           sectionName={`about-${feature.id}-title`}
                         />
                       ) : (
-                        feature.title
+                        <EditableText 
+                          id={`about-section-${feature.id}-title`}
+                          defaultText={`Feature ${feature.id} Title`}
+                          pageName="home"
+                          sectionName={`about-${feature.id}-title`}
+                          disabled={true}
+                        />
                       )}
                     </h3>
                     <p className="text-sm text-gray-600">
                       {isAuthenticated ? (
                         <EditableText 
                           id={`about-section-${feature.id}-description`}
-                          defaultText={feature.description}
+                          defaultText={`Description for feature ${feature.id}`}
                           pageName="home"
                           sectionName={`about-${feature.id}-description`}
                         />
                       ) : (
-                        feature.description
+                        <EditableText 
+                          id={`about-section-${feature.id}-description`}
+                          defaultText={`Description for feature ${feature.id}`}
+                          pageName="home"
+                          sectionName={`about-${feature.id}-description`}
+                          disabled={true}
+                        />
                       )}
                     </p>
                   </div>
@@ -162,7 +201,7 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                 {isEditable ? (
                   <EditableImage 
                     src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800" 
-                    alt={t("home.about.imageAlt")}
+                    alt="About us image"
                     pageName="home"
                     sectionName="about"
                     imageId="main"
@@ -171,7 +210,7 @@ const About: React.FC<AboutProps> = ({ isEditable }) => {
                 ) : (
                   <img 
                     src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800" 
-                    alt={t("home.about.imageAlt")}
+                    alt="About us image"
                     className="w-full h-auto"
                   />
                 )}

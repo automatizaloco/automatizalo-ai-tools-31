@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -19,6 +18,7 @@ const BlogPost = () => {
       if (slug) {
         try {
           setLoading(true);
+          window.scrollTo(0, 0);
           const fetchedPost = await fetchBlogPostBySlug(slug);
           if (fetchedPost) {
             setPost(fetchedPost);
@@ -37,11 +37,6 @@ const BlogPost = () => {
     fetchPost();
   }, [slug]);
 
-  useEffect(() => {
-    // Scroll to top when component mounts or slug changes
-    window.scrollTo(0, 0);
-  }, [slug]);
-  
   if (loading) {
     return (
       <div className="flex-grow flex items-center justify-center">
@@ -61,12 +56,10 @@ const BlogPost = () => {
     );
   }
 
-  // Get the translated title and content based on current language
   const title = translateContent(post, 'title', language);
   const content = translateContent(post, 'content', language);
   const excerpt = translateContent(post, 'excerpt', language);
 
-  // For debugging - log the content lengths
   console.log(`Language: ${language}`);
   console.log(`Original content length: ${post.content.length}`);
   if (language !== 'en' && post.translations && post.translations[language]) {

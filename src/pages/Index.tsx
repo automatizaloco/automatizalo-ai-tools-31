@@ -8,6 +8,7 @@ import SolutionsSection from '@/components/home/SolutionsSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import { useAuth } from '@/context/AuthContext';
 import { ensureContentBucket } from '@/services/blog/ensureBucket';
+import { useLocation } from 'react-router-dom';
 
 interface SectionState {
   id: number;
@@ -26,6 +27,12 @@ const Index = () => {
   ]);
   const { user } = useAuth();
   const isAdmin = !!user;
+  const location = useLocation();
+
+  // Ensure scroll to top on component mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     // Load section layout from localStorage (in a real app, from the database)

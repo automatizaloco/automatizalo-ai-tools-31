@@ -1,9 +1,17 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Toaster } from 'sonner';
 import { PersistentToastProvider } from "@/context/PersistentToastContext";
+import { useLocation } from 'react-router-dom';
 
 function App() {
+  const location = useLocation();
+
+  // Scroll to top when location changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+  
   return (
     <PersistentToastProvider>
       <div className="flex min-h-screen flex-col">

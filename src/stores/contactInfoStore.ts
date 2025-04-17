@@ -1,15 +1,6 @@
-
 import { create } from 'zustand';
-import { fetchContactInfo as fetchContactInfoService, updateContactInfo as updateContactInfoService } from '@/services/supabaseService';
+import { fetchContactInfo as fetchContactInfoService, updateContactInfo as updateContactInfoService, ContactInfo } from '@/services/contactService';
 import { toast } from 'sonner';
-
-export interface ContactInfo {
-  phone: string;
-  email: string;
-  address: string;
-  website: string; // Required to match DB schema
-  whatsapp?: string;
-}
 
 interface ContactInfoState {
   contactInfo: ContactInfo;

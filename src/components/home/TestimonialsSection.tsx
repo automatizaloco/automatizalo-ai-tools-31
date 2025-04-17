@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
-import { fetchTestimonials, fetchTestimonialTranslations } from '@/services/supabaseService';
+import { fetchTestimonials, fetchTestimonialTranslations } from '@/services/testimonialService';
 import { useQuery } from '@tanstack/react-query';
 
 interface TestimonialsSectionProps {

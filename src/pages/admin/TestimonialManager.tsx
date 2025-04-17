@@ -17,7 +17,7 @@ import {
   deleteTestimonial,
   fetchTestimonialTranslations,
   updateTestimonialTranslation
-} from "@/services/supabaseService";
+} from "@/services/testimonialService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";

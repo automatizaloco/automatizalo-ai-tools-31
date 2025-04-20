@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useRichTextEditor } from './RichTextEditorContext';
+import './RichTextEditor.css';
 
 const HTMLEditor = () => {
   const { value, onChange, placeholder } = useRichTextEditor();
@@ -29,7 +30,7 @@ const HTMLEditor = () => {
   return (
     <textarea
       ref={textareaRef}
-      className="w-full min-h-[300px] p-4 font-mono text-sm focus:outline-none"
+      className="w-full min-h-[300px] p-4 font-mono text-sm focus:outline-none blog-content"
       value={value}
       onChange={handleChange}
       placeholder={placeholder || "Write your content here..."}

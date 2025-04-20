@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { BlogPost } from "@/types/blog";
 import { TranslationFormData } from "@/types/form";
@@ -8,6 +7,7 @@ import { Globe, Check, Edit, Loader2, Save } from "lucide-react";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { translateBlogContent } from "@/services/translationService";
 import { toast } from "sonner";
+import "../../../styles/blog-content.css";
 
 interface TranslationPanelProps {
   post: BlogPost | null;
@@ -18,7 +18,7 @@ interface TranslationPanelProps {
   onTranslationEdit: () => void;
   onTranslationChange: (lang: "fr" | "es", field: "title" | "excerpt" | "content", value: string) => void;
   onTranslationContentChange: (content: string) => void;
-  onSaveTranslations: () => void; // New prop for saving translations
+  onSaveTranslations: () => void;
 }
 
 const TranslationPanel = ({
@@ -43,10 +43,8 @@ const TranslationPanel = ({
     if (!post) return;
     
     try {
-      // Set translating state for the specific language
       setIsTranslating(prev => ({ ...prev, [language]: true }));
       
-      // Call translation service
       const translated = await translateBlogContent(
         post.content,
         post.title,
@@ -55,8 +53,8 @@ const TranslationPanel = ({
       );
 
       console.log(`Translation results for ${language}:`, translated);
+      console.log(`Translation HTML preserved?: ${translated.content.includes('<p>') || translated.content.includes('<strong>')}`);
       
-      // Update translation data with results
       onTranslationChange(language, "title", translated.title);
       onTranslationChange(language, "excerpt", translated.excerpt);
       onTranslationChange(language, "content", translated.content);
@@ -68,6 +66,10 @@ const TranslationPanel = ({
     } finally {
       setIsTranslating(prev => ({ ...prev, [language]: false }));
     }
+  };
+
+  const renderHtmlContent = (content: string) => {
+    return { __html: content };
   };
 
   return (
@@ -127,6 +129,9 @@ const TranslationPanel = ({
         <TabsContent value="en" className="p-4 border rounded-md mt-2">
           <h3 className="font-medium">English (Original)</h3>
           <p className="text-sm text-gray-500">This is the original content you created</p>
+          <div className="mt-3">
+            <div className="blog-content" dangerouslySetInnerHTML={renderHtmlContent(post.content)} />
+          </div>
         </TabsContent>
         
         <TabsContent value="fr" className="p-4 border rounded-md mt-2">
@@ -196,6 +201,7 @@ const TranslationPanel = ({
                 <div className="mt-3">
                   <p><strong>Title:</strong> {post.translations.fr.title}</p>
                   <p><strong>Excerpt:</strong> {post.translations.fr.excerpt}</p>
+                  <div className="mt-4 blog-content" dangerouslySetInnerHTML={renderHtmlContent(post.translations.fr.content || '')} />
                 </div>
               )}
             </>
@@ -269,6 +275,7 @@ const TranslationPanel = ({
                 <div className="mt-3">
                   <p><strong>Title:</strong> {post.translations.es.title}</p>
                   <p><strong>Excerpt:</strong> {post.translations.es.excerpt}</p>
+                  <div className="mt-4 blog-content" dangerouslySetInnerHTML={renderHtmlContent(post.translations.es.content || '')} />
                 </div>
               )}
             </>

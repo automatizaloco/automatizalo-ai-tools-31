@@ -1,5 +1,7 @@
+
 import React, { useEffect } from 'react';
 import { useRichTextEditor } from './RichTextEditorContext';
+import './RichTextEditor.css';
 
 const EditorContent = () => {
   const { 
@@ -101,7 +103,7 @@ const EditorContent = () => {
   return (
     <div
       ref={editorRef}
-      className="min-h-[300px] p-4 focus:outline-none editor-placeholder"
+      className="min-h-[300px] p-4 focus:outline-none editor-placeholder blog-content"
       contentEditable
       suppressContentEditableWarning
       onKeyUp={handleKeyUp}

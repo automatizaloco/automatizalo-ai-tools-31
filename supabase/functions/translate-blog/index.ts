@@ -12,11 +12,12 @@ serve(async (req) => {
   }
 
   try {
-    const { text, title, excerpt, targetLang, isChunk, chunkIndex, onlyMetadata } = await req.json();
+    const { text, title, excerpt, targetLang, isChunk, chunkIndex, onlyMetadata, format } = await req.json();
     
     console.log(`Starting blog translation to ${targetLang}. API Key length: ${API_KEY?.length || 0}`);
     console.log(`Is chunk: ${isChunk ? 'yes' : 'no'}, Chunk index: ${chunkIndex || 'N/A'}, Only metadata: ${onlyMetadata ? 'yes' : 'no'}`);
     console.log(`Content contains HTML?: ${text?.includes('<p>') || text?.includes('<strong>') || false}`);
+    console.log(`Format requested: ${format || 'html'} (defaulting to html)`);
     
     if (!API_KEY) {
       console.error("Google API key not found");
@@ -39,7 +40,7 @@ serve(async (req) => {
         const requestBody = {
           q: content,
           target: target,
-          format: "html"  // Using html to better preserve formatting
+          format: "html"  // Using html to preserve HTML formatting
         };
 
         // Make API request

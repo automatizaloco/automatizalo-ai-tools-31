@@ -50,7 +50,8 @@ export const translateBlogContent = async (
             targetLang: targetLang,
             isChunk: true,
             chunkIndex: i,
-            preserveFormatting: true  // Explicitly request to preserve HTML formatting
+            preserveFormatting: true,  // Explicitly request to preserve HTML formatting
+            format: "html"  // Explicitly set format to HTML
           },
         });
         
@@ -79,7 +80,8 @@ export const translateBlogContent = async (
           excerpt: excerpt,
           targetLang: targetLang,
           onlyMetadata: true,
-          preserveFormatting: true
+          preserveFormatting: true,
+          format: "html"  // Explicitly set format to HTML
         },
       });
       
@@ -101,7 +103,8 @@ export const translateBlogContent = async (
           title: title,
           excerpt: excerpt,
           targetLang: targetLang,
-          preserveFormatting: true  // Explicitly request to preserve formatting
+          preserveFormatting: true,  // Explicitly request to preserve formatting
+          format: "html"  // Explicitly set format to HTML
         },
       });
 
@@ -168,4 +171,3 @@ const decodeHTMLEntities = (text: string): string => {
   element.innerHTML = text;
   return element.textContent || text;
 };
-

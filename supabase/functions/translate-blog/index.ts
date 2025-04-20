@@ -16,6 +16,7 @@ serve(async (req) => {
     
     console.log(`Starting blog translation to ${targetLang}. API Key length: ${API_KEY?.length || 0}`);
     console.log(`Is chunk: ${isChunk ? 'yes' : 'no'}, Chunk index: ${chunkIndex || 'N/A'}, Only metadata: ${onlyMetadata ? 'yes' : 'no'}`);
+    console.log(`Content contains HTML?: ${text?.includes('<p>') || text?.includes('<strong>') || false}`);
     
     if (!API_KEY) {
       console.error("Google API key not found");
@@ -30,9 +31,11 @@ serve(async (req) => {
       
       console.log(`Making request to Google Translate API for content length ${content.length}`);
       console.log(`Content sample: ${content.substring(0, 50)}...`);
+      console.log(`Using format: html to preserve formatting`);
       
       try {
         // Build request body according to Google's API docs
+        // IMPORTANT: Always use "html" format to preserve HTML formatting
         const requestBody = {
           q: content,
           target: target,
@@ -71,6 +74,7 @@ serve(async (req) => {
           throw new Error('No translation returned from API');
         }
 
+        console.log(`Translation successful, translated text contains HTML?: ${translatedText.includes('<p>') || translatedText.includes('<strong>')}`);
         return translatedText;
       } catch (error) {
         console.error(`Error translating text to ${target}: ${error.message}`);
@@ -135,6 +139,7 @@ serve(async (req) => {
 
       console.log("Blog translation completed successfully");
       console.log(`Translated content length: ${translatedContent.length}`);
+      console.log(`Translated content contains HTML?: ${translatedContent.includes('<p>') || translatedContent.includes('<strong>')}`);
 
       return new Response(
         JSON.stringify({ 

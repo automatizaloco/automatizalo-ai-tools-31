@@ -19,8 +19,11 @@ const HTMLEditor = () => {
     const newValue = e.target.value;
     onChange(newValue);
     
-    // Log content changes to verify they're being captured
+    // Log content changes to verify they're being captured properly with HTML formatting
     console.log("HTML content updated:", newValue.substring(0, 50) + "...");
+    console.log("Contains HTML formatting:", 
+      newValue.includes("<p>") || newValue.includes("<strong>") || 
+      newValue.includes("<em>") || newValue.includes("<h"));
   };
   
   return (

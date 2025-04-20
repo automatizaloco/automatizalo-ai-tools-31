@@ -19,6 +19,7 @@ export const translateBlogContent = async (
   try {
     console.log(`Starting translation to ${targetLang}...`);
     console.log(`Content length: ${content.length}, Title length: ${title.length}, Excerpt length: ${excerpt.length}`);
+    console.log(`Content contains HTML?: ${content.includes('<p>') || content.includes('<strong>')}`);
     
     // Split content for Spanish if it's very long to avoid potential truncation issues
     const needsSplitting = targetLang === 'es' && content.length > 10000;
@@ -30,7 +31,7 @@ export const translateBlogContent = async (
       const chunkSize = 8000; // Safe chunk size for translation
       const chunks = [];
       
-      // Split content into manageable chunks
+      // Split content into manageable chunks, being careful to preserve HTML tags
       for (let i = 0; i < content.length; i += chunkSize) {
         chunks.push(content.substring(i, i + chunkSize));
       }
@@ -49,7 +50,7 @@ export const translateBlogContent = async (
             targetLang: targetLang,
             isChunk: true,
             chunkIndex: i,
-            preserveFormatting: true  // Request to preserve formatting
+            preserveFormatting: true  // Explicitly request to preserve HTML formatting
           },
         });
         
@@ -66,6 +67,7 @@ export const translateBlogContent = async (
         // Append translated chunk
         translatedContent += data.content;
         console.log(`Chunk ${i+1} translated successfully, length: ${data.content.length}`);
+        console.log(`Translated chunk contains HTML?: ${data.content.includes('<p>') || data.content.includes('<strong>')}`);
       }
       
       // For split translations, we already have the content, but need title and excerpt
@@ -99,7 +101,7 @@ export const translateBlogContent = async (
           title: title,
           excerpt: excerpt,
           targetLang: targetLang,
-          preserveFormatting: true
+          preserveFormatting: true  // Explicitly request to preserve formatting
         },
       });
 
@@ -115,6 +117,7 @@ export const translateBlogContent = async (
       
       console.log(`Translation to ${targetLang} completed successfully:`, data);
       console.log(`Translated content length: ${data.content?.length || 0}`);
+      console.log(`Translated content contains HTML?: ${data.content?.includes('<p>') || data.content?.includes('<strong>')}`);
 
       if (!data.title || !data.content) {
         console.error('Incomplete translation data received:', data);

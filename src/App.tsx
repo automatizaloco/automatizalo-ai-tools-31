@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import AdminLayout from './components/layout/AdminLayout';
 import Index from './pages/Index';
@@ -57,7 +57,7 @@ function App() {
             
             <Route path="/login" element={<Login />} />
             
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminLayout><Outlet /></AdminLayout>}>
               <Route index element={<Admin />} />
               <Route path="content" element={<ContentEditor />} />
               <Route path="content-manager" element={<ContentManager />} />

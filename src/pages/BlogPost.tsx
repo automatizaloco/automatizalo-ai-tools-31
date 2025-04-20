@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -105,7 +106,10 @@ const BlogPost = () => {
           </div>
           
           <div className="prose prose-lg max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: content }} />
+            <div 
+              dangerouslySetInnerHTML={{ __html: content }} 
+              className="blog-content"
+            />
           </div>
           
           <div className="mt-12 pt-8 border-t border-gray-200">

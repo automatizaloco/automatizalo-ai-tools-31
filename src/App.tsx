@@ -1,29 +1,81 @@
 
 import React, { useEffect } from 'react';
-import { Toaster } from 'sonner';
-import { PersistentToastProvider } from "@/context/PersistentToastContext";
-import { useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import Layout from './components/layout/Layout';
+import AdminLayout from './components/layout/AdminLayout';
+import Index from './pages/Index';
+import Contact from './pages/Contact';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
+import Solutions from './pages/Solutions';
+import Admin from './pages/admin/Admin';
+import Login from './pages/Login';
+import NotFound from './pages/NotFound';
+import { Toaster } from '@/components/ui/sonner';
+import { PersistentToastProvider } from '@/context/PersistentToastContext';
+import { AuthProvider } from '@/context/AuthContext';
+import './App.css';
+import './styles/blog-content.css';
+import '@/components/editor/RichTextEditor.css';
+import { LanguageProvider } from './context/LanguageContext';
+import ContentEditor from './pages/admin/ContentEditor';
+import NewsletterAdmin from './pages/admin/NewsletterAdmin';
+import ContentManager from './pages/admin/ContentManager';
+import TestimonialManager from './pages/admin/TestimonialManager';
+import WebhookManager from './pages/admin/WebhookManager';
+import BlogAdmin from './pages/admin/BlogAdmin';
+import BlogPostForm from './pages/admin/BlogPostForm';
+import AutomaticBlog from './pages/admin/AutomaticBlog';
+import NotificationAdmin from './pages/admin/NotificationAdmin';
+import LayoutManager from './pages/admin/LayoutManager';
+import Unsubscribe from './pages/Unsubscribe';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 function App() {
   const location = useLocation();
 
-  // Scroll to top when location changes
+  // Scroll to top on navigation
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
-  
+
   return (
-    <PersistentToastProvider>
-      <div className="flex min-h-screen flex-col">
-        <main className="flex-grow">
-          <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold text-center mb-8">Welcome to Automatizalo</h1>
-            <p className="text-center text-lg">Explore our services through the navigation menu.</p>
-          </div>
-        </main>
-      </div>
-      <Toaster />
-    </PersistentToastProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <PersistentToastProvider>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Index />} />
+              <Route path="contact" element={<Contact />} />
+              <Route path="blog" element={<Blog />} />
+              <Route path="blog/:slug" element={<BlogPost />} />
+              <Route path="solutions" element={<Solutions />} />
+              <Route path="unsubscribe" element={<Unsubscribe />} />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+            
+            <Route path="/login" element={<Login />} />
+            
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Admin />} />
+              <Route path="content" element={<ContentEditor />} />
+              <Route path="content-manager" element={<ContentManager />} />
+              <Route path="layout-manager" element={<LayoutManager />} />
+              <Route path="testimonials" element={<TestimonialManager />} />
+              <Route path="webhooks" element={<WebhookManager />} />
+              <Route path="newsletters" element={<NewsletterAdmin />} />
+              <Route path="blog" element={<BlogAdmin />} />
+              <Route path="blog/new" element={<BlogPostForm />} />
+              <Route path="blog/edit/:id" element={<BlogPostForm />} />
+              <Route path="blog/automatic" element={<AutomaticBlog />} />
+              <Route path="notifications" element={<NotificationAdmin />} />
+            </Route>
+          </Routes>
+          <Toaster />
+        </PersistentToastProvider>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
 

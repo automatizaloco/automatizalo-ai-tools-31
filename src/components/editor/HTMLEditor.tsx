@@ -16,10 +16,11 @@ const HTMLEditor = () => {
   
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Ensure the content is properly updated in the context
-    onChange(e.target.value);
+    const newValue = e.target.value;
+    onChange(newValue);
     
     // Log content changes to verify they're being captured
-    console.log("HTML content updated:", e.target.value.substring(0, 50) + "...");
+    console.log("HTML content updated:", newValue.substring(0, 50) + "...");
   };
   
   return (

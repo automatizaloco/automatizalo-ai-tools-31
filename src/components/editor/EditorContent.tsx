@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useRichTextEditor } from './RichTextEditorContext';
 
@@ -19,17 +18,24 @@ const EditorContent = () => {
   useEffect(() => {
     if (editorRef.current && isInitialRender && value) {
       // Process the initial content for proper formatting
-      const processedContent = processMarkdownLikeContent(value);
+      const processedContent = processHtmlContent(value);
       editorRef.current.innerHTML = processedContent;
       setIsInitialRender(false);
       onChange(processedContent);
     }
   }, [value, isInitialRender, onChange, editorRef, setIsInitialRender]);
 
-  // Process markdown-like syntax in content
-  const processMarkdownLikeContent = (content: string): string => {
+  // Process HTML content safely
+  const processHtmlContent = (content: string): string => {
     if (!content) return '';
     
+    // If content already has HTML formatting, use it as is
+    if (content.includes('<p>') || content.includes('<div>') || 
+        content.includes('<h1>') || content.includes('<strong>')) {
+      return content;
+    }
+    
+    // Otherwise process markdown-like syntax
     let processedContent = content;
     
     // Handle headings

@@ -1,6 +1,16 @@
+
 import { create } from 'zustand';
-import { fetchContactInfo as fetchContactInfoService, updateContactInfo as updateContactInfoService, ContactInfo } from '@/services/contactService';
+import { fetchContactInfo as fetchContactInfoService, updateContactInfo as updateContactInfoService } from '@/services/contactService';
 import { toast } from 'sonner';
+
+// Export the ContactInfo interface
+export interface ContactInfo {
+  phone: string;
+  email: string;
+  address: string;
+  website: string;
+  whatsapp: string;
+}
 
 interface ContactInfoState {
   contactInfo: ContactInfo;

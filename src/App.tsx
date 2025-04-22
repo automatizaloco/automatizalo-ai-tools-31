@@ -60,10 +60,10 @@ function App() {
               <Route path="content" element={<ContentManager />} />
               <Route path="testimonials" element={<TestimonialManager />} />
               <Route path="webhooks" element={<WebhookManager />} />
-              <Route path="newsletters" element={<NewsletterAdmin />} />
               <Route path="blog" element={<BlogAdmin />} />
               <Route path="blog/new" element={<BlogPostForm />} />
               <Route path="blog/edit/:id" element={<BlogPostForm />} />
+              <Route path="newsletters" element={<NewsletterAdmin />} />
               <Route path="notifications" element={<NotificationAdmin />} />
               <Route path="automatic-blog" element={<AutomaticBlog />} />
             </Route>

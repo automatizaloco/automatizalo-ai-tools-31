@@ -1,7 +1,6 @@
 
 import React from "react";
 import NotificationHistory from "@/components/admin/NotificationHistory";
-import { PersistentToastProvider } from "@/context/PersistentToastContext";
 
 const NotificationAdmin = () => {
   return (

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { translateBlogContent } from "./translationService";
 import { toast } from "sonner";
@@ -8,18 +7,22 @@ import { toast } from "sonner";
  */
 export const fetchTestimonials = async () => {
   try {
+    console.log("Fetching testimonials from Supabase...");
     const { data, error } = await supabase
       .from('testimonials')
       .select('*')
       .order('created_at', { ascending: false });
     
     if (error) {
+      console.error('Error fetching testimonials:', error);
       throw error;
     }
     
+    console.log(`Successfully fetched ${data?.length || 0} testimonials`);
     return data || [];
   } catch (error) {
     console.error('Error fetching testimonials:', error);
+    toast.error("Failed to load testimonials");
     throw error;
   }
 };
@@ -29,17 +32,21 @@ export const fetchTestimonials = async () => {
  */
 export const fetchTestimonialTranslations = async () => {
   try {
+    console.log("Fetching testimonial translations from Supabase...");
     const { data, error } = await supabase
       .from('testimonials_translations')
       .select('*');
     
     if (error) {
+      console.error('Error fetching testimonial translations:', error);
       throw error;
     }
     
+    console.log(`Successfully fetched ${data?.length || 0} testimonial translations`);
     return data || [];
   } catch (error) {
     console.error('Error fetching testimonial translations:', error);
+    toast.error("Failed to load testimonial translations");
     throw error;
   }
 };
@@ -49,6 +56,8 @@ export const fetchTestimonialTranslations = async () => {
  */
 export const createTestimonial = async (testimonial: { name: string; company: string | null; text: string; }) => {
   try {
+    console.log("Creating new testimonial:", testimonial);
+    
     // First, create the testimonial in English
     const { data, error } = await supabase
       .from('testimonials')
@@ -62,8 +71,11 @@ export const createTestimonial = async (testimonial: { name: string; company: st
       .single();
     
     if (error) {
+      console.error('Error creating testimonial:', error);
       throw error;
     }
+    
+    console.log("Testimonial created successfully:", data);
     
     // Auto-translate the testimonial to other languages
     if (data) {
@@ -73,6 +85,7 @@ export const createTestimonial = async (testimonial: { name: string; company: st
     return data;
   } catch (error) {
     console.error('Error creating testimonial:', error);
+    toast.error("Failed to create testimonial");
     throw error;
   }
 };
@@ -181,6 +194,7 @@ const autoTranslateTestimonial = async (id: string, text: string, name: string) 
     
     for (const lang of languages) {
       try {
+        console.log(`Translating testimonial ${id} to ${lang}...`);
         // Create dummy content for translation API
         const dummyTitle = `Testimonial by ${name}`;
         const dummyExcerpt = "Testimonial excerpt";

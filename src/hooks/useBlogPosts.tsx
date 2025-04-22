@@ -8,16 +8,21 @@ import { useSocialMediaShare } from "@/hooks/useSocialMediaShare";
 export const useBlogPosts = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { shareToSocialMedia } = useSocialMediaShare();
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        console.log("Fetching blog posts...");
+        setError(null);
         const fetchedPosts = await fetchBlogPosts();
         setPosts(fetchedPosts);
-      } catch (error) {
+        console.log(`Successfully fetched ${fetchedPosts.length} blog posts`);
+      } catch (error: any) {
         console.error("Error fetching blog posts:", error);
-        toast.error("Failed to load blog posts");
+        setError(error.message || "Failed to load blog posts");
+        toast.error("Failed to load blog posts. Please try refreshing the page.");
       } finally {
         setLoading(false);
       }
@@ -76,6 +81,7 @@ export const useBlogPosts = () => {
   return {
     posts,
     loading,
+    error,
     handleDelete,
     handleToggleStatus,
   };

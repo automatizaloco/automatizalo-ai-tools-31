@@ -21,21 +21,25 @@ export const useTestimonials = () => {
     const loadTestimonials = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log("Fetching testimonials in useTestimonials hook...");
         const { data, error } = await supabase
           .from('testimonials')
           .select('*')
           .order('created_at', { ascending: false });
         
         if (error) {
+          console.error("Error in Supabase query:", error);
           throw error;
         }
         
         console.log("Testimonials loaded from database:", data);
         setTestimonials(data || []);
-        setError(null);
       } catch (error: any) {
         console.error("Error loading testimonials:", error);
         setError("Failed to load testimonials");
+        toast.error("Failed to load testimonials. Please try refreshing the page.");
       } finally {
         setLoading(false);
       }

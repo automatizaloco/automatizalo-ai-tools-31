@@ -18,41 +18,45 @@ export interface ContactInfo {
  */
 export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
   try {
-    console.log("Fetching contact info...");
+    console.log("Fetching contact info from Supabase...");
     const { data, error } = await supabase
       .from('contact_info')
       .select('*')
       .maybeSingle();
 
     if (error) {
-      console.error("Error in fetchContactInfo:", error);
+      console.error("Error in Supabase query:", error);
       throw error;
     }
 
     console.log("Fetched contact info:", data);
     
-    if (!data) return null;
+    if (!data) {
+      console.log("No contact info found in database, using defaults");
+      return null;
+    }
     
     // Create ContactInfo object with whatsapp added separately since it's not in the DB
     const contactInfo: ContactInfo = {
-      phone: data.phone || '+1 (555) 123-4567',
+      phone: data.phone || '+57 3192963363',
       email: data.email || 'contact@automatizalo.co',
       address: data.address || '123 AI Street, Tech City, TC 12345',
       website: data.website || 'https://automatizalo.co',
-      whatsapp: data.phone || '+1 (555) 123-4567' // Use phone number for whatsapp if not explicitly set
+      whatsapp: '+57 3192963363' // Always use this WhatsApp number
     };
     
     return contactInfo;
   } catch (error: any) {
     console.error("Error fetching contact information:", error);
-    toast.error("Failed to load contact information. Using default values.");
+    console.error("Error details:", error.message);
     // Return default values on error
+    toast.error("Failed to load contact information. Using default values.");
     return {
-      phone: '+1 (555) 123-4567',
+      phone: '+57 3192963363',
       email: 'contact@automatizalo.co',
       address: '123 AI Street, Tech City, TC 12345',
       website: 'https://automatizalo.co',
-      whatsapp: '+1 (555) 123-4567'
+      whatsapp: '+57 3192963363'
     };
   }
 };

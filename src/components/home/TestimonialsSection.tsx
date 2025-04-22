@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
@@ -7,26 +6,11 @@ import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import EditableText from '@/components/admin/EditableText';
-import { fetchTestimonials, fetchTestimonialTranslations } from '@/services/testimonialService';
+import { fetchTestimonials, fetchTestimonialTranslations, Testimonial, TestimonialTranslation } from '@/services/testimonialService';
 import { useQuery } from '@tanstack/react-query';
 
 interface TestimonialsSectionProps {
   isEditable?: boolean;
-}
-
-interface Testimonial {
-  id: string;
-  name: string;
-  company: string | null;
-  text: string;
-  language: string;
-}
-
-interface TranslatedTestimonial {
-  id: string;
-  testimonial_id: string;
-  language: string;
-  text: string;
 }
 
 const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable }) => {
@@ -62,10 +46,14 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isEditable })
     }
     
     const translation = translations.find(
-      t => t.testimonial_id === testimonial.id && t.language === language
+      t => t && typeof t === 'object' && 'testimonial_id' in t && 
+      t.testimonial_id === testimonial.id && 
+      'language' in t && t.language === language
     );
     
-    return translation ? decodeHTMLEntities(translation.text) : testimonial.text;
+    return translation && 'text' in translation && typeof translation.text === 'string' 
+      ? decodeHTMLEntities(translation.text) 
+      : testimonial.text;
   };
 
   useEffect(() => {

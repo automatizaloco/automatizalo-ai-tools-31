@@ -54,7 +54,26 @@ const NewsletterAdmin = () => {
         throw error;
       }
       
-      setSubscribers(data || []);
+      // Type safety: ensure we only set valid subscriber objects
+      if (data && Array.isArray(data)) {
+        const validSubscribers: Subscriber[] = data
+          .filter(item => 
+            item && 
+            typeof item === 'object' && 
+            'id' in item && 
+            'email' in item && 
+            'frequency' in item &&
+            'created_at' in item
+          )
+          .map(item => ({
+            id: item.id as string,
+            email: item.email as string,
+            frequency: item.frequency as string,
+            created_at: item.created_at as string
+          }));
+            
+        setSubscribers(validSubscribers);
+      }
     } catch (error) {
       console.error("Failed to fetch subscribers:", error);
     } finally {

@@ -1,16 +1,37 @@
+
 import { supabase, handleSupabaseError, retryOperation } from "@/integrations/supabase/client";
 import { translateBlogContent } from "./translationService";
 import { toast } from "sonner";
 
+// Define proper types for testimonials and translations
+export interface Testimonial {
+  id: string;
+  name: string;
+  company: string | null;
+  text: string;
+  language?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TestimonialTranslation {
+  id: string;
+  testimonial_id: string;
+  language: string;
+  text: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Local cache for testimonials
-let testimonialsCache: any[] = [];
+let testimonialsCache: Testimonial[] = [];
 let testimonialsCacheTimestamp = 0;
 const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Fetch all testimonials
  */
-export const fetchTestimonials = async () => {
+export const fetchTestimonials = async (): Promise<Testimonial[]> => {
   try {
     // Use cache if available and not expired
     if (testimonialsCache.length > 0 && (Date.now() - testimonialsCacheTimestamp) < CACHE_EXPIRY) {
@@ -60,7 +81,7 @@ export const fetchTestimonials = async () => {
 /**
  * Fetch testimonial translations
  */
-export const fetchTestimonialTranslations = async () => {
+export const fetchTestimonialTranslations = async (): Promise<TestimonialTranslation[]> => {
   try {
     console.log("Fetching testimonial translations from Supabase...");
     const { data, error } = await retryOperation(

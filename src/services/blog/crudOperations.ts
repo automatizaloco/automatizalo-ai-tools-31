@@ -9,7 +9,7 @@ import { transformDatabasePost } from './transformers';
 export const saveBlogPost = async (data: NewBlogPost): Promise<BlogPost> => {
   try {
     // Map readTime to read_time for database compatibility
-    const dbData = {
+    const dbData: any = {
       title: data.title,
       slug: data.slug,
       excerpt: data.excerpt,
@@ -27,7 +27,7 @@ export const saveBlogPost = async (data: NewBlogPost): Promise<BlogPost> => {
     
     const { data: savedPost, error } = await supabase
       .from('blog_posts')
-      .insert(dbData)
+      .insert(dbData as any)
       .select('*')
       .single();
     

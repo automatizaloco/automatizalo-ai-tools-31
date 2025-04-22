@@ -25,14 +25,12 @@ const Login = () => {
     setError(null);
     
     try {
-      console.log("Attempting login with:", { email });
+      console.log("Attempting login with Google OAuth");
       
-      const success = await login(email, password);
-      if (success) {
-        navigate("/admin/blog");
-      } else {
-        setError("Login failed. Please check your credentials.");
-      }
+      await login(); // No longer passing email and password
+      // Using the updated AuthContext login method which uses Google OAuth
+      // We don't need to check a return value since it's void
+      
     } catch (error) {
       console.error("Login error:", error);
       setError("An unexpected error occurred. Please try again.");

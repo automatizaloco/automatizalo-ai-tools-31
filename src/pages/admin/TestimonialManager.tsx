@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,27 +15,14 @@ import {
   updateTestimonial, 
   deleteTestimonial,
   fetchTestimonialTranslations,
-  updateTestimonialTranslation
+  updateTestimonialTranslation,
+  Testimonial,
+  TestimonialTranslation
 } from "@/services/testimonialService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-interface Testimonial {
-  id: string;
-  name: string;
-  company: string | null;
-  text: string;
-  language?: string;
-}
-
-interface TranslatedTestimonial {
-  id: string;
-  testimonial_id: string;
-  language: string;
-  text: string;
-}
 
 const TestimonialManager = () => {
   const navigate = useNavigate();
@@ -190,12 +176,15 @@ const TestimonialManager = () => {
   };
 
   // Get translations for a specific testimonial
-  const getTranslationsForTestimonial = (testimonialId: string) => {
-    return translations.filter(t => t.testimonial_id === testimonialId);
+  const getTranslationsForTestimonial = (testimonialId: string): TestimonialTranslation[] => {
+    return translations.filter(t => 
+      t && typeof t === 'object' && 
+      'testimonial_id' in t && t.testimonial_id === testimonialId
+    );
   };
 
   // Get edited translation text or use the original
-  const getTranslationText = (testimonialId: string, language: string) => {
+  const getTranslationText = (testimonialId: string, language: string): string => {
     if (
       editedTranslations[testimonialId] && 
       editedTranslations[testimonialId][language] !== undefined
@@ -204,10 +193,10 @@ const TestimonialManager = () => {
     }
     
     const translation = getTranslationsForTestimonial(testimonialId).find(
-      t => t.language === language
+      t => t && typeof t === 'object' && 'language' in t && t.language === language
     );
     
-    return translation?.text || '';
+    return translation && 'text' in translation ? translation.text : '';
   };
 
   useEffect(() => {

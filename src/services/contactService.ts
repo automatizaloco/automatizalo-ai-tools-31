@@ -1,4 +1,3 @@
-
 import { supabase, handleSupabaseError, retryOperation } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -13,10 +12,10 @@ export interface ContactInfo {
   whatsapp: string;
 }
 
-// Local cache to store contact info
+// Local cache to store contact info with longer expiry
 let contactInfoCache: ContactInfo | null = null;
 let cacheTimestamp: number = 0;
-const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes
+const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Default contact info to use as fallback
@@ -30,7 +29,7 @@ const defaultContactInfo: ContactInfo = {
 };
 
 /**
- * Fetch contact information
+ * Fetch contact information with improved error handling
  */
 export const fetchContactInfo = async (): Promise<ContactInfo> => {
   try {
@@ -42,18 +41,41 @@ export const fetchContactInfo = async (): Promise<ContactInfo> => {
     
     console.log("Fetching contact info from Supabase...");
     
-    // First try to fetch from Supabase with retries
+    // First try to fetch from Supabase with enhanced retries
     const { data, error } = await retryOperation(
       async () => await supabase
         .from('contact_info')
         .select('*')
         .maybeSingle(),
-      3,
+      5,  // Increased retry attempts
       1000
     );
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned by query"
+    if (error) {
       console.error("Error in Supabase query:", error);
+      
+      // Try to load from localStorage if available
+      try {
+        const localStorageData = localStorage.getItem('contact_info_backup');
+        if (localStorageData) {
+          const parsedData = JSON.parse(localStorageData);
+          console.log("Using contact info from localStorage due to database error");
+          toast.error(handleSupabaseError(error, "Database error. Using locally cached data."));
+          
+          // Still update the in-memory cache
+          contactInfoCache = {
+            ...parsedData,
+            whatsapp: '+57 3192963363' // Always use this WhatsApp number
+          };
+          cacheTimestamp = Date.now();
+          
+          return contactInfoCache;
+        }
+      } catch (localStorageError) {
+        console.error("Error accessing localStorage:", localStorageError);
+      }
+      
+      // If no localStorage data, throw the original error to use defaults
       throw error;
     }
 
@@ -72,26 +94,35 @@ export const fetchContactInfo = async (): Promise<ContactInfo> => {
       console.log("No contact info found in database, using defaults and creating record");
       // Try to create a default record if one doesn't exist
       try {
-        const { error: insertError } = await supabase
-          .from('contact_info')
-          .insert({
-            phone: defaultContactInfo.phone,
-            email: defaultContactInfo.email,
-            address: defaultContactInfo.address,
-            website: defaultContactInfo.website
-          });
-        
-        if (insertError) {
-          console.error("Error creating default contact info:", insertError);
-        }
+        await retryOperation(async () => {
+          const { error: insertError } = await supabase
+            .from('contact_info')
+            .insert({
+              phone: defaultContactInfo.phone,
+              email: defaultContactInfo.email,
+              address: defaultContactInfo.address,
+              website: defaultContactInfo.website
+            });
+          
+          if (insertError) {
+            console.error("Error creating default contact info:", insertError);
+          }
+          return true;
+        }, 3);
       } catch (insertError) {
         console.error("Error creating default contact info:", insertError);
       }
     }
     
-    // Update cache
+    // Update cache and localStorage
     contactInfoCache = contactInfo;
     cacheTimestamp = Date.now();
+    
+    try {
+      localStorage.setItem('contact_info_backup', JSON.stringify(contactInfo));
+    } catch (storageError) {
+      console.error("Error saving to localStorage:", storageError);
+    }
     
     return contactInfo;
   } catch (error: any) {
@@ -106,6 +137,14 @@ export const fetchContactInfo = async (): Promise<ContactInfo> => {
     
     // Return default values on error
     toast.error(handleSupabaseError(error, "Failed to load contact information. Using default values."));
+    
+    // Try to save default values to localStorage for future use
+    try {
+      localStorage.setItem('contact_info_backup', JSON.stringify(defaultContactInfo));
+    } catch (storageError) {
+      console.error("Error saving to localStorage:", storageError);
+    }
+    
     return defaultContactInfo;
   }
 };

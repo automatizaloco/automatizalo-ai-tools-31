@@ -21,7 +21,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   db: {
     schema: 'public',
   },
-  // Add retry and timeout configurations
+  // Increase request timeout and add retry configuration
   realtime: {
     params: {
       eventsPerSecond: 5,
@@ -32,9 +32,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Add initialization logging
 console.log("Supabase client initialized with URL:", SUPABASE_URL);
 
-// More robust connection test with retries
+// More robust connection test with multiple retries
 let connectionAttempts = 0;
-const maxConnectionAttempts = 3;
+const maxConnectionAttempts = 5;
 
 const testConnection = async () => {
   try {
@@ -54,7 +54,7 @@ const testConnection = async () => {
       console.log(`Retrying connection in ${connectionAttempts * 2} seconds...`);
       setTimeout(testConnection, connectionAttempts * 2000);
     } else {
-      toast.error("Failed to connect to the database after multiple attempts. Please refresh the page.");
+      toast.error("Database connection issues detected. Some features may be limited.");
       console.error("Supabase connection failed after maximum attempts:", err);
     }
     
@@ -62,7 +62,7 @@ const testConnection = async () => {
   }
 };
 
-// Run the connection test
+// Run the connection test on initialization
 testConnection();
 
 // Add a helper function to handle Supabase errors consistently
@@ -74,8 +74,12 @@ export const handleSupabaseError = (error: any, defaultMessage: string = "An err
   console.error("Supabase error:", error);
   
   // Handle specific error codes
-  if (error?.code === "42P17") {
+  if (error?.code === "42501" || error?.message?.includes("permission denied")) {
     return "Database permission error. The application will continue to function with limited features.";
+  }
+  
+  if (error?.code === "42P07") {
+    return "Database structure error. Please contact the administrator.";
   }
   
   if (error?.code === "PGRST116") {
@@ -86,20 +90,21 @@ export const handleSupabaseError = (error: any, defaultMessage: string = "An err
     return "Authentication error. Please try logging out and back in.";
   }
   
-  if (error?.message?.includes("network")) {
+  if (error?.message?.includes("network") || error?.code === "NETWORK_ERROR") {
     return "Network error connecting to database. Please check your connection.";
   }
   
   return error?.message || defaultMessage;
 };
 
-// Add a function to retry failed Supabase operations
+// Add a function to retry failed Supabase operations with exponential backoff
 export const retryOperation = async <T>(
   operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delay: number = 1000,
+  maxRetries: number = 5,
+  initialDelay: number = 1000,
 ): Promise<T> => {
   let lastError: any;
+  let delay = initialDelay;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -108,8 +113,8 @@ export const retryOperation = async <T>(
       lastError = error;
       console.log(`Operation failed (attempt ${attempt}/${maxRetries}). Retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
-      // Increase delay for next attempt
-      delay = delay * 1.5;
+      // Exponential backoff with random jitter for next attempt
+      delay = Math.min(delay * 1.5 + Math.random() * 1000, 10000);
     }
   }
   

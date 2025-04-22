@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { fetchContactInfo as fetchContactInfoService, updateContactInfo as updateContactInfoService } from '@/services/contactService';
 import { toast } from 'sonner';
@@ -38,37 +37,45 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       
+      // First try to load from localStorage while waiting for API
+      try {
+        const cachedData = localStorage.getItem('contact_info_backup');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          // Set cached data immediately for faster UI rendering
+          set({
+            contactInfo: {
+              ...parsedData,
+              whatsapp: '+57 3192963363' // Always use this WhatsApp number
+            }
+          });
+        }
+      } catch (cacheError) {
+        console.error("Error loading from cache:", cacheError);
+      }
+      
+      // Now fetch from service with better error handling
       const data = await fetchContactInfoService();
       
-      if (data) {
-        // Make sure whatsapp is set, defaulting to the new WhatsApp number if it's not
-        const contactInfo: ContactInfo = {
+      set({
+        contactInfo: {
           ...data,
-          whatsapp: '+57 3192963363' // Always use this WhatsApp number
-        };
-        
-        set({
-          contactInfo,
-          loading: false,
-        });
-        
-        console.log('Contact info fetched successfully:', contactInfo);
-      } else {
-        // Set default values if no data found
-        set({
-          contactInfo: defaultContactInfo,
-          loading: false,
-        });
-        console.log('No contact info found, using defaults:', defaultContactInfo);
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      set({ 
-        error: 'Failed to fetch contact info',
+          whatsapp: '+57 3192963363' // Always ensure this is set
+        },
         loading: false,
-        contactInfo: defaultContactInfo
+        error: null
       });
-      toast.error("Failed to load contact information. Using default values.");
+      
+    } catch (err: any) {
+      console.error('Error in contactInfoStore:', err);
+      
+      // Use default values but don't override cache that may have been set earlier
+      set(state => ({ 
+        error: err.message || 'Failed to fetch contact info',
+        loading: false,
+        // Only use defaultContactInfo if we don't already have contactInfo
+        contactInfo: state.contactInfo.email ? state.contactInfo : defaultContactInfo
+      }));
     }
   },
   
@@ -76,25 +83,31 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       
-      // Always ensure WhatsApp is set to the correct number
+      // Update local cache immediately for responsive UI
       const updatedInfo = {
         ...info,
         whatsapp: '+57 3192963363'
       };
       
+      set({ contactInfo: updatedInfo });
+      
+      // Try to save to localStorage as backup
+      try {
+        localStorage.setItem('contact_info_backup', JSON.stringify(updatedInfo));
+      } catch (storageError) {
+        console.error("Error saving to localStorage:", storageError);
+      }
+      
+      // Then attempt to update in database
       await updateContactInfoService(updatedInfo);
       
-      set({ 
-        contactInfo: updatedInfo, 
-        loading: false 
-      });
-
-      console.log('Contact info updated successfully in the store:', updatedInfo);
+      set({ loading: false });
       toast.success("Contact information updated successfully");
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      set({ error: 'Failed to update contact info', loading: false });
-      toast.error("Failed to update contact information");
+    } catch (err: any) {
+      console.error('Error updating contact info:', err);
+      // Keep the updated info in the UI even if save to DB failed
+      set({ error: err.message || 'Failed to update contact info', loading: false });
+      toast.error("Changes saved locally but couldn't update the database. Will try again when connection is restored.");
     }
   }
 }));

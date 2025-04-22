@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { BlogPost } from "@/types/blog";
@@ -11,6 +10,7 @@ export const useBlogPosts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { shareToSocialMedia } = useSocialMediaShare();
+  const [hasNetworkError, setHasNetworkError] = useState(false);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -18,19 +18,36 @@ export const useBlogPosts = () => {
         console.log("Fetching blog posts...");
         setError(null);
         setLoading(true);
+        setHasNetworkError(false);
         
-        // Use the retry mechanism for more resilience
+        // Use the enhanced retry mechanism with more resilience
         const fetchedPosts = await retryOperation(
           async () => await fetchBlogPosts(),
-          3,
-          1500
+          5,  // Increased retry attempts
+          2000 // Longer initial delay
         );
         
         setPosts(fetchedPosts);
         console.log(`Successfully fetched ${fetchedPosts.length} blog posts`);
+        
+        // Successfully fetched, so save to localStorage as backup
+        try {
+          localStorage.setItem('cached_blog_posts', JSON.stringify(fetchedPosts));
+        } catch (cacheError) {
+          console.error("Error caching blog posts:", cacheError);
+        }
+        
       } catch (error: any) {
         console.error("Error fetching blog posts:", error);
-        setError(handleSupabaseError(error, "Failed to load blog posts"));
+        const errorMessage = handleSupabaseError(error, "Failed to load blog posts");
+        setError(errorMessage);
+        
+        if (error?.message?.includes('network') || 
+            error?.code === 'NETWORK_ERROR' || 
+            error?.code === '42501') {
+          setHasNetworkError(true);
+        }
+        
         toast.error("Failed to load blog posts. Using cached data if available.");
         
         // Try to use cached data if available
@@ -40,6 +57,8 @@ export const useBlogPosts = () => {
             const parsedPosts = JSON.parse(cachedPosts);
             setPosts(parsedPosts);
             toast.info("Showing cached blog posts from your last visit");
+          } else {
+            toast.info("No cached posts available. Some features may be limited.");
           }
         } catch (cacheError) {
           console.error("Error loading cached posts:", cacheError);
@@ -58,13 +77,23 @@ export const useBlogPosts = () => {
     window.addEventListener('blogPostUpdated', handlePostUpdate);
     window.addEventListener('blogPostDeleted', handlePostUpdate);
     
+    // Add a network reconnection handler
+    const handleOnline = () => {
+      if (hasNetworkError) {
+        console.log("Network reconnected, refreshing blog posts...");
+        fetchPosts();
+      }
+    };
+    
+    window.addEventListener('online', handleOnline);
+    
     return () => {
       window.removeEventListener('blogPostUpdated', handlePostUpdate);
       window.removeEventListener('blogPostDeleted', handlePostUpdate);
+      window.removeEventListener('online', handleOnline);
     };
-  }, []);
+  }, [hasNetworkError]);
 
-  // Cache posts when they change
   useEffect(() => {
     if (posts.length > 0) {
       try {

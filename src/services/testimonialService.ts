@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
 import { translateBlogContent } from "./translationService";
 import { toast } from "sonner";
 
@@ -15,15 +15,16 @@ export const fetchTestimonials = async () => {
     
     if (error) {
       console.error('Error fetching testimonials:', error);
-      throw error;
+      toast.error(handleSupabaseError(error, "Failed to load testimonials"));
+      return [];
     }
     
     console.log(`Successfully fetched ${data?.length || 0} testimonials`);
     return data || [];
   } catch (error) {
     console.error('Error fetching testimonials:', error);
-    toast.error("Failed to load testimonials");
-    throw error;
+    toast.error(handleSupabaseError(error, "Failed to load testimonials"));
+    return [];
   }
 };
 
@@ -39,15 +40,16 @@ export const fetchTestimonialTranslations = async () => {
     
     if (error) {
       console.error('Error fetching testimonial translations:', error);
-      throw error;
+      toast.error(handleSupabaseError(error, "Failed to load testimonial translations"));
+      return [];
     }
     
     console.log(`Successfully fetched ${data?.length || 0} testimonial translations`);
     return data || [];
   } catch (error) {
     console.error('Error fetching testimonial translations:', error);
-    toast.error("Failed to load testimonial translations");
-    throw error;
+    toast.error(handleSupabaseError(error, "Failed to load testimonial translations"));
+    return [];
   }
 };
 
@@ -72,6 +74,7 @@ export const createTestimonial = async (testimonial: { name: string; company: st
     
     if (error) {
       console.error('Error creating testimonial:', error);
+      toast.error(handleSupabaseError(error, "Failed to create testimonial"));
       throw error;
     }
     
@@ -85,7 +88,7 @@ export const createTestimonial = async (testimonial: { name: string; company: st
     return data;
   } catch (error) {
     console.error('Error creating testimonial:', error);
-    toast.error("Failed to create testimonial");
+    toast.error(handleSupabaseError(error, "Failed to create testimonial"));
     throw error;
   }
 };

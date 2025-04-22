@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
@@ -19,38 +19,64 @@ export interface ContactInfo {
 export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
   try {
     console.log("Fetching contact info from Supabase...");
+    
+    // First try to fetch from Supabase
     const { data, error } = await supabase
       .from('contact_info')
       .select('*')
       .maybeSingle();
 
-    if (error) {
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned by query"
       console.error("Error in Supabase query:", error);
       throw error;
     }
 
     console.log("Fetched contact info:", data);
     
+    // Default contact info
+    const defaultInfo: ContactInfo = {
+      phone: '+57 3192963363',
+      email: 'contact@automatizalo.co',
+      address: '123 AI Street, Tech City, TC 12345',
+      website: 'https://automatizalo.co',
+      whatsapp: '+57 3192963363'
+    };
+    
     if (!data) {
       console.log("No contact info found in database, using defaults");
-      return null;
+      // Try to create a default record if one doesn't exist
+      try {
+        const { error: insertError } = await supabase
+          .from('contact_info')
+          .insert({
+            phone: defaultInfo.phone,
+            email: defaultInfo.email,
+            address: defaultInfo.address,
+            website: defaultInfo.website
+          });
+        
+        if (insertError) {
+          console.error("Error creating default contact info:", insertError);
+        }
+      } catch (insertError) {
+        console.error("Error creating default contact info:", insertError);
+      }
+      
+      return defaultInfo;
     }
     
     // Create ContactInfo object with whatsapp added separately since it's not in the DB
-    const contactInfo: ContactInfo = {
-      phone: data.phone || '+57 3192963363',
-      email: data.email || 'contact@automatizalo.co',
-      address: data.address || '123 AI Street, Tech City, TC 12345',
-      website: data.website || 'https://automatizalo.co',
+    return {
+      phone: data.phone || defaultInfo.phone,
+      email: data.email || defaultInfo.email,
+      address: data.address || defaultInfo.address,
+      website: data.website || defaultInfo.website,
       whatsapp: '+57 3192963363' // Always use this WhatsApp number
     };
-    
-    return contactInfo;
   } catch (error: any) {
     console.error("Error fetching contact information:", error);
-    console.error("Error details:", error.message);
     // Return default values on error
-    toast.error("Failed to load contact information. Using default values.");
+    toast.error(handleSupabaseError(error, "Failed to load contact information. Using default values."));
     return {
       phone: '+57 3192963363',
       email: 'contact@automatizalo.co',
@@ -78,38 +104,40 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
     };
     
     // Check if we have an existing record
-    const { data: existingData } = await supabase
+    const { data: existingData, error: queryError } = await supabase
       .from('contact_info')
       .select('id')
       .maybeSingle();
     
+    if (queryError && queryError.code !== 'PGRST116') {
+      console.error('Error checking existing contact info:', queryError);
+      throw new Error(queryError.message);
+    }
+    
+    let result;
+    
     if (existingData?.id) {
       // Update the record
-      const { error } = await supabase
+      result = await supabase
         .from('contact_info')
         .update(contactInfoForDB)
         .eq('id', existingData.id);
-      
-      if (error) {
-        console.error('Error updating contact info:', error);
-        throw new Error(error.message);
-      }
     } else {
       // Create a new record if none exists
-      const { error } = await supabase
+      result = await supabase
         .from('contact_info')
         .insert(contactInfoForDB);
-      
-      if (error) {
-        console.error('Error inserting contact info:', error);
-        throw new Error(error.message);
-      }
+    }
+    
+    if (result.error) {
+      console.error('Error updating contact info:', result.error);
+      throw new Error(result.error.message);
     }
     
     console.log("Contact info updated successfully");
   } catch (err) {
     console.error('Failed to update contact info:', err);
-    toast.error("Failed to update contact information.");
+    toast.error(handleSupabaseError(err, "Failed to update contact information."));
     throw err;
   }
 };

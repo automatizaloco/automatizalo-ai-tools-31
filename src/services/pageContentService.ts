@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
 import { translateBlogContent } from "./translationService";
 import { toast } from "sonner";
 
@@ -29,12 +29,14 @@ export const getPageContent = async (page: string, section: string, language: st
       console.error('Error fetching page content:', error);
       
       // If no content exists in database for this language, check if we have it in English
-      if (error.message.includes('No rows found') && language !== 'en') {
+      if (language !== 'en') {
         console.log(`No content found for ${language}, trying English as fallback`);
         return getPageContent(page, section, 'en');
       }
       
-      throw error;
+      // For serious errors, return default content
+      const defaultContent = `<h2>Content for ${section} on ${page} page</h2>`;
+      return defaultContent;
     }
     
     // If content exists in the database, return it
@@ -53,15 +55,21 @@ export const getPageContent = async (page: string, section: string, language: st
     const defaultContent = `<h2>Content for ${section} on ${page} page</h2>`;
     
     // Store the default content in Supabase
-    const { error: insertError } = await supabase.from('page_content').insert({
-      page,
-      section_name: section,
-      content: defaultContent,
-      language: language
-    });
-    
-    if (insertError) {
-      console.error('Error inserting default content:', insertError);
+    try {
+      const { error: insertError } = await supabase
+        .from('page_content')
+        .insert({
+          page,
+          section_name: section,
+          content: defaultContent,
+          language: language
+        });
+      
+      if (insertError) {
+        console.error('Error inserting default content:', insertError);
+      }
+    } catch (insertErr) {
+      console.error('Error in insert operation:', insertErr);
     }
     
     return defaultContent;
@@ -81,7 +89,8 @@ export const updatePageContent = async (
   try {
     console.log(`Updating content for ${page}/${section} in language ${language}`);
     
-    const { error } = await supabase.from('page_content')
+    const { error } = await supabase
+      .from('page_content')
       .upsert({
         page,
         section_name: section,
@@ -94,7 +103,8 @@ export const updatePageContent = async (
     
     if (error) {
       console.error('Error updating page content in Supabase:', error);
-      throw error;
+      toast.error(handleSupabaseError(error, "Failed to update content"));
+      return;
     }
     
     console.log(`Content updated successfully for ${page}/${section} in ${language}`);
@@ -105,7 +115,7 @@ export const updatePageContent = async (
     }
   } catch (error) {
     console.error('Error updating page content in Supabase:', error);
-    throw error;
+    toast.error(handleSupabaseError(error, "Failed to update content"));
   }
 };
 
@@ -138,7 +148,8 @@ const autoTranslatePageContent = async (page: string, section: string, englishCo
         console.log(`Translation to ${targetLang} completed. Storing in database...`);
         
         // Store the translated content
-        const { error } = await supabase.from('page_content')
+        const { error } = await supabase
+          .from('page_content')
           .upsert({
             page,
             section_name: section,

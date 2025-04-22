@@ -35,6 +35,10 @@ const BlogAdmin = () => {
     navigate("/admin/webhooks");
   };
 
+  const navigateToNotifications = () => {
+    navigate("/admin/notifications");
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -49,6 +53,7 @@ const BlogAdmin = () => {
         onCreatePost={handleCreate}
         onCreateAutomatic={handleCreateAutomatic}
         onWebhookSettings={navigateToWebhookSettings}
+        onNotifications={navigateToNotifications}
         isMobile={isMobile}
       />
       

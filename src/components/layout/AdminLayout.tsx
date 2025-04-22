@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { Menu, PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Webhook, Wand2 } from 'lucide-react';
+import { Menu, PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Webhook, Wand2, Bell } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Sheet,
@@ -111,14 +111,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return null;
   }
 
-  // Updated admin routes to include automatic blog and fix the navigation
+  // Updated admin routes to include notifications
   const adminRoutes = [
     { value: 'content', label: 'Dashboard', icon: LayoutDashboard },
     { value: 'blog', label: 'Blog', icon: PenSquare },
     { value: 'automatic-blog', label: 'AI Blog', icon: Wand2 },
     { value: 'webhooks', label: 'Webhooks', icon: Webhook },
     { value: 'testimonials', label: 'Testimonials', icon: MessageSquare },
-    { value: 'newsletters', label: 'Newsletter', icon: Mail }
+    { value: 'newsletters', label: 'Newsletter', icon: Mail },
+    { value: 'notifications', label: 'Notifications', icon: Bell }
   ];
 
   return (
@@ -178,7 +179,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             className="w-full mb-8"
             onValueChange={handleTabChange}
           >
-            <TabsList className="grid grid-cols-6 w-full">
+            <TabsList className="grid grid-cols-7 w-full">
               {adminRoutes.map((route) => {
                 const Icon = route.icon || Globe;
                 return (

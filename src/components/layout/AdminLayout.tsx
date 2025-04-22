@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { Menu, PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Webhook } from 'lucide-react';
+import { Menu, PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Webhook, Wand2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Sheet,
@@ -111,31 +111,31 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return null;
   }
 
-  // Updated admin routes to fix broken links and remove unnecessary options
+  // Updated admin routes to include automatic blog and fix the navigation
   const adminRoutes = [
     { value: 'content', label: 'Dashboard', icon: LayoutDashboard },
     { value: 'blog', label: 'Blog', icon: PenSquare },
+    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2 },
     { value: 'webhooks', label: 'Webhooks', icon: Webhook },
     { value: 'testimonials', label: 'Testimonials', icon: MessageSquare },
-    { value: 'newsletters', label: 'Newsletter', icon: Mail },
-    { value: 'notifications', label: 'Notifications', icon: Globe }
+    { value: 'newsletters', label: 'Newsletter', icon: Mail }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {isMobile ? (
-        <div className="bg-white shadow sticky top-0 z-50">
-          <div className="px-4 h-16 flex justify-between items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-lg font-bold">Admin</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleHomeClick}>
-                Home
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Logout
-              </Button>
+      <div className="bg-white shadow sticky top-0 z-50">
+        <div className="px-4 h-16 flex justify-between items-center">
+          <div className="flex-shrink-0 flex items-center">
+            <h1 className="text-lg font-bold">Admin</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={handleHomeClick}>
+              Home
+            </Button>
+            <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={handleLogout}>
+              Logout
+            </Button>
+            {isMobile && (
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -166,24 +166,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   </div>
                 </SheetContent>
               </Sheet>
-            </div>
+            )}
           </div>
         </div>
-      ) : (
-        <div className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16 items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold">Admin Dashboard</h1>
-              </div>
-              <div className="flex items-center gap-4">
-                <Button variant="outline" onClick={handleHomeClick}>Back to Homepage</Button>
-                <Button variant="outline" onClick={handleLogout}>Logout</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
       
       <div className={`${isMobile ? 'px-4 py-4' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
         {!isMobile && (

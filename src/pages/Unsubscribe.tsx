@@ -25,7 +25,7 @@ const Unsubscribe = () => {
       const { data: existingSubscriptions, error: checkError } = await supabase
         .from('newsletter_subscriptions')
         .select('id')
-        .eq('email' as any, email);
+        .eq('email', email) // Fixed: removed 'as any' cast that was causing the issue
       
       if (checkError) {
         throw checkError;
@@ -46,7 +46,7 @@ const Unsubscribe = () => {
       const { error: deleteError } = await supabase
         .from('newsletter_subscriptions')
         .delete()
-        .eq('email' as any, email);
+        .eq('email', email) // Fixed: removed 'as any' cast that was causing the issue
       
       if (deleteError) {
         throw deleteError;

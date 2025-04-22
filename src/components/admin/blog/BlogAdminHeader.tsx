@@ -1,18 +1,20 @@
 
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Webhook, Wand2 } from "lucide-react";
+import { PlusCircle, Webhook, Wand2, Bell } from "lucide-react";
 
 interface BlogAdminHeaderProps {
   onCreatePost: () => void;
   onCreateAutomatic: () => void;
   onWebhookSettings: () => void;
+  onNotifications: () => void;
   isMobile: boolean;
 }
 
 const BlogAdminHeader = ({ 
   onCreatePost, 
   onCreateAutomatic, 
-  onWebhookSettings, 
+  onWebhookSettings,
+  onNotifications, 
   isMobile 
 }: BlogAdminHeaderProps) => {
   return (
@@ -27,6 +29,15 @@ const BlogAdminHeader = ({
         >
           <Webhook className="w-4 h-4" />
           {isMobile ? "Webhooks" : "Webhook Settings"}
+        </Button>
+        <Button 
+          variant="outline"
+          onClick={onNotifications}
+          className="flex items-center gap-2 text-sm"
+          size={isMobile ? "sm" : "default"}
+        >
+          <Bell className="w-4 h-4" />
+          {isMobile ? "Notifs" : "Notifications"}
         </Button>
         <Button 
           variant="outline"

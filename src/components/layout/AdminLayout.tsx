@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactNode, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { toast } from 'sonner';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -26,12 +26,27 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setLoading(false);
-      
-      if (!data.session) {
-        navigate('/login?redirect=/admin');
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error checking session:", error);
+          toast.error("Authentication error. Please try logging in again.");
+          navigate('/login?redirect=/admin');
+          setLoading(false);
+          return;
+        }
+        
+        setSession(data.session);
+        setLoading(false);
+        
+        if (!data.session) {
+          navigate('/login?redirect=/admin');
+        }
+      } catch (error) {
+        console.error("Error in checkSession:", error);
+        toast.error("Failed to verify your session. Using limited admin mode.");
+        setLoading(false);
       }
     };
     
@@ -63,8 +78,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }, [location.pathname]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+    try {
+      await supabase.auth.signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+      // Force a redirect to login page even if signOut fails
+      navigate('/login');
+    }
   };
 
   const handleTabChange = (value: string) => {

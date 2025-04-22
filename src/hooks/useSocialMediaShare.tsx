@@ -42,50 +42,56 @@ export const useSocialMediaShare = () => {
 
       toast.info("Sending to social media webhook...");
 
-      if (method === 'GET') {
-        const params = new URLSearchParams();
-        Object.entries(postData).forEach(([key, value]) => {
-          if (value) params.append(key, value as string);
-        });
-        
-        const urlWithParams = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}${params.toString()}`;
-        console.log("Making GET request to:", urlWithParams);
-        
-        const response = await fetch(urlWithParams, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
+      try {
+        if (method === 'GET') {
+          const params = new URLSearchParams();
+          Object.entries(postData).forEach(([key, value]) => {
+            if (value) params.append(key, value as string);
+          });
+          
+          const urlWithParams = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}${params.toString()}`;
+          console.log("Making GET request to:", urlWithParams);
+          
+          const response = await fetch(urlWithParams, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          console.log("Response status:", response.status);
+          
+          if (response.ok) {
+            toast.success("Post shared to social media successfully");
+            return true;
+          } else {
+            throw new Error(`HTTP error: ${response.status}`);
           }
-        });
-        
-        console.log("Response status:", response.status);
-        
-        if (response.ok) {
-          toast.success("Post shared to social media successfully");
-          return true;
         } else {
-          throw new Error(`HTTP error: ${response.status}`);
+          console.log("Making POST request to:", webhookUrl);
+          console.log("With payload:", postData);
+          
+          const response = await fetch(webhookUrl, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(postData),
+          });
+          
+          console.log("Response status:", response.status);
+          
+          if (response.ok) {
+            toast.success("Post shared to social media successfully");
+            return true;
+          } else {
+            throw new Error(`HTTP error: ${response.status}`);
+          }
         }
-      } else {
-        console.log("Making POST request to:", webhookUrl);
-        console.log("With payload:", postData);
-        
-        const response = await fetch(webhookUrl, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(postData),
-        });
-        
-        console.log("Response status:", response.status);
-        
-        if (response.ok) {
-          toast.success("Post shared to social media successfully");
-          return true;
-        } else {
-          throw new Error(`HTTP error: ${response.status}`);
-        }
+      } catch (fetchError) {
+        console.error("Network error sharing to social media:", fetchError);
+        toast.error("Network error - couldn't connect to webhook. Please try again later.");
+        return false;
       }
     } catch (error) {
       console.error("Error sharing to social media:", error);

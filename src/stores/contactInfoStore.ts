@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { fetchContactInfo as fetchContactInfoService, updateContactInfo as updateContactInfoService } from '@/services/contactService';
 import { toast } from 'sonner';
@@ -21,7 +22,7 @@ interface ContactInfoState {
 
 // Default contact info to use as fallback
 const defaultContactInfo: ContactInfo = {
-  phone: '',
+  phone: '+57 3192963363',
   email: 'contact@automatizalo.co',
   address: '123 AI Street, Tech City, TC 12345',
   website: 'https://automatizalo.co',
@@ -55,17 +56,26 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
       }
       
       // Now fetch from service with better error handling
-      const data = await fetchContactInfoService();
-      
-      set({
-        contactInfo: {
-          ...data,
-          whatsapp: '+57 3192963363' // Always ensure this is set
-        },
-        loading: false,
-        error: null
-      });
-      
+      try {
+        const data = await fetchContactInfoService();
+        
+        set({
+          contactInfo: {
+            ...data,
+            whatsapp: '+57 3192963363' // Always ensure this is set
+          },
+          loading: false,
+          error: null
+        });
+      } catch (fetchError) {
+        console.error("Error fetching contact info:", fetchError);
+        // Don't override existing contact info if fetch fails
+        // Just mark loading as false and set the error
+        set(state => ({
+          loading: false,
+          error: fetchError.message || "Failed to fetch contact info"
+        }));
+      }
     } catch (err: any) {
       console.error('Error in contactInfoStore:', err);
       
@@ -99,15 +109,34 @@ export const useContactInfo = create<ContactInfoState>((set, get) => ({
       }
       
       // Then attempt to update in database
-      await updateContactInfoService(updatedInfo);
+      try {
+        await updateContactInfoService(updatedInfo);
+        toast.success("Contact information updated successfully");
+      } catch (updateError) {
+        console.error('Error updating contact info in database:', updateError);
+        toast.error("Changes saved locally but couldn't update the database. Will try again when connection is restored.");
+        
+        // Listen for online event to retry the update
+        const retryUpdate = async () => {
+          try {
+            await updateContactInfoService(get().contactInfo);
+            toast.success("Contact information now synced with database");
+            window.removeEventListener('online', retryUpdate);
+            window.removeEventListener('networkReconnected', retryUpdate);
+          } catch (retryError) {
+            console.error('Failed to retry contact info update:', retryError);
+          }
+        };
+        
+        window.addEventListener('online', retryUpdate);
+        window.addEventListener('networkReconnected', retryUpdate);
+      }
       
       set({ loading: false });
-      toast.success("Contact information updated successfully");
     } catch (err: any) {
       console.error('Error updating contact info:', err);
       // Keep the updated info in the UI even if save to DB failed
       set({ error: err.message || 'Failed to update contact info', loading: false });
-      toast.error("Changes saved locally but couldn't update the database. Will try again when connection is restored.");
     }
   }
 }));

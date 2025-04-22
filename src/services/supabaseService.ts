@@ -57,11 +57,27 @@ export const setupOfflineCache = <T>(
       const data = await fetchFunction();
       try {
         localStorage.setItem(`cached_${cacheKey}`, JSON.stringify(data));
+        toast.success(`${tableName} data refreshed successfully`);
       } catch (storageError) {
         console.error(`Error updating cache for ${tableName}:`, storageError);
       }
     } catch (error) {
       console.error(`Error refreshing ${tableName} after coming online:`, error);
+    }
+  });
+  
+  // Also listen for our custom networkReconnected event
+  window.addEventListener('networkReconnected', async () => {
+    console.log(`Network reconnected event, refreshing ${tableName} data`);
+    try {
+      const data = await fetchFunction();
+      try {
+        localStorage.setItem(`cached_${cacheKey}`, JSON.stringify(data));
+      } catch (storageError) {
+        console.error(`Error updating cache for ${tableName}:`, storageError);
+      }
+    } catch (error) {
+      console.error(`Error refreshing ${tableName} after reconnection event:`, error);
     }
   });
 };
@@ -79,4 +95,33 @@ export const getCachedData = <T>(cacheKey: string, defaultValue: T[] = []): T[] 
     console.error(`Error reading cached data for ${cacheKey}:`, error);
   }
   return defaultValue;
+};
+
+/**
+ * Clear all cached data
+ */
+export const clearAllCaches = (): void => {
+  const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('cached_'));
+  cacheKeys.forEach(key => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Error clearing cache for ${key}:`, error);
+    }
+  });
+  console.log(`Cleared ${cacheKeys.length} cache entries`);
+  toast.success("All cached data cleared");
+};
+
+/**
+ * Attempt to sync all offline changes
+ */
+export const syncOfflineChanges = async (): Promise<boolean> => {
+  // This is a placeholder for a more sophisticated offline sync mechanism
+  // In a real app, you would implement a queue system for offline changes
+  
+  // Dispatch reconnection event to trigger refreshes
+  window.dispatchEvent(new CustomEvent('networkReconnected'));
+  
+  return true;
 };

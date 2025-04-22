@@ -1,100 +1,77 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-
-interface User {
-  email: string;
-  isAdmin: boolean;
-}
-
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+interface AuthContextProps {
+  user: any;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
   useEffect(() => {
-    // Check initial session
-    const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const userData = { 
-          email: session.user.email || '', 
-          isAdmin: true 
-        };
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem("user", JSON.stringify(userData));
-      }
-    };
-    
-    initializeAuth();
-    
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setIsAuthenticated(false);
-          localStorage.removeItem("user");
-        } else if (event === 'SIGNED_IN' && session) {
-          const userData = { 
-            email: session.user.email || '', 
-            isAdmin: true 
-          };
-          setUser(userData);
-          setIsAuthenticated(true);
-          localStorage.setItem("user", JSON.stringify(userData));
-        }
-      }
-    );
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    const loadSession = async () => {
+      setIsLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+        if (session) {
+          setUser(session.user);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error("Error loading session:", error);
+        setUser(null);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [navigate]);
+
+  const login = async () => {
     try {
-      console.log(`Attempting to login with email: ${email}`);
-      
-      // Always use Supabase authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/admin`,
+        }
       });
-      
+
       if (error) {
-        console.error("Supabase auth error:", error);
-        toast.error(error.message || "Invalid credentials");
-        return false;
+        console.error("Login error:", error);
       }
-      
-      if (!data.session) {
-        console.error("No session created");
-        toast.error("No session created. Please try again.");
-        return false;
-      }
-      
-      const userData = { email, isAdmin: true };
-      setUser(userData);
-      setIsAuthenticated(true);
-      localStorage.setItem("user", JSON.stringify(userData));
-      toast.success("Successfully logged in");
-      console.log("Login successful, user data:", userData);
-      return true;
-    } catch (error) {
-      console.error("Unexpected error during login:", error);
-      toast.error("Login failed. Please try again.");
-      return false;
+    } catch (err) {
+      console.error("Unexpected error during login:", err);
     }
   };
 
@@ -102,27 +79,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error("Error signing out:", error);
+        console.error("Logout error:", error);
       }
-      
+    } catch (err) {
+      console.error("Unexpected error during logout:", err);
+    } finally {
       setUser(null);
       setIsAuthenticated(false);
-      localStorage.removeItem("user");
-      toast.success("Successfully logged out");
-    } catch (error) {
-      console.error("Unexpected error during logout:", error);
-      toast.error("Logout failed. Please try again.");
+      navigate('/login');
     }
   };
 
+  const value: AuthContextProps = {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");

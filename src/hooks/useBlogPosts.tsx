@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { BlogPost } from "@/types/blog";
@@ -44,6 +45,7 @@ export const useBlogPosts = () => {
         
         if (error?.message?.includes('network') || 
             error?.code === 'NETWORK_ERROR' || 
+            error?.message?.includes('fetch') ||
             error?.code === '42501') {
           setHasNetworkError(true);
         }
@@ -86,11 +88,13 @@ export const useBlogPosts = () => {
     };
     
     window.addEventListener('online', handleOnline);
+    window.addEventListener('networkReconnected', handleOnline);
     
     return () => {
       window.removeEventListener('blogPostUpdated', handlePostUpdate);
       window.removeEventListener('blogPostDeleted', handlePostUpdate);
       window.removeEventListener('online', handleOnline);
+      window.removeEventListener('networkReconnected', handleOnline);
     };
   }, [hasNetworkError]);
 

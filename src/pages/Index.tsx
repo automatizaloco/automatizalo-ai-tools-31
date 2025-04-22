@@ -9,6 +9,7 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 import { useAuth } from '@/context/AuthContext';
 import { ensureContentBucket } from '@/services/blog/ensureBucket';
 import { useLocation } from 'react-router-dom';
+import { checkSupabaseConnection } from '@/services/supabaseService';
 
 interface SectionState {
   id: number;
@@ -45,6 +46,16 @@ const Index = () => {
         console.error('Error parsing stored layout:', error);
       }
     }
+
+    // Check Supabase connection when the app starts
+    checkSupabaseConnection().then(isConnected => {
+      if (!isConnected) {
+        toast.warning("Database connection issue detected. Some features may be limited.", {
+          duration: 5000,
+          id: "connection-warning"
+        });
+      }
+    });
 
     // Ensure content bucket exists for image uploads
     if (isAdmin) {

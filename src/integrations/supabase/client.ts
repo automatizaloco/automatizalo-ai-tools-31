@@ -21,12 +21,16 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   db: {
     schema: 'public',
   },
-  // Increase request timeout and add retry configuration
+  // Enhanced connection settings with increased timeouts
   realtime: {
     params: {
       eventsPerSecond: 5,
     },
   },
+  // Add client-side timeout for queries
+  fetch: (url, options) => {
+    return fetch(url, { ...options, signal: AbortSignal.timeout(30000) });
+  }
 });
 
 // Add initialization logging
@@ -90,7 +94,7 @@ export const handleSupabaseError = (error: any, defaultMessage: string = "An err
     return "Authentication error. Please try logging out and back in.";
   }
   
-  if (error?.message?.includes("network") || error?.code === "NETWORK_ERROR") {
+  if (error?.message?.includes("network") || error?.code === "NETWORK_ERROR" || error?.message?.includes("fetch")) {
     return "Network error connecting to database. Please check your connection.";
   }
   
@@ -120,3 +124,18 @@ export const retryOperation = async <T>(
   
   throw lastError;
 };
+
+// Try to update localStorage when we're online again
+window.addEventListener('online', () => {
+  console.log('Network connection restored. Attempting to refresh data...');
+  toast.success("Network connection restored. Refreshing data...");
+  
+  // Dispatch custom event that services can listen for
+  window.dispatchEvent(new CustomEvent('networkReconnected'));
+});
+
+// Notify when we're offline
+window.addEventListener('offline', () => {
+  console.log('Network connection lost. Using cached data...');
+  toast.warning("Network connection lost. Using cached data where available.");
+});

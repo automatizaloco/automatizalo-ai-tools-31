@@ -1,137 +1,82 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { toast } from "sonner";
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface PersistentToast {
   id: string;
   title: string;
   message: string;
-  type: "success" | "error" | "warning" | "info";
+  type: 'success' | 'error' | 'info' | 'warning';
   timestamp: number;
 }
 
 interface PersistentToastContextType {
   toasts: PersistentToast[];
-  addToast: (toast: Omit<PersistentToast, "id" | "timestamp">) => void;
+  addToast: (toast: Omit<PersistentToast, 'id' | 'timestamp'>) => void;
   clearToasts: () => void;
-  removeToast: (id: string) => void;
 }
 
-const PersistentToastContext = createContext<PersistentToastContextType>({
-  toasts: [],
-  addToast: () => {},
-  clearToasts: () => {},
-  removeToast: () => {},
-});
+const STORAGE_KEY = 'persistent_toasts';
+const MAX_TOASTS = 100; // Maximum number of toasts to store
 
-interface PersistentToastProviderProps {
-  children: ReactNode;
-  storageKey?: string;
-}
+const PersistentToastContext = createContext<PersistentToastContextType | undefined>(undefined);
 
-export const PersistentToastProvider: React.FC<PersistentToastProviderProps> = ({
-  children,
-  storageKey = "persistent-toasts",
-}) => {
+export const PersistentToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<PersistentToast[]>([]);
-  
-  // Initialize toasts from localStorage
+
+  // Load toasts from localStorage on component mount
   useEffect(() => {
     try {
-      const storedToasts = localStorage.getItem(storageKey);
-      if (storedToasts) {
-        const parsedToasts = JSON.parse(storedToasts);
-        if (Array.isArray(parsedToasts)) {
-          setToasts(parsedToasts);
-          console.log("Loaded persistent toasts from storage:", parsedToasts.length);
-        }
+      const savedToasts = localStorage.getItem(STORAGE_KEY);
+      if (savedToasts) {
+        const parsedToasts = JSON.parse(savedToasts) as PersistentToast[];
+        setToasts(parsedToasts);
+        console.log('Loaded', parsedToasts.length, 'persistent toasts from storage');
+      } else {
+        console.log('No persistent toasts found in storage');
       }
     } catch (error) {
-      console.error("Error loading toasts from localStorage:", error);
+      console.error('Error loading persistent toasts:', error);
     }
-    
-    // Listen to custom events from external sources
-    const handleExternalToast = (event: CustomEvent<PersistentToast>) => {
-      console.log("Received external toast event:", event.detail);
-      if (event.detail) {
-        addToastInternal(event.detail);
-      }
-    };
-    
-    window.addEventListener('persistentToastAdded', handleExternalToast as EventListener);
-    
-    return () => {
-      window.removeEventListener('persistentToastAdded', handleExternalToast as EventListener);
-    };
-  }, [storageKey]);
-  
-  // Internal function to add a toast that can be called from both addToast and the event listener
-  const addToastInternal = (toastData: PersistentToast) => {
-    setToasts((currentToasts) => {
-      const newToasts = [toastData, ...currentToasts];
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(newToasts));
-        console.log("Saved toast to localStorage, new count:", newToasts.length);
-      } catch (error) {
-        console.error("Error saving toasts to localStorage:", error);
-      }
-      return newToasts;
-    });
-  };
-  
-  // Add a new toast
-  const addToast = (toastData: Omit<PersistentToast, "id" | "timestamp">) => {
+  }, []);
+
+  // Save toasts to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toasts));
+      console.info('Saved', toasts.length, 'persistent toasts to storage');
+    } catch (error) {
+      console.error('Error saving persistent toasts:', error);
+    }
+  }, [toasts]);
+
+  const addToast = (toast: Omit<PersistentToast, 'id' | 'timestamp'>) => {
     const newToast: PersistentToast = {
-      ...toastData,
-      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      ...toast,
+      id: uuidv4(),
       timestamp: Date.now(),
     };
     
-    console.log("Adding persistent toast:", newToast);
-    
-    // Also show the toast via Sonner
-    toast[toastData.type](toastData.title, { description: toastData.message });
-    
-    // Add to state and localStorage
-    addToastInternal(newToast);
-    
-    // Also dispatch custom event for other parts of the app
-    const event = new CustomEvent('persistentToastAdded', { 
-      detail: newToast 
-    });
-    
-    window.dispatchEvent(event);
+    // Add new toast at the beginning and keep only the latest MAX_TOASTS
+    setToasts(prevToasts => [newToast, ...prevToasts].slice(0, MAX_TOASTS));
+    console.info('Added new persistent toast:', newToast);
   };
-  
-  // Clear all toasts
+
   const clearToasts = () => {
     setToasts([]);
-    try {
-      localStorage.removeItem(storageKey);
-      console.log("Cleared all persistent toasts");
-    } catch (error) {
-      console.error("Error clearing toasts from localStorage:", error);
-    }
+    console.info('Cleared all persistent toasts');
   };
-  
-  // Remove a specific toast
-  const removeToast = (id: string) => {
-    setToasts((currentToasts) => {
-      const newToasts = currentToasts.filter((toast) => toast.id !== id);
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(newToasts));
-      } catch (error) {
-        console.error("Error saving toasts to localStorage:", error);
-      }
-      return newToasts;
-    });
-  };
-  
+
   return (
-    <PersistentToastContext.Provider value={{ toasts, addToast, clearToasts, removeToast }}>
+    <PersistentToastContext.Provider value={{ toasts, addToast, clearToasts }}>
       {children}
     </PersistentToastContext.Provider>
   );
 };
 
-export const usePersistentToast = () => useContext(PersistentToastContext);
+export const usePersistentToast = () => {
+  const context = useContext(PersistentToastContext);
+  if (context === undefined) {
+    throw new Error('usePersistentToast must be used within a PersistentToastProvider');
+  }
+  return context;
+};

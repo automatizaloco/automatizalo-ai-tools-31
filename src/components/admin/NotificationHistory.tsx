@@ -1,14 +1,26 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePersistentToast } from "@/context/PersistentToastContext";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Info, Trash2, BellRing } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, Trash2, BellRing, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 const NotificationHistory = () => {
   const { toasts, clearToasts } = usePersistentToast();
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [refreshKey, setRefreshKey] = useState(0); // Used to force a refresh
+
+  // Force a re-render on component mount to ensure notifications are loaded
+  useEffect(() => {
+    console.log("NotificationHistory mounted, loaded notifications:", toasts.length);
+  }, [toasts]);
+
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    toast.info("Refreshing notification list");
+  };
 
   const filteredToasts = toasts.filter(toast => {
     if (activeTab === "all") return true;
@@ -39,22 +51,36 @@ const NotificationHistory = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key={refreshKey}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BellRing className="h-5 w-5" />
           <h2 className="text-xl font-semibold">Notification History</h2>
+          <span className="text-sm text-gray-500 ml-2">
+            ({filteredToasts.length} notifications)
+          </span>
         </div>
         
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-          onClick={clearToasts}
-        >
-          <Trash2 className="h-4 w-4" />
-          Clear All
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={handleRefresh}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={clearToasts}
+          >
+            <Trash2 className="h-4 w-4" />
+            Clear All
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>

@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Sparkles, Webhook } from "lucide-react";
+import { PenSquare, MessageSquare, Mail, LayoutDashboard, Webhook } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Card,
@@ -42,12 +42,6 @@ const ContentManager = () => {
       icon: PenSquare
     },
     {
-      title: "Automatic Blog",
-      description: "Generate blog posts automatically with AI",
-      route: "/admin/automatic-blog",
-      icon: Sparkles
-    },
-    {
       title: "Webhooks",
       description: "Configure webhook endpoints for blog posts and social media",
       route: "/admin/webhooks",
@@ -62,14 +56,8 @@ const ContentManager = () => {
     {
       title: "Newsletter",
       description: "Manage newsletter templates and send newsletters",
-      route: "/admin/newsletter",
+      route: "/admin/newsletters",
       icon: Mail
-    },
-    {
-      title: "Website Content",
-      description: "Edit content, images, and text across all website pages",
-      route: "/admin/content-editor",
-      icon: Globe
     }
   ];
 

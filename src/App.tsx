@@ -13,23 +13,20 @@ import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import { Toaster } from '@/components/ui/sonner';
 import { PersistentToastProvider } from '@/context/PersistentToastContext';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/AuthProvider';
 import './App.css';
 import './styles/blog-content.css';
 import '@/components/editor/RichTextEditor.css';
 import { LanguageProvider } from './context/LanguageContext';
-import ContentEditor from './pages/admin/ContentEditor';
-import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import ContentManager from './pages/admin/ContentManager';
 import TestimonialManager from './pages/admin/TestimonialManager';
 import WebhookManager from './pages/admin/WebhookManager';
 import BlogAdmin from './pages/admin/BlogAdmin';
 import BlogPostForm from './pages/admin/BlogPostForm';
-import AutomaticBlog from './pages/admin/AutomaticBlog';
 import NotificationAdmin from './pages/admin/NotificationAdmin';
-import LayoutManager from './pages/admin/LayoutManager';
 import Unsubscribe from './pages/Unsubscribe';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 
 function App() {
   const location = useLocation();
@@ -59,16 +56,13 @@ function App() {
             
             <Route path="/admin" element={<AdminLayout><Outlet /></AdminLayout>}>
               <Route index element={<Admin />} />
-              <Route path="content" element={<ContentEditor />} />
-              <Route path="content-manager" element={<ContentManager />} />
-              <Route path="layout-manager" element={<LayoutManager />} />
+              <Route path="content" element={<ContentManager />} />
               <Route path="testimonials" element={<TestimonialManager />} />
               <Route path="webhooks" element={<WebhookManager />} />
               <Route path="newsletters" element={<NewsletterAdmin />} />
               <Route path="blog" element={<BlogAdmin />} />
               <Route path="blog/new" element={<BlogPostForm />} />
               <Route path="blog/edit/:id" element={<BlogPostForm />} />
-              <Route path="blog/automatic" element={<AutomaticBlog />} />
               <Route path="notifications" element={<NotificationAdmin />} />
             </Route>
           </Routes>

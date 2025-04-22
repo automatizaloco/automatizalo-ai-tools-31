@@ -1,5 +1,5 @@
 
-import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError, retryOperation } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
@@ -13,18 +13,44 @@ export interface ContactInfo {
   whatsapp: string;
 }
 
+// Local cache to store contact info
+let contactInfoCache: ContactInfo | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes
+
+/**
+ * Default contact info to use as fallback
+ */
+const defaultContactInfo: ContactInfo = {
+  phone: '+57 3192963363',
+  email: 'contact@automatizalo.co',
+  address: '123 AI Street, Tech City, TC 12345',
+  website: 'https://automatizalo.co',
+  whatsapp: '+57 3192963363'
+};
+
 /**
  * Fetch contact information
  */
-export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
+export const fetchContactInfo = async (): Promise<ContactInfo> => {
   try {
+    // Check if we have a valid cached version
+    if (contactInfoCache && (Date.now() - cacheTimestamp) < CACHE_EXPIRY) {
+      console.log("Using cached contact info");
+      return contactInfoCache;
+    }
+    
     console.log("Fetching contact info from Supabase...");
     
-    // First try to fetch from Supabase
-    const { data, error } = await supabase
-      .from('contact_info')
-      .select('*')
-      .maybeSingle();
+    // First try to fetch from Supabase with retries
+    const { data, error } = await retryOperation(
+      async () => await supabase
+        .from('contact_info')
+        .select('*')
+        .maybeSingle(),
+      3,
+      1000
+    );
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned by query"
       console.error("Error in Supabase query:", error);
@@ -33,26 +59,26 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
 
     console.log("Fetched contact info:", data);
     
-    // Default contact info
-    const defaultInfo: ContactInfo = {
-      phone: '+57 3192963363',
-      email: 'contact@automatizalo.co',
-      address: '123 AI Street, Tech City, TC 12345',
-      website: 'https://automatizalo.co',
-      whatsapp: '+57 3192963363'
+    // Create ContactInfo object with fetched data or defaults
+    const contactInfo: ContactInfo = {
+      phone: data?.phone || defaultContactInfo.phone,
+      email: data?.email || defaultContactInfo.email,
+      address: data?.address || defaultContactInfo.address,
+      website: data?.website || defaultContactInfo.website,
+      whatsapp: '+57 3192963363' // Always use this WhatsApp number
     };
     
     if (!data) {
-      console.log("No contact info found in database, using defaults");
+      console.log("No contact info found in database, using defaults and creating record");
       // Try to create a default record if one doesn't exist
       try {
         const { error: insertError } = await supabase
           .from('contact_info')
           .insert({
-            phone: defaultInfo.phone,
-            email: defaultInfo.email,
-            address: defaultInfo.address,
-            website: defaultInfo.website
+            phone: defaultContactInfo.phone,
+            email: defaultContactInfo.email,
+            address: defaultContactInfo.address,
+            website: defaultContactInfo.website
           });
         
         if (insertError) {
@@ -61,29 +87,26 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
       } catch (insertError) {
         console.error("Error creating default contact info:", insertError);
       }
-      
-      return defaultInfo;
     }
     
-    // Create ContactInfo object with whatsapp added separately since it's not in the DB
-    return {
-      phone: data.phone || defaultInfo.phone,
-      email: data.email || defaultInfo.email,
-      address: data.address || defaultInfo.address,
-      website: data.website || defaultInfo.website,
-      whatsapp: '+57 3192963363' // Always use this WhatsApp number
-    };
+    // Update cache
+    contactInfoCache = contactInfo;
+    cacheTimestamp = Date.now();
+    
+    return contactInfo;
   } catch (error: any) {
     console.error("Error fetching contact information:", error);
+    
+    // Return cached version if available, even if expired
+    if (contactInfoCache) {
+      console.log("Using expired cached contact info due to error");
+      toast.error(handleSupabaseError(error, "Failed to update contact information. Using cached values."));
+      return contactInfoCache;
+    }
+    
     // Return default values on error
     toast.error(handleSupabaseError(error, "Failed to load contact information. Using default values."));
-    return {
-      phone: '+57 3192963363',
-      email: 'contact@automatizalo.co',
-      address: '123 AI Street, Tech City, TC 12345',
-      website: 'https://automatizalo.co',
-      whatsapp: '+57 3192963363'
-    };
+    return defaultContactInfo;
   }
 };
 
@@ -93,6 +116,10 @@ export const fetchContactInfo = async (): Promise<ContactInfo | null> => {
 export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   try {
     console.log("Updating contact info with:", info);
+    
+    // Update cache immediately for responsive UI
+    contactInfoCache = info;
+    cacheTimestamp = Date.now();
     
     // Create a new object without the whatsapp property for the database
     // This fixes the TypeScript error where whatsapp doesn't exist in DB schema
@@ -140,4 +167,13 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
     toast.error(handleSupabaseError(err, "Failed to update contact information."));
     throw err;
   }
+};
+
+/**
+ * Clear the contact info cache
+ */
+export const clearContactInfoCache = (): void => {
+  contactInfoCache = null;
+  cacheTimestamp = 0;
+  console.log("Contact info cache cleared");
 };

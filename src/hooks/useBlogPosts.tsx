@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { BlogPost } from "@/types/blog";
 import { fetchBlogPosts, deleteBlogPost, updateBlogPostStatus } from "@/services/blogService";
 import { useSocialMediaShare } from "@/hooks/useSocialMediaShare";
-import { handleSupabaseError } from "@/integrations/supabase/client";
+import { handleSupabaseError, retryOperation } from "@/integrations/supabase/client";
 
 export const useBlogPosts = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -18,13 +18,32 @@ export const useBlogPosts = () => {
         console.log("Fetching blog posts...");
         setError(null);
         setLoading(true);
-        const fetchedPosts = await fetchBlogPosts();
+        
+        // Use the retry mechanism for more resilience
+        const fetchedPosts = await retryOperation(
+          async () => await fetchBlogPosts(),
+          3,
+          1500
+        );
+        
         setPosts(fetchedPosts);
         console.log(`Successfully fetched ${fetchedPosts.length} blog posts`);
       } catch (error: any) {
         console.error("Error fetching blog posts:", error);
         setError(handleSupabaseError(error, "Failed to load blog posts"));
-        toast.error("Failed to load blog posts. Please try refreshing the page.");
+        toast.error("Failed to load blog posts. Using cached data if available.");
+        
+        // Try to use cached data if available
+        try {
+          const cachedPosts = localStorage.getItem('cached_blog_posts');
+          if (cachedPosts) {
+            const parsedPosts = JSON.parse(cachedPosts);
+            setPosts(parsedPosts);
+            toast.info("Showing cached blog posts from your last visit");
+          }
+        } catch (cacheError) {
+          console.error("Error loading cached posts:", cacheError);
+        }
       } finally {
         setLoading(false);
       }
@@ -44,6 +63,17 @@ export const useBlogPosts = () => {
       window.removeEventListener('blogPostDeleted', handlePostUpdate);
     };
   }, []);
+
+  // Cache posts when they change
+  useEffect(() => {
+    if (posts.length > 0) {
+      try {
+        localStorage.setItem('cached_blog_posts', JSON.stringify(posts));
+      } catch (error) {
+        console.error("Error caching blog posts:", error);
+      }
+    }
+  }, [posts]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
@@ -72,7 +102,12 @@ export const useBlogPosts = () => {
       }));
 
       if (newStatus === 'published') {
-        await shareToSocialMedia(post);
+        try {
+          await shareToSocialMedia(post);
+        } catch (socialError) {
+          console.error("Error sharing to social media:", socialError);
+          // Continue with the status update even if social media sharing fails
+        }
       }
       
       toast.success(`Post ${newStatus === 'published' ? 'published' : 'unpublished'} successfully`);

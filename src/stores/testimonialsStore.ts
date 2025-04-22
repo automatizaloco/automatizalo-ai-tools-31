@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, handleSupabaseError, retryOperation } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { fetchTestimonials, fetchTestimonialTranslations } from '@/services/testimonialService';
 
 export interface Testimonial {
   id: string;
@@ -15,6 +15,8 @@ export const useTestimonials = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   // Load testimonials from Supabase
   useEffect(() => {
@@ -24,22 +26,71 @@ export const useTestimonials = () => {
         setError(null);
         
         console.log("Fetching testimonials in useTestimonials hook...");
-        const { data, error } = await supabase
-          .from('testimonials')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const data = await fetchTestimonials();
         
-        if (error) {
-          console.error("Error in Supabase query:", error);
-          throw error;
+        if (data && data.length > 0) {
+          console.log("Testimonials loaded from database:", data);
+          setTestimonials(data);
+          
+          // Cache testimonials in localStorage for offline access
+          try {
+            localStorage.setItem('cached_testimonials', JSON.stringify(data));
+          } catch (cacheError) {
+            console.error("Error caching testimonials:", cacheError);
+          }
+        } else if (retryCount < maxRetries) {
+          // Retry fetching after a delay
+          const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+          console.log(`No testimonials found, retrying in ${retryDelay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+          
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, retryDelay);
+          
+          // Try to load from cache while waiting for retry
+          try {
+            const cachedData = localStorage.getItem('cached_testimonials');
+            if (cachedData) {
+              const parsed = JSON.parse(cachedData);
+              setTestimonials(parsed);
+              console.log("Using cached testimonials while retrying");
+              toast.info("Using cached testimonials while connecting to database");
+            }
+          } catch (cacheError) {
+            console.error("Error loading cached testimonials:", cacheError);
+          }
+        } else {
+          // Max retries reached, try to use cached data
+          try {
+            const cachedData = localStorage.getItem('cached_testimonials');
+            if (cachedData) {
+              const parsed = JSON.parse(cachedData);
+              setTestimonials(parsed);
+              toast.info("Using cached testimonials - couldn't connect to database");
+            } else {
+              // No cached data, show error
+              setError("Failed to load testimonials after multiple attempts");
+            }
+          } catch (cacheError) {
+            console.error("Error loading cached testimonials:", cacheError);
+            setError("Failed to load testimonials");
+          }
         }
-        
-        console.log("Testimonials loaded from database:", data);
-        setTestimonials(data || []);
       } catch (error: any) {
         console.error("Error loading testimonials:", error);
-        setError("Failed to load testimonials");
-        toast.error("Failed to load testimonials. Please try refreshing the page.");
+        setError(handleSupabaseError(error, "Failed to load testimonials"));
+        
+        // Try to use cached data on error
+        try {
+          const cachedData = localStorage.getItem('cached_testimonials');
+          if (cachedData) {
+            const parsed = JSON.parse(cachedData);
+            setTestimonials(parsed);
+            toast.info("Using cached testimonials due to connection error");
+          }
+        } catch (cacheError) {
+          console.error("Error loading cached testimonials:", cacheError);
+        }
       } finally {
         setLoading(false);
       }
@@ -59,7 +110,7 @@ export const useTestimonials = () => {
     return () => {
       window.removeEventListener('testimonialUpdated', handleTestimonialUpdated as EventListener);
     };
-  }, []);
+  }, [retryCount]);
 
   // Create a new testimonial
   const createTestimonial = async (newTestimonial: Omit<Testimonial, 'id'>) => {
@@ -135,12 +186,27 @@ export const useTestimonials = () => {
     }
   };
 
+  // Refresh testimonials
+  const refreshTestimonials = async () => {
+    setLoading(true);
+    setRetryCount(0);
+    try {
+      const data = await fetchTestimonials();
+      setTestimonials(data);
+    } catch (error) {
+      console.error("Error refreshing testimonials:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return { 
     testimonials, 
     loading,
     error,
     createTestimonial,
     updateTestimonial,
-    deleteTestimonial
+    deleteTestimonial,
+    refreshTestimonials
   };
 };

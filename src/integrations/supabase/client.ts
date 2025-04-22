@@ -21,31 +21,97 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   db: {
     schema: 'public',
   },
+  // Add retry and timeout configurations
+  realtime: {
+    params: {
+      eventsPerSecond: 5,
+    },
+  },
 });
 
 // Add initialization logging
 console.log("Supabase client initialized with URL:", SUPABASE_URL);
 
-// Test connection
-supabase.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    console.error("Supabase connection error:", error.message);
-    toast.error("Failed to connect to Supabase. Please check your network connection.");
-  } else {
+// More robust connection test with retries
+let connectionAttempts = 0;
+const maxConnectionAttempts = 3;
+
+const testConnection = async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      throw error;
+    }
+    
     console.log("Supabase connection successful. Session:", data.session ? "Active" : "None");
+    return true;
+  } catch (err: any) {
+    connectionAttempts++;
+    console.error(`Supabase connection error (attempt ${connectionAttempts}/${maxConnectionAttempts}):`, err.message);
+    
+    if (connectionAttempts < maxConnectionAttempts) {
+      console.log(`Retrying connection in ${connectionAttempts * 2} seconds...`);
+      setTimeout(testConnection, connectionAttempts * 2000);
+    } else {
+      toast.error("Failed to connect to the database after multiple attempts. Please refresh the page.");
+      console.error("Supabase connection failed after maximum attempts:", err);
+    }
+    
+    return false;
   }
-}).catch(err => {
-  console.error("Unexpected Supabase connection error:", err);
-  toast.error("An error occurred while connecting to the database.");
-});
+};
+
+// Run the connection test
+testConnection();
 
 // Add a helper function to handle Supabase errors consistently
 export const handleSupabaseError = (error: any, defaultMessage: string = "An error occurred"): string => {
+  if (!error) {
+    return defaultMessage;
+  }
+  
   console.error("Supabase error:", error);
   
+  // Handle specific error codes
   if (error?.code === "42P17") {
-    return "Database permission error. Please contact an administrator.";
+    return "Database permission error. The application will continue to function with limited features.";
+  }
+  
+  if (error?.code === "PGRST116") {
+    return "No data found. Using default values.";
+  }
+  
+  if (error?.message?.includes("JWT")) {
+    return "Authentication error. Please try logging out and back in.";
+  }
+  
+  if (error?.message?.includes("network")) {
+    return "Network error connecting to database. Please check your connection.";
   }
   
   return error?.message || defaultMessage;
+};
+
+// Add a function to retry failed Supabase operations
+export const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000,
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      console.log(`Operation failed (attempt ${attempt}/${maxRetries}). Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      // Increase delay for next attempt
+      delay = delay * 1.5;
+    }
+  }
+  
+  throw lastError;
 };

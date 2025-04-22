@@ -1,28 +1,57 @@
-import { supabase, handleSupabaseError } from "@/integrations/supabase/client";
+import { supabase, handleSupabaseError, retryOperation } from "@/integrations/supabase/client";
 import { translateBlogContent } from "./translationService";
 import { toast } from "sonner";
+
+// Local cache for testimonials
+let testimonialsCache: any[] = [];
+let testimonialsCacheTimestamp = 0;
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Fetch all testimonials
  */
 export const fetchTestimonials = async () => {
   try {
+    // Use cache if available and not expired
+    if (testimonialsCache.length > 0 && (Date.now() - testimonialsCacheTimestamp) < CACHE_EXPIRY) {
+      console.log("Using cached testimonials");
+      return testimonialsCache;
+    }
+    
     console.log("Fetching testimonials from Supabase...");
-    const { data, error } = await supabase
-      .from('testimonials')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await retryOperation(
+      async () => await supabase
+        .from('testimonials')
+        .select('*')
+        .order('created_at', { ascending: false }),
+      3,
+      1000
+    );
     
     if (error) {
       console.error('Error fetching testimonials:', error);
+      if (testimonialsCache.length > 0) {
+        toast.error(handleSupabaseError(error, "Failed to refresh testimonials. Using cached data."));
+        return testimonialsCache;
+      }
       toast.error(handleSupabaseError(error, "Failed to load testimonials"));
       return [];
     }
+    
+    // Update cache
+    testimonialsCache = data || [];
+    testimonialsCacheTimestamp = Date.now();
     
     console.log(`Successfully fetched ${data?.length || 0} testimonials`);
     return data || [];
   } catch (error) {
     console.error('Error fetching testimonials:', error);
+    
+    if (testimonialsCache.length > 0) {
+      toast.error(handleSupabaseError(error, "Error refreshing testimonials. Using cached data."));
+      return testimonialsCache;
+    }
+    
     toast.error(handleSupabaseError(error, "Failed to load testimonials"));
     return [];
   }
@@ -34,9 +63,13 @@ export const fetchTestimonials = async () => {
 export const fetchTestimonialTranslations = async () => {
   try {
     console.log("Fetching testimonial translations from Supabase...");
-    const { data, error } = await supabase
-      .from('testimonials_translations')
-      .select('*');
+    const { data, error } = await retryOperation(
+      async () => await supabase
+        .from('testimonials_translations')
+        .select('*'),
+      2,
+      1000
+    );
     
     if (error) {
       console.error('Error fetching testimonial translations:', error);
@@ -79,6 +112,9 @@ export const createTestimonial = async (testimonial: { name: string; company: st
     }
     
     console.log("Testimonial created successfully:", data);
+    
+    // Clear cache to ensure fresh data on next fetch
+    testimonialsCache = [];
     
     // Auto-translate the testimonial to other languages
     if (data) {
@@ -234,4 +270,13 @@ const autoTranslateTestimonial = async (id: string, text: string, name: string) 
   } catch (error) {
     console.error('Error in autoTranslateTestimonial:', error);
   }
+};
+
+/**
+ * Clear the testimonials cache
+ */
+export const clearTestimonialsCache = (): void => {
+  testimonialsCache = [];
+  testimonialsCacheTimestamp = 0;
+  console.log("Testimonials cache cleared");
 };

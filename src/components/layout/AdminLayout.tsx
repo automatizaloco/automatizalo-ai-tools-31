@@ -1,17 +1,14 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactNode, useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LayoutDashboard, PenSquare, Webhook, Wand2, MessageSquare, Mail, Bell, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Menu, PenSquare, MessageSquare, Mail, LayoutDashboard, Globe, Webhook, Wand2, Bell } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { toast } from 'sonner';
+import AdminHeader from './admin/AdminHeader';
+import AdminNavTabs from './admin/AdminNavTabs';
+import AdminContent from './admin/AdminContent';
+import { AdminRouteType } from './admin/types';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -24,6 +21,17 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('content');
   const isMobile = useIsMobile();
+
+  // Admin routes definition
+  const adminRoutes: AdminRouteType[] = [
+    { value: 'content', label: 'Dashboard', icon: LayoutDashboard },
+    { value: 'blog', label: 'Blog', icon: PenSquare },
+    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2 },
+    { value: 'webhooks', label: 'Webhooks', icon: Webhook },
+    { value: 'testimonials', label: 'Testimonials', icon: MessageSquare },
+    { value: 'newsletters', label: 'Newsletter', icon: Mail },
+    { value: 'notifications', label: 'Notifications', icon: Bell }
+  ];
 
   useEffect(() => {
     const checkSession = async () => {
@@ -111,91 +119,28 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return null;
   }
 
-  // Updated admin routes to include notifications
-  const adminRoutes = [
-    { value: 'content', label: 'Dashboard', icon: LayoutDashboard },
-    { value: 'blog', label: 'Blog', icon: PenSquare },
-    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2 },
-    { value: 'webhooks', label: 'Webhooks', icon: Webhook },
-    { value: 'testimonials', label: 'Testimonials', icon: MessageSquare },
-    { value: 'newsletters', label: 'Newsletter', icon: Mail },
-    { value: 'notifications', label: 'Notifications', icon: Bell }
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow sticky top-0 z-50">
-        <div className="px-4 h-16 flex justify-between items-center">
-          <div className="flex-shrink-0 flex items-center">
-            <h1 className="text-lg font-bold">Admin</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={handleHomeClick}>
-              Home
-            </Button>
-            <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={handleLogout}>
-              Logout
-            </Button>
-            {isMobile && (
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[250px] p-0">
-                  <div className="flex flex-col h-full">
-                    <div className="p-4 border-b">
-                      <h2 className="text-lg font-semibold">Navigation</h2>
-                    </div>
-                    <div className="flex flex-col py-2 flex-1">
-                      {adminRoutes.map((route) => {
-                        const Icon = route.icon || Globe;
-                        return (
-                          <Button
-                            key={route.value}
-                            variant={activeTab === route.value ? "default" : "ghost"}
-                            className="justify-start rounded-none h-12 px-4"
-                            onClick={() => handleTabChange(route.value)}
-                          >
-                            <Icon className="h-4 w-4 mr-2" />
-                            {route.label}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            )}
-          </div>
-        </div>
-      </div>
+      <AdminHeader 
+        activeTab={activeTab}
+        adminRoutes={adminRoutes}
+        onTabChange={handleTabChange}
+        onHomeClick={handleHomeClick}
+        onLogout={handleLogout}
+      />
       
       <div className={`${isMobile ? 'px-4 py-4' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
         {!isMobile && (
-          <Tabs 
-            value={activeTab}
-            className="w-full mb-8"
-            onValueChange={handleTabChange}
-          >
-            <TabsList className="grid grid-cols-7 w-full">
-              {adminRoutes.map((route) => {
-                const Icon = route.icon || Globe;
-                return (
-                  <TabsTrigger key={route.value} value={route.value} className="flex items-center gap-1">
-                    <Icon className="h-4 w-4" />
-                    <span>{route.label}</span>
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-          </Tabs>
+          <AdminNavTabs 
+            activeTab={activeTab}
+            adminRoutes={adminRoutes}
+            onTabChange={handleTabChange}
+          />
         )}
         
-        <div className={`bg-white shadow rounded-lg ${isMobile ? 'p-3' : 'p-6'}`}>
+        <AdminContent>
           {children}
-        </div>
+        </AdminContent>
       </div>
     </div>
   );

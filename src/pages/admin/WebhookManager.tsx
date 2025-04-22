@@ -1,5 +1,5 @@
+
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,102 +158,100 @@ const WebhookManager = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="container mx-auto px-4 py-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">Webhook Manager</h1>
-          <p className="text-gray-600">
-            Configure and manage webhooks for your application. Webhooks allow your application to communicate with external services when certain events occur.
-          </p>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="blog-creation" className="flex items-center gap-1">
-              <Webhook className="h-4 w-4" />
-              <span>Blog Creation</span>
-            </TabsTrigger>
-            <TabsTrigger value="social-media" className="flex items-center gap-1">
-              <Globe className="h-4 w-4" />
-              <span>Social Media</span>
-            </TabsTrigger>
-            <TabsTrigger value="domain-settings" className="flex items-center gap-1">
-              <Server className="h-4 w-4" />
-              <span>Domain Settings</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="blog-creation">
-            <WebhookConfigCard
-              title="Blog Creation Webhook"
-              description="This webhook is called when generating new blog posts with AI"
-              icon={<Webhook className="h-5 w-5" />}
-              testUrl={localBlogCreation.test}
-              productionUrl={localBlogCreation.production}
-              method={localBlogCreation.method}
-              mode={localBlogCreation.mode}
-              onTestUrlChange={(value) => setLocalBlogCreation({...localBlogCreation, test: value})}
-              onProductionUrlChange={(value) => setLocalBlogCreation({...localBlogCreation, production: value})}
-              onMethodChange={(value) => setLocalBlogCreation({...localBlogCreation, method: value})}
-              onModeChange={(isProduction) => setLocalBlogCreation({...localBlogCreation, mode: isProduction ? 'production' : 'test'})}
-              onTest={() => handleTestWebhook('blog-creation')}
-              onSave={handleBlogCreationSubmit}
-            />
-          </TabsContent>
-
-          <TabsContent value="social-media">
-            <WebhookConfigCard
-              title="Social Media Webhook"
-              description="This webhook is triggered when a blog post is published to share on social media"
-              icon={<Globe className="h-5 w-5" />}
-              testUrl={localBlogSocialShare.test}
-              productionUrl={localBlogSocialShare.production}
-              method={localBlogSocialShare.method}
-              mode={localBlogSocialShare.mode}
-              onTestUrlChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, test: value})}
-              onProductionUrlChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, production: value})}
-              onMethodChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, method: value})}
-              onModeChange={(isProduction) => setLocalBlogSocialShare({...localBlogSocialShare, mode: isProduction ? 'production' : 'test'})}
-              onTest={() => handleTestWebhook('blog-social')}
-              onSave={handleBlogSocialShareSubmit}
-            />
-          </TabsContent>
-
-          <TabsContent value="domain-settings">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Server className="h-5 w-5" />
-                  Website Domain Settings
-                </CardTitle>
-                <CardDescription>
-                  Configure the domain used for generating links in webhooks
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleDomainSubmit}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="website-domain">Website Domain</Label>
-                    <Input 
-                      id="website-domain"
-                      value={localWebsiteDomain}
-                      onChange={(e) => setLocalWebsiteDomain(e.target.value)}
-                      placeholder="https://www.example.com"
-                    />
-                    <p className="text-xs text-gray-500">
-                      This domain will be used to generate full URLs for blog posts and other resources
-                    </p>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="ml-auto">Save Domain</Button>
-                </CardFooter>
-              </form>
-            </Card>
-          </TabsContent>
-        </Tabs>
+    <div className="container mx-auto px-4 py-4">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">Webhook Manager</h1>
+        <p className="text-gray-600">
+          Configure and manage webhooks for your application. Webhooks allow your application to communicate with external services when certain events occur.
+        </p>
       </div>
-    </AdminLayout>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="blog-creation" className="flex items-center gap-1">
+            <Webhook className="h-4 w-4" />
+            <span>Blog Creation</span>
+          </TabsTrigger>
+          <TabsTrigger value="social-media" className="flex items-center gap-1">
+            <Globe className="h-4 w-4" />
+            <span>Social Media</span>
+          </TabsTrigger>
+          <TabsTrigger value="domain-settings" className="flex items-center gap-1">
+            <Server className="h-4 w-4" />
+            <span>Domain Settings</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="blog-creation">
+          <WebhookConfigCard
+            title="Blog Creation Webhook"
+            description="This webhook is called when generating new blog posts with AI"
+            icon={<Webhook className="h-5 w-5" />}
+            testUrl={localBlogCreation.test}
+            productionUrl={localBlogCreation.production}
+            method={localBlogCreation.method}
+            mode={localBlogCreation.mode}
+            onTestUrlChange={(value) => setLocalBlogCreation({...localBlogCreation, test: value})}
+            onProductionUrlChange={(value) => setLocalBlogCreation({...localBlogCreation, production: value})}
+            onMethodChange={(value) => setLocalBlogCreation({...localBlogCreation, method: value})}
+            onModeChange={(isProduction) => setLocalBlogCreation({...localBlogCreation, mode: isProduction ? 'production' : 'test'})}
+            onTest={() => handleTestWebhook('blog-creation')}
+            onSave={handleBlogCreationSubmit}
+          />
+        </TabsContent>
+
+        <TabsContent value="social-media">
+          <WebhookConfigCard
+            title="Social Media Webhook"
+            description="This webhook is triggered when a blog post is published to share on social media"
+            icon={<Globe className="h-5 w-5" />}
+            testUrl={localBlogSocialShare.test}
+            productionUrl={localBlogSocialShare.production}
+            method={localBlogSocialShare.method}
+            mode={localBlogSocialShare.mode}
+            onTestUrlChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, test: value})}
+            onProductionUrlChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, production: value})}
+            onMethodChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, method: value})}
+            onModeChange={(isProduction) => setLocalBlogSocialShare({...localBlogSocialShare, mode: isProduction ? 'production' : 'test'})}
+            onTest={() => handleTestWebhook('blog-social')}
+            onSave={handleBlogSocialShareSubmit}
+          />
+        </TabsContent>
+
+        <TabsContent value="domain-settings">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Server className="h-5 w-5" />
+                Website Domain Settings
+              </CardTitle>
+              <CardDescription>
+                Configure the domain used for generating links in webhooks
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleDomainSubmit}>
+              <CardContent className="space-y-4">
+                <div className="space-y-1">
+                  <Label htmlFor="website-domain">Website Domain</Label>
+                  <Input 
+                    id="website-domain"
+                    value={localWebsiteDomain}
+                    onChange={(e) => setLocalWebsiteDomain(e.target.value)}
+                    placeholder="https://www.example.com"
+                  />
+                  <p className="text-xs text-gray-500">
+                    This domain will be used to generate full URLs for blog posts and other resources
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" className="ml-auto">Save Domain</Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,6 @@ import {
   TestimonialTranslation
 } from "@/services/testimonialService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import AdminLayout from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -211,241 +211,239 @@ const TestimonialManager = () => {
   }
 
   return (
-    <AdminLayout>
-      <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold">Testimonial Manager</h1>
-          <p className="text-gray-600 mt-2">Add and edit client testimonials</p>
-          
-          {user && (
-            <div className="mt-2 text-sm text-green-600">
-              Logged in as: {user.email}
-            </div>
-          )}
-        </div>
+    <div className="container mx-auto px-4">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold">Testimonial Manager</h1>
+        <p className="text-gray-600 mt-2">Add and edit client testimonials</p>
         
-        <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Testimonial</CardTitle>
-              <CardDescription>Create a new client testimonial to display on your website</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="name">Client Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={newTestimonial.name}
-                  onChange={handleInputChange}
-                  placeholder="e.g. John Smith"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="company">Company (Optional)</Label>
-                <Input
-                  id="company"
-                  name="company"
-                  value={newTestimonial.company || ""}
-                  onChange={handleInputChange}
-                  placeholder="e.g. Acme Inc."
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="text">Testimonial Text</Label>
-                <Textarea
-                  id="text"
-                  name="text"
-                  value={newTestimonial.text}
-                  onChange={handleInputChange}
-                  rows={4}
-                  placeholder="What did the client say about your service?"
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={handleAddTestimonial} 
-                className="ml-auto"
-                disabled={createMutation.isPending || !isAuthenticated}
-              >
-                {createMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  "Add Testimonial"
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Existing Testimonials</CardTitle>
-              <CardDescription>Edit or delete existing testimonials</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {fetchError ? (
-                <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-700 flex items-center">
-                  <AlertTriangle className="h-5 w-5 mr-2" />
-                  <div>
-                    <p className="font-medium">Error loading testimonials</p>
-                    <p className="text-sm">{(fetchError as Error).message}</p>
-                  </div>
-                </div>
-              ) : isLoading ? (
-                <div className="flex justify-center items-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-                </div>
-              ) : (
+        {user && (
+          <div className="mt-2 text-sm text-green-600">
+            Logged in as: {user.email}
+          </div>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New Testimonial</CardTitle>
+            <CardDescription>Create a new client testimonial to display on your website</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="name">Client Name</Label>
+              <Input
+                id="name"
+                name="name"
+                value={newTestimonial.name}
+                onChange={handleInputChange}
+                placeholder="e.g. John Smith"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="company">Company (Optional)</Label>
+              <Input
+                id="company"
+                name="company"
+                value={newTestimonial.company || ""}
+                onChange={handleInputChange}
+                placeholder="e.g. Acme Inc."
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="text">Testimonial Text</Label>
+              <Textarea
+                id="text"
+                name="text"
+                value={newTestimonial.text}
+                onChange={handleInputChange}
+                rows={4}
+                placeholder="What did the client say about your service?"
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={handleAddTestimonial} 
+              className="ml-auto"
+              disabled={createMutation.isPending || !isAuthenticated}
+            >
+              {createMutation.isPending ? (
                 <>
-                  {testimonials.length > 0 ? (
-                    testimonials.map((testimonial) => (
-                      <div key={testimonial.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-2 w-full">
-                            <div>
-                              <Label htmlFor={`name-${testimonial.id}`}>Client Name</Label>
-                              <Input
-                                id={`name-${testimonial.id}`}
-                                value={testimonial.name}
-                                onChange={(e) => handleTestimonialChange(testimonial.id, 'name', e.target.value)}
-                              />
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor={`company-${testimonial.id}`}>Company (Optional)</Label>
-                              <Input
-                                id={`company-${testimonial.id}`}
-                                value={testimonial.company || ""}
-                                onChange={(e) => handleTestimonialChange(testimonial.id, 'company', e.target.value)}
-                              />
-                            </div>
-                            
-                            <div className="mb-4">
-                              <div className="flex items-center justify-between mb-1">
-                                <Label htmlFor={`text-${testimonial.id}`}>Testimonial Text</Label>
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  <Globe className="h-3 w-3" />
-                                  <span>EN</span>
-                                </Badge>
-                              </div>
-                              <Textarea
-                                id={`text-${testimonial.id}`}
-                                value={testimonial.text}
-                                onChange={(e) => handleTestimonialChange(testimonial.id, 'text', e.target.value)}
-                                rows={3}
-                              />
-                            </div>
-                            
-                            {/* Translations section */}
-                            <div className="mt-4">
-                              <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
-                                <Languages className="h-4 w-4" />
-                                Translations
-                              </h4>
-                              
-                              {translationsLoading ? (
-                                <p className="text-sm text-gray-500">Loading translations...</p>
-                              ) : (
-                                <Tabs defaultValue="fr">
-                                  <TabsList className="mb-2">
-                                    <TabsTrigger value="fr">French</TabsTrigger>
-                                    <TabsTrigger value="es">Spanish</TabsTrigger>
-                                  </TabsList>
-                                  
-                                  <TabsContent value="fr">
-                                    {getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'fr') ? (
-                                      <div>
-                                        <Textarea
-                                          value={getTranslationText(testimonial.id, 'fr')}
-                                          onChange={(e) => handleTranslationChange(testimonial.id, 'fr', e.target.value)}
-                                          rows={3}
-                                          className="mb-2"
-                                        />
-                                        <Button 
-                                          size="sm"
-                                          onClick={() => handleSaveTranslation(testimonial.id, 'fr')}
-                                          disabled={updateTranslationMutation.isPending}
-                                          className="flex items-center gap-1"
-                                        >
-                                          {updateTranslationMutation.isPending ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <Save className="h-4 w-4" />
-                                          )}
-                                          Save French Translation
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <p className="text-sm text-gray-500 italic">No French translation available</p>
-                                    )}
-                                  </TabsContent>
-                                  
-                                  <TabsContent value="es">
-                                    {getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'es') ? (
-                                      <div>
-                                        <Textarea
-                                          value={getTranslationText(testimonial.id, 'es')}
-                                          onChange={(e) => handleTranslationChange(testimonial.id, 'es', e.target.value)}
-                                          rows={3}
-                                          className="mb-2"
-                                        />
-                                        <Button 
-                                          size="sm"
-                                          onClick={() => handleSaveTranslation(testimonial.id, 'es')}
-                                          disabled={updateTranslationMutation.isPending}
-                                          className="flex items-center gap-1"
-                                        >
-                                          {updateTranslationMutation.isPending ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <Save className="h-4 w-4" />
-                                          )}
-                                          Save Spanish Translation
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <p className="text-sm text-gray-500 italic">No Spanish translation available</p>
-                                    )}
-                                  </TabsContent>
-                                </Tabs>
-                              )}
-                            </div>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                "Add Testimonial"
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Existing Testimonials</CardTitle>
+            <CardDescription>Edit or delete existing testimonials</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {fetchError ? (
+              <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-700 flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                <div>
+                  <p className="font-medium">Error loading testimonials</p>
+                  <p className="text-sm">{(fetchError as Error).message}</p>
+                </div>
+              </div>
+            ) : isLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+              </div>
+            ) : (
+              <>
+                {testimonials.length > 0 ? (
+                  testimonials.map((testimonial) => (
+                    <div key={testimonial.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2 w-full">
+                          <div>
+                            <Label htmlFor={`name-${testimonial.id}`}>Client Name</Label>
+                            <Input
+                              id={`name-${testimonial.id}`}
+                              value={testimonial.name}
+                              onChange={(e) => handleTestimonialChange(testimonial.id, 'name', e.target.value)}
+                            />
                           </div>
                           
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="ml-4"
-                            onClick={() => handleDeleteTestimonial(testimonial.id)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            {deleteMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                          <div>
+                            <Label htmlFor={`company-${testimonial.id}`}>Company (Optional)</Label>
+                            <Input
+                              id={`company-${testimonial.id}`}
+                              value={testimonial.company || ""}
+                              onChange={(e) => handleTestimonialChange(testimonial.id, 'company', e.target.value)}
+                            />
+                          </div>
+                          
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between mb-1">
+                              <Label htmlFor={`text-${testimonial.id}`}>Testimonial Text</Label>
+                              <Badge variant="outline" className="flex items-center gap-1">
+                                <Globe className="h-3 w-3" />
+                                <span>EN</span>
+                              </Badge>
+                            </div>
+                            <Textarea
+                              id={`text-${testimonial.id}`}
+                              value={testimonial.text}
+                              onChange={(e) => handleTestimonialChange(testimonial.id, 'text', e.target.value)}
+                              rows={3}
+                            />
+                          </div>
+                          
+                          {/* Translations section */}
+                          <div className="mt-4">
+                            <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
+                              <Languages className="h-4 w-4" />
+                              Translations
+                            </h4>
+                            
+                            {translationsLoading ? (
+                              <p className="text-sm text-gray-500">Loading translations...</p>
                             ) : (
-                              <Trash2 className="h-4 w-4" />
+                              <Tabs defaultValue="fr">
+                                <TabsList className="mb-2">
+                                  <TabsTrigger value="fr">French</TabsTrigger>
+                                  <TabsTrigger value="es">Spanish</TabsTrigger>
+                                </TabsList>
+                                
+                                <TabsContent value="fr">
+                                  {getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'fr') ? (
+                                    <div>
+                                      <Textarea
+                                        value={getTranslationText(testimonial.id, 'fr')}
+                                        onChange={(e) => handleTranslationChange(testimonial.id, 'fr', e.target.value)}
+                                        rows={3}
+                                        className="mb-2"
+                                      />
+                                      <Button 
+                                        size="sm"
+                                        onClick={() => handleSaveTranslation(testimonial.id, 'fr')}
+                                        disabled={updateTranslationMutation.isPending}
+                                        className="flex items-center gap-1"
+                                      >
+                                        {updateTranslationMutation.isPending ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <Save className="h-4 w-4" />
+                                        )}
+                                        Save French Translation
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-500 italic">No French translation available</p>
+                                  )}
+                                </TabsContent>
+                                
+                                <TabsContent value="es">
+                                  {getTranslationsForTestimonial(testimonial.id).find(t => t.language === 'es') ? (
+                                    <div>
+                                      <Textarea
+                                        value={getTranslationText(testimonial.id, 'es')}
+                                        onChange={(e) => handleTranslationChange(testimonial.id, 'es', e.target.value)}
+                                        rows={3}
+                                        className="mb-2"
+                                      />
+                                      <Button 
+                                        size="sm"
+                                        onClick={() => handleSaveTranslation(testimonial.id, 'es')}
+                                        disabled={updateTranslationMutation.isPending}
+                                        className="flex items-center gap-1"
+                                      >
+                                        {updateTranslationMutation.isPending ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <Save className="h-4 w-4" />
+                                        )}
+                                        Save Spanish Translation
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-500 italic">No Spanish translation available</p>
+                                  )}
+                                </TabsContent>
+                              </Tabs>
                             )}
-                          </Button>
+                          </div>
                         </div>
+                        
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="ml-4"
+                          onClick={() => handleDeleteTestimonial(testimonial.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          {deleteMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center p-8 text-gray-500">
-                      No testimonials yet. Add your first one above.
                     </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  ))
+                ) : (
+                  <div className="text-center p-8 text-gray-500">
+                    No testimonials yet. Add your first one above.
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </AdminLayout>
+    </div>
   );
 };
 

@@ -13,7 +13,7 @@ import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import { Toaster } from '@/components/ui/sonner';
 import { PersistentToastProvider } from '@/context/PersistentToastContext';
-import { AuthProvider } from '@/context/AuthProvider';
+import { AuthProvider } from '@/context/AuthContext';
 import './App.css';
 import './styles/blog-content.css';
 import '@/components/editor/RichTextEditor.css';
@@ -27,6 +27,7 @@ import NotificationAdmin from './pages/admin/NotificationAdmin';
 import Unsubscribe from './pages/Unsubscribe';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
+import AutomaticBlog from './pages/admin/AutomaticBlog';
 
 function App() {
   const location = useLocation();
@@ -64,6 +65,7 @@ function App() {
               <Route path="blog/new" element={<BlogPostForm />} />
               <Route path="blog/edit/:id" element={<BlogPostForm />} />
               <Route path="notifications" element={<NotificationAdmin />} />
+              <Route path="automatic-blog" element={<AutomaticBlog />} />
             </Route>
           </Routes>
           <Toaster />

@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextProps {
@@ -22,10 +22,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Using a function to navigate instead of the hook directly
-  // This avoids the Router context requirement during initialization
-  const navigate = typeof window !== 'undefined' ? useNavigate() : null;
-  const location = typeof window !== 'undefined' ? useLocation() : null;
+  // We'll use navigate only after component mount and conditionally
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadSession = async () => {
@@ -91,10 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
-      // Only navigate if we have a navigate function
-      if (navigate) {
-        navigate('/login');
-      }
+      navigate('/login');
     }
   };
 

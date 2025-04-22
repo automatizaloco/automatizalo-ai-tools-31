@@ -2,7 +2,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import AdminLayout from "@/components/layout/AdminLayout";
 import BlogAdminHeader from "@/components/admin/blog/BlogAdminHeader";
 import MobilePostCard from "@/components/admin/blog/MobilePostCard";
 import BlogPostsTable from "@/components/admin/blog/BlogPostsTable";
@@ -21,7 +20,7 @@ const BlogAdmin = () => {
   }
 
   const handleEdit = (id: string) => {
-    navigate(`/admin/blog/${id}`);
+    navigate(`/admin/blog/edit/${id}`);
   };
 
   const handleCreate = () => {
@@ -38,56 +37,52 @@ const BlogAdmin = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="container mx-auto">
-        <BlogAdminHeader
-          onCreatePost={handleCreate}
-          onCreateAutomatic={handleCreateAutomatic}
-          onWebhookSettings={navigateToWebhookSettings}
-          isMobile={isMobile}
-        />
-        
-        {isMobile ? (
-          <div>
-            {posts.length > 0 ? (
-              posts.map((post) => (
-                <MobilePostCard
-                  key={post.id}
-                  post={post}
-                  onToggleStatus={handleToggleStatus}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No posts found. Create your first blog post.
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <BlogPostsTable
-                posts={posts}
+    <div className="container mx-auto">
+      <BlogAdminHeader
+        onCreatePost={handleCreate}
+        onCreateAutomatic={handleCreateAutomatic}
+        onWebhookSettings={navigateToWebhookSettings}
+        isMobile={isMobile}
+      />
+      
+      {isMobile ? (
+        <div>
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <MobilePostCard
+                key={post.id}
+                post={post}
                 onToggleStatus={handleToggleStatus}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
               />
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No posts found. Create your first blog post.
             </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <BlogPostsTable
+              posts={posts}
+              onToggleStatus={handleToggleStatus}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           </div>
-        )}
-      </div>
-    </AdminLayout>
+        </div>
+      )}
+    </div>
   );
 };
 

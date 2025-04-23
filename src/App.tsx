@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import Layout from './components/layout/Layout';
@@ -28,11 +27,11 @@ import Unsubscribe from './pages/Unsubscribe';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import AutomaticBlog from './pages/admin/AutomaticBlog';
+import ClientPortal from './pages/ClientPortal';
 
 function App() {
   const location = useLocation();
 
-  // Scroll to top on navigation
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -48,6 +47,7 @@ function App() {
               <Route path="blog" element={<Blog />} />
               <Route path="blog/:slug" element={<BlogPost />} />
               <Route path="solutions" element={<Solutions />} />
+              <Route path="client-portal" element={<ClientPortal />} />
               <Route path="unsubscribe" element={<Unsubscribe />} />
               <Route path="privacy-policy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />

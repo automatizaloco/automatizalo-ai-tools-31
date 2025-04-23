@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -36,6 +35,7 @@ const Navbar = () => {
     { title: t('nav.solutions'), path: '/solutions' },
     { title: t('nav.blog'), path: '/blog' },
     { title: t('nav.contact'), path: '/contact' },
+    { title: 'Client Portal', path: '/client-portal' },
   ];
 
   const adminItems = [

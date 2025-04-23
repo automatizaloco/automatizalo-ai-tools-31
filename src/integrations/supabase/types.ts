@@ -104,6 +104,36 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          company_name: string
+          contact_person: string | null
+          created_at: string
+          id: string
+          phone: string | null
+          type: Database["public"]["Enums"]["user_type"]
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          contact_person?: string | null
+          created_at?: string
+          id: string
+          phone?: string | null
+          type?: Database["public"]["Enums"]["user_type"]
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          phone?: string | null
+          type?: Database["public"]["Enums"]["user_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_info: {
         Row: {
           address: string
@@ -441,6 +471,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       request_method: "POST" | "GET"
+      user_type: "admin" | "client"
       webhook_mode: "test" | "production"
     }
     CompositeTypes: {
@@ -559,6 +590,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       request_method: ["POST", "GET"],
+      user_type: ["admin", "client"],
       webhook_mode: ["test", "production"],
     },
   },

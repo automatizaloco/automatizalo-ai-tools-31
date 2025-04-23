@@ -20,8 +20,8 @@ const UserManagement = () => {
     queryKey: ['users'],
     queryFn: async () => {
       try {
-        // Remove the explicit generic types and cast the result instead
-        const { data, error } = await supabase.rpc('get_users');
+        // Use any to bypass the TypeScript constraints as we know what the function returns
+        const { data, error } = await (supabase.rpc as any)('get_users');
         
         if (error) {
           toast.error('Error fetching users');

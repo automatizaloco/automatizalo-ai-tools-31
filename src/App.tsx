@@ -28,6 +28,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import AutomaticBlog from './pages/admin/AutomaticBlog';
 import ClientPortal from './pages/ClientPortal';
+import UserManagement from './pages/admin/UserManagement';
 
 function App() {
   const location = useLocation();
@@ -57,6 +58,7 @@ function App() {
             
             <Route path="/admin" element={<AdminLayout><Outlet /></AdminLayout>}>
               <Route index element={<Admin />} />
+              <Route path="users" element={<UserManagement />} />
               <Route path="content" element={<ContentManager />} />
               <Route path="testimonials" element={<TestimonialManager />} />
               <Route path="webhooks" element={<WebhookManager />} />

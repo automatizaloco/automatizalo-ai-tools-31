@@ -1,9 +1,8 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { PenSquare, MessageSquare, Mail, LayoutDashboard, Webhook, Wand2, Bell } from "lucide-react";
+import { PenSquare, MessageSquare, Mail, LayoutDashboard, Webhook, Wand2, Bell, Settings } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Card,
@@ -19,7 +18,6 @@ const ContentManager = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  // Redirect if not logged in
   React.useEffect(() => {
     if (!user) {
       navigate('/login?redirect=/admin');
@@ -35,6 +33,12 @@ const ContentManager = () => {
   }
 
   const adminOptions = [
+    {
+      title: "User Management",
+      description: "Manage admin and client users",
+      route: "/admin/users",
+      icon: Settings
+    },
     {
       title: "Blog Posts",
       description: "Create, edit, and manage blog posts",

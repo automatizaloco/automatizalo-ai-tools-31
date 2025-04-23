@@ -20,8 +20,9 @@ const UserManagement = () => {
     queryKey: ['users'],
     queryFn: async () => {
       try {
-        // Use a generic type parameter for the RPC call to fix the typing issue
-        const { data, error } = await supabase.rpc<User[]>('get_users');
+        // Use both type parameters for the RPC call to fix the typing issue
+        // First type parameter is for the return data type, second is for input parameters
+        const { data, error } = await supabase.rpc<User[], Record<string, never>>('get_users');
         
         if (error) {
           toast.error('Error fetching users');

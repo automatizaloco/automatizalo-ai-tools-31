@@ -24,7 +24,7 @@ const UserManagement = () => {
     queryKey: ['users'],
     queryFn: async () => {
       try {
-        const { data, error } = await (supabase.rpc as any)('get_users');
+        const { data, error } = await supabase.rpc('get_users');
         
         if (error) {
           console.error('Error fetching users:', error);
@@ -54,11 +54,8 @@ const UserManagement = () => {
   });
 
   const handleUserCreated = () => {
-    // Close dialog
     setIsDialogOpen(false);
-    // Refresh the users list
     refetch();
-    // Show success notification
     toast.success('User successfully created');
     addToast({
       title: 'User Created',

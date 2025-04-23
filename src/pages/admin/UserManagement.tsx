@@ -20,15 +20,11 @@ const UserManagement = () => {
     queryKey: ['users'],
     queryFn: async () => {
       try {
-        // Use a raw SQL query with auth.users to bypass TypeScript limitations
-        // This is a workaround until we can update the Supabase types
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false }) as unknown as {
-            data: User[] | null;
-            error: Error | null;
-          };
+        // Call the get_users RPC function with explicit type assertion
+        const { data, error } = await supabase.rpc('get_users') as { 
+          data: User[] | null; 
+          error: Error | null 
+        };
         
         if (error) {
           toast.error('Error fetching users');

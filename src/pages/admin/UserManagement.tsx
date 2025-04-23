@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,8 @@ import { User } from '@/types/user';
 
 const UserManagement = () => {
   const { addToast } = usePersistentToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
@@ -35,11 +37,7 @@ const UserManagement = () => {
         }
         
         if (data) {
-          addToast({
-            title: 'Users Loaded',
-            message: `Successfully loaded ${data.length} users`,
-            type: 'success'
-          });
+          console.log('Fetched users:', data);
         }
         
         return data as User[];
@@ -56,7 +54,12 @@ const UserManagement = () => {
   });
 
   const handleUserCreated = () => {
+    // Close dialog
+    setIsDialogOpen(false);
+    // Refresh the users list
     refetch();
+    // Show success notification
+    toast.success('User successfully created');
     addToast({
       title: 'User Created',
       message: 'New user has been successfully added',
@@ -68,7 +71,7 @@ const UserManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>Add New User</Button>
           </DialogTrigger>
@@ -86,7 +89,18 @@ const UserManagement = () => {
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
         </div>
       ) : (
-        <UserTable users={users || []} onUserUpdated={() => refetch()} />
+        <>
+          <div className="mb-4">
+            <Button 
+              variant="outline" 
+              onClick={() => refetch()}
+              size="sm"
+            >
+              Refresh User List
+            </Button>
+          </div>
+          <UserTable users={users || []} onUserUpdated={() => refetch()} />
+        </>
       )}
     </div>
   );

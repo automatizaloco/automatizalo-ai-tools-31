@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,8 @@ interface UserFormProps {
 }
 
 export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<UserFormValues>({
     defaultValues: {
       email: '',
@@ -41,8 +43,12 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
   });
 
   const onSubmit = async (data: UserFormValues) => {
+    setIsSubmitting(true);
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      console.log('Creating user:', data.email, data.role);
+      
+      // Sign up the user
+      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -53,10 +59,19 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
       });
 
       if (signUpError) throw signUpError;
-
+      
+      console.log('User created successfully:', signUpData);
+      
+      // Reset form
+      form.reset();
+      
+      // Notify parent component
       onSuccess();
     } catch (error: any) {
+      console.error('Error creating user:', error);
       toast.error(error.message || 'Error creating user');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -113,8 +128,8 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
           )}
         />
 
-        <Button type="submit" className="w-full">
-          Create User
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? 'Creating...' : 'Create User'}
         </Button>
       </form>
     </Form>

@@ -7,7 +7,7 @@ interface AuthContextProps {
   user: any;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: () => Promise<void>;
+  login: (email: string, password: string) => Promise<{error: any | null}>;
   logout: () => Promise<void>;
 }
 
@@ -61,20 +61,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  const login = async () => {
+  const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/admin`,
-        }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
       if (error) {
         console.error("Login error:", error);
+        return { error };
       }
+
+      return { error: null };
     } catch (err) {
       console.error("Unexpected error during login:", err);
+      return { error: err };
     }
   };
 

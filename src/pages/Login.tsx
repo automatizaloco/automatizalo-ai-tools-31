@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useTheme } from "@/context/ThemeContext";
 import { AlertCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("contact@automatizalo.co");
@@ -25,13 +26,17 @@ const Login = () => {
     setError(null);
     
     try {
-      console.log("Attempting login with Google OAuth");
+      console.log("Attempting login with email/password");
       
-      await login(); // No longer passing email and password
-      // Using the updated AuthContext login method which uses Google OAuth
-      // We don't need to check a return value since it's void
+      const { error: loginError } = await login(email, password);
       
-    } catch (error) {
+      if (loginError) {
+        setError(loginError.message || "Invalid login credentials. Please try again.");
+      } else {
+        toast.success("Login successful!");
+        navigate("/admin");
+      }
+    } catch (error: any) {
       console.error("Login error:", error);
       setError("An unexpected error occurred. Please try again.");
     } finally {

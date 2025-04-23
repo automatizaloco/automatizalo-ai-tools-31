@@ -19,15 +19,35 @@ const ClientLogin = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) throw error;
-      navigate('/client-portal');
+      
+      // Check user role to determine redirect
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+        
+      if (userError) {
+        console.error('Error fetching user role:', userError);
+      }
+      
+      // Redirect based on role
+      if (userData?.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/client-portal');
+      }
+      
+      toast.success('Successfully logged in');
     } catch (error: any) {
-      toast.error(error.message || 'An error occurred');
+      console.error('Login error:', error);
+      toast.error(error.message || 'An error occurred during login');
     } finally {
       setIsLoading(false);
     }

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,39 +16,87 @@ import {
 import { UserForm } from '@/components/admin/users/UserForm';
 import { UserTable } from '@/components/admin/users/UserTable';
 import { User } from '@/types/user';
+import { useAuth } from '@/context/AuthContext';
 
 const UserManagement = () => {
   const { addToast } = usePersistentToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { user: currentUser, isAuthenticated } = useAuth();
+
+  // Check if current user is an admin
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!currentUser) return;
+      
+      try {
+        // Check role of current user
+        const { data, error } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+          
+        if (error) {
+          console.error('Error checking admin status:', error);
+          return;
+        }
+        
+        setIsAdmin(data.role === 'admin');
+        
+        if (data.role !== 'admin') {
+          addToast({
+            title: 'Access Restricted',
+            message: 'You need admin privileges to view this page',
+            type: 'warning'
+          });
+        }
+      } catch (error) {
+        console.error('Error in admin check:', error);
+      }
+    };
+    
+    if (currentUser) {
+      checkAdminStatus();
+    }
+  }, [currentUser, addToast]);
 
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       console.log('Fetching users from database...');
       try {
-        // Make a direct query to the users table instead of using RPC
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false });
+        let userData;
         
-        if (error) {
-          console.error('Error fetching users:', error);
-          addToast({
-            title: 'Error Loading Users',
-            message: error.message,
-            type: 'error'
-          });
-          throw error;
+        // With the get_users function
+        const { data: functionData, error: functionError } = await supabase.rpc('get_users');
+        
+        if (functionError) {
+          console.log('Error using RPC function, falling back to direct query:', functionError);
+          
+          // Fallback to direct query if the user has admin rights
+          const { data: directData, error: directError } = await supabase
+            .from('users')
+            .select('*')
+            .order('created_at', { ascending: false });
+            
+          if (directError) {
+            throw directError;
+          }
+          
+          userData = directData;
+        } else {
+          userData = functionData;
         }
         
-        if (data) {
-          console.log('Fetched users successfully:', data);
+        if (userData) {
+          console.log('Fetched users successfully:', userData);
         } else {
           console.log('No users data returned');
         }
         
-        return data as User[];
+        return userData as User[];
       } catch (error: any) {
         console.error('Error fetching users:', error);
         addToast({
@@ -60,6 +108,7 @@ const UserManagement = () => {
       }
     },
     refetchOnWindowFocus: false,
+    enabled: isAuthenticated && isAdmin, // Only fetch if user is authenticated and admin
   });
 
   const handleUserCreated = () => {
@@ -73,6 +122,22 @@ const UserManagement = () => {
       type: 'success'
     });
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="text-center p-6 border border-dashed rounded-md">
+        <p className="text-muted-foreground">You need to be logged in to access this page</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="text-center p-6 border border-dashed rounded-md">
+        <p className="text-muted-foreground">You need admin privileges to access this page</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

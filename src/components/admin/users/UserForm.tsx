@@ -47,6 +47,14 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
     try {
       console.log('Creating user:', data.email, data.role);
       
+      // First, check if current user is an admin
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw new Error('Authentication error: ' + sessionError.message);
+      
+      if (!sessionData.session) {
+        throw new Error('You must be logged in to perform this action');
+      }
+      
       // Sign up the user through auth API
       const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email: data.email,
@@ -84,6 +92,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
       
       // Notify parent component
       onSuccess();
+      toast.success('User created successfully');
     } catch (error: any) {
       console.error('Error creating user:', error);
       

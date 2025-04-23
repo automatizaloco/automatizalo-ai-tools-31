@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { usePersistentToast } from '@/context/PersistentToastContext';
 import {
   Dialog,
   DialogContent,
@@ -16,26 +17,52 @@ import { UserTable } from '@/components/admin/users/UserTable';
 import { User } from '@/types/user';
 
 const UserManagement = () => {
+  const { addToast } = usePersistentToast();
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       try {
-        // Use any to bypass the TypeScript constraints as we know what the function returns
         const { data, error } = await (supabase.rpc as any)('get_users');
         
         if (error) {
-          toast.error('Error fetching users');
+          console.error('Error fetching users:', error);
+          addToast({
+            title: 'Error Loading Users',
+            message: error.message,
+            type: 'error'
+          });
           throw error;
+        }
+        
+        if (data) {
+          addToast({
+            title: 'Users Loaded',
+            message: `Successfully loaded ${data.length} users`,
+            type: 'success'
+          });
         }
         
         return data as User[];
       } catch (error) {
         console.error('Error in get_users query:', error);
-        toast.error('Could not load users');
+        addToast({
+          title: 'Failed to Load Users',
+          message: 'Could not retrieve user list. Please try again.',
+          type: 'error'
+        });
         return [] as User[];
       }
     },
   });
+
+  const handleUserCreated = () => {
+    refetch();
+    addToast({
+      title: 'User Created',
+      message: 'New user has been successfully added',
+      type: 'success'
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -49,10 +76,7 @@ const UserManagement = () => {
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
             </DialogHeader>
-            <UserForm onSuccess={() => {
-              refetch();
-              toast.success('User created successfully');
-            }} />
+            <UserForm onSuccess={handleUserCreated} />
           </DialogContent>
         </Dialog>
       </div>

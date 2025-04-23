@@ -416,6 +416,30 @@ export type Database = {
           },
         ]
       }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       webhook_configs: {
         Row: {
           blog_creation_method: Database["public"]["Enums"]["request_method"]
@@ -466,7 +490,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          role: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

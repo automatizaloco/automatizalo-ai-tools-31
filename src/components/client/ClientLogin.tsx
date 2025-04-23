@@ -28,28 +28,24 @@ const ClientLogin = () => {
       
       console.log('Login successful, checking user role');
       
-      // Check user role to determine redirect
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', data.user.id)
-        .single();
-        
-      if (userError) {
-        console.error('Error fetching user role:', userError);
-        // Special case for main admin
-        if (email === 'contact@automatizalo.co') {
-          navigate('/admin');
-          toast.success('Successfully logged in as administrator');
-          return;
-        }
-      }
-      
-      console.log('User data:', userData);
-      
-      // Handle main admin account separately
+      // Special case for the main admin account
       if (email === 'contact@automatizalo.co') {
-        // Ensure the user has admin role
+        console.log('Main admin account detected, redirecting to admin');
+        
+        // Ensure the user has admin role in the database
+        const { data: userData, error: fetchError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+          
+        console.log('User data for admin:', userData);
+        
+        if (fetchError) {
+          console.error('Error fetching user role:', fetchError);
+        }
+        
+        // If user doesn't exist or doesn't have admin role, update it
         if (!userData || userData.role !== 'admin') {
           console.log('Setting admin role for main account');
           const { error: updateError } = await supabase
@@ -59,12 +55,34 @@ const ClientLogin = () => {
             
           if (updateError) {
             console.error('Error updating admin role:', updateError);
+          } else {
+            console.log('Successfully updated to admin role');
           }
         }
+        
         navigate('/admin');
+        toast.success('Successfully logged in as administrator');
+        return;
       }
+      
+      // For regular users, check role in database
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+        
+      if (userError) {
+        console.error('Error fetching user role:', userError);
+        navigate('/client-portal');
+        toast.success('Successfully logged in');
+        return;
+      }
+      
+      console.log('User data:', userData);
+      
       // Redirect based on role
-      else if (userData?.role === 'admin') {
+      if (userData?.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/client-portal');

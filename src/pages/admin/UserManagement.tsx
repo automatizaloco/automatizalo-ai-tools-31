@@ -29,35 +29,33 @@ const UserManagement = () => {
   
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (!currentUser) return;
+      if (!currentUser) {
+        setIsCheckingAdmin(false);
+        return;
+      }
       
       try {
         setIsCheckingAdmin(true);
         console.log('Checking admin status for user:', currentUser.email);
-        
-        // Check role of current user
-        const { data, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', currentUser.id)
-          .single();
-          
-        if (error) {
-          console.error('Error checking admin status:', error);
-          toast.error('Failed to verify admin status');
-          return;
-        }
-        
-        console.log('User role data:', data);
-        setIsAdmin(data?.role === 'admin');
         
         // Special case for the main admin account
         if (currentUser.email === 'contact@automatizalo.co') {
           console.log('Main admin account detected, granting admin access');
           setIsAdmin(true);
           
-          // If the role isn't set as admin in the database, update it
-          if (data?.role !== 'admin') {
+          // Update the role in the database if needed
+          const { data: userData, error: fetchError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', currentUser.id)
+            .single();
+          
+          console.log('Current user data:', userData);
+          
+          if (fetchError) {
+            console.error('Error fetching user data:', fetchError);
+          } else if (userData?.role !== 'admin') {
+            console.log('Updating admin role for main account');
             const { error: updateError } = await supabase
               .from('users')
               .update({ role: 'admin' })
@@ -65,21 +63,40 @@ const UserManagement = () => {
               
             if (updateError) {
               console.error('Error updating admin role:', updateError);
+              toast.error('Failed to update admin role. Some features may be limited.');
             } else {
-              console.log('Updated user role to admin');
+              console.log('Successfully updated to admin role');
+              toast.success('Admin privileges confirmed');
             }
           }
-        }
-        
-        if (!isAdmin && data?.role !== 'admin' && currentUser.email !== 'contact@automatizalo.co') {
-          addToast({
-            title: 'Access Restricted',
-            message: 'You need admin privileges to view this page',
-            type: 'warning'
-          });
+        } else {
+          // Check role for other users
+          const { data, error } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', currentUser.id)
+            .single();
+            
+          if (error) {
+            console.error('Error checking admin status:', error);
+            toast.error('Failed to verify admin status: ' + error.message);
+            return;
+          }
+          
+          console.log('User role data:', data);
+          setIsAdmin(data?.role === 'admin');
+          
+          if (data?.role !== 'admin') {
+            addToast({
+              title: 'Access Restricted',
+              message: 'You need admin privileges to view this page',
+              type: 'warning'
+            });
+          }
         }
       } catch (error) {
         console.error('Error in admin check:', error);
+        toast.error('Error checking permissions: ' + (error.message || 'Unknown error'));
       } finally {
         setIsCheckingAdmin(false);
       }

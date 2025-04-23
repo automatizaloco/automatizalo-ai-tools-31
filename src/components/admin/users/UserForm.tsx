@@ -47,7 +47,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
     try {
       console.log('Creating user:', data.email, data.role);
       
-      // Sign up the user
+      // Sign up the user through auth API
       const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -60,7 +60,24 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
 
       if (signUpError) throw signUpError;
       
-      console.log('User created successfully:', signUpData);
+      console.log('Auth signup response:', signUpData);
+      
+      // Manually insert the user into the users table if the user was created
+      if (signUpData.user) {
+        const { error: insertError } = await supabase.from('users').insert({
+          id: signUpData.user.id,
+          email: data.email,
+          role: data.role,
+        });
+        
+        if (insertError) {
+          console.error('Error inserting user into users table:', insertError);
+          // Show warning but don't block the flow since the auth user was created
+          toast.warning(`User created but database sync failed: ${insertError.message}`);
+        } else {
+          console.log('User successfully inserted into users table');
+        }
+      }
       
       // Reset form
       form.reset();
@@ -69,7 +86,13 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
       onSuccess();
     } catch (error: any) {
       console.error('Error creating user:', error);
-      toast.error(error.message || 'Error creating user');
+      
+      // Check if user already exists
+      if (error.message?.includes('already registered') || error.code === 'user_already_exists') {
+        toast.error('This email is already registered');
+      } else {
+        toast.error(error.message || 'Error creating user');
+      }
     } finally {
       setIsSubmitting(false);
     }

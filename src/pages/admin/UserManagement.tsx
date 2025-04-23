@@ -13,11 +13,14 @@ import {
 } from "@/components/ui/dialog";
 import { UserForm } from '@/components/admin/users/UserForm';
 import { UserTable } from '@/components/admin/users/UserTable';
+import { User } from '@/types/user';
 
 const UserManagement = () => {
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
+      // Use auth.users endpoint via service role API (handled server-side)
+      // For now, we'll use the public.users table we created with the SQL migration
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -28,7 +31,7 @@ const UserManagement = () => {
         throw error;
       }
       
-      return data;
+      return data as User[];
     },
   });
 

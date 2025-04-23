@@ -87,13 +87,11 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
             
             // First update own role to admin if needed for the main admin account
             if (data.email === 'contact@automatizalo.co') {
+              // Using a direct from query instead of RPC since the function doesn't exist
               const { error: adminUpdateError } = await supabase
-                .rpc('update_admin_role', { 
-                  user_email: sessionData.session.user.email, 
-                  target_user_id: signUpData.user.id,
-                  target_email: data.email,
-                  target_role: data.role
-                });
+                .from('users')
+                .update({ role: 'admin' })
+                .eq('id', signUpData.user.id);
                 
               if (adminUpdateError) {
                 console.error('Error in admin role update:', adminUpdateError);

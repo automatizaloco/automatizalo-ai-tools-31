@@ -25,12 +25,16 @@ const UserManagement = () => {
 
   // Check if current user is an admin
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
   
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!currentUser) return;
       
       try {
+        setIsCheckingAdmin(true);
+        console.log('Checking admin status for user:', currentUser.email);
+        
         // Check role of current user
         const { data, error } = await supabase
           .from('users')
@@ -40,12 +44,34 @@ const UserManagement = () => {
           
         if (error) {
           console.error('Error checking admin status:', error);
+          toast.error('Failed to verify admin status');
           return;
         }
         
-        setIsAdmin(data.role === 'admin');
+        console.log('User role data:', data);
+        setIsAdmin(data?.role === 'admin');
         
-        if (data.role !== 'admin') {
+        // Special case for the main admin account
+        if (currentUser.email === 'contact@automatizalo.co') {
+          console.log('Main admin account detected, granting admin access');
+          setIsAdmin(true);
+          
+          // If the role isn't set as admin in the database, update it
+          if (data?.role !== 'admin') {
+            const { error: updateError } = await supabase
+              .from('users')
+              .update({ role: 'admin' })
+              .eq('id', currentUser.id);
+              
+            if (updateError) {
+              console.error('Error updating admin role:', updateError);
+            } else {
+              console.log('Updated user role to admin');
+            }
+          }
+        }
+        
+        if (!isAdmin && data?.role !== 'admin' && currentUser.email !== 'contact@automatizalo.co') {
           addToast({
             title: 'Access Restricted',
             message: 'You need admin privileges to view this page',
@@ -54,11 +80,15 @@ const UserManagement = () => {
         }
       } catch (error) {
         console.error('Error in admin check:', error);
+      } finally {
+        setIsCheckingAdmin(false);
       }
     };
     
     if (currentUser) {
       checkAdminStatus();
+    } else {
+      setIsCheckingAdmin(false);
     }
   }, [currentUser, addToast]);
 
@@ -69,26 +99,17 @@ const UserManagement = () => {
       try {
         let userData;
         
-        // With the get_users function
-        const { data: functionData, error: functionError } = await supabase.rpc('get_users');
-        
-        if (functionError) {
-          console.log('Error using RPC function, falling back to direct query:', functionError);
-          
-          // Fallback to direct query if the user has admin rights
-          const { data: directData, error: directError } = await supabase
-            .from('users')
-            .select('*')
-            .order('created_at', { ascending: false });
+        // Direct query since we're handling admin access separately
+        const { data: directData, error: directError } = await supabase
+          .from('users')
+          .select('*')
+          .order('created_at', { ascending: false });
             
-          if (directError) {
-            throw directError;
-          }
-          
-          userData = directData;
-        } else {
-          userData = functionData;
+        if (directError) {
+          throw directError;
         }
+        
+        userData = directData;
         
         if (userData) {
           console.log('Fetched users successfully:', userData);
@@ -108,7 +129,7 @@ const UserManagement = () => {
       }
     },
     refetchOnWindowFocus: false,
-    enabled: isAuthenticated && isAdmin, // Only fetch if user is authenticated and admin
+    enabled: isAuthenticated && (isAdmin || !isCheckingAdmin),
   });
 
   const handleUserCreated = () => {
@@ -131,10 +152,24 @@ const UserManagement = () => {
     );
   }
 
+  if (isCheckingAdmin) {
+    return (
+      <div className="text-center p-6">
+        <div className="flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+        </div>
+        <p className="mt-4 text-muted-foreground">Verifying admin privileges...</p>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div className="text-center p-6 border border-dashed rounded-md">
         <p className="text-muted-foreground">You need admin privileges to access this page</p>
+        <p className="text-sm mt-2 text-muted-foreground">
+          If you believe this is an error, please contact the system administrator.
+        </p>
       </div>
     );
   }

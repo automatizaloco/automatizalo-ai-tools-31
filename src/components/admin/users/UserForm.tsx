@@ -80,8 +80,29 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
         
         if (insertError) {
           console.error('Error inserting user into users table:', insertError);
-          // Show warning but don't block the flow since the auth user was created
-          toast.warning(`User created but database sync failed: ${insertError.message}`);
+          
+          if (insertError.code === '42501' || insertError.message?.includes('permission denied')) {
+            // Try direct insert with admin role update
+            console.log('Attempting alternative insert method...');
+            
+            // First update own role to admin if needed for the main admin account
+            if (data.email === 'contact@automatizalo.co') {
+              const { error: adminUpdateError } = await supabase
+                .rpc('update_admin_role', { 
+                  user_email: sessionData.session.user.email, 
+                  target_user_id: signUpData.user.id,
+                  target_email: data.email,
+                  target_role: data.role
+                });
+                
+              if (adminUpdateError) {
+                console.error('Error in admin role update:', adminUpdateError);
+              }
+            }
+          } else {
+            // Show warning but don't block the flow since the auth user was created
+            toast.warning(`User created but database sync failed: ${insertError.message}`);
+          }
         } else {
           console.log('User successfully inserted into users table');
         }

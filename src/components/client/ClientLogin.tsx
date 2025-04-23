@@ -26,6 +26,8 @@ const ClientLogin = () => {
 
       if (error) throw error;
       
+      console.log('Login successful, checking user role');
+      
       // Check user role to determine redirect
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -35,10 +37,34 @@ const ClientLogin = () => {
         
       if (userError) {
         console.error('Error fetching user role:', userError);
+        // Special case for main admin
+        if (email === 'contact@automatizalo.co') {
+          navigate('/admin');
+          toast.success('Successfully logged in as administrator');
+          return;
+        }
       }
       
+      console.log('User data:', userData);
+      
+      // Handle main admin account separately
+      if (email === 'contact@automatizalo.co') {
+        // Ensure the user has admin role
+        if (!userData || userData.role !== 'admin') {
+          console.log('Setting admin role for main account');
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({ role: 'admin' })
+            .eq('id', data.user.id);
+            
+          if (updateError) {
+            console.error('Error updating admin role:', updateError);
+          }
+        }
+        navigate('/admin');
+      }
       // Redirect based on role
-      if (userData?.role === 'admin') {
+      else if (userData?.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/client-portal');

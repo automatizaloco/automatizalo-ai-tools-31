@@ -19,19 +19,24 @@ const UserManagement = () => {
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Use auth.users endpoint via service role API (handled server-side)
-      // For now, we'll use the public.users table we created with the SQL migration
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        toast.error('Error fetching users');
-        throw error;
+      try {
+        // Use a raw SQL query with auth.users to bypass TypeScript limitations
+        // This is a workaround until we can update the Supabase types
+        const { data, error } = await supabase
+          .rpc('get_users')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          toast.error('Error fetching users');
+          throw error;
+        }
+        
+        return (data || []) as User[];
+      } catch (error) {
+        console.error('Error in get_users query:', error);
+        toast.error('Could not load users');
+        return [] as User[];
       }
-      
-      return data as User[];
     },
   });
 

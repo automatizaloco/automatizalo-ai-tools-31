@@ -91,7 +91,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
-      navigate('/login');
+      // Always redirect to home page after logout
+      navigate('/');
     }
   };
 

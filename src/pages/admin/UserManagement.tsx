@@ -54,7 +54,7 @@ const UserManagement = () => {
           
           if (fetchError) {
             console.error('Error fetching user data:', fetchError);
-          } else if (userData?.role !== 'admin') {
+          } else if (!userData || userData?.role !== 'admin') {
             console.log('Updating admin role for main account');
             const { error: updateError } = await supabase
               .from('users')
@@ -114,32 +114,23 @@ const UserManagement = () => {
     queryFn: async () => {
       console.log('Fetching users from database...');
       try {
-        let userData;
-        
-        // Direct query since we're handling admin access separately
-        const { data: directData, error: directError } = await supabase
+        // Direct query to the users table - no RPC function
+        const { data: userData, error: queryError } = await supabase
           .from('users')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select('*');
             
-        if (directError) {
-          throw directError;
+        if (queryError) {
+          console.error('Error querying users table:', queryError);
+          throw queryError;
         }
         
-        userData = directData;
-        
-        if (userData) {
-          console.log('Fetched users successfully:', userData);
-        } else {
-          console.log('No users data returned');
-        }
-        
+        console.log('Fetched users successfully:', userData);
         return userData as User[];
       } catch (error: any) {
         console.error('Error fetching users:', error);
         addToast({
           title: 'Failed to Load Users',
-          message: 'Could not retrieve user list. Please try again.',
+          message: 'Could not retrieve user list: ' + (error.message || 'Unknown error'),
           type: 'error'
         });
         return [] as User[];
@@ -154,11 +145,6 @@ const UserManagement = () => {
     console.log('User created, refreshing list...');
     refetch();
     toast.success('User successfully created');
-    addToast({
-      title: 'User Created',
-      message: 'New user has been successfully added',
-      type: 'success'
-    });
   };
 
   if (!isAuthenticated) {

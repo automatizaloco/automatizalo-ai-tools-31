@@ -50,8 +50,11 @@ const ClientLogin = () => {
           console.log('Setting admin role for main account');
           const { error: updateError } = await supabase
             .from('users')
-            .update({ role: 'admin' })
-            .eq('id', data.user.id);
+            .upsert({ 
+              id: data.user.id, 
+              email: email, 
+              role: 'admin' 
+            });
             
           if (updateError) {
             console.error('Error updating admin role:', updateError);
@@ -74,6 +77,20 @@ const ClientLogin = () => {
         
       if (userError) {
         console.error('Error fetching user role:', userError);
+        
+        // Try to create a user entry if it doesn't exist
+        const { error: createError } = await supabase
+          .from('users')
+          .upsert({
+            id: data.user.id,
+            email: email,
+            role: 'client' // Default to client role
+          });
+          
+        if (createError) {
+          console.error('Error creating user record:', createError);
+        }
+        
         navigate('/client-portal');
         toast.success('Successfully logged in');
         return;
@@ -84,11 +101,11 @@ const ClientLogin = () => {
       // Redirect based on role
       if (userData?.role === 'admin') {
         navigate('/admin');
+        toast.success('Successfully logged in as administrator');
       } else {
         navigate('/client-portal');
+        toast.success('Successfully logged in');
       }
-      
-      toast.success('Successfully logged in');
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'An error occurred during login');

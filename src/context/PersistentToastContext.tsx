@@ -1,18 +1,15 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { NotificationType } from '@/types/notification';
 
-export interface PersistentToast {
-  id: string;
-  title: string;
-  message: string;
-  type: 'success' | 'error' | 'info' | 'warning';
-  timestamp: number;
-}
+export type PersistentToast = NotificationType;
 
 interface PersistentToastContextType {
   toasts: PersistentToast[];
   addToast: (toast: Omit<PersistentToast, 'id' | 'timestamp'>) => void;
   clearToasts: () => void;
+  removeToast: (id: string) => void;
 }
 
 const STORAGE_KEY = 'persistent_toasts';
@@ -61,13 +58,18 @@ export const PersistentToastProvider = ({ children }: { children: ReactNode }) =
     console.info('Added new persistent toast:', newToast);
   };
 
+  const removeToast = (id: string) => {
+    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+    console.info('Removed persistent toast:', id);
+  };
+
   const clearToasts = () => {
     setToasts([]);
     console.info('Cleared all persistent toasts');
   };
 
   return (
-    <PersistentToastContext.Provider value={{ toasts, addToast, clearToasts }}>
+    <PersistentToastContext.Provider value={{ toasts, addToast, clearToasts, removeToast }}>
       {children}
     </PersistentToastContext.Provider>
   );

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,22 +8,27 @@ import { toast } from 'sonner';
 import ClientLogin from '@/components/client/ClientLogin';
 import ClientDashboard from '@/components/client/ClientDashboard';
 import NewSupportTicketForm from '@/components/client/NewSupportTicketForm';
+import { useNotification } from '@/hooks/useNotification';
+import { ArrowLeft } from 'lucide-react';
 
 const ClientPortal = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isViewingAsAdmin, setIsViewingAsAdmin] = useState(false);
+  const notification = useNotification();
 
-  // Check if user is admin and redirect if needed
+  // Check user role
   useEffect(() => {
     const checkUserRole = async () => {
       if (user) {
         try {
           // Special case for main admin account
           if (user.email === 'contact@automatizalo.co') {
-            console.log('Main admin detected in client portal, redirecting to admin');
-            navigate('/admin');
-            toast.info('Redirected to admin panel');
+            console.log('Main admin detected in client portal');
+            setUserRole('admin');
+            setIsViewingAsAdmin(true);
             return;
           }
           
@@ -39,11 +44,12 @@ const ClientPortal = () => {
             return;
           }
           
-          // Admins should be redirected to admin panel
+          setUserRole(data?.role);
+          
+          // If admin user but not redirecting
           if (data?.role === 'admin') {
-            console.log('Admin user detected, redirecting to admin panel');
-            navigate('/admin');
-            toast.info('Redirected to admin panel');
+            console.log('Admin user detected in client portal');
+            setIsViewingAsAdmin(true);
           }
         } catch (error) {
           console.error('Error in role check:', error);
@@ -85,6 +91,26 @@ const ClientPortal = () => {
 
   return (
     <div className="container mx-auto px-4 py-16 md:py-24">
+      {isViewingAsAdmin && (
+        <div className="bg-amber-50 border border-amber-200 p-3 mb-6 rounded-md flex justify-between items-center">
+          <div>
+            <p className="font-medium text-amber-800">
+              You are viewing the client portal as an admin
+            </p>
+            <p className="text-sm text-amber-700">
+              This is a view-only mode to check the client experience
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/admin')}
+            className="border-amber-300 text-amber-800 hover:bg-amber-100"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Admin
+          </Button>
+        </div>
+      )}
       {renderContent()}
     </div>
   );

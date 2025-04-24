@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Menu, Eye } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AdminNavItem } from './AdminNavItem';
@@ -13,6 +13,7 @@ interface AdminHeaderProps {
   onTabChange: (value: string) => void;
   onHomeClick: () => void;
   onLogout: () => void;
+  onViewAsClient: () => void;
 }
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({
@@ -20,7 +21,8 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   adminRoutes,
   onTabChange,
   onHomeClick,
-  onLogout
+  onLogout,
+  onViewAsClient
 }) => {
   const isMobile = useIsMobile();
 
@@ -31,6 +33,15 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           <h1 className="text-lg font-bold">Admin</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size={isMobile ? "sm" : "default"} 
+            onClick={onViewAsClient}
+            className="flex items-center gap-1"
+          >
+            <Eye className="h-4 w-4" />
+            {!isMobile && "View as Client"}
+          </Button>
           <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={onHomeClick}>
             Home
           </Button>

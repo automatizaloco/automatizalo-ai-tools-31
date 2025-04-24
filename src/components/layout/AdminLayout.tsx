@@ -1,7 +1,7 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactNode, useEffect, useState } from 'react';
-import { LayoutDashboard, PenSquare, Webhook, Wand2, MessageSquare, Mail, Bell, Globe } from 'lucide-react';
+import { LayoutDashboard, PenSquare, Webhook, Wand2, MessageSquare, Mail, Bell, Globe, Settings, Users, Zap, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import AdminHeader from './admin/AdminHeader';
 import AdminNavTabs from './admin/AdminNavTabs';
 import AdminContent from './admin/AdminContent';
 import { AdminRouteType } from './admin/types';
+import { useNotification } from '@/hooks/useNotification';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -21,12 +22,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('content');
   const isMobile = useIsMobile();
+  const notification = useNotification();
 
   // Admin routes definition
   const adminRoutes: AdminRouteType[] = [
     { value: 'content', label: 'Dashboard', icon: LayoutDashboard },
+    { value: 'users', label: 'Users', icon: Users },
     { value: 'blog', label: 'Blog', icon: PenSquare },
     { value: 'automatic-blog', label: 'AI Blog', icon: Wand2 },
+    { value: 'automations', label: 'Automations', icon: Zap },
+    { value: 'support', label: 'Support', icon: HelpCircle },
     { value: 'webhooks', label: 'Webhooks', icon: Webhook },
     { value: 'testimonials', label: 'Testimonials', icon: MessageSquare },
     { value: 'newsletters', label: 'Newsletter', icon: Mail },
@@ -40,7 +45,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         
         if (error) {
           console.error("Error checking session:", error);
-          toast.error("Authentication error. Please try logging in again.");
+          notification.showError("Authentication Error", "Please try logging in again.");
           navigate('/login?redirect=/admin');
           setLoading(false);
           return;
@@ -54,7 +59,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         }
       } catch (error) {
         console.error("Error in checkSession:", error);
-        toast.error("Failed to verify your session. Using limited admin mode.");
+        notification.showError("Session Error", "Failed to verify your session. Using limited admin mode.");
         setLoading(false);
       }
     };
@@ -73,7 +78,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, notification]);
   
   useEffect(() => {
     // Extract the current admin section from the URL path
@@ -89,13 +94,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
+      notification.showSuccess("Signed Out", "You have been signed out successfully.");
       navigate('/login');
     } catch (error) {
       console.error("Error signing out:", error);
-      toast.error("Failed to sign out. Please try again.");
+      notification.showError("Sign Out Failed", "Failed to sign out. Please try again.");
       // Force a redirect to login page even if signOut fails
       navigate('/login');
     }
+  };
+
+  const handleViewAsClient = () => {
+    navigate('/client-portal');
+    notification.showInfo("Client View", "You are now viewing the client portal as an admin.");
   };
 
   const handleTabChange = (value: string) => {
@@ -127,6 +138,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         onTabChange={handleTabChange}
         onHomeClick={handleHomeClick}
         onLogout={handleLogout}
+        onViewAsClient={handleViewAsClient}
       />
       
       <div className={`${isMobile ? 'px-4 py-4' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>

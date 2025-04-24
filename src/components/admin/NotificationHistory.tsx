@@ -6,11 +6,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, Info, Trash2, BellRing, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useNotification } from "@/hooks/useNotification";
 
 const NotificationHistory = () => {
-  const { toasts, clearToasts } = usePersistentToast();
+  const { toasts, clearToasts, removeToast } = usePersistentToast();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [refreshKey, setRefreshKey] = useState(0); // Used to force a refresh
+  const notification = useNotification();
 
   // Force a re-render on component mount to ensure notifications are loaded
   useEffect(() => {
@@ -20,6 +22,15 @@ const NotificationHistory = () => {
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
     toast.info("Refreshing notification list");
+  };
+
+  const handleTestNotification = () => {
+    notification.showSuccess("Test Notification", "This is a test notification to verify the system is working correctly.");
+  };
+
+  const handleClearToast = (id: string) => {
+    removeToast(id);
+    toast.info("Notification removed");
   };
 
   const filteredToasts = toasts.filter(toast => {
@@ -74,6 +85,15 @@ const NotificationHistory = () => {
           <Button
             variant="outline"
             size="sm"
+            className="flex items-center gap-1 text-green-600"
+            onClick={handleTestNotification}
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Test Notification
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             className="flex items-center gap-1"
             onClick={clearToasts}
           >
@@ -111,15 +131,26 @@ const NotificationHistory = () => {
                             "border-l-blue-500"
                           }`}
                         >
-                          <div className="flex gap-2">
-                            {getIconForType(toast.type)}
-                            <div className="flex-1">
-                              <AlertTitle>{toast.title}</AlertTitle>
-                              <AlertDescription>{toast.message}</AlertDescription>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {new Date(toast.timestamp).toLocaleTimeString()}
-                              </p>
+                          <div className="flex justify-between gap-2">
+                            <div className="flex gap-2">
+                              {getIconForType(toast.type)}
+                              <div className="flex-1">
+                                <AlertTitle>{toast.title}</AlertTitle>
+                                <AlertDescription>{toast.message}</AlertDescription>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(toast.timestamp).toLocaleTimeString()}
+                                </p>
+                              </div>
                             </div>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => handleClearToast(toast.id)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
                           </div>
                         </Alert>
                       ))}

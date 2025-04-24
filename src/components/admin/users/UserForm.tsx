@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from 'sonner';
+import { User } from '@/types/user';
+import { useNotification } from '@/hooks/useNotification';
 
 interface UserFormValues {
   email: string;
@@ -29,80 +31,83 @@ interface UserFormValues {
 
 interface UserFormProps {
   onSuccess: () => void;
+  existingUser?: User;
 }
 
-export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
+export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const notification = useNotification();
   
   const form = useForm<UserFormValues>({
     defaultValues: {
-      email: '',
+      email: existingUser?.email || '',
       password: '',
-      role: 'client',
+      role: (existingUser?.role as 'admin' | 'client') || 'client',
     },
   });
+
+  const isEditMode = !!existingUser;
 
   const onSubmit = async (data: UserFormValues) => {
     setIsSubmitting(true);
     try {
-      console.log('Creating user:', data.email, data.role);
+      console.log(`${isEditMode ? 'Updating' : 'Creating'} user:`, data.email, data.role);
       
-      // First, check if current user is an admin
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw new Error('Authentication error: ' + sessionError.message);
-      
-      if (!sessionData.session) {
-        throw new Error('You must be logged in to perform this action');
-      }
-      
-      // Sign up the user through auth API
-      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
+      if (isEditMode) {
+        // Update existing user
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ 
             role: data.role,
-          },
-        },
-      });
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingUser.id);
 
-      if (signUpError) throw signUpError;
-      
-      console.log('Auth signup response:', signUpData);
-      
-      // Manually insert the user into the users table if the user was created
-      if (signUpData.user) {
-        const { error: insertError } = await supabase.from('users').insert({
-          id: signUpData.user.id,
-          email: data.email,
-          role: data.role,
-        });
-        
-        if (insertError) {
-          console.error('Error inserting user into users table:', insertError);
-          
-          if (insertError.code === '42501' || insertError.message?.includes('permission denied')) {
-            // Try direct insert with admin role update
-            console.log('Attempting alternative insert method...');
-            
-            // First update own role to admin if needed for the main admin account
-            if (data.email === 'contact@automatizalo.co') {
-              // Using a direct from query instead of RPC since the function doesn't exist
-              const { error: adminUpdateError } = await supabase
-                .from('users')
-                .update({ role: 'admin' })
-                .eq('id', signUpData.user.id);
-                
-              if (adminUpdateError) {
-                console.error('Error in admin role update:', adminUpdateError);
-              }
-            }
-          } else {
-            // Show warning but don't block the flow since the auth user was created
-            toast.warning(`User created but database sync failed: ${insertError.message}`);
+        if (updateError) throw updateError;
+
+        // Update password if provided
+        if (data.password) {
+          const { error: passwordError } = await supabase.auth.admin.updateUserById(
+            existingUser.id,
+            { password: data.password }
+          );
+
+          if (passwordError) {
+            console.error('Error updating password:', passwordError);
+            notification.showWarning('Partial Update', 'User role updated but password update failed.');
+            onSuccess();
+            return;
           }
-        } else {
-          console.log('User successfully inserted into users table');
+        }
+
+        notification.showSuccess('User Updated', `User ${data.email} updated successfully`);
+      } else {
+        // Create new user
+        const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              role: data.role,
+            },
+          },
+        });
+
+        if (signUpError) throw signUpError;
+        
+        if (signUpData.user) {
+          const { error: insertError } = await supabase.from('users').insert({
+            id: signUpData.user.id,
+            email: data.email,
+            role: data.role,
+          });
+          
+          if (insertError) {
+            console.error('Error inserting user into users table:', insertError);
+            notification.showWarning('Partial Creation', 'Auth user created but database sync failed');
+          } else {
+            notification.showSuccess('User Created', `User ${data.email} created successfully`);
+          }
         }
       }
       
@@ -111,15 +116,13 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
       
       // Notify parent component
       onSuccess();
-      toast.success('User created successfully');
     } catch (error: any) {
-      console.error('Error creating user:', error);
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} user:`, error);
       
-      // Check if user already exists
       if (error.message?.includes('already registered') || error.code === 'user_already_exists') {
-        toast.error('This email is already registered');
+        notification.showError('Error', 'This email is already registered');
       } else {
-        toast.error(error.message || 'Error creating user');
+        notification.showError('Error', error.message || `Error ${isEditMode ? 'updating' : 'creating'} user`);
       }
     } finally {
       setIsSubmitting(false);
@@ -136,7 +139,12 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" required {...field} />
+                <Input 
+                  type="email" 
+                  required 
+                  {...field} 
+                  disabled={isEditMode} // Disable email editing for existing users
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -148,9 +156,13 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}</FormLabel>
               <FormControl>
-                <Input type="password" required {...field} />
+                <Input 
+                  type="password" 
+                  required={!isEditMode} // Only required for new users
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -180,7 +192,10 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess }) => {
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating...' : 'Create User'}
+          {isSubmitting 
+            ? (isEditMode ? 'Updating...' : 'Creating...') 
+            : (isEditMode ? 'Update User' : 'Create User')
+          }
         </Button>
       </form>
     </Form>

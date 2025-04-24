@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      automations: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          installation_price: number
+          monthly_price: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          installation_price?: number
+          monthly_price?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          installation_price?: number
+          monthly_price?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author: string
@@ -100,6 +136,41 @@ export type Database = {
             columns: ["blog_post_id"]
             isOneToOne: false
             referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_automations: {
+        Row: {
+          automation_id: string
+          client_id: string
+          id: string
+          next_billing_date: string
+          purchase_date: string
+          status: string
+        }
+        Insert: {
+          automation_id: string
+          client_id: string
+          id?: string
+          next_billing_date: string
+          purchase_date?: string
+          status: string
+        }
+        Update: {
+          automation_id?: string
+          client_id?: string
+          id?: string
+          next_billing_date?: string
+          purchase_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_automations_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
             referencedColumns: ["id"]
           },
         ]
@@ -351,6 +422,47 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          automation_id: string
+          client_id: string
+          created_at: string
+          description: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          automation_id: string
+          client_id: string
+          created_at?: string
+          description: string
+          id?: string
+          status: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          automation_id?: string
+          client_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       testimonials: {
         Row: {
           company: string | null
@@ -412,6 +524,41 @@ export type Database = {
             columns: ["testimonial_id"]
             isOneToOne: false
             referencedRelation: "testimonials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_responses: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_admin: boolean
+          message: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_admin?: boolean
+          message: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_admin?: boolean
+          message?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_responses_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
             referencedColumns: ["id"]
           },
         ]

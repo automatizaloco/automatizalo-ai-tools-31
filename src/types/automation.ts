@@ -1,0 +1,42 @@
+
+export interface Automation {
+  id: string;
+  title: string;
+  description: string;
+  installation_price: number;
+  monthly_price: number;
+  created_at: string;
+  updated_at: string;
+  image_url?: string;
+  active: boolean;
+}
+
+export interface ClientAutomation {
+  id: string;
+  client_id: string;
+  automation_id: string;
+  purchase_date: string;
+  status: 'active' | 'canceled' | 'pending';
+  next_billing_date: string;
+  automation?: Automation;
+}
+
+export interface SupportTicket {
+  id: string;
+  client_id: string;
+  automation_id: string;
+  title: string;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TicketResponse {
+  id: string;
+  ticket_id: string;
+  message: string;
+  created_by: string;
+  is_admin: boolean;
+  created_at: string;
+}

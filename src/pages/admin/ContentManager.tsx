@@ -1,8 +1,9 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { PenSquare, MessageSquare, Mail, LayoutDashboard, Webhook, Wand2, Bell, Settings } from "lucide-react";
+import { PenSquare, MessageSquare, Mail, LayoutDashboard, Webhook, Wand2, Bell, Settings, Bot, HelpCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Card,
@@ -50,6 +51,18 @@ const ContentManager = () => {
       description: "Generate blog posts using AI assistance",
       route: "/admin/automatic-blog",
       icon: Wand2
+    },
+    {
+      title: "Automations",
+      description: "Create and manage automations for clients",
+      route: "/admin/automations",
+      icon: Bot
+    },
+    {
+      title: "Support Tickets",
+      description: "Manage client support requests",
+      route: "/admin/support",
+      icon: HelpCircle
     },
     {
       title: "Webhooks",

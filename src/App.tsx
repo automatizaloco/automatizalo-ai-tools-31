@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import Layout from './components/layout/Layout';
@@ -29,6 +30,9 @@ import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import AutomaticBlog from './pages/admin/AutomaticBlog';
 import ClientPortal from './pages/ClientPortal';
 import UserManagement from './pages/admin/UserManagement';
+import AutomationManager from './pages/admin/AutomationManager';
+import SupportManager from './pages/admin/SupportManager';
+import NewSupportTicketForm from './components/client/NewSupportTicketForm';
 
 function App() {
   const location = useLocation();
@@ -49,6 +53,7 @@ function App() {
               <Route path="blog/:slug" element={<BlogPost />} />
               <Route path="solutions" element={<Solutions />} />
               <Route path="client-portal" element={<ClientPortal />} />
+              <Route path="client-portal/support/new" element={<ClientPortal><NewSupportTicketForm /></ClientPortal>} />
               <Route path="unsubscribe" element={<Unsubscribe />} />
               <Route path="privacy-policy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />
@@ -68,6 +73,8 @@ function App() {
               <Route path="newsletters" element={<NewsletterAdmin />} />
               <Route path="notifications" element={<NotificationAdmin />} />
               <Route path="automatic-blog" element={<AutomaticBlog />} />
+              <Route path="automations" element={<AutomationManager />} />
+              <Route path="support" element={<SupportManager />} />
             </Route>
           </Routes>
           <Toaster />

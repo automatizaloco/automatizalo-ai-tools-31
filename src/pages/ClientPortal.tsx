@@ -3,14 +3,16 @@ import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import ClientLogin from '@/components/client/ClientLogin';
 import ClientDashboard from '@/components/client/ClientDashboard';
+import NewSupportTicketForm from '@/components/client/NewSupportTicketForm';
 
 const ClientPortal = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Check if user is admin and redirect if needed
   useEffect(() => {
@@ -54,6 +56,7 @@ const ClientPortal = () => {
     }
   }, [user, isLoading, navigate]);
 
+  // Show loading state while checking auth
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -62,9 +65,27 @@ const ClientPortal = () => {
     );
   }
 
+  // Handle different routes within the client portal
+  const renderContent = () => {
+    const path = location.pathname;
+    
+    // If user is not logged in, always show login component
+    if (!user) {
+      return <ClientLogin />;
+    }
+
+    // For logged in users, show the appropriate content based on the path
+    if (path === '/client-portal/support/new') {
+      return <NewSupportTicketForm />;
+    }
+    
+    // Default to dashboard
+    return <ClientDashboard />;
+  };
+
   return (
     <div className="container mx-auto px-4 py-16 md:py-24">
-      {user ? <ClientDashboard /> : <ClientLogin />}
+      {renderContent()}
     </div>
   );
 };

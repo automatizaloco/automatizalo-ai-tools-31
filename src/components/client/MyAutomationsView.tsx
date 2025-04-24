@@ -34,7 +34,14 @@ const MyAutomationsView = () => {
         .order('purchase_date', { ascending: false });
         
       if (error) throw error;
-      setAutomations(data || []);
+      
+      // Cast the data to the correct type
+      const typedData = data?.map(item => ({
+        ...item,
+        status: item.status as 'active' | 'canceled' | 'pending'
+      })) || [];
+      
+      setAutomations(typedData);
     } catch (error) {
       console.error('Error fetching my automations:', error);
       toast.error('Failed to load your automations');

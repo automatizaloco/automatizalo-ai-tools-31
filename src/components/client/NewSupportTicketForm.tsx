@@ -46,12 +46,19 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
         .order('purchase_date', { ascending: false });
         
       if (error) throw error;
-      setAutomations(data || []);
       
-      if (data && data.length > 0 && !preselectedAutomationId) {
+      // Cast the data to the correct type
+      const typedData = data?.map(item => ({
+        ...item,
+        status: item.status as 'active' | 'canceled' | 'pending'
+      })) || [];
+      
+      setAutomations(typedData);
+      
+      if (typedData.length > 0 && !preselectedAutomationId) {
         setFormData(prev => ({
           ...prev,
-          automationId: data[0].automation_id
+          automationId: typedData[0].automation_id
         }));
       }
     } catch (error) {

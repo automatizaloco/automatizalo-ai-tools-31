@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import Layout from './components/layout/Layout';
@@ -52,7 +53,7 @@ function App() {
               <Route path="blog/:slug" element={<BlogPost />} />
               <Route path="solutions" element={<Solutions />} />
               <Route path="client-portal" element={<ClientPortal />} />
-              <Route path="client-portal/support/new" element={<ClientPortal><NewSupportTicketForm /></ClientPortal>} />
+              <Route path="client-portal/support/new" element={<ClientPortal />} />
               <Route path="unsubscribe" element={<Unsubscribe />} />
               <Route path="privacy-policy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />

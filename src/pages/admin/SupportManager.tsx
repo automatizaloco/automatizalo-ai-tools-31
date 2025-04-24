@@ -44,12 +44,19 @@ const SupportManager = () => {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      setTickets(data || []);
+      
+      // Properly type the data
+      const typedData = data?.map(ticket => ({
+        ...ticket,
+        status: ticket.status as 'open' | 'in_progress' | 'resolved' | 'closed'
+      })) || [];
+      
+      setTickets(typedData);
       
       // Select first ticket by default if available
-      if (data && data.length > 0 && !selectedTicket) {
-        setSelectedTicket(data[0]);
-        fetchTicketResponses(data[0].id);
+      if (typedData.length > 0 && !selectedTicket) {
+        setSelectedTicket(typedData[0]);
+        fetchTicketResponses(typedData[0].id);
       }
     } catch (error) {
       console.error('Error fetching support tickets:', error);
@@ -91,7 +98,7 @@ const SupportManager = () => {
     fetchTicketResponses(ticket.id);
   };
   
-  const handleStatusChange = async (status: string) => {
+  const handleStatusChange = async (status: 'open' | 'in_progress' | 'resolved' | 'closed') => {
     if (!selectedTicket) return;
     
     try {
@@ -270,7 +277,7 @@ const SupportManager = () => {
                     <Badge variant={getStatusColor(selectedTicket.status) as any}>
                       {selectedTicket.status.replace('_', ' ')}
                     </Badge>
-                    <Select value={selectedTicket.status} onValueChange={handleStatusChange}>
+                    <Select value={selectedTicket.status} onValueChange={(value) => handleStatusChange(value as 'open' | 'in_progress' | 'resolved' | 'closed')}>
                       <SelectTrigger className="w-36">
                         <SelectValue placeholder="Change status" />
                       </SelectTrigger>

@@ -36,7 +36,14 @@ const SupportTicketsView = () => {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      setTickets(data || []);
+      
+      // Cast the data to the correct type
+      const typedData = data?.map(ticket => ({
+        ...ticket,
+        status: ticket.status as 'open' | 'in_progress' | 'resolved' | 'closed'
+      })) || [];
+      
+      setTickets(typedData);
     } catch (error) {
       console.error('Error fetching support tickets:', error);
       toast.error('Failed to load your support tickets');
@@ -55,7 +62,14 @@ const SupportTicketsView = () => {
         .order('purchase_date', { ascending: false });
         
       if (error) throw error;
-      setAutomations(data || []);
+      
+      // Cast the data to the correct type
+      const typedData = data?.map(item => ({
+        ...item,
+        status: item.status as 'active' | 'canceled' | 'pending'
+      })) || [];
+      
+      setAutomations(typedData);
     } catch (error) {
       console.error('Error fetching client automations:', error);
     }

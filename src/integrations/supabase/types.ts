@@ -647,6 +647,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      is_admin: {
+        Args: { user_uid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

@@ -10,12 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Edit, Trash2, AlertCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { UserForm } from './UserForm';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotification } from '@/hooks/useNotification';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface UserTableProps {
   users: User[];
@@ -27,7 +28,10 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const notification = useNotification();
+  const maxRetries = 2;
 
   const handleEditClick = (user: User) => {
     setSelectedUser(user);
@@ -36,6 +40,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
 
   const handleDeleteClick = (user: User) => {
     setSelectedUser(user);
+    setErrorMessage(null);
     setIsDeleteDialogOpen(true);
   };
 
@@ -47,8 +52,10 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
-
+    
+    setErrorMessage(null);
     setIsProcessing(true);
+    
     try {
       console.log('Attempting to delete user:', selectedUser.id);
       
@@ -61,7 +68,13 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
       }
 
       console.log('Calling manage-users edge function to delete user...');
-      const { error: functionError, data } = await supabase.functions.invoke('manage-users', {
+      
+      // Set a timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out')), 10000)
+      );
+      
+      const fetchPromise = supabase.functions.invoke('manage-users', {
         body: { 
           action: 'delete', 
           userId: selectedUser.id 
@@ -70,6 +83,14 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
           Authorization: `Bearer ${session.access_token}`
         }
       });
+      
+      // Race between fetch and timeout
+      const { error: functionError, data } = await Promise.race([
+        fetchPromise,
+        timeoutPromise.then(() => {
+          throw new Error('The request took too long to complete. Please try again.');
+        })
+      ]);
       
       if (functionError) {
         console.error('Edge function error:', functionError);
@@ -84,11 +105,23 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
       notification.showSuccess('User Deleted', `User ${selectedUser.email} was successfully deleted`);
       setIsDeleteDialogOpen(false);
       onUserUpdated();
+      setRetryCount(0); // Reset retry count on success
     } catch (error) {
       console.error('Error deleting user:', error);
       
+      // Check if we should retry
+      if (retryCount < maxRetries && error.message?.includes('Request timed out')) {
+        setRetryCount(prev => prev + 1);
+        notification.showWarning('Request timeout', 'Retrying the request...');
+        handleDeleteUser(); // Retry the operation
+        return;
+      }
+      
+      // Set error message for display in dialog
+      setErrorMessage(error.message || 'Failed to delete user. Please try again.');
+      
       toast.error("Error deleting user", {
-        description: `${error.message || 'Failed to delete user. Please try again.'}`,
+        description: error.message || 'Failed to delete user. Please try again.',
         duration: 5000,
       });
       
@@ -111,34 +144,42 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.email}</TableCell>
-                <TableCell className="capitalize">{user.role}</TableCell>
-                <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditClick(user)}
-                    >
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(user)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </div>
+            {users.length > 0 ? (
+              users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell className="capitalize">{user.role}</TableCell>
+                  <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditClick(user)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(user)}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                  No users found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
@@ -167,7 +208,15 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
               Are you sure you want to delete {selectedUser?.email}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end gap-3 mt-4">
+          
+          {errorMessage && (
+            <Alert variant="destructive" className="mt-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+          
+          <DialogFooter className="flex justify-end gap-3 mt-4">
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
@@ -180,9 +229,16 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
               onClick={handleDeleteUser}
               disabled={isProcessing}
             >
-              {isProcessing ? 'Deleting...' : 'Delete'}
+              {isProcessing ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-r-transparent border-white"></span>
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

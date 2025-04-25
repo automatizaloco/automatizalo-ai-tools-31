@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User } from '@/types/user';
 import {
@@ -28,9 +29,8 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [deleteAttemptMethod, setDeleteAttemptMethod] = useState<string>('none');
   const notification = useNotification();
-  const maxRetries = 2;
 
   const handleEditClick = (user: User) => {
     setSelectedUser(user);
@@ -40,6 +40,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
   const handleDeleteClick = (user: User) => {
     setSelectedUser(user);
     setErrorMessage(null);
+    setDeleteAttemptMethod('none');
     setIsDeleteDialogOpen(true);
   };
 
@@ -54,83 +55,79 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
     
     setErrorMessage(null);
     setIsProcessing(true);
+    setDeleteAttemptMethod('none');
     
-    try {
-      console.log('Attempting to delete user:', selectedUser.id);
-      
-      // First try to remove the user directly from the database
-      // This approach avoids edge function connectivity issues
-      const { error: userTableError } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', selectedUser.id);
-        
-      if (userTableError && !userTableError.message.includes('No rows found')) {
-        console.warn('Warning deleting from users table:', userTableError);
-        // Continue with auth deletion - non-blocking
-      }
-      
-      // Delete user from Supabase auth directly
-      // This requires admin privileges but avoids edge function issues
-      // This will work through RLS if the user is an admin
-      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(selectedUser.id);
-      
-      if (authDeleteError) {
-        console.error('Error deleting from auth:', authDeleteError);
-        throw new Error(`Failed to delete user: ${authDeleteError.message}`);
-      }
+    // Get the current session for the auth token
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      setErrorMessage('Authentication required. Please sign in again.');
+      setIsProcessing(false);
+      return;
+    }
 
+    try {
+      console.log('Starting user deletion process for:', selectedUser.id);
+      setDeleteAttemptMethod('edge-function');
+      
+      // First attempt: Using Edge Function
+      const { error: functionError, data } = await supabase.functions.invoke('manage-users', {
+        body: { 
+          action: 'delete', 
+          userId: selectedUser.id 
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (functionError || (data && data.error)) {
+        console.warn('Edge function deletion attempt failed:', functionError || data?.error);
+        throw new Error(functionError?.message || data?.error || 'Edge function deletion failed');
+      }
+      
+      console.log('User deleted via edge function');
       notification.showSuccess('User Deleted', `User ${selectedUser.email} was successfully deleted`);
       setIsDeleteDialogOpen(false);
       onUserUpdated();
-      setRetryCount(0); // Reset retry count on success
-    } catch (error: any) {
-      console.error('Error deleting user:', error);
+      return;
       
-      // Fallback to edge function approach if direct deletion fails
-      if (retryCount < maxRetries) {
-        setRetryCount(prev => prev + 1);
-        try {
-          // Get the current session for the auth token
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionError || !session) {
-            console.error('Error getting session:', sessionError);
-            throw new Error('Authentication required. Please sign in again.');
-          }
-
-          console.log('Falling back to manage-users edge function to delete user...');
-          
-          const { error: functionError, data } = await supabase.functions.invoke('manage-users', {
-            body: { 
-              action: 'delete', 
-              userId: selectedUser.id 
-            },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`
-            }
-          });
-          
-          if (functionError || (data && data.error)) {
-            throw new Error(functionError?.message || data?.error || 'Failed to delete user');
-          }
-          
-          notification.showSuccess('User Deleted', `User ${selectedUser.email} was successfully deleted`);
-          setIsDeleteDialogOpen(false);
-          onUserUpdated();
-        } catch (fallbackError: any) {
-          console.error('Error in fallback deletion:', fallbackError);
-          setErrorMessage(fallbackError.message || 'Failed to delete user. Please try again.');
-        }
-      } else {
-        setErrorMessage(error.message || 'Failed to delete user. Please try again.');
+    } catch (edgeFunctionError: any) {
+      console.error('Edge function error:', edgeFunctionError);
+      
+      // Fall back to database-only approach
+      try {
+        console.log('Edge function failed, trying database-only approach');
+        setDeleteAttemptMethod('database');
         
-        toast.error("Error deleting user", {
-          description: error.message || 'Failed to delete user. Please try again.',
+        // Remove from users table
+        const { error: userTableError } = await supabase
+          .from('users')
+          .delete()
+          .eq('id', selectedUser.id);
+          
+        if (userTableError) {
+          console.error('Error deleting from users table:', userTableError);
+          throw new Error(`Database deletion failed: ${userTableError.message}`);
+        }
+        
+        // Successfully deleted from database - we can't delete from auth without service_role
+        // but the user will at least be removed from the system's database
+        console.log('User deleted from database table');
+        notification.showSuccess('User Record Deleted', 
+          'The user was removed from the database. Note: Their auth account may still exist.'
+        );
+        setIsDeleteDialogOpen(false);
+        onUserUpdated();
+        
+      } catch (dbError: any) {
+        console.error('Database deletion error:', dbError);
+        setErrorMessage(`All deletion methods failed. Please contact support.\nError: ${dbError.message || 'Unknown error'}`);
+        
+        toast.error("User Deletion Failed", {
+          description: "All deletion methods failed. The user may need to be deleted manually.",
           duration: 5000,
         });
-        
-        notification.showError('Error', error.message || 'Failed to delete user. Please try again.');
       }
     } finally {
       setIsProcessing(false);
@@ -238,7 +235,8 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
               {isProcessing ? (
                 <>
                   <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-r-transparent border-white"></span>
-                  Deleting...
+                  {deleteAttemptMethod === 'edge-function' ? 'Deleting (API)...' : 
+                   deleteAttemptMethod === 'database' ? 'Deleting (DB)...' : 'Deleting...'}
                 </>
               ) : (
                 'Delete'

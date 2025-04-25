@@ -17,7 +17,10 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     log('Received OPTIONS request - responding with CORS headers')
-    return new Response(null, { headers: corsHeaders, status: 204 })
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204 
+    })
   }
 
   try {
@@ -27,12 +30,20 @@ serve(async (req) => {
       throw new Error('Server configuration error: Missing environment variables')
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
+    // Initialize Supabase admin client
+    let supabaseAdmin;
+    try {
+      supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+      log('Supabase admin client initialized')
+    } catch (initError) {
+      log('Failed to initialize Supabase admin client', 'error', initError)
+      throw new Error(`Supabase client initialization failed: ${initError.message}`)
+    }
     
     // Validate authentication
     const authHeader = req.headers.get('Authorization')
@@ -44,14 +55,22 @@ serve(async (req) => {
     const jwt = authHeader.replace('Bearer ', '')
     log('Verifying authorization token')
     
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(jwt)
-    
-    if (authError || !user) {
-      log('Auth error:', 'error', authError)
-      throw new Error('Unauthorized: Invalid token')
+    // Verify the JWT token
+    let user;
+    try {
+      const { data, error: authError } = await supabaseAdmin.auth.getUser(jwt)
+      
+      if (authError || !data.user) {
+        log('Auth error:', 'error', authError)
+        throw new Error('Unauthorized: Invalid token')
+      }
+      
+      user = data.user
+      log(`Authenticated as user: ${user.email} (${user.id})`)
+    } catch (authVerifyError) {
+      log('Failed to verify auth token', 'error', authVerifyError)
+      throw new Error(`Authentication verification failed: ${authVerifyError.message}`)
     }
-    
-    log(`Authenticated as user: ${user.email} (${user.id})`)
     
     // Parse request body
     let reqBody;
@@ -74,27 +93,54 @@ serve(async (req) => {
     // For verifyAdmin action, use the is_admin function
     if (action === 'verifyAdmin') {
       log('Verifying admin status')
-      const { data, error: verifyError } = await supabaseAdmin.rpc('is_admin', { user_uid: user.id })
-      
-      if (verifyError) {
-        log('Error verifying admin:', 'error', verifyError)
-        throw new Error('Failed to verify admin status')
+
+      try {
+        const { data, error: verifyError } = await supabaseAdmin.rpc('is_admin', { user_uid: user.id })
+        
+        if (verifyError) {
+          log('Error verifying admin:', 'error', verifyError)
+          throw new Error('Failed to verify admin status')
+        }
+        
+        log(`Admin verification result: ${data ? 'is admin' : 'not admin'}`)
+        return new Response(
+          JSON.stringify({ isAdmin: data }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } catch (verifyAdminError) {
+        log('Verify admin operation failed', 'error', verifyAdminError)
+        throw new Error(`Admin verification failed: ${verifyAdminError.message}`)
       }
-      
-      log(`Admin verification result: ${data ? 'is admin' : 'not admin'}`)
-      return new Response(
-        JSON.stringify({ isAdmin: data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
     }
     
     // For other actions, verify admin status first
     log('Checking if user has admin privileges')
-    const { data: isAdmin, error: adminCheckError } = await supabaseAdmin.rpc('is_admin', { user_uid: user.id })
     
-    if (adminCheckError) {
-      log('Admin check error:', 'error', adminCheckError)
-      throw new Error(`Admin check failed: ${adminCheckError.message}`)
+    let isAdmin = false;
+    try {
+      // First try direct query
+      const { data: userData, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (!userError && userData) {
+        isAdmin = userData.role === 'admin';
+      } else {
+        // Fall back to RPC
+        const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('is_admin', { user_uid: user.id })
+        
+        if (rpcError) {
+          log('Admin check error:', 'error', rpcError)
+          throw new Error(`Admin check failed: ${rpcError.message}`)
+        }
+        
+        isAdmin = !!rpcData;
+      }
+    } catch (adminCheckError) {
+      log('All admin verification methods failed', 'error', adminCheckError)
+      throw new Error('Could not verify admin status')
     }
     
     if (!isAdmin) {
@@ -129,6 +175,7 @@ serve(async (req) => {
           }
           
           // Check if user exists in auth.users before attempting deletion
+          log('Checking if user exists in auth')
           const { data: userExists, error: checkError } = await supabaseAdmin.auth.admin.getUserById(userId)
           
           if (checkError) {
@@ -171,39 +218,44 @@ serve(async (req) => {
         
         log(`Creating new user: ${userData.email} with role: ${userData.role}`)
         
-        // Create the user in auth.users
-        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email: userData.email,
-          password: userData.password,
-          email_confirm: true
-        })
-        
-        if (createError) {
-          log('Error creating user in auth.users:', 'error', createError)
-          throw createError
-        }
-        
-        // Ensure user exists in public.users table with correct role
-        if (newUser?.user) {
-          log(`Ensuring user exists in public.users with ID: ${newUser.user.id}`)
-          const { error: roleError } = await supabaseAdmin
-            .from('users')
-            .upsert({
-              id: newUser.user.id,
-              email: newUser.user.email,
-              role: userData.role,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
+        try {
+          // Create the user in auth.users
+          const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+            email: userData.email,
+            password: userData.password,
+            email_confirm: true
+          })
           
-          if (roleError) {
-            log('Error ensuring user in public.users:', 'error', roleError)
-            // Even if this fails, the auth user was created, so return success
-            log('User created in auth but not in public.users table', 'warn')
+          if (createError) {
+            log('Error creating user in auth.users:', 'error', createError)
+            throw createError
           }
+          
+          // Ensure user exists in public.users table with correct role
+          if (newUser?.user) {
+            log(`Ensuring user exists in public.users with ID: ${newUser.user.id}`)
+            const { error: roleError } = await supabaseAdmin
+              .from('users')
+              .upsert({
+                id: newUser.user.id,
+                email: newUser.user.email,
+                role: userData.role,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+            
+            if (roleError) {
+              log('Error ensuring user in public.users:', 'error', roleError)
+              // Even if this fails, the auth user was created, so return success
+              log('User created in auth but not in public.users table', 'warn')
+            }
+          }
+          
+          result = { success: true, user: newUser.user }
+        } catch (createUserError) {
+          log('User creation failed', 'error', createUserError)
+          throw new Error(`Failed to create user: ${createUserError.message}`)
         }
-        
-        result = { success: true, user: newUser.user }
         break
         
       case 'update':
@@ -214,36 +266,41 @@ serve(async (req) => {
         
         log(`Updating user: ${userId}`, 'info', userData)
         
-        if (userData?.password) {
-          log('Updating user password')
-          const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(
-            userId,
-            { password: userData.password }
-          )
-          
-          if (pwError) {
-            log('Error updating password:', 'error', pwError)
-            throw pwError
+        try {
+          if (userData?.password) {
+            log('Updating user password')
+            const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(
+              userId,
+              { password: userData.password }
+            )
+            
+            if (pwError) {
+              log('Error updating password:', 'error', pwError)
+              throw pwError
+            }
           }
-        }
-        
-        if (userData?.role) {
-          log(`Updating user role to: ${userData.role}`)
-          const { error: roleError } = await supabaseAdmin
-            .from('users')
-            .update({ 
-              role: userData.role,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', userId)
           
-          if (roleError) {
-            log('Error updating role:', 'error', roleError)
-            throw roleError
+          if (userData?.role) {
+            log(`Updating user role to: ${userData.role}`)
+            const { error: roleError } = await supabaseAdmin
+              .from('users')
+              .update({ 
+                role: userData.role,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', userId)
+            
+            if (roleError) {
+              log('Error updating role:', 'error', roleError)
+              throw roleError
+            }
           }
+          
+          result = { success: true }
+        } catch (updateUserError) {
+          log('User update failed', 'error', updateUserError)
+          throw new Error(`Failed to update user: ${updateUserError.message}`)
         }
-        
-        result = { success: true }
         break
         
       default:

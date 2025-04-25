@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotification } from '@/hooks/useNotification';
@@ -12,8 +12,14 @@ export function useAdminVerification(maxRetries = 3) {
   const { user, isAuthenticated } = useAuth();
   const notification = useNotification();
   const navigate = useNavigate();
+  const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // Clear any existing timeout to prevent memory leaks
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
     // Function to handle verification errors with proper feedback
     const handleVerificationError = (error: any, isRetry = false) => {
       console.error('Error during admin verification:', error);
@@ -21,7 +27,11 @@ export function useAdminVerification(maxRetries = 3) {
       // Check if we should retry
       if (retryCount < maxRetries && isRetry) {
         setRetryCount(prev => prev + 1);
-        return; // Will trigger another verification attempt via useEffect dependency
+        // Use timeout to avoid immediate retry and potential cascade failures
+        timeoutRef.current = window.setTimeout(() => {
+          verifyAdmin(); // Explicit retry call after timeout
+        }, 1000 * Math.min(2 ** retryCount, 8)); // Exponential backoff
+        return;
       }
       
       // Max retries reached or explicit handling without retry
@@ -55,22 +65,44 @@ export function useAdminVerification(maxRetries = 3) {
         setIsVerifying(true);
         console.log(`Verifying admin permissions for user: ${user.email} (attempt ${retryCount + 1}/${maxRetries + 1})`);
         
-        // Check admin status directly from the database using RPC function
-        // This avoids edge function connectivity issues
-        const { data, error } = await supabase.rpc('is_admin', { user_uid: user.id });
-        
-        if (error) {
-          console.error('Error verifying admin status:', error);
-          throw new Error(`Failed to verify admin permissions: ${error.message}`);
+        // First try the direct database approach which is most reliable
+        const { data: directData, error: directError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+          
+        if (!directError && directData) {
+          const isAdminUser = directData.role === 'admin';
+          console.log('Admin verification result (direct):', isAdminUser);
+          setIsAdmin(isAdminUser);
+          
+          if (!isAdminUser) {
+            notification.showError('Access Denied', 'You do not have administrator permissions.');
+            navigate('/');
+          }
+          
+          setIsVerifying(false);
+          return;
         }
         
-        console.log('Admin verification result:', data);
-        setIsAdmin(!!data); // Ensure boolean result
-        
-        // If not admin, notify and redirect
-        if (!data) {
-          notification.showError('Access Denied', 'You do not have administrator permissions.');
-          navigate('/');
+        // Fallback to RPC function if direct query fails
+        if (directError) {
+          console.log('Direct query failed, trying RPC:', directError);
+          const { data: rpcData, error: rpcError } = await supabase.rpc('is_admin', { user_uid: user.id });
+          
+          if (rpcError) {
+            console.error('Error verifying admin status with RPC:', rpcError);
+            throw new Error(`Failed to verify admin permissions: ${rpcError.message}`);
+          }
+          
+          console.log('Admin verification result (RPC):', rpcData);
+          setIsAdmin(!!rpcData); // Ensure boolean result
+          
+          if (!rpcData) {
+            notification.showError('Access Denied', 'You do not have administrator permissions.');
+            navigate('/');
+          }
         }
         
         // Reset retry count on success
@@ -85,7 +117,21 @@ export function useAdminVerification(maxRetries = 3) {
       }
     };
 
-    verifyAdmin();
+    // Prevent verification running on unmounted component
+    let isMounted = true;
+    
+    // Initial verification
+    if (isMounted) {
+      verifyAdmin();
+    }
+    
+    // Cleanup function to prevent memory leaks and state updates on unmounted component
+    return () => {
+      isMounted = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [user, isAuthenticated, navigate, notification, retryCount, maxRetries]);
 
   return { isAdmin, isVerifying };

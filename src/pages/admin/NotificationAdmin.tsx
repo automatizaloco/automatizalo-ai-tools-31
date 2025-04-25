@@ -13,7 +13,8 @@ const NotificationAdmin = () => {
   const notification = useNotification();
   const { toasts, clearToasts } = usePersistentToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { isAdmin, isVerifying } = useAdminVerification();
+  // Increase max retries to 4 for more resilience
+  const { isAdmin, isVerifying } = useAdminVerification(4);
   
   // Example notification for testing
   const handleTestNotification = () => {

@@ -1,16 +1,16 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { ensureContentBucket } from '@/services/blog/ensureBucket';
 import { useNotification } from '@/hooks/useNotification';
+import { Loader2 } from 'lucide-react';
 
 const Admin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
   const notification = useNotification();
 
   useEffect(() => {
@@ -23,6 +23,7 @@ const Admin = () => {
     // Check if user has admin role
     const checkAdminRole = async () => {
       try {
+        setIsChecking(true);
         console.log('Checking admin privileges for:', user.email);
         
         // Special case for main admin account
@@ -61,21 +62,39 @@ const Admin = () => {
             navigate('/admin/content');
           }
           
+          setIsChecking(false);
           return; // Main admin is always allowed
         }
         
-        // For all other users, check role using database RPC function
-        // This avoids edge function connectivity issues
-        const { data: isAdmin, error } = await supabase.rpc('is_admin', { user_uid: user.id });
+        // Try both methods to check admin status for more reliability
+        
+        // 1. Direct database query (most reliable, but may be affected by RLS)
+        const { data: directData, error: directError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        let isAdmin = false;
+        
+        if (!directError && directData) {
+          isAdmin = directData.role === 'admin';
+        } else if (directError) {
+          console.log('Direct query failed, trying RPC function:', directError);
           
-        if (error) {
-          console.error('Error checking admin role:', error);
-          notification.showError('Failed to verify admin privileges', 'Please try again or contact support.');
-          navigate('/');
-          return;
+          // 2. RPC function as fallback (bypasses some RLS issues)
+          const { data: rpcData, error: rpcError } = await supabase.rpc('is_admin', { user_uid: user.id });
+          
+          if (rpcError) {
+            console.error('Error checking admin role via RPC:', rpcError);
+            throw new Error(`Failed to verify admin status: ${rpcError.message}`);
+          }
+          
+          isAdmin = !!rpcData;
         }
         
-        // Redirect non-admin users
+        console.log('Admin check result:', isAdmin);
+        
         if (!isAdmin) {
           console.log('Non-admin user tried to access admin area:', user.email);
           notification.showError('Access Denied', 'You need admin privileges to access this area');
@@ -87,25 +106,26 @@ const Admin = () => {
         if (location.pathname === '/admin') {
           navigate('/admin/content');
         }
+        
       } catch (error) {
         console.error('Admin check error:', error);
         notification.showError('Error checking permissions', 'Please try again later.');
         navigate('/');
+      } finally {
+        setIsChecking(false);
       }
     };
     
     checkAdminRole();
-
-    // Ensure storage buckets exist when admin loads
-    ensureContentBucket().catch(error => {
-      console.error("Error ensuring storage buckets exist:", error);
-    });
   }, [user, navigate, location.pathname, notification]);
 
-  if (!user) {
+  if (!user || isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-gray-500">Verifying admin access...</p>
+        </div>
       </div>
     );
   }

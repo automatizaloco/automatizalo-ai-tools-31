@@ -35,7 +35,7 @@ export function useAdminVerification(maxRetries = 3) {
       );
       
       // Navigate back to dashboard or home
-      navigate('/admin');
+      navigate('/');
     };
 
     const verifyAdmin = async () => {
@@ -55,14 +55,8 @@ export function useAdminVerification(maxRetries = 3) {
         setIsVerifying(true);
         console.log(`Verifying admin permissions for user: ${user.email} (attempt ${retryCount + 1}/${maxRetries + 1})`);
         
-        // Check if session is valid
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-          throw new Error('Authentication session invalid. Please log in again.');
-        }
-        
-        // Use the RPC function to check admin status
+        // Check admin status directly from the database using RPC function
+        // This avoids edge function connectivity issues
         const { data, error } = await supabase.rpc('is_admin', { user_uid: user.id });
         
         if (error) {
@@ -83,13 +77,11 @@ export function useAdminVerification(maxRetries = 3) {
         if (retryCount > 0) {
           setRetryCount(0);
         }
+        
+        // Complete verification
+        setIsVerifying(false);
       } catch (error) {
         handleVerificationError(error, true);
-      } finally {
-        // Only set verifying to false if we're not going to retry
-        if (retryCount >= maxRetries) {
-          setIsVerifying(false);
-        }
       }
     };
 

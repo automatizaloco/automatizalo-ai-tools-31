@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User } from '@/types/user';
 import {
@@ -59,73 +58,80 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
     try {
       console.log('Attempting to delete user:', selectedUser.id);
       
-      // Get the current session for the auth token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.error('Error getting session:', sessionError);
-        throw new Error('Authentication required. Please sign in again.');
-      }
-
-      console.log('Calling manage-users edge function to delete user...');
-      
-      // Set a timeout to prevent hanging requests
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out')), 10000)
-      );
-      
-      const fetchPromise = supabase.functions.invoke('manage-users', {
-        body: { 
-          action: 'delete', 
-          userId: selectedUser.id 
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-      
-      // Race between fetch and timeout
-      const { error: functionError, data } = await Promise.race([
-        fetchPromise,
-        timeoutPromise.then(() => {
-          throw new Error('The request took too long to complete. Please try again.');
-        })
-      ]);
-      
-      if (functionError) {
-        console.error('Edge function error:', functionError);
-        throw new Error(`Error: ${functionError.message || 'Failed to delete user'}`);
+      // First try to remove the user directly from the database
+      // This approach avoids edge function connectivity issues
+      const { error: userTableError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', selectedUser.id);
+        
+      if (userTableError && !userTableError.message.includes('No rows found')) {
+        console.warn('Warning deleting from users table:', userTableError);
+        // Continue with auth deletion - non-blocking
       }
       
-      if (data && data.error) {
-        console.error('Error returned by edge function:', data.error);
-        throw new Error(data.error || 'Failed to delete user');
+      // Delete user from Supabase auth directly
+      // This requires admin privileges but avoids edge function issues
+      // This will work through RLS if the user is an admin
+      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(selectedUser.id);
+      
+      if (authDeleteError) {
+        console.error('Error deleting from auth:', authDeleteError);
+        throw new Error(`Failed to delete user: ${authDeleteError.message}`);
       }
 
       notification.showSuccess('User Deleted', `User ${selectedUser.email} was successfully deleted`);
       setIsDeleteDialogOpen(false);
       onUserUpdated();
       setRetryCount(0); // Reset retry count on success
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
       
-      // Check if we should retry
-      if (retryCount < maxRetries && error.message?.includes('Request timed out')) {
+      // Fallback to edge function approach if direct deletion fails
+      if (retryCount < maxRetries) {
         setRetryCount(prev => prev + 1);
-        notification.showWarning('Request timeout', 'Retrying the request...');
-        handleDeleteUser(); // Retry the operation
-        return;
+        try {
+          // Get the current session for the auth token
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError || !session) {
+            console.error('Error getting session:', sessionError);
+            throw new Error('Authentication required. Please sign in again.');
+          }
+
+          console.log('Falling back to manage-users edge function to delete user...');
+          
+          const { error: functionError, data } = await supabase.functions.invoke('manage-users', {
+            body: { 
+              action: 'delete', 
+              userId: selectedUser.id 
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
+          });
+          
+          if (functionError || (data && data.error)) {
+            throw new Error(functionError?.message || data?.error || 'Failed to delete user');
+          }
+          
+          notification.showSuccess('User Deleted', `User ${selectedUser.email} was successfully deleted`);
+          setIsDeleteDialogOpen(false);
+          onUserUpdated();
+        } catch (fallbackError: any) {
+          console.error('Error in fallback deletion:', fallbackError);
+          setErrorMessage(fallbackError.message || 'Failed to delete user. Please try again.');
+        }
+      } else {
+        setErrorMessage(error.message || 'Failed to delete user. Please try again.');
+        
+        toast.error("Error deleting user", {
+          description: error.message || 'Failed to delete user. Please try again.',
+          duration: 5000,
+        });
+        
+        notification.showError('Error', error.message || 'Failed to delete user. Please try again.');
       }
-      
-      // Set error message for display in dialog
-      setErrorMessage(error.message || 'Failed to delete user. Please try again.');
-      
-      toast.error("Error deleting user", {
-        description: error.message || 'Failed to delete user. Please try again.',
-        duration: 5000,
-      });
-      
-      notification.showError('Error', error.message || 'Failed to delete user. Please try again.');
     } finally {
       setIsProcessing(false);
     }

@@ -23,6 +23,8 @@ const Admin = () => {
     // Check if user has admin role
     const checkAdminRole = async () => {
       try {
+        console.log('Checking admin privileges for:', user.email);
+        
         // Special case for main admin account
         if (user.email === 'contact@automatizalo.co') {
           console.log('Main admin detected, ensuring admin role');
@@ -38,13 +40,20 @@ const Admin = () => {
             console.log('Updating admin role for main account');
             
             // Upsert to create/update the user with admin role
-            await supabase
+            const { error: upsertError } = await supabase
               .from('users')
               .upsert({
                 id: user.id,
                 email: user.email,
-                role: 'admin'
+                role: 'admin',
+                updated_at: new Date().toISOString(),
+                created_at: new Date().toISOString()
               });
+              
+            if (upsertError) {
+              console.error('Error upserting admin user:', upsertError);
+              notification.showWarning('Admin Setup', 'Could not update admin role, but continuing as admin');
+            }
           }
           
           // Handle exact /admin path to redirect to content dashboard
@@ -55,12 +64,9 @@ const Admin = () => {
           return; // Main admin is always allowed
         }
         
-        // For all other users, check role
-        const { data, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
+        // For all other users, check role using database RPC function
+        // This avoids edge function connectivity issues
+        const { data: isAdmin, error } = await supabase.rpc('is_admin', { user_uid: user.id });
           
         if (error) {
           console.error('Error checking admin role:', error);
@@ -70,7 +76,7 @@ const Admin = () => {
         }
         
         // Redirect non-admin users
-        if (data?.role !== 'admin') {
+        if (!isAdmin) {
           console.log('Non-admin user tried to access admin area:', user.email);
           notification.showError('Access Denied', 'You need admin privileges to access this area');
           navigate('/client-portal');

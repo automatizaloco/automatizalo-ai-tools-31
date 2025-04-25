@@ -27,7 +27,12 @@ serve(async (req) => {
       throw new Error('Server configuration error: Missing environment variables')
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
     
     // Validate authentication
     const authHeader = req.headers.get('Authorization')
@@ -49,8 +54,20 @@ serve(async (req) => {
     log(`Authenticated as user: ${user.email} (${user.id})`)
     
     // Parse request body
-    const reqBody = await req.json()
+    let reqBody;
+    try {
+      reqBody = await req.json()
+    } catch (error) {
+      log('Error parsing request body', 'error', error)
+      throw new Error('Invalid request: Could not parse JSON body')
+    }
+    
     const { action, userId, userData } = reqBody
+    
+    if (!action) {
+      log('Missing action in request', 'error')
+      throw new Error('Missing required parameter: action')
+    }
     
     log(`Requested action: ${action}`, 'info', { userId, action })
     
@@ -109,6 +126,23 @@ serve(async (req) => {
           if (userTableError && !userTableError.message.includes('No rows found')) {
             log('Error deleting from users table:', 'error', userTableError)
             // Don't throw here, just log and continue - user might exist only in auth
+          }
+          
+          // Check if user exists in auth.users before attempting deletion
+          const { data: userExists, error: checkError } = await supabaseAdmin.auth.admin.getUserById(userId)
+          
+          if (checkError) {
+            log('Error checking if user exists:', 'error', checkError)
+            // Continue anyway, since we still want to try deletion
+          }
+          
+          if (!userExists || !userExists.user) {
+            log(`User with ID ${userId} not found in auth.users`, 'warn')
+            // If user already deleted from auth, consider it a success
+            return new Response(
+              JSON.stringify({ success: true, message: "User already deleted from auth" }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
           }
           
           // Then delete from auth.users

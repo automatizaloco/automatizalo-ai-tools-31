@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,9 +27,40 @@ const AutomationManager = () => {
   const notification = useNotification();
 
   const fetchAutomations = async () => {
+    if (!isAdmin) {
+      return; // Don't fetch if not admin
+    }
+    
     setIsLoading(true);
     try {
       console.log('Fetching automations...');
+      
+      // First check if admin view is working correctly
+      const { data: adminCheck, error: adminCheckError } = await supabase.rpc('is_admin', { 
+        user_uid: (await supabase.auth.getUser()).data.user?.id 
+      });
+      
+      if (adminCheckError) {
+        console.error('Error checking admin status:', adminCheckError);
+        notification.showError(
+          'Permission Error', 
+          'Failed to verify your admin permissions. Please try again later.'
+        );
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!adminCheck) {
+        console.warn('User is not an admin but reached the automation manager');
+        notification.showError(
+          'Access Denied', 
+          'You do not have admin privileges to view this page.'
+        );
+        setIsLoading(false);
+        return;
+      }
+      
+      // Now fetch the automations
       const { data, error } = await supabase
         .from('automations')
         .select('*')

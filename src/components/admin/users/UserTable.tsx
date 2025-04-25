@@ -14,7 +14,6 @@ import { Edit, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { UserForm } from './UserForm';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { useNotification } from '@/hooks/useNotification';
 
 interface UserTableProps {
@@ -50,23 +49,27 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
 
     setIsProcessing(true);
     try {
-      // Delete from the users table first
-      const { error: dbError } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', selectedUser.id);
-
-      if (dbError) {
-        throw dbError;
+      console.log('Attempting to delete user:', selectedUser.id);
+      
+      // Get the current user's JWT token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Authentication required');
       }
 
-      // Then attempt to delete the auth user
-      const { error: authError } = await supabase.auth.admin.deleteUser(
-        selectedUser.id
-      );
-
-      if (authError) {
-        console.warn('Could not delete auth user, but DB record was removed:', authError);
+      // Call our edge function to handle the user deletion with admin privileges
+      const { error: functionError, data } = await supabase.functions.invoke('manage-users', {
+        body: { 
+          action: 'delete', 
+          userId: selectedUser.id 
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (functionError || (data && data.error)) {
+        throw new Error(data?.error || functionError?.message || 'Failed to delete user');
       }
 
       notification.showSuccess('User Deleted', `User ${selectedUser.email} was successfully deleted`);
@@ -74,7 +77,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
       onUserUpdated();
     } catch (error) {
       console.error('Error deleting user:', error);
-      notification.showError('Error', 'Failed to delete user. Please try again.');
+      notification.showError('Error', error.message || 'Failed to delete user. Please try again.');
     } finally {
       setIsProcessing(false);
     }

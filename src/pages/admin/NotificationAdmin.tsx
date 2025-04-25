@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import NotificationHistory from "@/components/admin/NotificationHistory";
 import { useNotification } from "@/hooks/useNotification";
 import { Button } from "@/components/ui/button";

@@ -42,9 +42,9 @@ const NotificationHistory = () => {
     return (
       <Card className="border-dashed">
         <CardContent className="pt-6 pb-6 text-center">
-          <p className="text-gray-500">No notifications found</p>
+          <p className="text-gray-500">No se encontraron notificaciones</p>
           <p className="text-sm text-gray-400 mt-1">
-            Notifications will appear here when they are triggered
+            Las notificaciones aparecerán aquí cuando se generen
           </p>
         </CardContent>
       </Card>

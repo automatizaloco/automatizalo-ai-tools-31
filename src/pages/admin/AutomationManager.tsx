@@ -6,12 +6,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Automation } from '@/types/automation';
+import { useAdminVerification } from '@/hooks/useAdminVerification';
+import { useNotification } from '@/hooks/useNotification';
+import { Loader2 } from 'lucide-react';
 
 const AutomationManager = () => {
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -21,31 +24,48 @@ const AutomationManager = () => {
   });
   const [editMode, setEditMode] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const { isAdmin, isVerifying } = useAdminVerification();
+  const notification = useNotification();
 
   const fetchAutomations = async () => {
     setIsLoading(true);
     try {
+      console.log('Fetching automations...');
       const { data, error } = await supabase
         .from('automations')
         .select('*')
         .order('created_at', { ascending: false });
         
       if (error) {
+        console.error('Error fetching automations:', error);
+        
+        // Check if this is an RLS error
+        if (error.message.includes('row-level security')) {
+          notification.showError(
+            'Error de permisos', 
+            'No tienes permisos para ver las automatizaciones. Verifica que tu usuario tenga rol de administrador.'
+          );
+          return;
+        }
+        
         throw error;
       }
       
+      console.log('Automations fetched successfully:', data?.length || 0);
       setAutomations(data || []);
     } catch (error) {
-      console.error('Error fetching automations:', error);
-      toast.error('Failed to load automations');
+      console.error('Error processing automations:', error);
+      notification.showError('Error', 'No se pudieron cargar las automatizaciones');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAutomations();
-  }, []);
+    if (isAdmin && !isVerifying) {
+      fetchAutomations();
+    }
+  }, [isAdmin, isVerifying]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -58,7 +78,15 @@ const AutomationManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isAdmin) {
+      notification.showError('Acceso denegado', 'No tienes permisos para realizar esta acción.');
+      return;
+    }
+    
+    setIsSaving(true);
     try {
+      console.log(`${editMode ? 'Updating' : 'Creating'} automation...`);
+      
       if (editMode && currentId) {
         const { error } = await supabase
           .from('automations')
@@ -68,8 +96,21 @@ const AutomationManager = () => {
           })
           .eq('id', currentId);
           
-        if (error) throw error;
-        toast.success('Automation updated successfully');
+        if (error) {
+          console.error('Error updating automation:', error);
+          
+          if (error.message.includes('row-level security')) {
+            notification.showError(
+              'Error de permisos', 
+              'No tienes permisos para actualizar automatizaciones. Verifica que tu usuario tenga rol de administrador.'
+            );
+            return;
+          }
+          
+          throw error;
+        }
+        
+        notification.showSuccess('Automatización actualizada', 'La automatización se actualizó correctamente');
       } else {
         const { error } = await supabase
           .from('automations')
@@ -80,15 +121,30 @@ const AutomationManager = () => {
             updated_at: new Date().toISOString()
           }]);
           
-        if (error) throw error;
-        toast.success('Automation created successfully');
+        if (error) {
+          console.error('Error creating automation:', error);
+          
+          if (error.message.includes('row-level security')) {
+            notification.showError(
+              'Error de permisos', 
+              'No tienes permisos para crear automatizaciones. Verifica que tu usuario tenga rol de administrador.'
+            );
+            return;
+          }
+          
+          throw error;
+        }
+        
+        notification.showSuccess('Automatización creada', 'La automatización se creó correctamente');
       }
       
       resetForm();
       fetchAutomations();
     } catch (error: any) {
       console.error('Error saving automation:', error);
-      toast.error(error.message || 'Failed to save automation');
+      notification.showError('Error', error.message || 'No se pudo guardar la automatización');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -105,19 +161,39 @@ const AutomationManager = () => {
   };
 
   const handleToggleStatus = async (id: string, currentlyActive: boolean) => {
+    if (!isAdmin) {
+      notification.showError('Acceso denegado', 'No tienes permisos para realizar esta acción.');
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('automations')
         .update({ active: !currentlyActive, updated_at: new Date().toISOString() })
         .eq('id', id);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating automation status:', error);
+        
+        if (error.message.includes('row-level security')) {
+          notification.showError(
+            'Error de permisos', 
+            'No tienes permisos para actualizar el estado de automatizaciones.'
+          );
+          return;
+        }
+        
+        throw error;
+      }
       
       fetchAutomations();
-      toast.success(`Automation ${currentlyActive ? 'disabled' : 'enabled'}`);
+      notification.showSuccess(
+        'Estado actualizado', 
+        `Automatización ${currentlyActive ? 'desactivada' : 'activada'}`
+      );
     } catch (error: any) {
       console.error('Error updating automation status:', error);
-      toast.error(error.message || 'Failed to update automation status');
+      notification.showError('Error', error.message || 'No se pudo actualizar el estado de la automatización');
     }
   };
 
@@ -133,48 +209,72 @@ const AutomationManager = () => {
     setEditMode(false);
   };
 
+  if (isVerifying) {
+    return (
+      <div className="container mx-auto px-4 py-6 flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="mt-2 text-gray-600">Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="border rounded-lg p-8 text-center">
+          <p className="text-red-500 mb-2 font-semibold">Acceso denegado</p>
+          <p className="text-gray-600">No tienes permisos para acceder a esta sección.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Automation Management</h1>
-        <Button onClick={fetchAutomations} variant="outline">Refresh</Button>
+        <h1 className="text-2xl font-bold">Gestión de Automatizaciones</h1>
+        <Button onClick={fetchAutomations} variant="outline" disabled={isLoading}>
+          {isLoading ? 'Cargando...' : 'Actualizar'}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>{editMode ? 'Edit Automation' : 'Create Automation'}</CardTitle>
+              <CardTitle>{editMode ? 'Editar Automatización' : 'Crear Automatización'}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Título</Label>
                   <Input
                     id="title"
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    placeholder="Enter automation title"
+                    placeholder="Ingrese el título de la automatización"
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Descripción</Label>
                   <Textarea
                     id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    placeholder="Enter automation description"
+                    placeholder="Ingrese la descripción de la automatización"
                     rows={4}
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="installation_price">Installation Price ($)</Label>
+                  <Label htmlFor="installation_price">Precio de instalación ($)</Label>
                   <Input
                     id="installation_price"
                     name="installation_price"
@@ -189,7 +289,7 @@ const AutomationManager = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="monthly_price">Monthly Maintenance Price ($)</Label>
+                  <Label htmlFor="monthly_price">Precio de mantenimiento mensual ($)</Label>
                   <Input
                     id="monthly_price"
                     name="monthly_price"
@@ -204,23 +304,23 @@ const AutomationManager = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="image_url">Image URL (Optional)</Label>
+                  <Label htmlFor="image_url">URL de imagen (Opcional)</Label>
                   <Input
                     id="image_url"
                     name="image_url"
                     value={formData.image_url}
                     onChange={handleChange}
-                    placeholder="https://example.com/image.jpg"
+                    placeholder="https://ejemplo.com/imagen.jpg"
                   />
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button type="submit">
-                    {editMode ? 'Update Automation' : 'Create Automation'}
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? 'Guardando...' : editMode ? 'Actualizar' : 'Crear'}
                   </Button>
                   {editMode && (
-                    <Button type="button" variant="outline" onClick={resetForm}>
-                      Cancel
+                    <Button type="button" variant="outline" onClick={resetForm} disabled={isSaving}>
+                      Cancelar
                     </Button>
                   )}
                 </div>
@@ -230,7 +330,7 @@ const AutomationManager = () => {
         </div>
 
         <div className="lg:col-span-2">
-          <h2 className="text-xl font-semibold mb-4">Automation List</h2>
+          <h2 className="text-xl font-semibold mb-4">Lista de Automatizaciones</h2>
           
           {isLoading ? (
             <div className="flex justify-center py-8">
@@ -247,8 +347,8 @@ const AutomationManager = () => {
                           <div>
                             <h3 className="font-bold text-lg">{automation.title}</h3>
                             <p className="text-sm text-gray-500 mt-1">
-                              Installation: ${automation.installation_price.toFixed(2)} | 
-                              Monthly: ${automation.monthly_price.toFixed(2)}
+                              Instalación: ${automation.installation_price.toFixed(2)} | 
+                              Mensual: ${automation.monthly_price.toFixed(2)}
                             </p>
                             <p className="mt-2 text-gray-600">{automation.description}</p>
                           </div>
@@ -258,14 +358,14 @@ const AutomationManager = () => {
                               variant="outline" 
                               onClick={() => handleEdit(automation)}
                             >
-                              Edit
+                              Editar
                             </Button>
                             <Button 
                               size="sm" 
                               variant={automation.active ? "destructive" : "default"}
                               onClick={() => handleToggleStatus(automation.id, automation.active)}
                             >
-                              {automation.active ? 'Disable' : 'Enable'}
+                              {automation.active ? 'Desactivar' : 'Activar'}
                             </Button>
                           </div>
                         </div>
@@ -275,8 +375,8 @@ const AutomationManager = () => {
                 </div>
               ) : (
                 <div className="border rounded-lg p-8 text-center">
-                  <p className="text-gray-500">No automations found</p>
-                  <p className="text-gray-400 text-sm mt-1">Create your first automation using the form</p>
+                  <p className="text-gray-500">No se encontraron automatizaciones</p>
+                  <p className="text-gray-400 text-sm mt-1">Cree su primera automatización usando el formulario</p>
                 </div>
               )}
             </>

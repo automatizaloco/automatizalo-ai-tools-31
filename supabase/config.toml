@@ -39,3 +39,6 @@ verify_jwt = true
 
 [edge_functions.translate-blog]
 verify_jwt = true
+
+[edge_functions.manage-users]
+verify_jwt = true

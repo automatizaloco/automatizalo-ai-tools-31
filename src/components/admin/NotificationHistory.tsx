@@ -1,170 +1,89 @@
 
-import React, { useState, useEffect } from "react";
-import { usePersistentToast } from "@/context/PersistentToastContext";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Info, Trash2, BellRing, RefreshCw } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { useNotification } from "@/hooks/useNotification";
+import React from 'react';
+import { usePersistentToast } from '@/context/PersistentToastContext';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { format } from 'date-fns';
+import { NotificationType } from '@/types/notification';
+
+const getNotificationIcon = (type: NotificationType['type']) => {
+  switch (type) {
+    case 'success':
+      return <span className="text-green-500 text-lg">✓</span>;
+    case 'error':
+      return <span className="text-red-500 text-lg">✕</span>;
+    case 'warning':
+      return <span className="text-amber-500 text-lg">⚠</span>;
+    case 'info':
+    default:
+      return <span className="text-blue-500 text-lg">ℹ</span>;
+  }
+};
+
+const getNotificationColor = (type: NotificationType['type']) => {
+  switch (type) {
+    case 'success':
+      return 'bg-green-50 border-green-100';
+    case 'error':
+      return 'bg-red-50 border-red-100';
+    case 'warning':
+      return 'bg-amber-50 border-amber-100';
+    case 'info':
+    default:
+      return 'bg-blue-50 border-blue-100';
+  }
+};
 
 const NotificationHistory = () => {
-  const { toasts, clearToasts, removeToast } = usePersistentToast();
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [refreshKey, setRefreshKey] = useState(0); // Used to force a refresh
-  const notification = useNotification();
+  const { toasts, removeToast } = usePersistentToast();
 
-  // Force a re-render on component mount to ensure notifications are loaded
-  useEffect(() => {
-    console.log("NotificationHistory mounted, loaded notifications:", toasts.length);
-  }, [toasts]);
-
-  const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
-    toast.info("Refreshing notification list");
-  };
-
-  const handleTestNotification = () => {
-    notification.showSuccess("Test Notification", "This is a test notification to verify the system is working correctly.");
-  };
-
-  const handleClearToast = (id: string) => {
-    removeToast(id);
-    toast.info("Notification removed");
-  };
-
-  const filteredToasts = toasts.filter(toast => {
-    if (activeTab === "all") return true;
-    return toast.type === activeTab;
-  });
-
-  const groupedByDate = filteredToasts.reduce((groups: Record<string, typeof toasts>, toast) => {
-    const date = new Date(toast.timestamp).toLocaleDateString();
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(toast);
-    return groups;
-  }, {});
-
-  const getIconForType = (type: string) => {
-    switch (type) {
-      case "success":
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-      case "error":
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-      case "warning":
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-      case "info":
-      default:
-        return <Info className="h-5 w-5 text-blue-500" />;
-    }
-  };
+  if (toasts.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="pt-6 pb-6 text-center">
+          <p className="text-gray-500">No notifications found</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Notifications will appear here when they are triggered
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-6" key={refreshKey}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BellRing className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Notification History</h2>
-          <span className="text-sm text-gray-500 ml-2">
-            ({filteredToasts.length} notifications)
-          </span>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={handleRefresh}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1 text-green-600"
-            onClick={handleTestNotification}
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            Test Notification
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={clearToasts}
-          >
-            <Trash2 className="h-4 w-4" />
-            Clear All
-          </Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-4 mb-4">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="success">Success</TabsTrigger>
-          <TabsTrigger value="error">Error</TabsTrigger>
-          <TabsTrigger value="info">Info</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value={activeTab} className="mt-0">
-          {Object.keys(groupedByDate).length > 0 ? (
-            Object.entries(groupedByDate)
-              .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
-              .map(([date, toastsForDate]) => (
-                <div key={date} className="mb-6">
-                  <h3 className="text-sm font-medium mb-3 text-gray-500">{date}</h3>
-                  <div className="space-y-3">
-                    {toastsForDate
-                      .sort((a, b) => b.timestamp - a.timestamp)
-                      .map((toast) => (
-                        <Alert 
-                          key={toast.id} 
-                          className={`border-l-4 ${
-                            toast.type === "success" ? "border-l-green-500" : 
-                            toast.type === "error" ? "border-l-red-500" : 
-                            toast.type === "warning" ? "border-l-yellow-500" : 
-                            "border-l-blue-500"
-                          }`}
-                        >
-                          <div className="flex justify-between gap-2">
-                            <div className="flex gap-2">
-                              {getIconForType(toast.type)}
-                              <div className="flex-1">
-                                <AlertTitle>{toast.title}</AlertTitle>
-                                <AlertDescription>{toast.message}</AlertDescription>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {new Date(toast.timestamp).toLocaleTimeString()}
-                                </p>
-                              </div>
-                            </div>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => handleClearToast(toast.id)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
-                        </Alert>
-                      ))}
-                  </div>
-                </div>
-              ))
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              <BellRing className="h-12 w-12 mx-auto opacity-20 mb-3" />
-              <p>No notifications to display</p>
+    <div className="space-y-3">
+      {toasts.map((toast) => (
+        <Card 
+          key={toast.id} 
+          className={`relative overflow-hidden border ${getNotificationColor(toast.type)}`}
+        >
+          <CardHeader className="pb-2 pt-4 px-4">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-2">
+                {getNotificationIcon(toast.type)}
+                <span className="font-medium">{toast.title}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">
+                  {format(new Date(toast.timestamp), 'MMM d, yyyy h:mm a')}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0" 
+                  onClick={() => removeToast(toast.id)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          </CardHeader>
+          <CardContent className="pt-0 pb-4 px-4">
+            <p className="text-sm text-gray-600">{toast.message}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };

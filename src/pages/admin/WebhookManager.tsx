@@ -12,6 +12,7 @@ import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
 
 const WebhookManager = () => {
   const [activeTab, setActiveTab] = useState('blog-creation');
+  const [isLoading, setIsLoading] = useState(true);
   
   const { 
     blogCreationUrl, 
@@ -20,64 +21,94 @@ const WebhookManager = () => {
     updateBlogCreationUrl,
     updateBlogSocialShareUrl,
     updateWebsiteDomain,
-    initializeFromSupabase
+    initializeFromSupabase,
+    isInitialized
   } = useWebhookStore();
 
   useEffect(() => {
-    initializeFromSupabase();
+    const loadWebhookConfigs = async () => {
+      setIsLoading(true);
+      try {
+        await initializeFromSupabase();
+      } catch (error) {
+        console.error('Failed to load webhook configs:', error);
+        toast.error('Failed to load webhook settings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadWebhookConfigs();
   }, [initializeFromSupabase]);
 
   const [localBlogCreation, setLocalBlogCreation] = useState({
-    test: blogCreationUrl.test,
-    production: blogCreationUrl.production,
-    mode: blogCreationUrl.mode,
-    method: blogCreationUrl.method
+    test: '',
+    production: '',
+    mode: 'production' as WebhookMode,
+    method: 'POST' as RequestMethod
   });
 
   const [localBlogSocialShare, setLocalBlogSocialShare] = useState({
-    test: blogSocialShareUrl.test,
-    production: blogSocialShareUrl.production,
-    mode: blogSocialShareUrl.mode,
-    method: blogSocialShareUrl.method
+    test: '',
+    production: '',
+    mode: 'test' as WebhookMode,
+    method: 'GET' as RequestMethod
   });
 
-  const [localWebsiteDomain, setLocalWebsiteDomain] = useState(websiteDomain);
+  const [localWebsiteDomain, setLocalWebsiteDomain] = useState('');
 
   useEffect(() => {
-    console.log("Syncing local state with store");
-    setLocalBlogCreation({
-      test: blogCreationUrl.test,
-      production: blogCreationUrl.production,
-      mode: blogCreationUrl.mode,
-      method: blogCreationUrl.method
-    });
-    
-    setLocalBlogSocialShare({
-      test: blogSocialShareUrl.test,
-      production: blogSocialShareUrl.production,
-      mode: blogSocialShareUrl.mode,
-      method: blogSocialShareUrl.method
-    });
-    
-    setLocalWebsiteDomain(websiteDomain);
-  }, [blogCreationUrl, blogSocialShareUrl, websiteDomain]);
+    if (isInitialized) {
+      console.log("Syncing local state with store");
+      setLocalBlogCreation({
+        test: blogCreationUrl.test,
+        production: blogCreationUrl.production,
+        mode: blogCreationUrl.mode,
+        method: blogCreationUrl.method
+      });
+      
+      setLocalBlogSocialShare({
+        test: blogSocialShareUrl.test,
+        production: blogSocialShareUrl.production,
+        mode: blogSocialShareUrl.mode,
+        method: blogSocialShareUrl.method
+      });
+      
+      setLocalWebsiteDomain(websiteDomain);
+    }
+  }, [blogCreationUrl, blogSocialShareUrl, websiteDomain, isInitialized]);
 
-  const handleBlogCreationSubmit = (e: React.FormEvent) => {
+  const handleBlogCreationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateBlogCreationUrl(localBlogCreation);
-    toast.success("Blog creation webhook settings saved successfully");
+    try {
+      await updateBlogCreationUrl(localBlogCreation);
+      toast.success("Blog creation webhook settings saved successfully");
+    } catch (error) {
+      console.error('Error saving blog creation settings:', error);
+      toast.error('Failed to save settings');
+    }
   };
 
-  const handleBlogSocialShareSubmit = (e: React.FormEvent) => {
+  const handleBlogSocialShareSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateBlogSocialShareUrl(localBlogSocialShare);
-    toast.success("Blog social share webhook settings saved successfully");
+    try {
+      await updateBlogSocialShareUrl(localBlogSocialShare);
+      toast.success("Blog social share webhook settings saved successfully");
+    } catch (error) {
+      console.error('Error saving blog social share settings:', error);
+      toast.error('Failed to save settings');
+    }
   };
 
-  const handleDomainSubmit = (e: React.FormEvent) => {
+  const handleDomainSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateWebsiteDomain(localWebsiteDomain);
-    toast.success("Website domain saved successfully");
+    try {
+      await updateWebsiteDomain(localWebsiteDomain);
+      toast.success("Website domain saved successfully");
+    } catch (error) {
+      console.error('Error saving domain settings:', error);
+      toast.error('Failed to save domain');
+    }
   };
 
   const handleTestWebhook = async (type: 'blog-creation' | 'blog-social') => {
@@ -87,6 +118,11 @@ const WebhookManager = () => {
       const webhookUrl = type === 'blog-creation' 
         ? webhookStore.getActiveBlogCreationUrl() 
         : webhookStore.getActiveBlogSocialShareUrl();
+      
+      if (!webhookUrl || webhookUrl.trim() === '') {
+        toast.error('No webhook URL configured');
+        return;
+      }
       
       const method = type === 'blog-creation' 
         ? webhookStore.getActiveBlogCreationMethod()
@@ -156,6 +192,17 @@ const WebhookManager = () => {
       toast.error(`Failed to test ${type} webhook: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <h1 className="text-2xl font-bold mb-6">Webhook Manager</h1>
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-4">

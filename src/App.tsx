@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation, Outlet } from 'react-router-dom';
+import { Routes, Route, useLocation, Outlet, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import AdminLayout from './components/layout/AdminLayout';
 import Index from './pages/Index';
@@ -62,9 +62,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             
             <Route path="/admin" element={<AdminLayout><Outlet /></AdminLayout>}>
-              <Route index element={<Admin />} />
-              <Route path="users" element={<UserManagement />} />
+              <Route index element={<Navigate to="/admin/content" replace />} />
               <Route path="content" element={<ContentManager />} />
+              <Route path="users" element={<UserManagement />} />
               <Route path="testimonials" element={<TestimonialManager />} />
               <Route path="webhooks" element={<WebhookManager />} />
               <Route path="blog" element={<BlogAdmin />} />

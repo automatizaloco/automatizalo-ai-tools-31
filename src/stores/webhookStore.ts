@@ -1,5 +1,7 @@
+
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from 'sonner';
 
 export type WebhookMode = "test" | "production";
 export type RequestMethod = "POST" | "GET";
@@ -21,6 +23,10 @@ interface WebhookState {
   };
   // Website domain for correct link generation
   websiteDomain: string;
+  // Flag to track if store has been initialized
+  isInitialized: boolean;
+  // Config ID from database
+  configId: string | null;
   
   // Actions
   updateBlogCreationUrl: (params: { 
@@ -70,9 +76,19 @@ export const useWebhookStore = create<WebhookState>()((set, get) => ({
     method: "GET"
   },
   websiteDomain: "",
+  isInitialized: false,
+  configId: null,
   
   initializeFromSupabase: async () => {
     try {
+      // Skip if already initialized
+      if (get().isInitialized && get().configId) {
+        console.log('Webhook store already initialized');
+        return;
+      }
+      
+      console.log('Initializing webhook store from Supabase');
+      
       const { data: configs, error } = await supabase
         .from('webhook_configs')
         .select('*')
@@ -81,10 +97,58 @@ export const useWebhookStore = create<WebhookState>()((set, get) => ({
 
       if (error) {
         console.error('Error fetching webhook configs:', error);
+        
+        // If no configs exist, create a default one
+        if (error.code === 'PGRST116') {
+          console.log('No webhook configs found, creating default');
+          
+          const { data: newConfig, error: insertError } = await supabase
+            .from('webhook_configs')
+            .insert({
+              blog_creation_test_url: 'https://webhook.site/your-test-webhook',
+              blog_creation_prod_url: 'https://webhook.site/your-production-webhook',
+              blog_social_test_url: 'https://webhook.site/your-test-social-webhook',
+              blog_social_prod_url: 'https://webhook.site/your-production-social-webhook',
+              website_domain: 'https://automatizalo.co',
+              blog_creation_mode: 'production',
+              blog_social_mode: 'test',
+              blog_creation_method: 'POST',
+              blog_social_method: 'GET'
+            })
+            .select()
+            .single();
+          
+          if (insertError) {
+            console.error('Error creating default webhook config:', insertError);
+            return;
+          }
+          
+          if (newConfig) {
+            console.log('Created default webhook config:', newConfig);
+            set({
+              blogCreationUrl: {
+                test: newConfig.blog_creation_test_url,
+                production: newConfig.blog_creation_prod_url,
+                mode: newConfig.blog_creation_mode,
+                method: newConfig.blog_creation_method
+              },
+              blogSocialShareUrl: {
+                test: newConfig.blog_social_test_url,
+                production: newConfig.blog_social_prod_url,
+                mode: newConfig.blog_social_mode,
+                method: newConfig.blog_social_method
+              },
+              websiteDomain: newConfig.website_domain,
+              isInitialized: true,
+              configId: newConfig.id
+            });
+          }
+        }
         return;
       }
 
       if (configs) {
+        console.log('Webhook configs loaded:', configs);
         set({
           blogCreationUrl: {
             test: configs.blog_creation_test_url,
@@ -98,7 +162,9 @@ export const useWebhookStore = create<WebhookState>()((set, get) => ({
             mode: configs.blog_social_mode,
             method: configs.blog_social_method
           },
-          websiteDomain: configs.website_domain
+          websiteDomain: configs.website_domain,
+          isInitialized: true,
+          configId: configs.id
         });
       }
     } catch (error) {
@@ -121,19 +187,31 @@ export const useWebhookStore = create<WebhookState>()((set, get) => ({
     // Update local state
     set({ blogCreationUrl: updatedBlogCreationUrl });
 
-    // Update Supabase
-    const { error } = await supabase
-      .from('webhook_configs')
-      .update({
-        blog_creation_test_url: updatedBlogCreationUrl.test,
-        blog_creation_prod_url: updatedBlogCreationUrl.production,
-        blog_creation_mode: updatedBlogCreationUrl.mode,
-        blog_creation_method: updatedBlogCreationUrl.method
-      })
-      .eq('id', (await supabase.from('webhook_configs').select('id').single()).data?.id);
+    // Make sure we have a config ID before updating Supabase
+    if (!currentState.configId) {
+      console.error('No config ID available, cannot update Supabase');
+      await get().initializeFromSupabase();
+    }
+    
+    try {
+      // Update Supabase
+      const { error } = await supabase
+        .from('webhook_configs')
+        .update({
+          blog_creation_test_url: updatedBlogCreationUrl.test,
+          blog_creation_prod_url: updatedBlogCreationUrl.production,
+          blog_creation_mode: updatedBlogCreationUrl.mode,
+          blog_creation_method: updatedBlogCreationUrl.method
+        })
+        .eq('id', get().configId);
 
-    if (error) {
-      console.error('Error updating blog creation URL:', error);
+      if (error) {
+        console.error('Error updating blog creation URL:', error);
+        toast.error('Failed to save webhook settings to database');
+      }
+    } catch (error) {
+      console.error('Unexpected error updating blog creation URL:', error);
+      toast.error('Unexpected error saving settings');
     }
   },
     
@@ -152,19 +230,31 @@ export const useWebhookStore = create<WebhookState>()((set, get) => ({
     // Update local state
     set({ blogSocialShareUrl: updatedBlogSocialShareUrl });
 
-    // Update Supabase
-    const { error } = await supabase
-      .from('webhook_configs')
-      .update({
-        blog_social_test_url: updatedBlogSocialShareUrl.test,
-        blog_social_prod_url: updatedBlogSocialShareUrl.production,
-        blog_social_mode: updatedBlogSocialShareUrl.mode,
-        blog_social_method: updatedBlogSocialShareUrl.method
-      })
-      .eq('id', (await supabase.from('webhook_configs').select('id').single()).data?.id);
+    // Make sure we have a config ID before updating Supabase
+    if (!currentState.configId) {
+      console.error('No config ID available, cannot update Supabase');
+      await get().initializeFromSupabase();
+    }
+    
+    try {
+      // Update Supabase
+      const { error } = await supabase
+        .from('webhook_configs')
+        .update({
+          blog_social_test_url: updatedBlogSocialShareUrl.test,
+          blog_social_prod_url: updatedBlogSocialShareUrl.production,
+          blog_social_mode: updatedBlogSocialShareUrl.mode,
+          blog_social_method: updatedBlogSocialShareUrl.method
+        })
+        .eq('id', get().configId);
 
-    if (error) {
-      console.error('Error updating blog social share URL:', error);
+      if (error) {
+        console.error('Error updating blog social share URL:', error);
+        toast.error('Failed to save webhook settings to database');
+      }
+    } catch (error) {
+      console.error('Unexpected error updating blog social URL:', error);
+      toast.error('Unexpected error saving settings');
     }
   },
   
@@ -174,14 +264,27 @@ export const useWebhookStore = create<WebhookState>()((set, get) => ({
     // Update local state
     set({ websiteDomain: domain });
 
-    // Update Supabase
-    const { error } = await supabase
-      .from('webhook_configs')
-      .update({ website_domain: domain })
-      .eq('id', (await supabase.from('webhook_configs').select('id').single()).data?.id);
+    // Make sure we have a config ID before updating Supabase
+    const currentState = get();
+    if (!currentState.configId) {
+      console.error('No config ID available, cannot update Supabase');
+      await get().initializeFromSupabase();
+    }
+    
+    try {
+      // Update Supabase
+      const { error } = await supabase
+        .from('webhook_configs')
+        .update({ website_domain: domain })
+        .eq('id', get().configId);
 
-    if (error) {
-      console.error('Error updating website domain:', error);
+      if (error) {
+        console.error('Error updating website domain:', error);
+        toast.error('Failed to save domain setting to database');
+      }
+    } catch (error) {
+      console.error('Unexpected error updating website domain:', error);
+      toast.error('Unexpected error saving domain');
     }
   },
   

@@ -1,14 +1,17 @@
 
 import React, { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ensureContentBucket } from '@/services/blog/ensureBucket';
+import { useNotification } from '@/hooks/useNotification';
 
 const Admin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const notification = useNotification();
 
   useEffect(() => {
     // Check for authentication
@@ -44,6 +47,11 @@ const Admin = () => {
               });
           }
           
+          // Handle exact /admin path to redirect to content dashboard
+          if (location.pathname === '/admin') {
+            navigate('/admin/content');
+          }
+          
           return; // Main admin is always allowed
         }
         
@@ -56,7 +64,7 @@ const Admin = () => {
           
         if (error) {
           console.error('Error checking admin role:', error);
-          toast.error('Failed to verify admin privileges');
+          notification.showError('Failed to verify admin privileges', 'Please try again or contact support.');
           navigate('/');
           return;
         }
@@ -64,12 +72,18 @@ const Admin = () => {
         // Redirect non-admin users
         if (data?.role !== 'admin') {
           console.log('Non-admin user tried to access admin area:', user.email);
-          toast.error('You need admin privileges to access this area');
+          notification.showError('Access Denied', 'You need admin privileges to access this area');
           navigate('/client-portal');
+          return;
+        }
+        
+        // Handle exact /admin path to redirect to content dashboard
+        if (location.pathname === '/admin') {
+          navigate('/admin/content');
         }
       } catch (error) {
         console.error('Admin check error:', error);
-        toast.error('Error checking permissions');
+        notification.showError('Error checking permissions', 'Please try again later.');
         navigate('/');
       }
     };
@@ -80,7 +94,7 @@ const Admin = () => {
     ensureContentBucket().catch(error => {
       console.error("Error ensuring storage buckets exist:", error);
     });
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname, notification]);
 
   if (!user) {
     return (

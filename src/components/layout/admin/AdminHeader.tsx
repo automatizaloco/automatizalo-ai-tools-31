@@ -6,6 +6,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AdminNavItem } from './AdminNavItem';
 import { AdminRouteType } from './types';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
+import { useLanguage } from '@/context/LanguageContext';
+import { adminTranslations } from '@/translations/adminTranslations';
 
 interface AdminHeaderProps {
   activeTab: string;
@@ -25,14 +28,17 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   onViewAsClient
 }) => {
   const isMobile = useIsMobile();
+  const { language } = useLanguage();
+  const t = adminTranslations[language].adminHeader;
 
   return (
     <div className="bg-white shadow sticky top-0 z-50">
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-shrink-0 flex items-center">
-          <h1 className="text-lg font-bold">Admin</h1>
+          <h1 className="text-lg font-bold">{t.adminTitle}</h1>
         </div>
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <Button 
             variant="outline" 
             size={isMobile ? "sm" : "default"} 
@@ -40,13 +46,13 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             className="flex items-center gap-1"
           >
             <Eye className="h-4 w-4" />
-            {!isMobile && "View as Client"}
+            {!isMobile && t.viewAsClient}
           </Button>
           <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={onHomeClick}>
-            Home
+            {t.home}
           </Button>
           <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={onLogout}>
-            Logout
+            {t.logout}
           </Button>
           {isMobile && (
             <Sheet>
@@ -58,7 +64,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
               <SheetContent side="right" className="w-[250px] p-0">
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b">
-                    <h2 className="text-lg font-semibold">Navigation</h2>
+                    <h2 className="text-lg font-semibold">{t.navigation}</h2>
                   </div>
                   <div className="flex flex-col py-2 flex-1">
                     {adminRoutes.map((route) => (

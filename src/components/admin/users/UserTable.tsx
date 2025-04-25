@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { UserForm } from './UserForm';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotification } from '@/hooks/useNotification';
+import { toast } from 'sonner';
 
 interface UserTableProps {
   users: User[];
@@ -52,12 +53,14 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
       console.log('Attempting to delete user:', selectedUser.id);
       
       // Get the current user's JWT token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Authentication required');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error('Error getting session:', sessionError);
+        throw new Error('Se requiere autenticación. Por favor, inicie sesión de nuevo.');
       }
 
       // Call our edge function to handle the user deletion with admin privileges
+      console.log('Calling manage-users edge function to delete user...');
       const { error: functionError, data } = await supabase.functions.invoke('manage-users', {
         body: { 
           action: 'delete', 
@@ -68,15 +71,29 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
         }
       });
       
-      if (functionError || (data && data.error)) {
-        throw new Error(data?.error || functionError?.message || 'Failed to delete user');
+      if (functionError) {
+        console.error('Edge function error:', functionError);
+        throw new Error(`Error en la función: ${functionError.message || 'Error al eliminar usuario'}`);
+      }
+      
+      if (data && data.error) {
+        console.error('Error returned by edge function:', data.error);
+        throw new Error(data.error || 'Failed to delete user');
       }
 
       notification.showSuccess('User Deleted', `User ${selectedUser.email} was successfully deleted`);
       setIsDeleteDialogOpen(false);
       onUserUpdated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
+      
+      // Show a toast with detailed error information
+      toast.error("Error deleting user", {
+        description: `${error.message || 'Failed to delete user. Please try again.'}`,
+        duration: 5000,
+      });
+      
+      // Also show in notification history
       notification.showError('Error', error.message || 'Failed to delete user. Please try again.');
     } finally {
       setIsProcessing(false);

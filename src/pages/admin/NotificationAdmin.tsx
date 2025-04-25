@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Bell, Trash2 } from "lucide-react";
 import { usePersistentToast } from "@/context/PersistentToastContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useAdminVerification } from "@/hooks/useAdminVerification";
+import { Loader2 } from "lucide-react";
 
 const NotificationAdmin = () => {
   const notification = useNotification();
   const { toasts, clearToasts } = usePersistentToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { isAdmin, isVerifying } = useAdminVerification();
   
   // Example notification for testing
   const handleTestNotification = () => {
@@ -19,6 +22,28 @@ const NotificationAdmin = () => {
       "This is a test notification to verify the system is working correctly."
     );
   };
+
+  if (isVerifying) {
+    return (
+      <div className="container mx-auto px-4 py-6 flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="mt-2 text-gray-600">Verifying admin permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="border rounded-lg p-8 text-center">
+          <p className="text-red-500 mb-2 font-semibold">Access denied</p>
+          <p className="text-gray-600">You don't have permission to access this section.</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="container mx-auto px-4 py-6">

@@ -19,6 +19,7 @@ export function useAdminVerification() {
     const verifyAdmin = async () => {
       if (!isAuthenticated || !user) {
         setIsVerifying(false);
+        setIsAdmin(false);
         return;
       }
 
@@ -34,7 +35,24 @@ export function useAdminVerification() {
           
         if (error) {
           console.error('Error verifying admin role from database:', error);
-          throw error;
+          // If direct query fails, try the edge function as a backup verification method
+          const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
+            body: { 
+              action: 'verifyAdmin'
+            },
+            headers: {
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`
+            }
+          });
+          
+          if (functionError || !functionData || !functionData.isAdmin) {
+            console.error('Edge function admin verification failed:', functionError || 'User is not admin');
+            throw new Error(functionError?.message || 'Admin verification failed');
+          }
+          
+          console.log('Admin role verified through edge function for user:', user.email);
+          setIsAdmin(true);
+          return;
         }
         
         if (data?.role !== 'admin') {

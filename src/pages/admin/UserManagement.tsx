@@ -8,12 +8,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/user';
 import { useAuth } from '@/context/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useNotification } from '@/hooks/useNotification';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [syncingCurrentUser, setSyncingCurrentUser] = useState(false);
   const { user } = useAuth();
+  const notification = useNotification();
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -52,9 +55,69 @@ const UserManagement = () => {
     }
   };
 
+  // Check if current user exists in the users table
+  const checkAndSyncCurrentUser = async () => {
+    if (!user) return;
+    
+    try {
+      // Check if the current user exists in the users table
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      // If the user doesn't exist in the users table, offer to add them
+      if (error || !data) {
+        console.log('Current user not found in users table, offering to sync');
+        notification.showWarning(
+          'User Account Issue', 
+          'Your account exists in authentication but not in the users table. Click "Sync Account" to fix this.'
+        );
+      }
+    } catch (error) {
+      console.error('Error checking current user:', error);
+    }
+  };
+  
+  // Function to manually add the current user to the users table with admin role
+  const syncCurrentUser = async () => {
+    if (!user) return;
+    
+    setSyncingCurrentUser(true);
+    try {
+      // Insert the current user into the users table with admin role
+      const { error } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email,
+          role: 'admin',
+        });
+      
+      if (error) {
+        if (error.code === '23505') { // Unique violation error code
+          notification.showWarning('Already Exists', 'Your user already exists in the database.');
+        } else {
+          throw error;
+        }
+      } else {
+        notification.showSuccess('Account Synced', 'Your user account has been synced as an admin.');
+        // Refresh the user list
+        fetchUsers();
+      }
+    } catch (error) {
+      console.error('Error syncing current user:', error);
+      notification.showError('Sync Failed', 'Could not sync your user account. Please try again.');
+    } finally {
+      setSyncingCurrentUser(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
-  }, []);
+    checkAndSyncCurrentUser();
+  }, [user]);
 
   const handleUserCreated = () => {
     setIsDialogOpen(false);
@@ -70,6 +133,13 @@ const UserManagement = () => {
           <Button onClick={() => setIsDialogOpen(true)}>Add New User</Button>
           <Button variant="outline" onClick={fetchUsers} disabled={isLoading}>
             Refresh User List
+          </Button>
+          <Button 
+            variant="secondary" 
+            onClick={syncCurrentUser} 
+            disabled={syncingCurrentUser}
+          >
+            {syncingCurrentUser ? 'Syncing...' : 'Sync My Account'}
           </Button>
         </div>
       </div>
@@ -90,7 +160,7 @@ const UserManagement = () => {
             <div className="border rounded-lg p-8 text-center">
               <p className="text-gray-500 mb-1">No users found</p>
               <p className="text-gray-400 text-sm">
-                Create a new user by clicking the "Add New User" button
+                Create a new user by clicking the "Add New User" button or sync your account
               </p>
             </div>
           )}

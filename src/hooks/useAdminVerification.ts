@@ -25,48 +25,58 @@ export function useAdminVerification() {
 
       try {
         setIsVerifying(true);
+        console.log('Verifying admin permissions for user:', user.email);
         
-        // First try direct query to users table
+        // Try direct query to users table first - simpler and faster
         const { data, error } = await supabase
           .from('users')
           .select('role')
           .eq('id', user.id)
           .single();
           
-        if (error) {
-          console.error('Error verifying admin role from database:', error);
-          // If direct query fails, try the edge function as a backup verification method
-          const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
-            body: { 
-              action: 'verifyAdmin'
-            },
-            headers: {
-              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`
-            }
-          });
+        if (!error && data) {
+          const isUserAdmin = data.role === 'admin';
+          console.log('Admin verification result from direct query:', isUserAdmin);
           
-          if (functionError || !functionData || !functionData.isAdmin) {
-            console.error('Edge function admin verification failed:', functionError || 'User is not admin');
-            throw new Error(functionError?.message || 'Admin verification failed');
+          if (isUserAdmin) {
+            setIsAdmin(true);
+            setIsVerifying(false);
+            return;
+          } else {
+            throw new Error('User does not have admin role');
           }
-          
-          console.log('Admin role verified through edge function for user:', user.email);
-          setIsAdmin(true);
-          return;
         }
         
-        if (data?.role !== 'admin') {
-          console.warn('User does not have admin role:', user.email);
-          notification.showError('Acceso denegado', 'No tienes permisos de administrador.');
-          navigate('/client-portal');
-          return;
+        // If direct query fails, use the edge function as backup
+        console.log('Direct query failed, trying edge function for verification');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          throw new Error('No active session found');
         }
         
-        console.log('Admin role verified for user:', user.email);
+        const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
+          body: { action: 'verifyAdmin' },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+        
+        if (functionError) {
+          console.error('Edge function error:', functionError);
+          throw new Error(`Verification failed: ${functionError.message}`);
+        }
+        
+        if (!functionData || !functionData.isAdmin) {
+          console.warn('Edge function verification result: Not admin');
+          throw new Error('Admin verification failed: User is not an admin');
+        }
+        
+        console.log('Admin verification successful via edge function');
         setIsAdmin(true);
       } catch (error) {
         console.error('Error during admin verification:', error);
-        notification.showError('Error de verificación', 'No se pudieron verificar los permisos de administrador.');
+        notification.showError('Access Denied', 'You do not have administrator permissions.');
         navigate('/');
       } finally {
         setIsVerifying(false);

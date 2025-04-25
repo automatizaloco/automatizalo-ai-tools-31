@@ -1,15 +1,8 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
-// Define CORS headers for cross-origin requests
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-// Environment variables from Supabase
 const supabaseUrl = Deno.env.get('SUPABASE_URL')
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -18,11 +11,8 @@ if (!supabaseUrl || !serviceRoleKey) {
 }
 
 serve(async (req) => {
-  console.log("Edge function invoked with method:", req.method)
-  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log("Handling OPTIONS request with CORS headers")
     return new Response(null, { 
       headers: corsHeaders,
       status: 204
@@ -30,6 +20,7 @@ serve(async (req) => {
   }
 
   try {
+    // Validate request method
     if (req.method !== 'POST') {
       throw new Error(`Method ${req.method} not allowed. Only POST requests are accepted.`)
     }
@@ -43,7 +34,7 @@ serve(async (req) => {
       throw new Error('Missing Authorization header')
     }
     
-    // Verify the user is authenticated and has admin role
+    // Verify the user is authenticated
     const jwt = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(jwt)
     
@@ -54,34 +45,28 @@ serve(async (req) => {
     
     console.log("Authenticated user:", user.email)
     
-    // Verify the user is an admin by checking the users table
-    const { data: userData, error: userRoleError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    
-    console.log("User role data:", userData)
-    if (userRoleError) {
-      console.error("Error fetching user role:", userRoleError) 
-    }
-      
     // Parse the request body
-    let reqBody
-    try {
-      reqBody = await req.json()
-      console.log("Request body:", JSON.stringify(reqBody))
-    } catch (e) {
-      console.error("Error parsing request body:", e)
-      throw new Error('Invalid JSON in request body')
-    }
+    const reqBody = await req.json()
+    console.log("Request body:", JSON.stringify(reqBody))
     
-    const { action, userId, userData: updateData } = reqBody
+    const { action, userId, userData } = reqBody
     
     // For verifyAdmin action, we just need to check if the user is an admin
     if (action === 'verifyAdmin') {
+      // Check if the user exists in the users table with admin role
+      const { data: userData, error: userRoleError } = await supabaseAdmin
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      
+      if (userRoleError) {
+        console.error("Error fetching user role:", userRoleError)
+      }
+      
       const isAdmin = userData?.role === 'admin'
       console.log(`User ${user.email} admin status: ${isAdmin}`)
+      
       return new Response(
         JSON.stringify({ isAdmin }),
         { 
@@ -91,13 +76,18 @@ serve(async (req) => {
       )
     }
     
-    // For other actions, we need to verify the user is an admin
-    if (userData?.role !== 'admin') {
-      console.error(`User ${user.email} is not an admin (role: ${userData?.role})`)
+    // For other actions, verify the user is an admin
+    const { data: adminData, error: adminError } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    
+    if (adminError || adminData?.role !== 'admin') {
+      console.error("Admin verification error:", adminError || "User is not admin")
       throw new Error('Unauthorized: Admin role required')
     }
-
-    // Log the action being performed
+    
     console.log(`Admin user ${user.email} performing action "${action}" on user ID: ${userId}`)
     
     let result = null
@@ -112,12 +102,11 @@ serve(async (req) => {
         
         console.log(`Deleting user with ID ${userId}...`)
         
-        // First try to delete from auth.users (requires service role)
+        // First try to delete from auth.users
         const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
         
         if (authDeleteError) {
           console.error('Error deleting auth user:', authDeleteError)
-          // If we fail to delete the auth user, report error
           error = authDeleteError
           break
         }
@@ -131,7 +120,6 @@ serve(async (req) => {
         if (dbDeleteError) {
           console.error('Error deleting database user:', dbDeleteError)
           error = dbDeleteError
-          // Note: we've already deleted the auth user at this point
         } 
         
         console.log(`User ${userId} deleted successfully`)
@@ -139,37 +127,90 @@ serve(async (req) => {
         break
       }
       
-      case 'update': {
-        if (!userId || !updateData) {
-          throw new Error('Missing userId or userData parameters')
+      case 'create': {
+        if (!userData || !userData.email || !userData.password || !userData.role) {
+          throw new Error('Missing required user data parameters')
         }
         
-        console.log(`Updating user ${userId} with data:`, updateData)
+        console.log(`Creating new user with email ${userData.email}...`)
         
-        // Update user data
-        const { error: updateError } = await supabaseAdmin
-          .from('users')
-          .update(updateData)
-          .eq('id', userId)
+        // Create auth user
+        const { data: authData, error: authCreateError } = await supabaseAdmin.auth.admin.createUser({
+          email: userData.email,
+          password: userData.password,
+          email_confirm: true,
+          user_metadata: { role: userData.role }
+        })
         
-        if (updateError) {
-          console.error('Error updating user in database:', updateError)
-          error = updateError
+        if (authCreateError) {
+          console.error('Error creating auth user:', authCreateError)
+          error = authCreateError
           break
         }
         
-        // If password is included, update it in auth
-        if (updateData.password) {
-          console.log('Updating user password...')
-          const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
-            userId,
-            { password: updateData.password }
-          )
+        if (!authData.user) {
+          console.error('No user returned from auth.admin.createUser')
+          error = new Error('Failed to create auth user')
+          break
+        }
+        
+        // Create user in users table
+        const { error: dbCreateError } = await supabaseAdmin
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: userData.email,
+            role: userData.role,
+          })
+        
+        if (dbCreateError) {
+          console.error('Error creating user in database:', dbCreateError)
+          error = dbCreateError
+          break
+        }
+        
+        console.log(`User ${userData.email} created successfully`)
+        result = { success: true, user: authData.user }
+        break
+      }
+      
+      case 'update': {
+        if (!userId) {
+          throw new Error('Missing userId parameter')
+        }
+        
+        console.log(`Updating user ${userId}...`)
+        
+        // Update user data in users table
+        if (userData && Object.keys(userData).length > 0) {
+          // Filter out password from userData for database update
+          const { password, ...dbUserData } = userData;
           
-          if (passwordError) {
-            console.error('Error updating user password:', passwordError)
-            error = passwordError
-            break
+          if (Object.keys(dbUserData).length > 0) {
+            const { error: dbUpdateError } = await supabaseAdmin
+              .from('users')
+              .update(dbUserData)
+              .eq('id', userId)
+            
+            if (dbUpdateError) {
+              console.error('Error updating user in database:', dbUpdateError)
+              error = dbUpdateError
+              break
+            }
+          }
+          
+          // Update password if provided
+          if (password) {
+            const { error: passwordUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
+              userId,
+              { password }
+            )
+            
+            if (passwordUpdateError) {
+              console.error('Error updating user password:', passwordUpdateError)
+              error = passwordUpdateError
+              break
+            }
           }
         }
         
@@ -183,11 +224,9 @@ serve(async (req) => {
     }
     
     if (error) {
-      console.error(`Error in action "${action}":`, error)
       throw error
     }
     
-    // Return the result with CORS headers
     return new Response(
       JSON.stringify(result),
       { 
@@ -196,10 +235,9 @@ serve(async (req) => {
       }
     )
     
-  } catch (error: any) {
-    console.error('Error in edge function:', error.message)
+  } catch (error) {
+    console.error('Error in manage-users function:', error.message)
     
-    // Return error response with CORS headers
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

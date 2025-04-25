@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -53,62 +53,54 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
     try {
       console.log(`${isEditMode ? 'Updating' : 'Creating'} user:`, data.email, data.role);
       
+      // Get the session for authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('Authentication required. Please sign in again.');
+      }
+      
       if (isEditMode) {
-        // Update existing user
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ 
-            role: data.role,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingUser.id);
-
-        if (updateError) throw updateError;
-
-        // Update password if provided
-        if (data.password) {
-          const { error: passwordError } = await supabase.auth.admin.updateUserById(
-            existingUser.id,
-            { password: data.password }
-          );
-
-          if (passwordError) {
-            console.error('Error updating password:', passwordError);
-            notification.showWarning('Partial Update', 'User role updated but password update failed.');
-            onSuccess();
-            return;
+        // Update existing user via edge function
+        const updateData: any = { role: data.role };
+        if (data.password) updateData.password = data.password;
+        
+        const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
+          body: { 
+            action: 'update',
+            userId: existingUser.id,
+            userData: updateData
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
           }
+        });
+        
+        if (functionError || (functionData && functionData.error)) {
+          throw new Error(functionError?.message || functionData?.error || 'Error updating user');
         }
-
+        
         notification.showSuccess('User Updated', `User ${data.email} updated successfully`);
       } else {
-        // Create new user
-        const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
-          options: {
-            data: {
-              role: data.role,
-            },
+        // Create new user via edge function
+        const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
+          body: {
+            action: 'create',
+            userData: {
+              email: data.email,
+              password: data.password,
+              role: data.role
+            }
           },
-        });
-
-        if (signUpError) throw signUpError;
-        
-        if (signUpData.user) {
-          const { error: insertError } = await supabase.from('users').insert({
-            id: signUpData.user.id,
-            email: data.email,
-            role: data.role,
-          });
-          
-          if (insertError) {
-            console.error('Error inserting user into users table:', insertError);
-            notification.showWarning('Partial Creation', 'Auth user created but database sync failed');
-          } else {
-            notification.showSuccess('User Created', `User ${data.email} created successfully`);
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
           }
+        });
+        
+        if (functionError || (functionData && functionData.error)) {
+          throw new Error(functionError?.message || functionData?.error || 'Error creating user');
         }
+        
+        notification.showSuccess('User Created', `User ${data.email} created successfully`);
       }
       
       // Reset form
@@ -116,7 +108,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
       
       // Notify parent component
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} user:`, error);
       
       if (error.message?.includes('already registered') || error.code === 'user_already_exists') {

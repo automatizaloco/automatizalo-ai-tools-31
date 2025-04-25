@@ -52,14 +52,14 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
     try {
       console.log('Attempting to delete user:', selectedUser.id);
       
-      // Get the current user's JWT token
+      // Get the current session for the auth token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
       if (sessionError || !session) {
         console.error('Error getting session:', sessionError);
-        throw new Error('Se requiere autenticación. Por favor, inicie sesión de nuevo.');
+        throw new Error('Authentication required. Please sign in again.');
       }
 
-      // Call our edge function to handle the user deletion with admin privileges
       console.log('Calling manage-users edge function to delete user...');
       const { error: functionError, data } = await supabase.functions.invoke('manage-users', {
         body: { 
@@ -73,7 +73,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
       
       if (functionError) {
         console.error('Edge function error:', functionError);
-        throw new Error(`Error en la función: ${functionError.message || 'Error al eliminar usuario'}`);
+        throw new Error(`Error: ${functionError.message || 'Failed to delete user'}`);
       }
       
       if (data && data.error) {
@@ -84,16 +84,14 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onUserUpdated }) =>
       notification.showSuccess('User Deleted', `User ${selectedUser.email} was successfully deleted`);
       setIsDeleteDialogOpen(false);
       onUserUpdated();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting user:', error);
       
-      // Show a toast with detailed error information
       toast.error("Error deleting user", {
         description: `${error.message || 'Failed to delete user. Please try again.'}`,
         duration: 5000,
       });
       
-      // Also show in notification history
       notification.showError('Error', error.message || 'Failed to delete user. Please try again.');
     } finally {
       setIsProcessing(false);

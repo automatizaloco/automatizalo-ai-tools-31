@@ -24,6 +24,14 @@ const AutomationManager = () => {
       setIsLoading(true);
       setFetchError(null);
       
+      // Make sure we're authenticated before making the request
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        setFetchError("Authentication required. Please log in.");
+        setIsLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('automations')
         .select('*')

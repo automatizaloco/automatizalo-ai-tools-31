@@ -28,6 +28,8 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
     try {
       setPendingIds(prev => [...prev, id]);
       await onToggleStatus(id, currentlyActive);
+    } catch (error) {
+      console.error('Error toggling automation status:', error);
     } finally {
       setPendingIds(prev => prev.filter(pendingId => pendingId !== id));
     }
@@ -45,12 +47,21 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
   }
 
   if (error) {
+    // Enhanced error display with more specific error message
+    const isRecursionError = error.includes('infinite recursion') || 
+                             error.includes('recursive') ||
+                             error.includes('policy');
+                             
     return (
       <div className="border rounded-lg p-6">
         <div className="flex flex-col items-center text-center">
           <AlertTriangle className="h-8 w-8 text-amber-500 mb-2" />
           <p className="text-red-500 mb-2 font-medium">{error}</p>
-          <p className="text-sm text-gray-500 mb-4">This could be due to a network issue or database permissions.</p>
+          <p className="text-sm text-gray-500 mb-4">
+            {isRecursionError 
+              ? "This is related to database permissions. Please make sure you're logged in as an admin user."
+              : "This could be due to a network issue or database permissions."}
+          </p>
           <Button 
             onClick={onRetry} 
             variant="outline" 

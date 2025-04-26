@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import NotificationHistory from "@/components/admin/NotificationHistory";
 import { useNotification } from "@/hooks/useNotification";
@@ -12,8 +13,8 @@ const NotificationAdmin = () => {
   const notification = useNotification();
   const { toasts, clearToasts } = usePersistentToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  // Increase verification timeout to 15 seconds for this component
-  const { isAdmin, isVerifying } = useAdminVerification(4, 15000);
+  // Use a more reliable verification approach
+  const { isAdmin, isVerifying } = useAdminVerification(2, 8000);
   
   // Example notification for testing
   const handleTestNotification = () => {
@@ -29,7 +30,7 @@ const NotificationAdmin = () => {
         <div className="flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="mt-2 text-gray-600">Verifying admin permissions...</p>
-          <p className="mt-1 text-sm text-gray-500">This might take a few seconds...</p>
+          <p className="mt-1 text-sm text-gray-500">This might take a few seconds</p>
         </div>
       </div>
     );

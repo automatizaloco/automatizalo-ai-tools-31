@@ -12,45 +12,19 @@ export function useAdminVerification(maxRetries = 3, verificationTimeout = 10000
   const { user, isAuthenticated } = useAuth();
   const notification = useNotification();
   const navigate = useNavigate();
+  const verificationRef = useRef<{ aborted: boolean }>({ aborted: false });
   const timeoutRef = useRef<number | null>(null);
-  const verificationTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // Create a verification reference for this effect instance
+    const verificationInstance = { aborted: false };
+    verificationRef.current = verificationInstance;
+
     // Clear any existing timeouts
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
-    if (verificationTimeoutRef.current) {
-      clearTimeout(verificationTimeoutRef.current);
-    }
-
-    const handleVerificationError = (error: any, isRetry = false) => {
-      console.error('Error during admin verification:', error);
-      
-      // Check if we should retry
-      if (retryCount < maxRetries && isRetry) {
-        setRetryCount(prev => prev + 1);
-        timeoutRef.current = window.setTimeout(() => {
-          verifyAdmin();
-        }, Math.min(2000 * (retryCount + 1), 6000)); // Progressive delay with max of 6 seconds
-        return;
-      }
-      
-      setIsVerifying(false);
-      setIsAdmin(false);
-      
-      let errorMessage = 'Could not verify admin permissions. ';
-      if (error.message?.includes('policy')) {
-        errorMessage += 'You do not have the required admin role.';
-      } else if (error.message?.includes('network')) {
-        errorMessage += 'Please check your internet connection.';
-      } else {
-        errorMessage += 'Please try again later.';
-      }
-      
-      notification.showError('Access Denied', errorMessage);
-      navigate('/');
-    };
 
     const verifyAdmin = async () => {
       // Skip verification if not authenticated
@@ -64,79 +38,100 @@ export function useAdminVerification(maxRetries = 3, verificationTimeout = 10000
       try {
         setIsVerifying(true);
         console.log(`Verifying admin permissions for user: ${user.email} (attempt ${retryCount + 1}/${maxRetries + 1})`);
-        
+
         // Set verification timeout
-        verificationTimeoutRef.current = window.setTimeout(() => {
-          handleVerificationError(new Error('Verification timeout'), true);
+        timeoutRef.current = window.setTimeout(() => {
+          if (verificationInstance.aborted) return;
+          console.log('Verification timeout reached');
+          if (retryCount < maxRetries) {
+            setRetryCount(prev => prev + 1);
+          } else {
+            setIsVerifying(false);
+            setIsAdmin(false);
+            notification.showError('Access Denied', 'Verification timeout. Please try again later.');
+            navigate('/');
+          }
         }, verificationTimeout);
 
-        // First try to directly query the automations table as a quick admin check
-        const { data: automationsData, error: automationsError } = await supabase
-          .from('automations')
-          .select('id')
-          .limit(1);
-          
-        if (!automationsError) {
-          console.log('Admin verification successful via automations table access');
-          setIsAdmin(true);
-          setIsVerifying(false);
-          clearTimeout(verificationTimeoutRef.current!);
-          return;
-        }
+        // Simplified approach: use only the RPC function as single source of truth
+        const { data: rpcData, error: rpcError } = await supabase.rpc('is_admin', { user_uid: user.id });
+
+        // Check if the verification was aborted during the request
+        if (verificationInstance.aborted) return;
         
-        // If automations check fails, try the direct database approach
-        const { data: directData, error: directError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-          
-        if (!directError && directData) {
-          const isAdminUser = directData.role === 'admin';
-          console.log('Admin verification result (direct):', isAdminUser);
-          setIsAdmin(isAdminUser);
-          
-          if (!isAdminUser) {
-            throw new Error('User does not have admin role');
-          }
-          
-          setIsVerifying(false);
-          clearTimeout(verificationTimeoutRef.current!);
-          return;
+        // Clear the timeout since we got a response
+        if (timeoutRef.current) {
+          window.clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
         }
-        
-        // Final fallback to RPC function
-        if (directError) {
-          console.log('Direct query failed, trying RPC:', directError);
-          const { data: rpcData, error: rpcError } = await supabase.rpc('is_admin', { user_uid: user.id });
-          
-          if (rpcError) throw rpcError;
-          
-          console.log('Admin verification result (RPC):', rpcData);
-          setIsAdmin(!!rpcData);
-          
-          if (!rpcData) {
-            throw new Error('User does not have admin role');
-          }
+
+        if (rpcError) {
+          console.error('Error checking admin status via RPC:', rpcError);
+          throw new Error(`Failed to verify admin status: ${rpcError.message}`);
         }
+
+        const adminStatus = !!rpcData;
+        console.log('Admin verification result (RPC):', adminStatus);
         
+        setIsAdmin(adminStatus);
+        setIsVerifying(false);
+        
+        // If not admin, redirect to homepage
+        if (!adminStatus) {
+          notification.showError('Access Denied', 'You do not have the required admin role.');
+          navigate('/');
+        }
+
         // Reset retry count on success
         setRetryCount(0);
-        setIsVerifying(false);
-        clearTimeout(verificationTimeoutRef.current!);
         
-      } catch (error) {
-        handleVerificationError(error, true);
+      } catch (error: any) {
+        // Check if the verification was aborted
+        if (verificationInstance.aborted) return;
+        
+        console.error('Error during admin verification:', error);
+        
+        // Check if we should retry
+        if (retryCount < maxRetries) {
+          setRetryCount(prev => prev + 1);
+          const delay = Math.min(2000 * (retryCount + 1), 6000);
+          timeoutRef.current = window.setTimeout(() => {
+            if (!verificationInstance.aborted) {
+              verifyAdmin();
+            }
+          }, delay);
+          return;
+        }
+        
+        setIsVerifying(false);
+        setIsAdmin(false);
+        
+        let errorMessage = 'Could not verify admin permissions. ';
+        if (error.message?.includes('policy')) {
+          errorMessage += 'You do not have the required admin role.';
+        } else if (error.message?.includes('network')) {
+          errorMessage += 'Please check your internet connection.';
+        } else {
+          errorMessage += 'Please try again later.';
+        }
+        
+        notification.showError('Access Denied', errorMessage);
+        navigate('/');
       }
     };
 
     verifyAdmin();
     
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (verificationTimeoutRef.current) clearTimeout(verificationTimeoutRef.current);
+      // Mark this verification instance as aborted
+      verificationInstance.aborted = true;
+      
+      // Clear any timeouts
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
     };
-  }, [user, isAuthenticated, navigate, notification, retryCount, maxRetries, verificationTimeout]);
+  }, [user?.id, isAuthenticated, navigate, notification, retryCount, maxRetries, verificationTimeout]);
 
   return { isAdmin, isVerifying };
 }

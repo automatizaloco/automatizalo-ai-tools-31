@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,26 +11,35 @@ import { useAdminVerification } from '@/hooks/useAdminVerification';
 import { useNotification } from '@/hooks/useNotification';
 import { Loader2 } from 'lucide-react';
 
+const INITIAL_FORM_STATE = {
+  title: '',
+  description: '',
+  installation_price: 0,
+  monthly_price: 0,
+  image_url: '',
+};
+
 const AutomationManager = () => {
+  // State for automations and loading
   const [automations, setAutomations] = useState<Automation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    installation_price: 0,
-    monthly_price: 0,
-    image_url: '',
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [editMode, setEditMode] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
-  const { isAdmin, isVerifying } = useAdminVerification(5, 15000);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  
+  // Use the improved admin verification hook with fewer retries
+  const { isAdmin, isVerifying } = useAdminVerification(2, 8000);
   const notification = useNotification();
 
-  const fetchAutomations = async () => {
-    if (!isAdmin) return;
+  // Debounced fetch with useCallback to prevent multiple calls
+  const fetchAutomations = useCallback(async () => {
+    if (!isAdmin || isLoading) return;
     
     setIsLoading(true);
+    setFetchError(null);
+    
     try {
       console.log('Fetching automations...');
       
@@ -42,11 +52,13 @@ const AutomationManager = () => {
         console.error('Error fetching automations:', error);
         
         if (error.message.includes('policy')) {
+          setFetchError('Permission error. You do not have access to view automations.');
           notification.showError(
             'Permission Error', 
             'You do not have permission to view automations. Please verify your admin role.'
           );
         } else {
+          setFetchError('Failed to load automations. Please try again.');
           notification.showError(
             'Error', 
             'Failed to load automations. Please try again.'
@@ -59,6 +71,7 @@ const AutomationManager = () => {
       setAutomations(data || []);
     } catch (error) {
       console.error('Error processing automations:', error);
+      setFetchError('An unexpected error occurred while loading automations.');
       notification.showError(
         'Error', 
         'An unexpected error occurred while loading automations.'
@@ -66,13 +79,14 @@ const AutomationManager = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAdmin, notification, isLoading]);
 
+  // Fetch data once admin status is confirmed
   useEffect(() => {
-    if (isAdmin && !isVerifying) {
+    if (isAdmin && !isVerifying && !isLoading) {
       fetchAutomations();
     }
-  }, [isAdmin, isVerifying]);
+  }, [isAdmin, isVerifying, fetchAutomations, isLoading]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -86,7 +100,7 @@ const AutomationManager = () => {
     e.preventDefault();
     
     if (!isAdmin) {
-      notification.showError('Acceso denegado', 'No tienes permisos para realizar esta acción.');
+      notification.showError('Access denied', 'You do not have permissions to perform this action.');
       return;
     }
     
@@ -108,8 +122,8 @@ const AutomationManager = () => {
           
           if (error.message.includes('row-level security')) {
             notification.showError(
-              'Error de permisos', 
-              'No tienes permisos para actualizar automatizaciones. Verifica que tu usuario tenga rol de administrador.'
+              'Permission error', 
+              'You do not have permissions to update automations. Verify that your user has admin role.'
             );
             return;
           }
@@ -117,7 +131,7 @@ const AutomationManager = () => {
           throw error;
         }
         
-        notification.showSuccess('Automatización actualizada', 'La automatización se actualizó correctamente');
+        notification.showSuccess('Automation updated', 'The automation was successfully updated');
       } else {
         const { error } = await supabase
           .from('automations')
@@ -133,8 +147,8 @@ const AutomationManager = () => {
           
           if (error.message.includes('row-level security')) {
             notification.showError(
-              'Error de permisos', 
-              'No tienes permisos para crear automatizaciones. Verifica que tu usuario tenga rol de administrador.'
+              'Permission error', 
+              'You do not have permissions to create automations. Verify that your user has admin role.'
             );
             return;
           }
@@ -142,14 +156,15 @@ const AutomationManager = () => {
           throw error;
         }
         
-        notification.showSuccess('Automatización creada', 'La automatización se creó correctamente');
+        notification.showSuccess('Automation created', 'The automation was successfully created');
       }
       
       resetForm();
-      fetchAutomations();
+      // Fetch automations after a short delay to ensure the backend has updated
+      setTimeout(() => fetchAutomations(), 300);
     } catch (error: any) {
       console.error('Error saving automation:', error);
-      notification.showError('Error', error.message || 'No se pudo guardar la automatización');
+      notification.showError('Error', error.message || 'Could not save the automation');
     } finally {
       setIsSaving(false);
     }
@@ -169,7 +184,7 @@ const AutomationManager = () => {
 
   const handleToggleStatus = async (id: string, currentlyActive: boolean) => {
     if (!isAdmin) {
-      notification.showError('Acceso denegado', 'No tienes permisos para realizar esta acción.');
+      notification.showError('Access denied', 'You do not have permissions to perform this action.');
       return;
     }
     
@@ -184,8 +199,8 @@ const AutomationManager = () => {
         
         if (error.message.includes('row-level security')) {
           notification.showError(
-            'Error de permisos', 
-            'No tienes permisos para actualizar el estado de automatizaciones.'
+            'Permission error', 
+            'You do not have permissions to update automation status.'
           );
           return;
         }
@@ -193,36 +208,37 @@ const AutomationManager = () => {
         throw error;
       }
       
-      fetchAutomations();
+      // Update local state to avoid another fetch
+      setAutomations(prevAutomations => 
+        prevAutomations.map(item => 
+          item.id === id ? {...item, active: !currentlyActive} : item
+        )
+      );
+      
       notification.showSuccess(
-        'Estado actualizado', 
-        `Automatización ${currentlyActive ? 'desactivada' : 'activada'}`
+        'Status updated', 
+        `Automation ${currentlyActive ? 'deactivated' : 'activated'}`
       );
     } catch (error: any) {
       console.error('Error updating automation status:', error);
-      notification.showError('Error', error.message || 'No se pudo actualizar el estado de la automatización');
+      notification.showError('Error', error.message || 'Could not update automation status');
     }
   };
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      installation_price: 0,
-      monthly_price: 0,
-      image_url: '',
-    });
+    setFormData(INITIAL_FORM_STATE);
     setCurrentId(null);
     setEditMode(false);
   };
 
+  // Unified loading state
   if (isVerifying) {
     return (
       <div className="container mx-auto px-4 py-6 flex justify-center items-center h-64">
         <div className="flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="mt-2 text-gray-600">Verifying admin permissions...</p>
-          <p className="mt-1 text-sm text-gray-500">This might take a few seconds...</p>
+          <p className="mt-1 text-sm text-gray-500">This might take a few seconds</p>
         </div>
       </div>
     );
@@ -232,8 +248,8 @@ const AutomationManager = () => {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="border rounded-lg p-8 text-center">
-          <p className="text-red-500 mb-2 font-semibold">Acceso denegado</p>
-          <p className="text-gray-600">No tienes permisos para acceder a esta sección.</p>
+          <p className="text-red-500 mb-2 font-semibold">Access denied</p>
+          <p className="text-gray-600">You don't have permission to access this section.</p>
         </div>
       </div>
     );
@@ -242,9 +258,18 @@ const AutomationManager = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestión de Automatizaciones</h1>
-        <Button onClick={fetchAutomations} variant="outline" disabled={isLoading}>
-          {isLoading ? 'Cargando...' : 'Actualizar'}
+        <h1 className="text-2xl font-bold">Automation Management</h1>
+        <Button 
+          onClick={() => fetchAutomations()} 
+          variant="outline" 
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Loading...
+            </>
+          ) : 'Refresh'}
         </Button>
       </div>
 
@@ -252,37 +277,37 @@ const AutomationManager = () => {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>{editMode ? 'Editar Automatización' : 'Crear Automatización'}</CardTitle>
+              <CardTitle>{editMode ? 'Edit Automation' : 'Create Automation'}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Título</Label>
+                  <Label htmlFor="title">Title</Label>
                   <Input
                     id="title"
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    placeholder="Ingrese el título de la automatización"
+                    placeholder="Enter automation title"
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Descripción</Label>
+                  <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    placeholder="Ingrese la descripción de la automatización"
+                    placeholder="Enter automation description"
                     rows={4}
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="installation_price">Precio de instalación ($)</Label>
+                  <Label htmlFor="installation_price">Installation price ($)</Label>
                   <Input
                     id="installation_price"
                     name="installation_price"
@@ -297,7 +322,7 @@ const AutomationManager = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="monthly_price">Precio de mantenimiento mensual ($)</Label>
+                  <Label htmlFor="monthly_price">Monthly maintenance price ($)</Label>
                   <Input
                     id="monthly_price"
                     name="monthly_price"
@@ -312,23 +337,30 @@ const AutomationManager = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="image_url">URL de imagen (Opcional)</Label>
+                  <Label htmlFor="image_url">Image URL (Optional)</Label>
                   <Input
                     id="image_url"
                     name="image_url"
                     value={formData.image_url}
                     onChange={handleChange}
-                    placeholder="https://ejemplo.com/imagen.jpg"
+                    placeholder="https://example.com/image.jpg"
                   />
                 </div>
 
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" disabled={isSaving}>
-                    {isSaving ? 'Guardando...' : editMode ? 'Actualizar' : 'Crear'}
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {editMode ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : (
+                      editMode ? 'Update' : 'Create'
+                    )}
                   </Button>
                   {editMode && (
                     <Button type="button" variant="outline" onClick={resetForm} disabled={isSaving}>
-                      Cancelar
+                      Cancel
                     </Button>
                   )}
                 </div>
@@ -338,11 +370,26 @@ const AutomationManager = () => {
         </div>
 
         <div className="lg:col-span-2">
-          <h2 className="text-xl font-semibold mb-4">Lista de Automatizaciones</h2>
+          <h2 className="text-xl font-semibold mb-4">Automations List</h2>
           
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+              <div className="flex flex-col items-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="mt-2 text-gray-500">Loading automations...</p>
+              </div>
+            </div>
+          ) : fetchError ? (
+            <div className="border rounded-lg p-6 text-center">
+              <p className="text-red-500 mb-2">{fetchError}</p>
+              <Button 
+                onClick={() => fetchAutomations()} 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+              >
+                Try Again
+              </Button>
             </div>
           ) : (
             <>
@@ -355,8 +402,8 @@ const AutomationManager = () => {
                           <div>
                             <h3 className="font-bold text-lg">{automation.title}</h3>
                             <p className="text-sm text-gray-500 mt-1">
-                              Instalación: ${automation.installation_price.toFixed(2)} | 
-                              Mensual: ${automation.monthly_price.toFixed(2)}
+                              Installation: ${automation.installation_price.toFixed(2)} | 
+                              Monthly: ${automation.monthly_price.toFixed(2)}
                             </p>
                             <p className="mt-2 text-gray-600">{automation.description}</p>
                           </div>
@@ -366,14 +413,14 @@ const AutomationManager = () => {
                               variant="outline" 
                               onClick={() => handleEdit(automation)}
                             >
-                              Editar
+                              Edit
                             </Button>
                             <Button 
                               size="sm" 
                               variant={automation.active ? "destructive" : "default"}
                               onClick={() => handleToggleStatus(automation.id, automation.active)}
                             >
-                              {automation.active ? 'Desactivar' : 'Activar'}
+                              {automation.active ? 'Deactivate' : 'Activate'}
                             </Button>
                           </div>
                         </div>
@@ -383,8 +430,8 @@ const AutomationManager = () => {
                 </div>
               ) : (
                 <div className="border rounded-lg p-8 text-center">
-                  <p className="text-gray-500">No se encontraron automatizaciones</p>
-                  <p className="text-gray-400 text-sm mt-1">Cree su primera automatización usando el formulario</p>
+                  <p className="text-gray-500">No automations found</p>
+                  <p className="text-gray-400 text-sm mt-1">Create your first automation using the form</p>
                 </div>
               )}
             </>

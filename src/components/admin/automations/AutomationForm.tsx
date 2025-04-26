@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AutomationFormProps {
   onSubmit: (data: {
@@ -26,6 +27,7 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
     monthly_price: 0,
     image_url: '',
   });
+  const [errorFields, setErrorFields] = React.useState<string[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -33,18 +35,47 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
       ...prev,
       [name]: name.includes('price') ? parseFloat(value) || 0 : value
     }));
+    
+    // Clear error state when field is modified
+    if (errorFields.includes(name)) {
+      setErrorFields(prev => prev.filter(field => field !== name));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: string[] = [];
+    
+    if (!formData.title.trim()) errors.push('title');
+    if (!formData.description.trim()) errors.push('description');
+    if (formData.installation_price < 0) errors.push('installation_price');
+    if (formData.monthly_price < 0) errors.push('monthly_price');
+    
+    setErrorFields(errors);
+    return errors.length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
-    setFormData({
-      title: '',
-      description: '',
-      installation_price: 0,
-      monthly_price: 0,
-      image_url: '',
-    });
+    
+    if (!validateForm()) {
+      toast.error('Please fill in all required fields correctly.');
+      return;
+    }
+    
+    try {
+      await onSubmit(formData);
+      setFormData({
+        title: '',
+        description: '',
+        installation_price: 0,
+        monthly_price: 0,
+        image_url: '',
+      });
+      toast.success('Automation created successfully!');
+    } catch (error) {
+      console.error('Form submission error:', error);
+      // Error handling is managed by the parent component
+    }
   };
 
   return (
@@ -55,7 +86,9 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className={errorFields.includes('title') ? 'text-red-500' : ''}>
+              Title {errorFields.includes('title') && <span className="text-red-500">*</span>}
+            </Label>
             <Input
               id="title"
               name="title"
@@ -63,11 +96,17 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
               onChange={handleChange}
               placeholder="Enter automation title"
               required
+              className={errorFields.includes('title') ? 'border-red-500' : ''}
             />
+            {errorFields.includes('title') && (
+              <p className="text-red-500 text-xs mt-1">Title is required</p>
+            )}
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className={errorFields.includes('description') ? 'text-red-500' : ''}>
+              Description {errorFields.includes('description') && <span className="text-red-500">*</span>}
+            </Label>
             <Textarea
               id="description"
               name="description"
@@ -76,11 +115,17 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
               placeholder="Enter automation description"
               rows={4}
               required
+              className={errorFields.includes('description') ? 'border-red-500' : ''}
             />
+            {errorFields.includes('description') && (
+              <p className="text-red-500 text-xs mt-1">Description is required</p>
+            )}
           </div>
 
           <div>
-            <Label htmlFor="installation_price">Installation price ($)</Label>
+            <Label htmlFor="installation_price" className={errorFields.includes('installation_price') ? 'text-red-500' : ''}>
+              Installation price ($)
+            </Label>
             <Input
               id="installation_price"
               name="installation_price"
@@ -91,11 +136,17 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
               onChange={handleChange}
               placeholder="0.00"
               required
+              className={errorFields.includes('installation_price') ? 'border-red-500' : ''}
             />
+            {errorFields.includes('installation_price') && (
+              <p className="text-red-500 text-xs mt-1">Price cannot be negative</p>
+            )}
           </div>
 
           <div>
-            <Label htmlFor="monthly_price">Monthly maintenance price ($)</Label>
+            <Label htmlFor="monthly_price" className={errorFields.includes('monthly_price') ? 'text-red-500' : ''}>
+              Monthly maintenance price ($)
+            </Label>
             <Input
               id="monthly_price"
               name="monthly_price"
@@ -106,7 +157,11 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
               onChange={handleChange}
               placeholder="0.00"
               required
+              className={errorFields.includes('monthly_price') ? 'border-red-500' : ''}
             />
+            {errorFields.includes('monthly_price') && (
+              <p className="text-red-500 text-xs mt-1">Price cannot be negative</p>
+            )}
           </div>
 
           <div>

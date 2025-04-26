@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import type { Automation } from '@/types/automation';
 import AutomationForm from '@/components/admin/automations/AutomationForm';
 import AutomationsList from '@/components/admin/automations/AutomationsList';
+import { toast } from 'sonner';
 
 const AutomationManager = () => {
   const [automations, setAutomations] = useState<Automation[]>([]);
@@ -19,6 +20,7 @@ const AutomationManager = () => {
 
   const fetchAutomations = async () => {
     try {
+      console.log('Fetching automations...');
       setIsLoading(true);
       setFetchError(null);
       
@@ -29,13 +31,15 @@ const AutomationManager = () => {
         
       if (error) {
         console.error('Error fetching automations:', error);
-        setFetchError('Failed to load automations. Please try again.');
+        console.log('Error details:', error.message, error.details, error.hint);
+        setFetchError(`Failed to load automations: ${error.message}`);
         return;
       }
       
+      console.log(`Successfully fetched ${data?.length || 0} automations`);
       setAutomations(data || []);
-    } catch (error) {
-      console.error('Error processing automations:', error);
+    } catch (error: any) {
+      console.error('Exception in fetchAutomations:', error);
       setFetchError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -51,30 +55,36 @@ const AutomationManager = () => {
   const handleSubmit = async (formData: Omit<Automation, 'id' | 'created_at' | 'updated_at' | 'active'>) => {
     try {
       setIsSaving(true);
+      console.log('Creating automation with data:', formData);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('automations')
         .insert([{
           ...formData,
-          active: true
-        }]);
+          active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select();
         
       if (error) {
         console.error('Error creating automation:', error);
+        console.log('Error details:', error.message, error.details, error.hint);
         notification.showError(
           'Error', 
-          'Could not create the automation. Please try again.'
+          `Could not create the automation: ${error.message}`
         );
         return;
       }
       
+      console.log('Automation created successfully:', data);
       notification.showSuccess('Success', 'Automation created successfully');
       fetchAutomations();
-    } catch (error) {
-      console.error('Error saving automation:', error);
+    } catch (error: any) {
+      console.error('Exception in handleSubmit:', error);
       notification.showError(
         'Error',
-        'An unexpected error occurred. Please try again.'
+        `An unexpected error occurred: ${error.message || 'Unknown error'}`
       );
     } finally {
       setIsSaving(false);
@@ -83,6 +93,8 @@ const AutomationManager = () => {
 
   const handleToggleStatus = async (id: string, currentlyActive: boolean) => {
     try {
+      console.log(`Toggling automation ${id} from ${currentlyActive ? 'active' : 'inactive'} to ${!currentlyActive ? 'active' : 'inactive'}`);
+      
       const { error } = await supabase
         .from('automations')
         .update({ 
@@ -93,30 +105,37 @@ const AutomationManager = () => {
         
       if (error) {
         console.error('Error updating automation status:', error);
+        console.log('Error details:', error.message, error.details, error.hint);
         notification.showError(
           'Error',
-          'Could not update automation status. Please try again.'
+          `Could not update automation status: ${error.message}`
         );
         return;
       }
       
+      console.log('Automation status updated successfully');
       setAutomations(prevAutomations => 
         prevAutomations.map(item => 
           item.id === id ? {...item, active: !currentlyActive} : item
         )
       );
       
-      notification.showSuccess(
-        'Status updated',
-        `Automation ${currentlyActive ? 'deactivated' : 'activated'}`
+      toast.success(
+        `Automation ${currentlyActive ? 'deactivated' : 'activated'} successfully`,
+        { duration: 3000 }
       );
-    } catch (error) {
-      console.error('Error toggling automation status:', error);
+    } catch (error: any) {
+      console.error('Exception in handleToggleStatus:', error);
       notification.showError(
         'Error',
-        'An unexpected error occurred. Please try again.'
+        `An unexpected error occurred: ${error.message || 'Unknown error'}`
       );
     }
+  };
+
+  const handleEdit = (automation: Automation) => {
+    // Will implement edit functionality when needed
+    notification.showInfo('Coming Soon', 'Edit functionality will be implemented soon');
   };
 
   if (isVerifying) {
@@ -174,7 +193,7 @@ const AutomationManager = () => {
             automations={automations}
             isLoading={isLoading}
             onToggleStatus={handleToggleStatus}
-            onEdit={() => {}} // Will implement edit functionality later if needed
+            onEdit={handleEdit}
             error={fetchError}
             onRetry={fetchAutomations}
           />

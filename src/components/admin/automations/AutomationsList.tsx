@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import type { Automation } from '@/types/automation';
 
 interface AutomationsListProps {
@@ -22,6 +22,17 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
   error,
   onRetry
 }) => {
+  const [pendingIds, setPendingIds] = React.useState<string[]>([]);
+
+  const handleToggleStatus = async (id: string, currentlyActive: boolean) => {
+    try {
+      setPendingIds(prev => [...prev, id]);
+      await onToggleStatus(id, currentlyActive);
+    } finally {
+      setPendingIds(prev => prev.filter(pendingId => pendingId !== id));
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -35,16 +46,21 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
 
   if (error) {
     return (
-      <div className="border rounded-lg p-6 text-center">
-        <p className="text-red-500 mb-2">{error}</p>
-        <Button 
-          onClick={onRetry} 
-          variant="outline" 
-          size="sm" 
-          className="mt-2"
-        >
-          Try Again
-        </Button>
+      <div className="border rounded-lg p-6">
+        <div className="flex flex-col items-center text-center">
+          <AlertTriangle className="h-8 w-8 text-amber-500 mb-2" />
+          <p className="text-red-500 mb-2 font-medium">{error}</p>
+          <p className="text-sm text-gray-500 mb-4">This could be due to a network issue or database permissions.</p>
+          <Button 
+            onClick={onRetry} 
+            variant="outline" 
+            size="sm" 
+            className="mt-2"
+          >
+            <Loader2 className={`mr-2 h-4 w-4 ${onRetry ? 'animate-spin' : ''}`} />
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
@@ -83,9 +99,17 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
                 <Button 
                   size="sm" 
                   variant={automation.active ? "destructive" : "default"}
-                  onClick={() => onToggleStatus(automation.id, automation.active)}
+                  onClick={() => handleToggleStatus(automation.id, automation.active)}
+                  disabled={pendingIds.includes(automation.id)}
                 >
-                  {automation.active ? 'Deactivate' : 'Activate'}
+                  {pendingIds.includes(automation.id) ? (
+                    <>
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      {automation.active ? 'Deactivating...' : 'Activating...'}
+                    </>
+                  ) : (
+                    automation.active ? 'Deactivate' : 'Activate'
+                  )}
                 </Button>
               </div>
             </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,8 +28,8 @@ const AutomationManager = () => {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   
-  // Use the improved admin verification hook with fewer retries
-  const { isAdmin, isVerifying } = useAdminVerification(2, 8000);
+  // Use the improved admin verification hook without parameters
+  const { isAdmin, isVerifying } = useAdminVerification();
   const notification = useNotification();
 
   // Debounced fetch with useCallback to prevent multiple calls

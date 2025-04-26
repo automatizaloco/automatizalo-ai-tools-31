@@ -13,8 +13,8 @@ const NotificationAdmin = () => {
   const notification = useNotification();
   const { toasts, clearToasts } = usePersistentToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  // Use a more reliable verification approach
-  const { isAdmin, isVerifying } = useAdminVerification(2, 8000);
+  // Use the hook without parameters
+  const { isAdmin, isVerifying } = useAdminVerification();
   
   // Example notification for testing
   const handleTestNotification = () => {

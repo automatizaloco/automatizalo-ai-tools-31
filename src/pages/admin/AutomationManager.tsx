@@ -23,44 +23,16 @@ const AutomationManager = () => {
   });
   const [editMode, setEditMode] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
-  const { isAdmin, isVerifying } = useAdminVerification();
+  const { isAdmin, isVerifying } = useAdminVerification(5, 15000);
   const notification = useNotification();
 
   const fetchAutomations = async () => {
-    if (!isAdmin) {
-      return; // Don't fetch if not admin
-    }
+    if (!isAdmin) return;
     
     setIsLoading(true);
     try {
       console.log('Fetching automations...');
       
-      // First check if admin view is working correctly
-      const { data: adminCheck, error: adminCheckError } = await supabase.rpc('is_admin', { 
-        user_uid: (await supabase.auth.getUser()).data.user?.id 
-      });
-      
-      if (adminCheckError) {
-        console.error('Error checking admin status:', adminCheckError);
-        notification.showError(
-          'Permission Error', 
-          'Failed to verify your admin permissions. Please try again later.'
-        );
-        setIsLoading(false);
-        return;
-      }
-      
-      if (!adminCheck) {
-        console.warn('User is not an admin but reached the automation manager');
-        notification.showError(
-          'Access Denied', 
-          'You do not have admin privileges to view this page.'
-        );
-        setIsLoading(false);
-        return;
-      }
-      
-      // Now fetch the automations
       const { data, error } = await supabase
         .from('automations')
         .select('*')
@@ -69,23 +41,28 @@ const AutomationManager = () => {
       if (error) {
         console.error('Error fetching automations:', error);
         
-        // Check if this is an RLS error
-        if (error.message.includes('row-level security')) {
+        if (error.message.includes('policy')) {
           notification.showError(
-            'Error de permisos', 
-            'No tienes permisos para ver las automatizaciones. Verifica que tu usuario tenga rol de administrador.'
+            'Permission Error', 
+            'You do not have permission to view automations. Please verify your admin role.'
           );
-          return;
+        } else {
+          notification.showError(
+            'Error', 
+            'Failed to load automations. Please try again.'
+          );
         }
-        
-        throw error;
+        return;
       }
       
       console.log('Automations fetched successfully:', data?.length || 0);
       setAutomations(data || []);
     } catch (error) {
       console.error('Error processing automations:', error);
-      notification.showError('Error', 'No se pudieron cargar las automatizaciones');
+      notification.showError(
+        'Error', 
+        'An unexpected error occurred while loading automations.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -244,7 +221,8 @@ const AutomationManager = () => {
       <div className="container mx-auto px-4 py-6 flex justify-center items-center h-64">
         <div className="flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="mt-2 text-gray-600">Verificando permisos...</p>
+          <p className="mt-2 text-gray-600">Verifying admin permissions...</p>
+          <p className="mt-1 text-sm text-gray-500">This might take a few seconds...</p>
         </div>
       </div>
     );

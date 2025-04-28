@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +44,6 @@ const SupportManager = () => {
         
       if (error) throw error;
       
-      // Properly type the data
       const typedData = data?.map(ticket => ({
         ...ticket,
         status: ticket.status as 'open' | 'in_progress' | 'resolved' | 'closed'
@@ -53,7 +51,6 @@ const SupportManager = () => {
       
       setTickets(typedData);
       
-      // Select first ticket by default if available
       if (typedData.length > 0 && !selectedTicket) {
         setSelectedTicket(typedData[0]);
         fetchTicketResponses(typedData[0].id);
@@ -112,14 +109,12 @@ const SupportManager = () => {
         
       if (error) throw error;
       
-      // Update local state
       setSelectedTicket({
         ...selectedTicket,
         status,
         updated_at: new Date().toISOString()
       });
       
-      // Update tickets list
       setTickets(tickets.map(ticket => 
         ticket.id === selectedTicket.id 
           ? { ...ticket, status, updated_at: new Date().toISOString() }
@@ -142,22 +137,19 @@ const SupportManager = () => {
         .insert([{
           ticket_id: selectedTicket.id,
           message: newResponse,
-          created_by: user.email,
+          created_by: user.id,
           is_admin: true,
           created_at: new Date().toISOString()
         }]);
         
       if (error) throw error;
       
-      // Update response list
       fetchTicketResponses(selectedTicket.id);
       
-      // Update ticket status to in_progress if it's open
       if (selectedTicket.status === 'open') {
         handleStatusChange('in_progress');
       }
       
-      // Clear input
       setNewResponse('');
       
       toast.success('Response submitted successfully');

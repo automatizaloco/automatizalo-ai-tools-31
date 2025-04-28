@@ -54,6 +54,7 @@ function App() {
               <Route path="solutions" element={<Solutions />} />
               <Route path="client-portal" element={<ClientPortal />} />
               <Route path="client-portal/support/new" element={<ClientPortal />} />
+              <Route path="client-portal/support/:ticketId" element={<ClientPortal />} />
               <Route path="unsubscribe" element={<Unsubscribe />} />
               <Route path="privacy-policy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />

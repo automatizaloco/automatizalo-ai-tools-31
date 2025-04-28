@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +6,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SupportTicket, ClientAutomation } from '@/types/automation';
 import { useAuth } from '@/context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const SupportTicketsView = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -37,7 +37,6 @@ const SupportTicketsView = () => {
         
       if (error) throw error;
       
-      // Cast the data to the correct type
       const typedData = data?.map(ticket => ({
         ...ticket,
         status: ticket.status as 'open' | 'in_progress' | 'resolved' | 'closed'
@@ -63,7 +62,6 @@ const SupportTicketsView = () => {
         
       if (error) throw error;
       
-      // Cast the data to the correct type
       const typedData = data?.map(item => ({
         ...item,
         status: item.status as 'active' | 'canceled' | 'pending'
@@ -141,13 +139,14 @@ const SupportTicketsView = () => {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.location.href = `/client-portal/support/${ticket.id}`}
-                >
-                  View Details
-                </Button>
+                <Link to={`/client-portal/support/${ticket.id}`}>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    View Details
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}

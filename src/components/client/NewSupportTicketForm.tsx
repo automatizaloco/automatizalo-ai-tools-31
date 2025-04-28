@@ -115,7 +115,7 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
       if (error) throw error;
       
       toast.success('Support ticket created successfully');
-      navigate('/client-portal/support');
+      navigate('/client-portal'); // Fixed: Navigate to client-portal instead of client-portal/support
     } catch (error: any) {
       console.error('Error creating support ticket:', error);
       toast.error(error.message || 'Failed to create support ticket');

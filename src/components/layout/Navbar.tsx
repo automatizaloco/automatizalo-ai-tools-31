@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -97,12 +98,14 @@ const Navbar = () => {
               </Link>
             )}
             
-            <LanguageSwitcher />
+            <div className="z-10">
+              <LanguageSwitcher />
+            </div>
             
             {isAuthenticated && (
               <Button 
                 variant="outline" 
-                className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 z-0"
                 onClick={logout}
               >
                 {t('nav.logout')}
@@ -110,10 +113,12 @@ const Navbar = () => {
             )}
           </div>
 
-          <div className="md:hidden flex items-center gap-2">
-            <LanguageSwitcher />
+          <div className="md:hidden flex items-center gap-4">
+            <div className="z-10">
+              <LanguageSwitcher />
+            </div>
             <button
-              className="text-slate-700 p-2"
+              className="text-slate-700 p-2 z-0"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle Menu"
             >
@@ -123,7 +128,7 @@ const Navbar = () => {
         </nav>
 
         {isMenuOpen && (
-          <div className="md:hidden pt-5 pb-4 absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md shadow-lg animate-fade-in">
+          <div className="md:hidden pt-5 pb-4 absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md shadow-lg animate-fade-in z-40">
             <div className="flex flex-col space-y-4 px-6">
               {navItems.map((item) => (
                 <Link

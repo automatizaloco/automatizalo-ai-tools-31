@@ -1,12 +1,12 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SupportTicket, ClientAutomation } from '@/types/automation';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
+import TicketCard from './ticket/TicketCard';
 
 const SupportTicketsView = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -73,21 +73,6 @@ const SupportTicketsView = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'default';
-      case 'in_progress':
-        return 'warning';
-      case 'resolved':
-        return 'success';
-      case 'closed':
-        return 'secondary';
-      default:
-        return 'default';
-    }
-  };
-
   const getAutomationTitle = (automationId: string) => {
     const clientAutomation = automations.find(a => a.automation_id === automationId);
     return clientAutomation?.automation?.title || 'Unknown Automation';
@@ -103,52 +88,28 @@ const SupportTicketsView = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <h2 className="text-xl font-bold">Support Tickets</h2>
-        <Button onClick={() => window.location.href = '/client-portal/support/new'}>
-          Create New Ticket
-        </Button>
+        <Link to="/client-portal/support/new">
+          <Button>Create New Ticket</Button>
+        </Link>
       </div>
       
       {tickets.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-gray-500">You haven't created any support tickets yet.</p>
-          <Button className="mt-4" onClick={() => window.location.href = '/client-portal/support/new'}>
-            Create Your First Ticket
-          </Button>
+          <Link to="/client-portal/support/new">
+            <Button className="mt-4">Create Your First Ticket</Button>
+          </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
           {tickets.map((ticket) => (
-            <Card key={ticket.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{ticket.title}</CardTitle>
-                  <Badge variant={getStatusColor(ticket.status) as any}>
-                    {ticket.status.replace('_', ' ')}
-                  </Badge>
-                </div>
-                <p className="text-sm text-gray-500">
-                  {getAutomationTitle(ticket.automation_id)} • 
-                  Created on {new Date(ticket.created_at).toLocaleDateString()}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-sm">{ticket.description.substring(0, 150)}
-                  {ticket.description.length > 150 ? '...' : ''}
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Link to={`/client-portal/support/${ticket.id}`}>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                  >
-                    View Details
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
+            <TicketCard 
+              key={ticket.id} 
+              ticket={ticket} 
+              automationTitle={getAutomationTitle(ticket.automation_id)} 
+            />
           ))}
         </div>
       )}

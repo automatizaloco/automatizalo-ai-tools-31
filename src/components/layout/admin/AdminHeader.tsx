@@ -2,7 +2,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, Eye } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AdminNavItem } from './AdminNavItem';
 import { AdminRouteType } from './types';
@@ -39,21 +45,36 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
+          
+          <div className="flex items-center">
+            <Button 
+              variant="outline" 
+              size={isMobile ? "sm" : "default"} 
+              onClick={onViewAsClient}
+              className="flex items-center gap-1"
+            >
+              <Eye className="h-4 w-4" />
+              {!isMobile && t.viewAsClient}
+            </Button>
+          </div>
+          
           <Button 
             variant="outline" 
             size={isMobile ? "sm" : "default"} 
-            onClick={onViewAsClient}
-            className="flex items-center gap-1"
+            onClick={onHomeClick}
           >
-            <Eye className="h-4 w-4" />
-            {!isMobile && t.viewAsClient}
-          </Button>
-          <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={onHomeClick}>
             {t.home}
           </Button>
-          <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={onLogout}>
+          
+          <Button 
+            variant="outline" 
+            size={isMobile ? "sm" : "default"} 
+            onClick={onLogout}
+            className="mr-2"
+          >
             {t.logout}
           </Button>
+          
           {isMobile && (
             <Sheet>
               <SheetTrigger asChild>
@@ -61,21 +82,21 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[250px] p-0">
-                <div className="flex flex-col h-full">
-                  <div className="p-4 border-b">
-                    <h2 className="text-lg font-semibold">{t.navigation}</h2>
-                  </div>
-                  <div className="flex flex-col py-2 flex-1">
-                    {adminRoutes.map((route) => (
-                      <AdminNavItem
-                        key={route.value}
-                        route={route}
-                        isActive={activeTab === route.value}
-                        onClick={() => onTabChange(route.value)}
-                      />
-                    ))}
-                  </div>
+              <SheetContent side="right" className="w-[280px] p-0">
+                <SheetHeader className="p-4 border-b">
+                  <SheetTitle>{t.navigation}</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col py-2 flex-1 overflow-y-auto max-h-[calc(100vh-80px)]">
+                  {adminRoutes.map((route) => (
+                    <AdminNavItem
+                      key={route.value}
+                      route={route}
+                      isActive={activeTab === route.value}
+                      onClick={() => {
+                        onTabChange(route.value);
+                      }}
+                    />
+                  ))}
                 </div>
               </SheetContent>
             </Sheet>

@@ -28,7 +28,7 @@ const ClientPortal = () => {
 
   // For logged in users, show the appropriate content
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-20">
       {location.pathname === '/client-portal/support/new' ? (
         <NewSupportTicketForm />
       ) : location.pathname.includes('/client-portal/support/') ? (

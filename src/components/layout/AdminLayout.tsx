@@ -1,7 +1,18 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactNode, useEffect, useState } from 'react';
-import { LayoutDashboard, PenSquare, Webhook, Wand2, MessageSquare, Mail, Bell, Globe, Settings, Users, Zap, HelpCircle } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  PenSquare, 
+  Webhook, 
+  Wand2, 
+  MessageSquare, 
+  Mail, 
+  Bell, 
+  Users, 
+  Zap, 
+  HelpCircle 
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
@@ -10,6 +21,11 @@ import AdminNavTabs from './admin/AdminNavTabs';
 import AdminContent from './admin/AdminContent';
 import { AdminRouteType } from './admin/types';
 import { useNotification } from '@/hooks/useNotification';
+import { 
+  Collapsible, 
+  CollapsibleContent, 
+  CollapsibleTrigger 
+} from "@/components/ui/collapsible";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -141,7 +157,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         onViewAsClient={handleViewAsClient}
       />
       
-      <div className={`${isMobile ? 'px-4 py-4' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
+      <div className={`${isMobile ? 'px-2 py-3' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
         {!isMobile && (
           <AdminNavTabs 
             activeTab={activeTab}

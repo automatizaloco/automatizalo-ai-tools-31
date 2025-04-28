@@ -32,7 +32,6 @@ import ClientPortal from './pages/ClientPortal';
 import UserManagement from './pages/admin/UserManagement';
 import AutomationManager from './pages/admin/AutomationManager';
 import SupportManager from './pages/admin/SupportManager';
-import NewSupportTicketForm from './components/client/NewSupportTicketForm';
 
 function App() {
   const location = useLocation();

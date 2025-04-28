@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -47,10 +46,9 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
   }
 
   if (error) {
-    // Enhanced error display with more specific error message
-    const isRecursionError = error.includes('infinite recursion') || 
-                             error.includes('recursive') ||
-                             error.includes('policy');
+    const isPermissionError = error.toLowerCase().includes('permission') || 
+                             error.toLowerCase().includes('policy') ||
+                             error.toLowerCase().includes('recursive');
                              
     return (
       <div className="border rounded-lg p-6">
@@ -58,9 +56,9 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
           <AlertTriangle className="h-8 w-8 text-amber-500 mb-2" />
           <p className="text-red-500 mb-2 font-medium">{error}</p>
           <p className="text-sm text-gray-500 mb-4">
-            {isRecursionError 
+            {isPermissionError 
               ? "This is related to database permissions. Please make sure you're logged in as an admin user."
-              : "This could be due to a network issue or database permissions."}
+              : "This could be due to a network issue. Please try again."}
           </p>
           <Button 
             onClick={onRetry} 

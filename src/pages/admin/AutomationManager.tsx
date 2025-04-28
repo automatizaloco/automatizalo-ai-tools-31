@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,13 +23,7 @@ const AutomationManager = () => {
       setIsLoading(true);
       setFetchError(null);
       
-      // Make sure we're authenticated before making the request
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session) {
-        setFetchError("Authentication required. Please log in.");
-        setIsLoading(false);
-        return;
-      }
+      await syncUserAccount();
       
       const { data, error } = await supabase
         .from('automations')
@@ -51,6 +44,34 @@ const AutomationManager = () => {
       setFetchError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const syncUserAccount = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!existingUser) {
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email,
+          role: user.email === 'contact@automatizalo.co' ? 'admin' : 'client'
+        });
+
+      if (insertError) {
+        console.error('Error syncing user account:', insertError);
+        toast.error('Failed to sync user account');
+      } else {
+        toast.success('Account synchronized successfully');
+      }
     }
   };
 
@@ -129,8 +150,7 @@ const AutomationManager = () => {
       );
       
       toast.success(
-        `Automation ${currentlyActive ? 'deactivated' : 'activated'} successfully`,
-        { duration: 3000 }
+        `Automation ${currentlyActive ? 'deactivated' : 'activated'} successfully`
       );
     } catch (error: any) {
       console.error('Exception in handleToggleStatus:', error);
@@ -142,7 +162,6 @@ const AutomationManager = () => {
   };
 
   const handleEdit = (automation: Automation) => {
-    // Will implement edit functionality when needed
     notification.showInfo('Coming Soon', 'Edit functionality will be implemented soon');
   };
 

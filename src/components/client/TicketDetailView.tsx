@@ -46,7 +46,13 @@ const TicketDetailView = () => {
         return;
       }
       
-      setTicket(data);
+      // Convert string status to the correct type
+      const typedTicket: SupportTicket = {
+        ...data,
+        status: data.status as 'open' | 'in_progress' | 'resolved' | 'closed'
+      };
+      
+      setTicket(typedTicket);
       
       // Fetch automation details
       const { data: automationData, error: automationError } = await supabase
@@ -58,7 +64,13 @@ const TicketDetailView = () => {
         
       if (automationError) throw automationError;
       
-      setAutomation(automationData);
+      if (automationData) {
+        const typedAutomation: ClientAutomation = {
+          ...automationData,
+          status: automationData.status as 'active' | 'canceled' | 'pending'
+        };
+        setAutomation(typedAutomation);
+      }
     } catch (error: any) {
       console.error('Error fetching ticket details:', error);
       toast.error(error.message || 'Failed to load ticket details');

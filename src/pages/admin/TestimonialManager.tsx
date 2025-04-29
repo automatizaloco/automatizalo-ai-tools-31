@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { AlertTriangle, Loader2 } from "lucide-react";
 import { 
   fetchTestimonials, 
   createTestimonial, 
@@ -12,12 +11,12 @@ import {
   deleteTestimonial,
   fetchTestimonialTranslations,
   updateTestimonialTranslation,
-  Testimonial,
-  TestimonialTranslation
+  Testimonial
 } from "@/services/testimonialService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TestimonialForm from "@/components/admin/testimonials/TestimonialForm";
-import TestimonialItem from "@/components/admin/testimonials/TestimonialItem";
+import TestimonialHeader from "@/components/admin/testimonials/TestimonialHeader";
+import TestimonialsList from "@/components/admin/testimonials/TestimonialsList";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const TestimonialManager = () => {
@@ -31,15 +30,21 @@ const TestimonialManager = () => {
   const [editedTranslations, setEditedTranslations] = useState<{[key: string]: {[lang: string]: string}}>({});
 
   // Fetch testimonials from Supabase
-  const { data: testimonials = [], isLoading, error: fetchError } = useQuery({
+  const { 
+    data: testimonials = [], 
+    isLoading, 
+    error: fetchError 
+  } = useQuery({
     queryKey: ['testimonials'],
     queryFn: fetchTestimonials,
-    // Only attempt to fetch if the user is authenticated
     enabled: isAuthenticated,
   });
   
   // Fetch translations
-  const { data: translations = [], isLoading: translationsLoading } = useQuery({
+  const { 
+    data: translations = [], 
+    isLoading: translationsLoading 
+  } = useQuery({
     queryKey: ['testimonial-translations'],
     queryFn: fetchTestimonialTranslations,
     enabled: isAuthenticated && testimonials.length > 0,
@@ -166,16 +171,7 @@ const TestimonialManager = () => {
 
   return (
     <div className="container mx-auto px-4">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Testimonial Manager</h1>
-        <p className="text-gray-600 mt-2">Add and edit client testimonials</p>
-        
-        {user && (
-          <div className="mt-2 text-sm text-green-600">
-            Logged in as: {user.email}
-          </div>
-        )}
-      </div>
+      <TestimonialHeader email={user?.email} />
       
       <div className={`grid grid-cols-1 gap-8 ${isMobile ? 'mx-0' : 'max-w-4xl mx-auto'}`}>
         <TestimonialForm 
@@ -183,48 +179,19 @@ const TestimonialManager = () => {
           isPending={createMutation.isPending} 
         />
         
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Existing Testimonials</h2>
-          
-          {fetchError ? (
-            <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-700 flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2" />
-              <div>
-                <p className="font-medium">Error loading testimonials</p>
-                <p className="text-sm">{(fetchError as Error).message}</p>
-              </div>
-            </div>
-          ) : isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-            </div>
-          ) : (
-            <>
-              {testimonials.length > 0 ? (
-                <div className="space-y-6">
-                  {testimonials.map((testimonial) => (
-                    <TestimonialItem 
-                      key={testimonial.id}
-                      testimonial={testimonial}
-                      translations={translations}
-                      onTestimonialChange={handleTestimonialChange}
-                      onTranslationChange={handleTranslationChange}
-                      onSaveTranslation={handleSaveTranslation}
-                      onDeleteTestimonial={handleDeleteTestimonial}
-                      editedTranslations={editedTranslations}
-                      isDeleting={deleteMutation.isPending}
-                      isTranslationUpdating={updateTranslationMutation.isPending}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center p-8 text-gray-500">
-                  No testimonials yet. Add your first one above.
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <TestimonialsList
+          testimonials={testimonials}
+          isLoading={isLoading}
+          error={fetchError as Error | null}
+          translations={translations}
+          onTestimonialChange={handleTestimonialChange}
+          onTranslationChange={handleTranslationChange}
+          onSaveTranslation={handleSaveTranslation}
+          onDeleteTestimonial={handleDeleteTestimonial}
+          editedTranslations={editedTranslations}
+          isDeleting={deleteMutation.isPending}
+          isTranslationUpdating={updateTranslationMutation.isPending}
+        />
       </div>
     </div>
   );

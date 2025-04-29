@@ -1,26 +1,25 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { createBlogPost, fetchBlogPostById, updateBlogPost, saveBlogTranslations, getBlogTranslations } from "@/services/blogService";
+import { fetchBlogPostById, getBlogTranslations } from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { BlogFormData, TranslationFormData } from "@/types/form";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import TranslationPanel from "@/components/admin/blog/TranslationPanel";
 import BlogFormFields from "@/components/admin/blog/BlogFormFields";
+import BlogFormContainer from "@/components/admin/blog/BlogFormContainer";
+import TranslationTools from "@/components/admin/blog/TranslationTools";
 import { supabase } from "@/integrations/supabase/client";
-import { translateBlogContent } from "@/services/translationService";
-import { Loader2, Globe } from "lucide-react";
 
 const BlogPostForm = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { language } = useLanguage();
-  const [isLoading, setIsLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [post, setPost] = useState<BlogPost | null>(null);
   const [formData, setFormData] = useState<BlogFormData>({
@@ -46,7 +45,6 @@ const BlogPostForm = () => {
     fr: { title: "", excerpt: "", content: "" },
     es: { title: "", excerpt: "", content: "" }
   });
-  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -164,165 +162,6 @@ const BlogPostForm = () => {
     setEditingTranslation(!editingTranslation);
   };
 
-  const autoTranslateAll = async () => {
-    if (!formData.content || !formData.title || !formData.excerpt) {
-      toast.error("Please add content to translate");
-      return;
-    }
-
-    setIsTranslating(true);
-
-    try {
-      // French translation
-      const frTranslation = await translateBlogContent(
-        formData.content,
-        formData.title,
-        formData.excerpt,
-        'fr'
-      );
-
-      // Spanish translation
-      const esTranslation = await translateBlogContent(
-        formData.content,
-        formData.title,
-        formData.excerpt,
-        'es'
-      );
-
-      // Update the translation data state
-      const updatedTranslations = {
-        fr: {
-          title: frTranslation.title,
-          excerpt: frTranslation.excerpt,
-          content: frTranslation.content
-        },
-        es: {
-          title: esTranslation.title,
-          excerpt: esTranslation.excerpt,
-          content: esTranslation.content
-        }
-      };
-
-      // Update both states to ensure consistency
-      setTranslationData(updatedTranslations);
-      
-      // Also update the form data with the translations
-      setFormData(prev => ({
-        ...prev,
-        translations: updatedTranslations
-      }));
-
-      console.log("Translations updated:", updatedTranslations);
-      toast.success("Content translated to all languages");
-      
-      // Save translations to database if in edit mode
-      if (id) {
-        await saveTranslations(updatedTranslations);
-      }
-    } catch (error) {
-      console.error("Error auto-translating all content:", error);
-      toast.error("Failed to translate content to all languages");
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
-  const saveTranslations = async (translations: TranslationFormData) => {
-    if (!id) {
-      toast.error("Cannot save translations for a post that hasn't been created yet");
-      return;
-    }
-    
-    try {
-      await saveBlogTranslations(id, translations);
-      
-      if (post) {
-        setPost({
-          ...post,
-          translations
-        });
-      }
-      
-      toast.success("Translations saved successfully");
-    } catch (error) {
-      console.error("Error saving translations:", error);
-      toast.error(`Failed to save translations: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    console.log("Submitting form with data:", formData);
-
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        toast.error("You must be logged in to create or update posts");
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      const tagsArray = formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag);
-      
-      const postData: any = {
-        title: formData.title,
-        excerpt: formData.excerpt,
-        content: formData.content,
-        category: formData.category,
-        tags: tagsArray,
-        author: formData.author,
-        date: formData.date,
-        readTime: formData.readTime,
-        image: formData.image,
-        featured: formData.featured,
-        slug: formData.slug || formData.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
-      };
-
-      console.log("Post data prepared for saving:", postData);
-
-      let savedPostId: string;
-      
-      if (id) {
-        console.log("Updating existing post with ID:", id);
-        await updateBlogPost(id, postData);
-        savedPostId = id;
-        toast.success("Post updated successfully");
-      } else {
-        console.log("Creating new post");
-        const newPost = await createBlogPost(postData);
-        savedPostId = newPost.id;
-        toast.success("Post created successfully");
-      }
-      
-      const currentTranslations = editingTranslation ? translationData : formData.translations;
-      if ((currentTranslations.fr.title && currentTranslations.fr.content) || 
-          (currentTranslations.es.title && currentTranslations.es.content)) {
-        try {
-          await saveBlogTranslations(savedPostId, currentTranslations);
-        } catch (translationError) {
-          console.error("Error saving translations:", translationError);
-          toast.error(`Post was saved, but translations failed: ${translationError instanceof Error ? translationError.message : String(translationError)}`);
-        }
-      }
-      
-      navigate("/admin/blog");
-    } catch (error) {
-      console.error("Error saving post:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error("Detailed error:", error);
-      
-      toast.error(
-        <div>
-          <p>Failed to save post: {errorMessage}</p>
-          <p className="text-xs mt-1">Please check the console for more details</p>
-        </div>
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   if (fetchLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-white">
@@ -345,26 +184,15 @@ const BlogPostForm = () => {
             <h1 className="text-3xl font-bold">
               {id ? "Edit Blog Post" : "Create New Blog Post"}
             </h1>
-            {id && !editingTranslation && (
-              <Button
-                variant="outline"
-                onClick={autoTranslateAll}
-                disabled={isTranslating}
-                className="flex items-center gap-2"
-              >
-                {isTranslating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Translating...
-                  </>
-                ) : (
-                  <>
-                    <Globe className="h-4 w-4" />
-                    Auto-translate All
-                  </>
-                )}
-              </Button>
-            )}
+            
+            <TranslationTools 
+              id={id}
+              post={post}
+              formData={formData}
+              setFormData={setFormData}
+              translationData={translationData}
+              setTranslationData={setTranslationData}
+            />
           </div>
           
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -378,34 +206,22 @@ const BlogPostForm = () => {
                 onTranslationEdit={toggleTranslationEditing}
                 onTranslationChange={handleTranslationChange}
                 onTranslationContentChange={handleTranslationContentChange}
-                onSaveTranslations={() => saveTranslations(translationData)}
+                onSaveTranslations={() => {}}
               />
             )}
             
-            <form onSubmit={handleSubmit}>
+            <BlogFormContainer 
+              formData={formData}
+              setFormData={setFormData}
+              translationData={translationData}
+              editingTranslation={editingTranslation}
+            >
               <BlogFormFields 
                 formData={formData}
                 handleChange={handleChange}
                 handleContentChange={handleContentChange}
               />
-              
-              <div className="flex justify-end space-x-4 mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/admin/blog")}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  className="bg-gray-900 hover:bg-gray-800"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Saving..." : (id ? "Update Post" : "Create Post")}
-                </Button>
-              </div>
-            </form>
+            </BlogFormContainer>
           </div>
         </div>
       </main>

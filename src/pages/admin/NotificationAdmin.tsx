@@ -51,15 +51,17 @@ const NotificationAdmin = () => {
 
   if (isMobile) {
     return (
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-4 mt-16">
         <Card className="border-0 shadow-none">
           <CardHeader className="px-0 pt-0">
             <CardTitle className="text-xl">Notifications</CardTitle>
             
             <div className="mt-4 space-y-2">
-              <p className="text-gray-600 text-sm">
-                Total: {toasts.length}
-              </p>
+              <div className="flex justify-between items-center">
+                <p className="text-gray-600 text-sm">
+                  Total: {toasts.length}
+                </p>
+              </div>
               
               <div className="flex flex-col gap-2">
                 <Button 

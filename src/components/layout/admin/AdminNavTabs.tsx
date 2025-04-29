@@ -3,6 +3,7 @@ import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminRouteType } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface AdminNavTabsProps {
   activeTab: string;
@@ -17,9 +18,33 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // For mobile, we use the sheet menu instead, so don't render tabs
   if (isMobile) {
-    return null;
+    return (
+      <Accordion 
+        type="single" 
+        collapsible 
+        defaultValue={activeTab}
+        className="w-full mb-4"
+        onValueChange={onTabChange}
+      >
+        {adminRoutes.map((route) => {
+          const Icon = route.icon || null;
+          return (
+            <AccordionItem key={route.value} value={route.value}>
+              <AccordionTrigger className="py-2">
+                <div className="flex items-center gap-1">
+                  {Icon && <Icon className="h-4 w-4" />}
+                  <span>{route.label}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                {/* Content will be rendered by the parent component */}
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    );
   }
   
   return (

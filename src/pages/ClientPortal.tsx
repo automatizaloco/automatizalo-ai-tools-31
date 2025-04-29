@@ -15,15 +15,19 @@ const ClientPortal = () => {
   
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
+      <div className="flex justify-center items-center min-h-[60vh] mt-20">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
-  // If not logged in, show login component
+  // If not logged in, show login component with proper top margin
   if (!user) {
-    return <ClientLogin />;
+    return (
+      <div className="pt-24 px-4">
+        <ClientLogin />
+      </div>
+    );
   }
 
   // For logged in users, show the appropriate content

@@ -38,13 +38,16 @@ const getNotificationColor = (type: NotificationType['type']) => {
 const NotificationHistory = () => {
   const { toasts, removeToast } = usePersistentToast();
 
-  if (toasts.length === 0) {
+  // Sort notifications by timestamp (newest first)
+  const sortedToasts = [...toasts].sort((a, b) => b.timestamp - a.timestamp);
+
+  if (sortedToasts.length === 0) {
     return (
       <Card className="border-dashed">
         <CardContent className="pt-6 pb-6 text-center">
-          <p className="text-gray-500">No se encontraron notificaciones</p>
+          <p className="text-gray-500">No notifications found</p>
           <p className="text-sm text-gray-400 mt-1">
-            Las notificaciones aparecerán aquí cuando se generen
+            Notifications will appear here when they are generated
           </p>
         </CardContent>
       </Card>
@@ -53,7 +56,7 @@ const NotificationHistory = () => {
 
   return (
     <div className="space-y-3">
-      {toasts.map((toast) => (
+      {sortedToasts.map((toast) => (
         <Card 
           key={toast.id} 
           className={`relative overflow-hidden border ${getNotificationColor(toast.type)}`}
@@ -73,6 +76,8 @@ const NotificationHistory = () => {
                   size="sm" 
                   className="h-6 w-6 p-0" 
                   onClick={() => removeToast(toast.id)}
+                  title="Remove notification"
+                  aria-label="Remove notification"
                 >
                   <X className="h-3 w-3" />
                 </Button>

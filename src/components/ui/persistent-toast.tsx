@@ -39,20 +39,20 @@ const PersistentToast = React.forwardRef<HTMLDivElement, ToastProps>(
           }
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 max-w-[90%]">
           {toast.type === "success" && (
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
           )}
           {toast.type === "error" && (
-            <AlertCircle className="h-5 w-5 text-red-500" />
+            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
           )}
-          {toast.type === "info" && <Info className="h-5 w-5 text-blue-500" />}
+          {toast.type === "info" && <Info className="h-5 w-5 text-blue-500 shrink-0" />}
           {toast.type === "warning" && (
-            <AlertCircle className="h-5 w-5 text-yellow-500" />
+            <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0" />
           )}
-          <div className="flex flex-col gap-1">
-            <p className="font-medium">{toast.title}</p>
-            <p className="text-sm">{toast.message}</p>
+          <div className="flex flex-col gap-1 overflow-hidden">
+            <p className="font-medium line-clamp-1">{toast.title}</p>
+            <p className="text-sm line-clamp-2">{toast.message}</p>
             <p className="text-xs opacity-75 mt-1">
               {new Date(toast.timestamp).toLocaleTimeString()}
             </p>
@@ -60,7 +60,8 @@ const PersistentToast = React.forwardRef<HTMLDivElement, ToastProps>(
         </div>
         <button
           onClick={() => onRemove(toast.id)}
-          className="absolute right-2 top-2 rounded-md p-1 text-gray-500 opacity-70 transition-opacity hover:opacity-100"
+          className="absolute right-2 top-2 rounded-md p-1 text-gray-500 opacity-70 transition-opacity hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+          aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" />
         </button>

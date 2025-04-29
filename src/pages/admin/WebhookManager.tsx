@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,12 +6,19 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { useWebhookStore, WebhookMode, RequestMethod } from '@/stores/webhookStore';
 import { Webhook, Globe, Send, Server } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
 
 const WebhookManager = () => {
-  const [activeTab, setActiveTab] = useState('blog-creation');
+  const [activeSection, setActiveSection] = useState('blog-creation');
   const [isLoading, setIsLoading] = useState(true);
+  const isMobile = useIsMobile();
   
   const { 
     blogCreationUrl, 
@@ -204,6 +210,110 @@ const WebhookManager = () => {
     );
   }
 
+  // For mobile, use accordion instead of tabs
+  if (isMobile) {
+    return (
+      <div className="container mx-auto px-4 py-4">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-2">Webhook Manager</h1>
+          <p className="text-gray-600 text-sm">
+            Configure and manage webhooks for your application
+          </p>
+        </div>
+
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="blog-creation">
+            <AccordionTrigger className="flex items-center gap-2">
+              <Webhook className="h-4 w-4" />
+              <span>Blog Creation</span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <WebhookConfigCard
+                title="Blog Creation Webhook"
+                description="This webhook is called when generating new blog posts with AI"
+                icon={<Webhook className="h-5 w-5" />}
+                testUrl={localBlogCreation.test}
+                productionUrl={localBlogCreation.production}
+                method={localBlogCreation.method}
+                mode={localBlogCreation.mode}
+                onTestUrlChange={(value) => setLocalBlogCreation({...localBlogCreation, test: value})}
+                onProductionUrlChange={(value) => setLocalBlogCreation({...localBlogCreation, production: value})}
+                onMethodChange={(value) => setLocalBlogCreation({...localBlogCreation, method: value})}
+                onModeChange={(isProduction) => setLocalBlogCreation({...localBlogCreation, mode: isProduction ? 'production' : 'test'})}
+                onTest={() => handleTestWebhook('blog-creation')}
+                onSave={handleBlogCreationSubmit}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          
+          <AccordionItem value="social-media">
+            <AccordionTrigger className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              <span>Social Media</span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <WebhookConfigCard
+                title="Social Media Webhook"
+                description="This webhook is triggered when a blog post is published to share on social media"
+                icon={<Globe className="h-5 w-5" />}
+                testUrl={localBlogSocialShare.test}
+                productionUrl={localBlogSocialShare.production}
+                method={localBlogSocialShare.method}
+                mode={localBlogSocialShare.mode}
+                onTestUrlChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, test: value})}
+                onProductionUrlChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, production: value})}
+                onMethodChange={(value) => setLocalBlogSocialShare({...localBlogSocialShare, method: value})}
+                onModeChange={(isProduction) => setLocalBlogSocialShare({...localBlogSocialShare, mode: isProduction ? 'production' : 'test'})}
+                onTest={() => handleTestWebhook('blog-social')}
+                onSave={handleBlogSocialShareSubmit}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          
+          <AccordionItem value="domain-settings">
+            <AccordionTrigger className="flex items-center gap-2">
+              <Server className="h-4 w-4" />
+              <span>Domain Settings</span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Server className="h-4 w-4" />
+                    Website Domain
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Configure the domain used for generating links in webhooks
+                  </CardDescription>
+                </CardHeader>
+                <form onSubmit={handleDomainSubmit}>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="website-domain">Website Domain</Label>
+                      <Input 
+                        id="website-domain"
+                        value={localWebsiteDomain}
+                        onChange={(e) => setLocalWebsiteDomain(e.target.value)}
+                        placeholder="https://www.example.com"
+                      />
+                      <p className="text-xs text-gray-500">
+                        This domain will be used to generate full URLs for blog posts and other resources
+                      </p>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" size="sm" className="ml-auto">Save Domain</Button>
+                  </CardFooter>
+                </form>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    );
+  }
+
+  // Desktop view with tabs
   return (
     <div className="container mx-auto px-4 py-4">
       <div className="mb-6">
@@ -213,7 +323,7 @@ const WebhookManager = () => {
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeSection} onValueChange={setActiveSection}>
         <TabsList className="mb-6">
           <TabsTrigger value="blog-creation" className="flex items-center gap-1">
             <Webhook className="h-4 w-4" />
@@ -269,7 +379,7 @@ const WebhookManager = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Server className="h-5 w-5" />
+                <Server className="h-4 w-4" />
                 Website Domain Settings
               </CardTitle>
               <CardDescription>

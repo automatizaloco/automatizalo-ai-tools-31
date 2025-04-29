@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NewsletterManager from "@/components/admin/newsletter/NewsletterManager";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Subscriber {
   id: string;
@@ -18,6 +18,7 @@ interface Subscriber {
 
 const NewsletterAdmin = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [isAutomationEnabled, setIsAutomationEnabled] = useState(false);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState({
@@ -87,6 +88,73 @@ const NewsletterAdmin = () => {
     fetchSubscribers();
   }, []);
 
+  if (isMobile) {
+    return (
+      <div className="container mx-auto px-4 py-4">
+        <div className="mb-6 flex justify-between items-center">
+          <h1 className="text-xl font-bold">Newsletter</h1>
+          <Button onClick={() => navigate("/admin")} size="sm">Back</Button>
+        </div>
+        
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="manager">
+            <AccordionTrigger className="font-medium">Newsletter Manager</AccordionTrigger>
+            <AccordionContent>
+              <div className="bg-white rounded-lg p-4">
+                <NewsletterManager 
+                  isAutomationEnabled={isAutomationEnabled} 
+                  onAutomationToggle={setIsAutomationEnabled} 
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+          
+          <AccordionItem value="subscribers">
+            <AccordionTrigger className="font-medium">Subscribers</AccordionTrigger>
+            <AccordionContent>
+              <Card className="border-0 shadow-none">
+                <CardHeader className="p-0 pb-4">
+                  <CardTitle className="text-base">Newsletter Subscribers</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {loading.subscribers ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  ) : subscribers.length === 0 ? (
+                    <p className="text-center py-4 text-gray-500 text-sm">No subscribers yet.</p>
+                  ) : (
+                    <div className="overflow-x-auto -mx-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Frequency</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {subscribers.map((subscriber) => (
+                            <TableRow key={subscriber.id}>
+                              <TableCell className="text-xs">{subscriber.email}</TableCell>
+                              <TableCell className="capitalize text-xs">{subscriber.frequency}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    );
+  }
+
+  // Desktop view with tabs
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6 flex justify-between items-center">

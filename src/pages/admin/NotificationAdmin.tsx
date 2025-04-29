@@ -8,13 +8,15 @@ import { usePersistentToast } from "@/context/PersistentToastContext";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAdminVerification } from "@/hooks/useAdminVerification";
 import { Loader2 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const NotificationAdmin = () => {
   const notification = useNotification();
   const { toasts, clearToasts } = usePersistentToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  // Use the hook without parameters
   const { isAdmin, isVerifying } = useAdminVerification();
+  const isMobile = useIsMobile();
   
   // Example notification for testing
   const handleTestNotification = () => {
@@ -46,7 +48,77 @@ const NotificationAdmin = () => {
       </div>
     );
   }
+
+  if (isMobile) {
+    return (
+      <div className="container mx-auto px-4 py-4">
+        <Card className="border-0 shadow-none">
+          <CardHeader className="px-0 pt-0">
+            <CardTitle className="text-xl">Notifications</CardTitle>
+            
+            <div className="mt-4 space-y-2">
+              <p className="text-gray-600 text-sm">
+                Total: {toasts.length}
+              </p>
+              
+              <div className="flex flex-col gap-2">
+                <Button 
+                  onClick={handleTestNotification}
+                  variant="outline"
+                  size="sm"
+                  className="w-full flex justify-center items-center gap-1"
+                >
+                  <Bell className="h-4 w-4" />
+                  Test Notification
+                </Button>
+                
+                <Button 
+                  onClick={() => setIsDialogOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full flex justify-center items-center gap-1 text-red-500 hover:text-red-600"
+                  disabled={toasts.length === 0}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Clear All
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="px-0 py-4">
+            <NotificationHistory />
+          </CardContent>
+        </Card>
+        
+        <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <AlertDialogContent className="max-w-[90%]">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Clear All Notifications</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action will permanently delete all notification history. 
+                This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  clearToasts();
+                  notification.showSuccess("Notifications Cleared", "All notification history has been cleared.");
+                }}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Clear All
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    );
+  }
   
+  // Desktop view
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">

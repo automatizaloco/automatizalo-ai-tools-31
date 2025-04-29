@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { UserForm } from '@/components/admin/users/UserForm';
@@ -9,6 +8,7 @@ import { User } from '@/types/user';
 import { useAuth } from '@/context/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useNotification } from '@/hooks/useNotification';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -17,6 +17,7 @@ const UserManagement = () => {
   const [syncingCurrentUser, setSyncingCurrentUser] = useState(false);
   const { user } = useAuth();
   const notification = useNotification();
+  const isMobile = useIsMobile();
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -127,17 +128,28 @@ const UserManagement = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <div className="flex space-x-2">
-          <Button onClick={() => setIsDialogOpen(true)}>Add New User</Button>
-          <Button variant="outline" onClick={fetchUsers} disabled={isLoading}>
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            onClick={() => setIsDialogOpen(true)}
+            className="w-full sm:w-auto"
+          >
+            Add New User
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={fetchUsers} 
+            disabled={isLoading}
+            className="w-full sm:w-auto"
+          >
             Refresh User List
           </Button>
           <Button 
             variant="secondary" 
             onClick={syncCurrentUser} 
             disabled={syncingCurrentUser}
+            className="w-full sm:w-auto"
           >
             {syncingCurrentUser ? 'Syncing...' : 'Sync My Account'}
           </Button>
@@ -155,7 +167,9 @@ const UserManagement = () => {
       ) : (
         <>
           {users.length > 0 ? (
-            <UserTable users={users} onUserUpdated={fetchUsers} />
+            <div className="overflow-x-auto">
+              <UserTable users={users} onUserUpdated={fetchUsers} />
+            </div>
           ) : (
             <div className="border rounded-lg p-8 text-center">
               <p className="text-gray-500 mb-1">No users found</p>
@@ -168,7 +182,7 @@ const UserManagement = () => {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className={isMobile ? "max-w-[95%] p-4" : ""}>
           <DialogHeader>
             <DialogTitle>Create New User</DialogTitle>
           </DialogHeader>

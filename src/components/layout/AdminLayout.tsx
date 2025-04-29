@@ -21,11 +21,6 @@ import AdminNavTabs from './admin/AdminNavTabs';
 import AdminContent from './admin/AdminContent';
 import { AdminRouteType } from './admin/types';
 import { useNotification } from '@/hooks/useNotification';
-import { 
-  Collapsible, 
-  CollapsibleContent, 
-  CollapsibleTrigger 
-} from "@/components/ui/collapsible";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -158,13 +153,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       />
       
       <div className={`${isMobile ? 'px-2 py-3' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
-        {!isMobile && (
-          <AdminNavTabs 
-            activeTab={activeTab}
-            adminRoutes={adminRoutes}
-            onTabChange={handleTabChange}
-          />
-        )}
+        <AdminNavTabs 
+          activeTab={activeTab}
+          adminRoutes={adminRoutes}
+          onTabChange={handleTabChange}
+        />
         
         <AdminContent>
           {children}

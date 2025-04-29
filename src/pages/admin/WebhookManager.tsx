@@ -14,6 +14,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const WebhookManager = () => {
   const [activeSection, setActiveSection] = useState('blog-creation');

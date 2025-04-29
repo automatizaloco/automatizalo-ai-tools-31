@@ -110,14 +110,14 @@ export const BlogFormContainer: React.FC<BlogFormContainerProps> = ({
         .from('blog_translations')
         .upsert([
           {
-            blog_id: blogId,
+            blog_post_id: blogId,
             language: 'fr',
             title: translations.fr.title,
             excerpt: translations.fr.excerpt || '',
             content: translations.fr.content
           },
           {
-            blog_id: blogId,
+            blog_post_id: blogId,
             language: 'es',
             title: translations.es.title,
             excerpt: translations.es.excerpt || '',

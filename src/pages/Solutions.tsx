@@ -8,6 +8,7 @@ import EditableText from "@/components/admin/EditableText";
 import { Link } from 'react-router-dom';
 import { useContactInfo } from "@/stores/contactInfoStore";
 import { useEffect } from "react";
+
 const Solutions = () => {
   const {
     t
@@ -19,10 +20,13 @@ const Solutions = () => {
     contactInfo,
     fetchContactInfo
   } = useContactInfo();
+  
   useEffect(() => {
     console.log("Solutions page: Fetching contact info");
     fetchContactInfo();
   }, [fetchContactInfo]);
+
+  // Add lead generation as the fourth solution card
   const solutionCards = [{
     title: t("solutions.chatbots.title"),
     description: t("solutions.chatbots.description"),
@@ -41,7 +45,15 @@ const Solutions = () => {
     icon: <Database className="h-5 w-5" />,
     features: [t("solutions.aiAgents.feature1"), t("solutions.aiAgents.feature2"), t("solutions.aiAgents.feature3"), t("solutions.leadGeneration.feature1")],
     imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+  }, {
+    title: t("solutions.leadGeneration.title"),
+    description: t("solutions.leadGeneration.description"),
+    icon: <Users className="h-5 w-5" />,
+    features: [t("solutions.leadGeneration.feature1"), t("solutions.leadGeneration.feature2"), t("solutions.leadGeneration.feature3"), t("solutions.leadGeneration.feature4")],
+    imageUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
   }];
+
+  // Keep existing aiWorkflowFeatures and conversationalAIFeatures arrays
   const aiWorkflowFeatures = [{
     icon: <Bot className="h-5 w-5 text-gray-700" />,
     title: t("solutions.chatbots.feature1"),
@@ -59,6 +71,7 @@ const Solutions = () => {
     title: t("solutions.aiAgents.feature1"),
     description: t("solutions.aiAgents.description")
   }];
+  
   const conversationalAIFeatures = [{
     icon: <MessageSquare className="h-5 w-5 text-gray-700" />,
     title: t("solutions.chatbots.feature2"),
@@ -76,6 +89,8 @@ const Solutions = () => {
     title: t("solutions.aiAgents.feature2"),
     description: t("solutions.aiAgents.description")
   }];
+  
+  // Add new section for lead generation features
   const dataIntelligenceFeatures = [{
     icon: <Database className="h-5 w-5 text-gray-700" />,
     title: t("solutions.chatbots.feature3"),
@@ -93,6 +108,68 @@ const Solutions = () => {
     title: t("solutions.aiAgents.feature3"),
     description: t("solutions.aiAgents.description")
   }];
+
+  // Handle opening WhatsApp when the button is clicked
+  const handleWhatsAppClick = () => {
+    // Use the contactInfo.whatsapp or fall back to a default number
+    const whatsappNumber = contactInfo?.whatsapp || "+57 3192963363";
+    // Remove any non-digit characters from the phone number
+    const cleanPhone = whatsappNumber.replace(/\D/g, '');
+    // Create default message
+    const defaultMessage = t('contact.whatsapp.defaultMessage');
+    const encodedMessage = encodeURIComponent(defaultMessage);
+    
+    // Open WhatsApp with the specified number and message
+    window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
+  };
+
+  // Create section specifically for lead generation
+  const leadGenerationSection = (
+    <div className="mb-24 scroll-mt-24" id="lead-generation">
+      <div className="flex flex-col lg:flex-row items-center gap-12 mb-16">
+        <div className="lg:w-1/2">
+          <h2 className="text-3xl font-semibold text-gray-900 mb-6">
+            {isAuthenticated ? <EditableText id="solutions-leadgeneration-title" defaultText={t("solutions.leadGeneration.title")} /> : t("solutions.leadGeneration.title")}
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {isAuthenticated ? <EditableText id="solutions-leadgeneration-description" defaultText={t("solutions.leadGeneration.description")} /> : t("solutions.leadGeneration.description")}
+          </p>
+          <p className="text-gray-600">
+            {isAuthenticated ? <EditableText id="solutions-leadgeneration-subtitle" defaultText={t("solutions.leadGeneration.subtitle")} /> : t("solutions.leadGeneration.subtitle")}
+          </p>
+        </div>
+        <div className="lg:w-1/2">
+          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt={t("solutions.leadGeneration.title")} className="rounded-xl shadow-lg" />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[
+          {
+            icon: <Users className="h-5 w-5 text-gray-700" />,
+            title: t("solutions.leadGeneration.feature1"),
+            description: t("solutions.leadGeneration.description")
+          },
+          {
+            icon: <MessageSquare className="h-5 w-5 text-gray-700" />,
+            title: t("solutions.leadGeneration.feature2"),
+            description: t("solutions.leadGeneration.description")
+          },
+          {
+            icon: <Clock className="h-5 w-5 text-gray-700" />,
+            title: t("solutions.leadGeneration.feature3"),
+            description: t("solutions.leadGeneration.description")
+          },
+          {
+            icon: <BarChart className="h-5 w-5 text-gray-700" />,
+            title: t("solutions.leadGeneration.feature4"),
+            description: t("solutions.leadGeneration.description")
+          }
+        ].map((feature, index) => <ProductFeature key={index} icon={feature.icon} title={feature.title} description={feature.description} index={index} isEditable={isAuthenticated} />)}
+      </div>
+    </div>
+  );
+
   return <div className="min-h-screen flex flex-col bg-white">
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
@@ -109,7 +186,7 @@ const Solutions = () => {
             <h2 className="text-3xl font-semibold text-gray-900 text-center mb-12">
               {isAuthenticated ? <EditableText id="solutions-section-title" defaultText={t("solutions.sectionTitle")} /> : t("solutions.sectionTitle")}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {solutionCards.map((solution, index) => <SolutionCard key={index} title={solution.title} description={solution.description} icon={solution.icon} features={solution.features} imageUrl={solution.imageUrl} delay={index * 100} index={index} isEditable={isAuthenticated} />)}
             </div>
           </div>
@@ -183,6 +260,9 @@ const Solutions = () => {
             </div>
           </div>
           
+          {/* Add new lead generation section */}
+          {leadGenerationSection}
+          
           <div className="bg-gray-50 rounded-2xl p-10 lg:p-16 text-center">
             <h2 className="text-3xl font-semibold text-gray-900 mb-6">
               {isAuthenticated ? <EditableText id="solutions-cta-title" defaultText={t("solutions.cta.title")} /> : t("solutions.cta.title")}
@@ -191,10 +271,12 @@ const Solutions = () => {
               {isAuthenticated ? <EditableText id="solutions-cta-subtitle" defaultText={t("solutions.cta.subtitle")} /> : t("solutions.cta.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button className="bg-gray-900 hover:bg-gray-800 py-6 px-8 rounded-xl text-base">
+              <Button 
+                className="bg-gray-900 hover:bg-gray-800 py-6 px-8 rounded-xl text-base"
+                onClick={handleWhatsAppClick}
+              >
                 {isAuthenticated ? <EditableText id="solutions-cta-button" defaultText={t("solutions.cta.button")} /> : t("solutions.cta.button")}
               </Button>
-              
             </div>
           </div>
         </div>

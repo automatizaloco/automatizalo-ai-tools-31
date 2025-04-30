@@ -115,6 +115,7 @@ const Navbar = () => {
               className="text-slate-700 p-2 z-10"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle Menu"
+              type="button"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

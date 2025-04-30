@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { Routes, Route, useLocation, Outlet, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import AdminLayout from './components/layout/AdminLayout';
@@ -33,6 +33,14 @@ import UserManagement from './pages/admin/UserManagement';
 import AutomationManager from './pages/admin/AutomationManager';
 import SupportManager from './pages/admin/SupportManager';
 
+const LazyLoadedRoute = ({ component: Component, ...rest }: { component: React.ComponentType<any>, [key: string]: any }) => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Component {...rest} />
+    </Suspense>
+  );
+};
+
 function App() {
   const location = useLocation();
 
@@ -44,40 +52,42 @@ function App() {
     <AuthProvider>
       <LanguageProvider>
         <PersistentToastProvider>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Index />} />
-              <Route path="contact" element={<Contact />} />
-              <Route path="blog" element={<Blog />} />
-              <Route path="blog/:slug" element={<BlogPost />} />
-              <Route path="solutions" element={<Solutions />} />
-              <Route path="client-portal" element={<ClientPortal />} />
-              <Route path="client-portal/support/new" element={<ClientPortal />} />
-              <Route path="client-portal/support/:ticketId" element={<ClientPortal />} />
-              <Route path="unsubscribe" element={<Unsubscribe />} />
-              <Route path="privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-            
-            <Route path="/login" element={<Login />} />
-            
-            <Route path="/admin" element={<AdminLayout><Outlet /></AdminLayout>}>
-              <Route index element={<Navigate to="/admin/content" replace />} />
-              <Route path="content" element={<ContentManager />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="testimonials" element={<TestimonialManager />} />
-              <Route path="webhooks" element={<WebhookManager />} />
-              <Route path="blog" element={<BlogAdmin />} />
-              <Route path="blog/new" element={<BlogPostForm />} />
-              <Route path="blog/edit/:id" element={<BlogPostForm />} />
-              <Route path="newsletters" element={<NewsletterAdmin />} />
-              <Route path="notifications" element={<NotificationAdmin />} />
-              <Route path="automatic-blog" element={<AutomaticBlog />} />
-              <Route path="automations" element={<AutomationManager />} />
-              <Route path="support" element={<SupportManager />} />
-            </Route>
-          </Routes>
-          <Toaster />
+          <div className="app-wrapper">
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Index />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="blog" element={<Blog />} />
+                <Route path="blog/:slug" element={<BlogPost />} />
+                <Route path="solutions" element={<Solutions />} />
+                <Route path="client-portal" element={<ClientPortal />} />
+                <Route path="client-portal/support/new" element={<ClientPortal />} />
+                <Route path="client-portal/support/:ticketId" element={<ClientPortal />} />
+                <Route path="unsubscribe" element={<Unsubscribe />} />
+                <Route path="privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+              
+              <Route path="/login" element={<Login />} />
+              
+              <Route path="/admin" element={<AdminLayout><Outlet /></AdminLayout>}>
+                <Route index element={<Navigate to="/admin/content" replace />} />
+                <Route path="content" element={<ContentManager />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="testimonials" element={<TestimonialManager />} />
+                <Route path="webhooks" element={<WebhookManager />} />
+                <Route path="blog" element={<BlogAdmin />} />
+                <Route path="blog/new" element={<BlogPostForm />} />
+                <Route path="blog/edit/:id" element={<BlogPostForm />} />
+                <Route path="newsletters" element={<NewsletterAdmin />} />
+                <Route path="notifications" element={<NotificationAdmin />} />
+                <Route path="automatic-blog" element={<AutomaticBlog />} />
+                <Route path="automations" element={<AutomationManager />} />
+                <Route path="support" element={<SupportManager />} />
+              </Route>
+            </Routes>
+            <Toaster />
+          </div>
         </PersistentToastProvider>
       </LanguageProvider>
     </AuthProvider>

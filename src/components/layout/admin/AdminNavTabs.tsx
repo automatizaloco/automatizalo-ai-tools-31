@@ -4,12 +4,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminRouteType } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from '@/components/ui/accordion';
-import { 
   NavigationMenu,
   NavigationMenuList,
   NavigationMenuItem,
@@ -34,7 +28,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
   // Scroll active tab into view on mobile
   useEffect(() => {
     if (isMobile && scrollRef.current) {
-      const activeElement = scrollRef.current.querySelector(`[data-state="active"]`);
+      const activeElement = scrollRef.current.querySelector(`[data-active="true"]`);
       if (activeElement) {
         activeElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
@@ -60,6 +54,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
                         ? "bg-primary text-primary-foreground" 
                         : "hover:bg-accent text-muted-foreground"
                     )}
+                    data-active={isActive}
                   >
                     {Icon && <Icon className="h-4 w-4" />}
                     <span>{route.label}</span>
@@ -91,6 +86,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
                       ? "bg-background text-foreground border-b-2 border-primary" 
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   )}
+                  data-active={isActive}
                 >
                   {Icon && <Icon className="h-4 w-4" />}
                   <span>{route.label}</span>

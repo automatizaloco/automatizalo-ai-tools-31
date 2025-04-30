@@ -165,6 +165,37 @@ const AutomationManager = () => {
     notification.showInfo('Coming Soon', 'Edit functionality will be implemented soon');
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      console.log(`Deleting automation with ID: ${id}`);
+      
+      const { error } = await supabase
+        .from('automations')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        console.error('Error deleting automation:', error);
+        console.log('Error details:', error.message, error.details, error.hint);
+        notification.showError(
+          'Error', 
+          `Could not delete automation: ${error.message}`
+        );
+        return;
+      }
+      
+      console.log('Automation deleted successfully');
+      setAutomations(prevAutomations => prevAutomations.filter(item => item.id !== id));
+      toast.success('Automation deleted successfully');
+    } catch (error: any) {
+      console.error('Exception in handleDelete:', error);
+      notification.showError(
+        'Error',
+        `An unexpected error occurred: ${error.message || 'Unknown error'}`
+      );
+    }
+  };
+
   if (isVerifying) {
     return (
       <div className="container mx-auto px-4 py-6 flex justify-center items-center h-64">
@@ -221,6 +252,7 @@ const AutomationManager = () => {
             isLoading={isLoading}
             onToggleStatus={handleToggleStatus}
             onEdit={handleEdit}
+            onDelete={handleDelete}
             error={fetchError}
             onRetry={fetchAutomations}
           />

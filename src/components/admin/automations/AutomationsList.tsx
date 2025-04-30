@@ -1,7 +1,18 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, Trash } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Automation } from '@/types/automation';
 
 interface AutomationsListProps {
@@ -9,6 +20,7 @@ interface AutomationsListProps {
   isLoading: boolean;
   onToggleStatus: (id: string, currentlyActive: boolean) => Promise<void>;
   onEdit: (automation: Automation) => void;
+  onDelete?: (id: string) => Promise<void>; // Add delete handler
   error: string | null;
   onRetry: () => void;
 }
@@ -18,10 +30,12 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
   isLoading,
   onToggleStatus,
   onEdit,
+  onDelete,
   error,
   onRetry
 }) => {
   const [pendingIds, setPendingIds] = React.useState<string[]>([]);
+  const [automationToDelete, setAutomationToDelete] = React.useState<string | null>(null);
 
   const handleToggleStatus = async (id: string, currentlyActive: boolean) => {
     try {
@@ -31,6 +45,20 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
       console.error('Error toggling automation status:', error);
     } finally {
       setPendingIds(prev => prev.filter(pendingId => pendingId !== id));
+    }
+  };
+
+  const handleDelete = async () => {
+    if (automationToDelete && onDelete) {
+      try {
+        setPendingIds(prev => [...prev, automationToDelete]);
+        await onDelete(automationToDelete);
+      } catch (error) {
+        console.error('Error deleting automation:', error);
+      } finally {
+        setPendingIds(prev => prev.filter(id => id !== automationToDelete));
+        setAutomationToDelete(null);
+      }
     }
   };
 
@@ -84,48 +112,88 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {automations.map((automation) => (
-        <Card key={automation.id} className={automation.active ? 'border-green-300' : 'border-gray-300 opacity-75'}>
-          <CardContent className="pt-6">
-            <div className="flex justify-between">
-              <div>
-                <h3 className="font-bold text-lg">{automation.title}</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Installation: ${automation.installation_price.toFixed(2)} | 
-                  Monthly: ${automation.monthly_price.toFixed(2)}
-                </p>
-                <p className="mt-2 text-gray-600">{automation.description}</p>
-              </div>
-              <div className="flex flex-col space-y-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => onEdit(automation)}
-                >
-                  Edit
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant={automation.active ? "destructive" : "default"}
-                  onClick={() => handleToggleStatus(automation.id, automation.active)}
-                  disabled={pendingIds.includes(automation.id)}
-                >
-                  {pendingIds.includes(automation.id) ? (
-                    <>
-                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                      {automation.active ? 'Deactivating...' : 'Activating...'}
-                    </>
-                  ) : (
-                    automation.active ? 'Deactivate' : 'Activate'
+    <>
+      <div className="space-y-4">
+        {automations.map((automation) => (
+          <Card key={automation.id} className={automation.active ? 'border-green-300' : 'border-gray-300 opacity-75'}>
+            <CardContent className="pt-6">
+              <div className="flex justify-between">
+                <div>
+                  <h3 className="font-bold text-lg">{automation.title}</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Installation: ${automation.installation_price.toFixed(2)} | 
+                    Monthly: ${automation.monthly_price.toFixed(2)}
+                  </p>
+                  <p className="mt-2 text-gray-600">{automation.description}</p>
+                </div>
+                <div className="flex flex-col space-y-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => onEdit(automation)}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={automation.active ? "destructive" : "default"}
+                    onClick={() => handleToggleStatus(automation.id, automation.active)}
+                    disabled={pendingIds.includes(automation.id)}
+                  >
+                    {pendingIds.includes(automation.id) ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        {automation.active ? 'Deactivating...' : 'Activating...'}
+                      </>
+                    ) : (
+                      automation.active ? 'Deactivate' : 'Activate'
+                    )}
+                  </Button>
+                  {onDelete && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      onClick={() => setAutomationToDelete(automation.id)}
+                      disabled={pendingIds.includes(automation.id)}
+                    >
+                      {pendingIds.includes(automation.id) && automation.id === automationToDelete ? (
+                        <>
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash className="h-3 w-3 mr-1" />
+                          Delete
+                        </>
+                      )}
+                    </Button>
                   )}
-                </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <AlertDialog open={!!automationToDelete} onOpenChange={() => setAutomationToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this automation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the automation and remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

@@ -1,9 +1,21 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminRouteType } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from '@/components/ui/accordion';
+import { 
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink
+} from '@/components/ui/navigation-menu';
+import { cn } from '@/lib/utils';
 
 interface AdminNavTabsProps {
   activeTab: string;
@@ -17,54 +29,78 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
   onTabChange
 }) => {
   const isMobile = useIsMobile();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll active tab into view on mobile
+  useEffect(() => {
+    if (isMobile && scrollRef.current) {
+      const activeElement = scrollRef.current.querySelector(`[data-state="active"]`);
+      if (activeElement) {
+        activeElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [activeTab, isMobile]);
   
   if (isMobile) {
     return (
-      <Accordion 
-        type="single" 
-        collapsible 
-        defaultValue={activeTab}
-        className="w-full mb-4"
-        onValueChange={onTabChange}
-      >
-        {adminRoutes.map((route) => {
-          const Icon = route.icon || null;
-          return (
-            <AccordionItem key={route.value} value={route.value}>
-              <AccordionTrigger className="py-2">
-                <div className="flex items-center gap-1">
-                  {Icon && <Icon className="h-4 w-4" />}
-                  <span>{route.label}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                {/* Content will be rendered by the parent component */}
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+      <div ref={scrollRef} className="w-full overflow-x-auto mb-4 no-scrollbar">
+        <NavigationMenu className="max-w-none w-auto">
+          <NavigationMenuList className="flex space-x-2 p-1">
+            {adminRoutes.map((route) => {
+              const Icon = route.icon || null;
+              const isActive = activeTab === route.value;
+              
+              return (
+                <NavigationMenuItem key={route.value}>
+                  <NavigationMenuLink
+                    onClick={() => onTabChange(route.value)}
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-2 rounded-md text-sm",
+                      isActive 
+                        ? "bg-primary text-primary-foreground" 
+                        : "hover:bg-accent text-muted-foreground"
+                    )}
+                  >
+                    {Icon && <Icon className="h-4 w-4" />}
+                    <span>{route.label}</span>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              );
+            })}
+          </NavigationMenuList>
+        </NavigationMenu>
+      </div>
     );
   }
   
   return (
-    <Tabs 
-      value={activeTab}
-      className="w-full mb-8"
-      onValueChange={onTabChange}
-    >
-      <TabsList className="grid grid-cols-5 md:grid-cols-7 w-full overflow-x-auto">
-        {adminRoutes.map((route) => {
-          const Icon = route.icon || null;
-          return (
-            <TabsTrigger key={route.value} value={route.value} className="flex items-center gap-1">
-              {Icon && <Icon className="h-4 w-4" />}
-              <span>{route.label}</span>
-            </TabsTrigger>
-          );
-        })}
-      </TabsList>
-    </Tabs>
+    <div className="w-full mb-8 border-b">
+      <NavigationMenu className="max-w-none">
+        <NavigationMenuList className="flex space-x-1 p-1">
+          {adminRoutes.map((route) => {
+            const Icon = route.icon || null;
+            const isActive = activeTab === route.value;
+            
+            return (
+              <NavigationMenuItem key={route.value}>
+                <NavigationMenuLink
+                  onClick={() => onTabChange(route.value)}
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    isActive 
+                      ? "bg-background text-foreground border-b-2 border-primary" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                >
+                  {Icon && <Icon className="h-4 w-4" />}
+                  <span>{route.label}</span>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            );
+          })}
+        </NavigationMenuList>
+      </NavigationMenu>
+    </div>
   );
 };
 

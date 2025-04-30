@@ -23,6 +23,14 @@ const BlogPostsTable = ({ posts, onToggleStatus, onEdit, onDelete }: BlogPostsTa
   const hasTranslations = (post: BlogPost) => {
     return post.translations && Object.keys(post.translations).length > 0;
   };
+  
+  // Sort posts by date (newest first)
+  const sortedPosts = [...posts].sort((a, b) => {
+    // Try to parse dates and compare them
+    const dateA = new Date(a.created_at || a.date).getTime();
+    const dateB = new Date(b.created_at || b.date).getTime();
+    return dateB - dateA; // Descending order (newest first)
+  });
 
   if (posts.length === 0) {
     return (
@@ -46,7 +54,7 @@ const BlogPostsTable = ({ posts, onToggleStatus, onEdit, onDelete }: BlogPostsTa
         </TableRow>
       </TableHeader>
       <TableBody>
-        {posts.map((post) => (
+        {sortedPosts.map((post) => (
           <TableRow key={post.id} className="hover:bg-gray-50">
             <TableCell className="font-medium">{post.title}</TableCell>
             <TableCell>{post.category}</TableCell>

@@ -26,9 +26,9 @@ const BlogPostsTable = ({ posts, onToggleStatus, onEdit, onDelete }: BlogPostsTa
   
   // Sort posts by date (newest first)
   const sortedPosts = [...posts].sort((a, b) => {
-    // Try to parse dates and compare them
-    const dateA = new Date(a.created_at || a.date).getTime();
-    const dateB = new Date(b.created_at || b.date).getTime();
+    // Use date property instead of created_at (which doesn't exist in BlogPost type)
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
     return dateB - dateA; // Descending order (newest first)
   });
 

@@ -21,15 +21,22 @@ const Blog = () => {
   const categories = ["All", "AI", "Automation", "Technology"];
 
   // Fetch blog posts using React Query with better error handling and retry logic
-  const { data: blogPosts = [], isLoading, isError, error } = useQuery({
+  const { 
+    data: blogPosts = [], 
+    isLoading, 
+    isError, 
+    error 
+  } = useQuery({
     queryKey: ['blogPosts'],
     queryFn: fetchBlogPosts,
     staleTime: 5 * 60 * 1000, // 5 minutes before refetching
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    retry: 2, // Only retry twice
-    onError: (err) => {
-      console.error("Failed to load blog posts:", err);
-      toast.error("Failed to load blog posts. Please try again.");
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: 2,
+    onSettled: (data, error) => {
+      if (error) {
+        console.error("Failed to load blog posts:", error);
+        toast.error("Failed to load blog posts. Please try again.");
+      }
     }
   });
 
@@ -77,7 +84,7 @@ const Blog = () => {
             <LoadingState />
           ) : (
             <>
-              <FeaturedPosts posts={blogPosts} />
+              <FeaturedPosts posts={blogPosts as BlogPost[]} />
               <CategoryFilter 
                 categories={categories} 
                 activeCategory={activeCategory}

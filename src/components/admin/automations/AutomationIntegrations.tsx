@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,16 +46,20 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       
       setIsLoading(true);
       try {
+        // Use a generic query with type casting to work around TypeScript limitations
         const { data, error } = await supabase
           .from('automation_integrations')
           .select('*')
-          .eq('automation_id', automationId);
+          .eq('automation_id', automationId) as unknown as { 
+            data: Integration[] | null; 
+            error: Error | null 
+          };
           
         if (error) throw error;
         
         if (data && data.length > 0) {
           // Sort integrations by type
-          data.forEach((integration) => {
+          data.forEach((integration: Integration) => {
             if (integration.integration_type === 'webhook') {
               setWebhookData(integration);
             } else if (integration.integration_type === 'form') {
@@ -128,7 +131,9 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             production_url: webhookData.production_url,
             updated_at: new Date().toISOString()
           })
-          .eq('id', webhookData.id);
+          .eq('id', webhookData.id) as unknown as { 
+            error: Error | null 
+          };
           
         if (error) throw error;
       } else {
@@ -140,7 +145,10 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             test_url: webhookData.test_url,
             production_url: webhookData.production_url
           })
-          .select();
+          .select() as unknown as { 
+            data: Integration[] | null; 
+            error: Error | null 
+          };
           
         if (error) throw error;
         
@@ -170,7 +178,9 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             integration_code: formData.integration_code,
             updated_at: new Date().toISOString()
           })
-          .eq('id', formData.id);
+          .eq('id', formData.id) as unknown as { 
+            error: Error | null 
+          };
           
         if (error) throw error;
       } else {
@@ -181,7 +191,10 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             integration_type: 'form',
             integration_code: formData.integration_code
           })
-          .select();
+          .select() as unknown as { 
+            data: Integration[] | null; 
+            error: Error | null 
+          };
           
         if (error) throw error;
         
@@ -211,7 +224,9 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             integration_code: tableData.integration_code,
             updated_at: new Date().toISOString()
           })
-          .eq('id', tableData.id);
+          .eq('id', tableData.id) as unknown as { 
+            error: Error | null 
+          };
           
         if (error) throw error;
       } else {
@@ -222,7 +237,10 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             integration_type: 'table',
             integration_code: tableData.integration_code
           })
-          .select();
+          .select() as unknown as { 
+            data: Integration[] | null; 
+            error: Error | null 
+          };
           
         if (error) throw error;
         

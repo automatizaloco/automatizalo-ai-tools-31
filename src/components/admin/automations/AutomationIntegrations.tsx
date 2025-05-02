@@ -47,8 +47,8 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       
       setIsLoading(true);
       try {
-        // Use a simple type cast to work around TypeScript limitations
-        const response = await supabase
+        // Use the supabase client with any type to work around TypeScript limitations
+        const response = await (supabase as any)
           .from('automation_integrations')
           .select('*')
           .eq('automation_id', automationId);
@@ -125,7 +125,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     try {
       // If it has an ID, update; otherwise, insert
       if (webhookData.id) {
-        const response = await supabase
+        const response = await (supabase as any)
           .from('automation_integrations')
           .update({
             test_url: webhookData.test_url,
@@ -137,7 +137,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
         const error = response.error;
         if (error) throw error;
       } else {
-        const response = await supabase
+        const response = await (supabase as any)
           .from('automation_integrations')
           .insert({
             automation_id: automationId,
@@ -171,7 +171,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     setIsSaving(true);
     try {
       if (formData.id) {
-        const response = await supabase
+        const response = await (supabase as any)
           .from('automation_integrations')
           .update({
             integration_code: formData.integration_code,
@@ -182,7 +182,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
         const error = response.error;
         if (error) throw error;
       } else {
-        const response = await supabase
+        const response = await (supabase as any)
           .from('automation_integrations')
           .insert({
             automation_id: automationId,
@@ -215,7 +215,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     setIsSaving(true);
     try {
       if (tableData.id) {
-        const response = await supabase
+        const response = await (supabase as any)
           .from('automation_integrations')
           .update({
             integration_code: tableData.integration_code,
@@ -226,7 +226,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
         const error = response.error;
         if (error) throw error;
       } else {
-        const response = await supabase
+        const response = await (supabase as any)
           .from('automation_integrations')
           .insert({
             automation_id: automationId,

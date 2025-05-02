@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,8 @@ const AutomationManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [selectedAutomation, setSelectedAutomation] = useState<Automation | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const { isAdmin, isVerifying } = useAdminVerification();
   const notification = useNotification();
 
@@ -84,30 +87,73 @@ const AutomationManager = () => {
   const handleSubmit = async (formData: Omit<Automation, 'id' | 'created_at' | 'updated_at' | 'active'>) => {
     try {
       setIsSaving(true);
-      console.log('Creating automation with data:', formData);
       
-      const { data, error } = await supabase
-        .from('automations')
-        .insert([{
-          ...formData,
-          active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
-        .select();
+      if (isEditing && selectedAutomation) {
+        // Update existing automation
+        console.log('Updating automation with ID:', selectedAutomation.id);
+        console.log('Update data:', formData);
         
-      if (error) {
-        console.error('Error creating automation:', error);
-        console.log('Error details:', error.message, error.details, error.hint);
-        notification.showError(
-          'Error', 
-          `Could not create the automation: ${error.message}`
+        const { data, error } = await supabase
+          .from('automations')
+          .update({
+            ...formData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedAutomation.id)
+          .select();
+          
+        if (error) {
+          console.error('Error updating automation:', error);
+          console.log('Error details:', error.message, error.details, error.hint);
+          notification.showError(
+            'Error', 
+            `Could not update the automation: ${error.message}`
+          );
+          return;
+        }
+        
+        console.log('Automation updated successfully:', data);
+        notification.showSuccess('Success', 'Automation updated successfully');
+        
+        // Update the local state
+        setAutomations(prevAutomations => 
+          prevAutomations.map(item => 
+            item.id === selectedAutomation.id ? { ...item, ...formData } : item
+          )
         );
-        return;
+        
+        // Exit edit mode
+        setIsEditing(false);
+        setSelectedAutomation(null);
+      } else {
+        // Create new automation
+        console.log('Creating automation with data:', formData);
+        
+        const { data, error } = await supabase
+          .from('automations')
+          .insert([{
+            ...formData,
+            active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }])
+          .select();
+          
+        if (error) {
+          console.error('Error creating automation:', error);
+          console.log('Error details:', error.message, error.details, error.hint);
+          notification.showError(
+            'Error', 
+            `Could not create the automation: ${error.message}`
+          );
+          return;
+        }
+        
+        console.log('Automation created successfully:', data);
+        notification.showSuccess('Success', 'Automation created successfully');
       }
       
-      console.log('Automation created successfully:', data);
-      notification.showSuccess('Success', 'Automation created successfully');
+      // Refresh the automations list
       fetchAutomations();
     } catch (error: any) {
       console.error('Exception in handleSubmit:', error);
@@ -162,7 +208,15 @@ const AutomationManager = () => {
   };
 
   const handleEdit = (automation: Automation) => {
-    notification.showInfo('Coming Soon', 'Edit functionality will be implemented soon');
+    setSelectedAutomation(automation);
+    setIsEditing(true);
+    // Scroll to the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setSelectedAutomation(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -187,6 +241,12 @@ const AutomationManager = () => {
       console.log('Automation deleted successfully');
       setAutomations(prevAutomations => prevAutomations.filter(item => item.id !== id));
       toast.success('Automation deleted successfully');
+      
+      // If the deleted automation was being edited, exit edit mode
+      if (selectedAutomation?.id === id) {
+        setIsEditing(false);
+        setSelectedAutomation(null);
+      }
     } catch (error: any) {
       console.error('Exception in handleDelete:', error);
       notification.showError(
@@ -223,18 +283,28 @@ const AutomationManager = () => {
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Automation Management</h1>
-        <Button 
-          onClick={fetchAutomations} 
-          variant="outline" 
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Loading...
-            </>
-          ) : 'Refresh'}
-        </Button>
+        <div className="flex space-x-2">
+          {isEditing && (
+            <Button 
+              onClick={handleCancelEdit} 
+              variant="outline" 
+            >
+              Cancel Edit
+            </Button>
+          )}
+          <Button 
+            onClick={fetchAutomations} 
+            variant="outline" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : 'Refresh'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -242,11 +312,15 @@ const AutomationManager = () => {
           <AutomationForm 
             onSubmit={handleSubmit}
             isSaving={isSaving}
+            automation={selectedAutomation || undefined}
+            isEditing={isEditing}
           />
         </div>
 
         <div className="lg:col-span-2">
-          <h2 className="text-xl font-semibold mb-4">Automations List</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            {isEditing ? 'Edit Mode: Select Another Automation to Edit' : 'Automations List'}
+          </h2>
           <AutomationsList
             automations={automations}
             isLoading={isLoading}

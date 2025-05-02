@@ -61,8 +61,10 @@ function App() {
                 <Route path="blog/:slug" element={<BlogPost />} />
                 <Route path="solutions" element={<Solutions />} />
                 <Route path="client-portal" element={<ClientPortal />} />
-                <Route path="client-portal/support/new" element={<ClientPortal />} />
-                <Route path="client-portal/support/:ticketId" element={<ClientPortal />} />
+                <Route path="client-portal/marketplace" element={<ClientPortal defaultTab="marketplace" />} />
+                <Route path="client-portal/automations/:automationId" element={<ClientPortal defaultTab="my-automations" view="details" />} />
+                <Route path="client-portal/support/new" element={<ClientPortal defaultTab="support" view="new-ticket" />} />
+                <Route path="client-portal/support/:ticketId" element={<ClientPortal defaultTab="support" view="ticket-detail" />} />
                 <Route path="unsubscribe" element={<Unsubscribe />} />
                 <Route path="privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="*" element={<NotFound />} />

@@ -1,12 +1,15 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Upload, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { FileUploader } from '@/components/admin/FileUploader';
+import { supabase } from '@/integrations/supabase/client';
+import { Switch } from '@/components/ui/switch';
 
 interface AutomationFormProps {
   onSubmit: (data: {
@@ -15,19 +18,65 @@ interface AutomationFormProps {
     installation_price: number;
     monthly_price: number;
     image_url?: string;
+    has_custom_prompt?: boolean;
+    has_webhook?: boolean;
+    has_form_integration?: boolean;
+    has_table_integration?: boolean;
   }) => Promise<void>;
   isSaving: boolean;
+  automation?: {
+    id: string;
+    title: string;
+    description: string;
+    installation_price: number;
+    monthly_price: number;
+    image_url?: string;
+    has_custom_prompt?: boolean;
+    has_webhook?: boolean;
+    has_form_integration?: boolean;
+    has_table_integration?: boolean;
+  };
+  isEditing?: boolean;
 }
 
-const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) => {
-  const [formData, setFormData] = React.useState({
+const AutomationForm: React.FC<AutomationFormProps> = ({ 
+  onSubmit, 
+  isSaving, 
+  automation = null, 
+  isEditing = false 
+}) => {
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     installation_price: 0,
     monthly_price: 0,
     image_url: '',
+    has_custom_prompt: false,
+    has_webhook: false,
+    has_form_integration: false,
+    has_table_integration: false,
   });
-  const [errorFields, setErrorFields] = React.useState<string[]>([]);
+  const [errorFields, setErrorFields] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showImageUrlField, setShowImageUrlField] = useState(true);
+
+  // Load existing automation data when editing
+  useEffect(() => {
+    if (automation) {
+      setFormData({
+        title: automation.title || '',
+        description: automation.description || '',
+        installation_price: automation.installation_price || 0,
+        monthly_price: automation.monthly_price || 0,
+        image_url: automation.image_url || '',
+        has_custom_prompt: automation.has_custom_prompt || false,
+        has_webhook: automation.has_webhook || false,
+        has_form_integration: automation.has_form_integration || false,
+        has_table_integration: automation.has_table_integration || false,
+      });
+      setShowImageUrlField(!!automation.image_url);
+    }
+  }, [automation]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -39,6 +88,53 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
     // Clear error state when field is modified
     if (errorFields.includes(name)) {
       setErrorFields(prev => prev.filter(field => field !== name));
+    }
+  };
+
+  const handleSwitchChange = (name: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+    }));
+  };
+
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    setIsUploading(true);
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `automations/${fileName}`;
+      
+      // Upload image to Supabase Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('content')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('content')
+        .getPublicUrl(filePath);
+      
+      // Update form data with the new image URL
+      setFormData(prev => ({
+        ...prev,
+        image_url: publicUrl
+      }));
+      
+      setShowImageUrlField(false);
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image. Please try again.');
+      return null;
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -64,14 +160,21 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
     
     try {
       await onSubmit(formData);
-      setFormData({
-        title: '',
-        description: '',
-        installation_price: 0,
-        monthly_price: 0,
-        image_url: '',
-      });
-      toast.success('Automation created successfully!');
+      if (!isEditing) {
+        // Only reset the form when creating a new automation
+        setFormData({
+          title: '',
+          description: '',
+          installation_price: 0,
+          monthly_price: 0,
+          image_url: '',
+          has_custom_prompt: false,
+          has_webhook: false,
+          has_form_integration: false,
+          has_table_integration: false,
+        });
+      }
+      toast.success(isEditing ? 'Automation updated successfully!' : 'Automation created successfully!');
     } catch (error) {
       console.error('Form submission error:', error);
       // Error handling is managed by the parent component
@@ -81,7 +184,7 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create Automation</CardTitle>
+        <CardTitle>{isEditing ? 'Update Automation' : 'Create Automation'}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -165,24 +268,124 @@ const AutomationForm: React.FC<AutomationFormProps> = ({ onSubmit, isSaving }) =
           </div>
 
           <div>
-            <Label htmlFor="image_url">Image URL (Optional)</Label>
-            <Input
-              id="image_url"
-              name="image_url"
-              value={formData.image_url}
-              onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
-            />
+            <Label>Automation Image</Label>
+            <div className="mt-1 space-y-3">
+              <FileUploader
+                onUpload={handleImageUpload}
+                label={isUploading ? "Uploading..." : "Upload Image"}
+                buttonVariant="outline"
+                className="w-full"
+                acceptedFileTypes={['image/jpeg', 'image/png', 'image/webp', 'image/gif']}
+                maxSizeMB={5}
+              />
+              
+              {showImageUrlField && (
+                <div className="mt-2">
+                  <Label htmlFor="image_url">Image URL (Optional)</Label>
+                  <Input
+                    id="image_url"
+                    name="image_url"
+                    value={formData.image_url}
+                    onChange={handleChange}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+              )}
+
+              {formData.image_url && (
+                <div className="mt-2">
+                  <div className="border rounded p-2">
+                    <div className="aspect-video w-full bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={formData.image_url} 
+                        alt="Automation preview" 
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://placehold.co/600x400?text=Image+Not+Found';
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, image_url: '' }));
+                          setShowImageUrlField(true);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        Remove Image
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <Button type="submit" disabled={isSaving}>
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-medium text-md mb-2">Automation Features</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="has_custom_prompt" className="cursor-pointer">Custom Prompt</Label>
+                  <p className="text-sm text-gray-500">Allow custom AI prompt configuration</p>
+                </div>
+                <Switch 
+                  id="has_custom_prompt"
+                  checked={formData.has_custom_prompt}
+                  onCheckedChange={(checked) => handleSwitchChange('has_custom_prompt', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="has_webhook" className="cursor-pointer">Webhook Integration</Label>
+                  <p className="text-sm text-gray-500">Enable webhook URL for external triggers</p>
+                </div>
+                <Switch 
+                  id="has_webhook"
+                  checked={formData.has_webhook}
+                  onCheckedChange={(checked) => handleSwitchChange('has_webhook', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="has_form_integration" className="cursor-pointer">Form Integration</Label>
+                  <p className="text-sm text-gray-500">Add n8n form to launch automation</p>
+                </div>
+                <Switch 
+                  id="has_form_integration"
+                  checked={formData.has_form_integration}
+                  onCheckedChange={(checked) => handleSwitchChange('has_form_integration', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="has_table_integration" className="cursor-pointer">Table Integration</Label>
+                  <p className="text-sm text-gray-500">Connect to external data tables</p>
+                </div>
+                <Switch 
+                  id="has_table_integration"
+                  checked={formData.has_table_integration}
+                  onCheckedChange={(checked) => handleSwitchChange('has_table_integration', checked)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <Button type="submit" disabled={isSaving || isUploading} className="w-full">
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                {isEditing ? 'Updating...' : 'Creating...'}
               </>
             ) : (
-              'Create'
+              isEditing ? 'Update' : 'Create'
             )}
           </Button>
         </form>

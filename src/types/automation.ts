@@ -1,4 +1,3 @@
-
 export interface Automation {
   id: string;
   title: string;
@@ -9,6 +8,10 @@ export interface Automation {
   updated_at: string;
   image_url?: string;
   active: boolean;
+  has_custom_prompt?: boolean;
+  has_webhook?: boolean;
+  has_form_integration?: boolean;
+  has_table_integration?: boolean;
 }
 
 export interface ClientAutomation {

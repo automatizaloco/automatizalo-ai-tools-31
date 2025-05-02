@@ -1,44 +1,73 @@
 
 import React from 'react';
+import { useParams } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ClientDashboard } from '@/components/client/ClientDashboard';
+import { ClientLogin } from '@/components/client/ClientLogin';
 import { useAuth } from '@/context/AuthContext';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import ClientLogin from '@/components/client/ClientLogin';
-import ClientDashboard from '@/components/client/ClientDashboard';
+import MyAutomationsView from '@/components/client/MyAutomationsView';
+import MarketplaceView from '@/components/client/MarketplaceView';
+import SupportTicketsView from '@/components/client/SupportTicketsView';
 import NewSupportTicketForm from '@/components/client/NewSupportTicketForm';
 import TicketDetailView from '@/components/client/TicketDetailView';
+import AutomationDetails from '@/components/client/automation/AutomationDetails';
 
-const ClientPortal = () => {
-  const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const { ticketId } = useParams<{ ticketId?: string }>();
-  const location = useLocation();
-  
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh] mt-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
+interface ClientPortalProps {
+  defaultTab?: string;
+  view?: string;
+}
 
-  // If not logged in, show login component with proper top margin
+const ClientPortal: React.FC<ClientPortalProps> = ({ 
+  defaultTab = 'my-automations', 
+  view = null 
+}) => {
+  const { user } = useAuth();
+  const { ticketId } = useParams<{ ticketId: string }>();
+  const { automationId } = useParams<{ automationId: string }>();
+
   if (!user) {
-    return (
-      <div className="pt-24 px-4">
-        <ClientLogin />
-      </div>
-    );
+    return <ClientLogin />;
   }
 
-  // For logged in users, show the appropriate content
   return (
-    <div className="container mx-auto px-4 py-8 mt-16">
-      {location.pathname === '/client-portal/support/new' ? (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Client Portal</h1>
+
+      {/* If we're showing automation details view */}
+      {view === 'details' && automationId && (
+        <AutomationDetails clientId={user.id} />
+      )}
+
+      {/* If we're showing support ticket detail or new support ticket form */}
+      {view === 'ticket-detail' && ticketId && (
+        <TicketDetailView ticketId={ticketId} />
+      )}
+      
+      {view === 'new-ticket' && (
         <NewSupportTicketForm />
-      ) : location.pathname.includes('/client-portal/support/') ? (
-        <TicketDetailView />
-      ) : (
-        <ClientDashboard />
+      )}
+
+      {/* Main tab view (only shown when not in a detail view) */}
+      {!view && (
+        <Tabs defaultValue={defaultTab} className="w-full">
+          <TabsList className="grid grid-cols-3 mb-8">
+            <TabsTrigger value="my-automations">My Automations</TabsTrigger>
+            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
+            <TabsTrigger value="support">Support</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="my-automations">
+            <MyAutomationsView />
+          </TabsContent>
+
+          <TabsContent value="marketplace">
+            <MarketplaceView />
+          </TabsContent>
+
+          <TabsContent value="support">
+            <SupportTicketsView />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

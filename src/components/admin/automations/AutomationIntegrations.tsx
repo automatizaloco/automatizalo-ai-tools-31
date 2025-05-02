@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,15 +47,15 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       
       setIsLoading(true);
       try {
-        // Use a generic query with type casting to work around TypeScript limitations
-        const { data, error } = await supabase
+        // Use a simple type cast to work around TypeScript limitations
+        const response = await supabase
           .from('automation_integrations')
           .select('*')
-          .eq('automation_id', automationId) as unknown as { 
-            data: Integration[] | null; 
-            error: Error | null 
-          };
+          .eq('automation_id', automationId);
           
+        const data = response.data as Integration[] | null;
+        const error = response.error;
+        
         if (error) throw error;
         
         if (data && data.length > 0) {
@@ -124,20 +125,19 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     try {
       // If it has an ID, update; otherwise, insert
       if (webhookData.id) {
-        const { error } = await supabase
+        const response = await supabase
           .from('automation_integrations')
           .update({
             test_url: webhookData.test_url,
             production_url: webhookData.production_url,
             updated_at: new Date().toISOString()
           })
-          .eq('id', webhookData.id) as unknown as { 
-            error: Error | null 
-          };
+          .eq('id', webhookData.id);
           
+        const error = response.error;
         if (error) throw error;
       } else {
-        const { data, error } = await supabase
+        const response = await supabase
           .from('automation_integrations')
           .insert({
             automation_id: automationId,
@@ -145,11 +145,10 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             test_url: webhookData.test_url,
             production_url: webhookData.production_url
           })
-          .select() as unknown as { 
-            data: Integration[] | null; 
-            error: Error | null 
-          };
+          .select();
           
+        const data = response.data as Integration[] | null;
+        const error = response.error;
         if (error) throw error;
         
         if (data && data.length > 0) {
@@ -172,30 +171,28 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     setIsSaving(true);
     try {
       if (formData.id) {
-        const { error } = await supabase
+        const response = await supabase
           .from('automation_integrations')
           .update({
             integration_code: formData.integration_code,
             updated_at: new Date().toISOString()
           })
-          .eq('id', formData.id) as unknown as { 
-            error: Error | null 
-          };
+          .eq('id', formData.id);
           
+        const error = response.error;
         if (error) throw error;
       } else {
-        const { data, error } = await supabase
+        const response = await supabase
           .from('automation_integrations')
           .insert({
             automation_id: automationId,
             integration_type: 'form',
             integration_code: formData.integration_code
           })
-          .select() as unknown as { 
-            data: Integration[] | null; 
-            error: Error | null 
-          };
+          .select();
           
+        const data = response.data as Integration[] | null;
+        const error = response.error;
         if (error) throw error;
         
         if (data && data.length > 0) {
@@ -218,30 +215,28 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     setIsSaving(true);
     try {
       if (tableData.id) {
-        const { error } = await supabase
+        const response = await supabase
           .from('automation_integrations')
           .update({
             integration_code: tableData.integration_code,
             updated_at: new Date().toISOString()
           })
-          .eq('id', tableData.id) as unknown as { 
-            error: Error | null 
-          };
+          .eq('id', tableData.id);
           
+        const error = response.error;
         if (error) throw error;
       } else {
-        const { data, error } = await supabase
+        const response = await supabase
           .from('automation_integrations')
           .insert({
             automation_id: automationId,
             integration_type: 'table',
             integration_code: tableData.integration_code
           })
-          .select() as unknown as { 
-            data: Integration[] | null; 
-            error: Error | null 
-          };
+          .select();
           
+        const data = response.data as Integration[] | null;
+        const error = response.error;
         if (error) throw error;
         
         if (data && data.length > 0) {

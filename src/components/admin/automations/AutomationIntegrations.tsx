@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,21 +9,195 @@ import { Loader2, Save, Globe, Box, Table } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
+import { Integration } from '@/types/automation';
+
+// Separate component for webhook integration
+const WebhookIntegration = ({ 
+  webhookData, 
+  onWebhookTestUrlChange,
+  onWebhookProdUrlChange,
+  onSaveWebhook,
+  isSaving 
+}: { 
+  webhookData: Integration;
+  onWebhookTestUrlChange: (value: string) => void;
+  onWebhookProdUrlChange: (value: string) => void;
+  onSaveWebhook: () => void;
+  isSaving: boolean;
+}) => (
+  <WebhookConfigCard 
+    title="Webhook Integration" 
+    description="Configure webhook URLs for this automation"
+    icon={<Globe className="h-5 w-5" />}
+    testUrl={webhookData.test_url || ''}
+    productionUrl={webhookData.production_url || ''}
+    method="POST"
+    mode="test"
+    onTestUrlChange={onWebhookTestUrlChange}
+    onProductionUrlChange={onWebhookProdUrlChange}
+    onMethodChange={() => {}}
+    onModeChange={() => {}}
+    onTest={() => toast.info('Webhook test function not implemented')}
+    onSave={onSaveWebhook}
+    isSaving={isSaving}
+  />
+);
+
+// Separate component for form integration
+const FormIntegration = ({ 
+  formData, 
+  onChange, 
+  onSave, 
+  isSaving 
+}: { 
+  formData: Integration;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onSave: () => void;
+  isSaving: boolean;
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <Box className="h-5 w-5" />
+        Form Integration
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <div>
+        <Label htmlFor="form-code">Form Embed Code</Label>
+        <p className="text-sm text-gray-500 mb-2">
+          Paste the HTML code for your n8n form or Google Form embed.
+        </p>
+        <Textarea 
+          id="form-code"
+          placeholder="<iframe src='https://your-form-url' ...>"
+          rows={10}
+          value={formData?.integration_code || ''}
+          onChange={onChange}
+          className="font-mono text-sm"
+        />
+      </div>
+      
+      {formData?.integration_code && (
+        <div>
+          <Label>Preview</Label>
+          <div className="mt-2 border rounded-md p-4 bg-gray-50">
+            <div dangerouslySetInnerHTML={{ __html: formData.integration_code }} />
+          </div>
+        </div>
+      )}
+      
+      <Button 
+        onClick={onSave} 
+        disabled={isSaving} 
+        className="w-full"
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Save Form Integration
+          </>
+        )}
+      </Button>
+    </CardContent>
+  </Card>
+);
+
+// Separate component for table integration
+const TableIntegration = ({ 
+  tableData, 
+  onChange, 
+  onSave, 
+  isSaving 
+}: { 
+  tableData: Integration;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onSave: () => void;
+  isSaving: boolean;
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <Table className="h-5 w-5" />
+        Table Integration
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <div>
+        <Label htmlFor="table-code">Table Embed Code</Label>
+        <p className="text-sm text-gray-500 mb-2">
+          Paste the HTML code for your Airtable, Google Sheets, or NocoDB table embed.
+        </p>
+        <Textarea 
+          id="table-code"
+          placeholder="<iframe src='https://your-table-url' ...>"
+          rows={10}
+          value={tableData?.integration_code || ''}
+          onChange={onChange}
+          className="font-mono text-sm"
+        />
+      </div>
+      
+      {tableData?.integration_code && (
+        <div>
+          <Label>Preview</Label>
+          <div className="mt-2 border rounded-md p-4 bg-gray-50">
+            <div dangerouslySetInnerHTML={{ __html: tableData.integration_code }} />
+          </div>
+        </div>
+      )}
+      
+      <Button 
+        onClick={onSave} 
+        disabled={isSaving} 
+        className="w-full"
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Save Table Integration
+          </>
+        )}
+      </Button>
+    </CardContent>
+  </Card>
+);
+
+// Loading state component
+const LoadingState = () => (
+  <div className="flex justify-center items-center p-8">
+    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+    <span className="ml-2">Loading integrations...</span>
+  </div>
+);
+
+// No integrations component
+const NoIntegrations = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className="bg-gray-50 p-6 rounded-md text-center">
+        <p className="text-gray-500">No integrations have been enabled for this automation.</p>
+        <p className="text-sm text-gray-400 mt-1">Edit the automation to enable integrations.</p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 interface AutomationIntegrationsProps {
   automationId: string;
   hasWebhook: boolean;
   hasFormIntegration: boolean;
   hasTableIntegration: boolean;
-}
-
-interface Integration {
-  id?: string;
-  automation_id: string;
-  integration_type: 'webhook' | 'form' | 'table';
-  test_url?: string;
-  production_url?: string;
-  integration_code?: string;
 }
 
 const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
@@ -47,14 +220,10 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       
       setIsLoading(true);
       try {
-        // Use the supabase client with any type to work around TypeScript limitations
-        const response = await (supabase as any)
+        const { data, error } = await supabase
           .from('automation_integrations')
           .select('*')
-          .eq('automation_id', automationId);
-          
-        const data = response.data as Integration[] | null;
-        const error = response.error;
+          .eq('automation_id', automationId) as any;
         
         if (error) throw error;
         
@@ -118,136 +287,55 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     }
   }, [hasWebhook, hasFormIntegration, hasTableIntegration]);
   
-  const saveWebhookIntegration = async () => {
-    if (!webhookData || !automationId) return;
+  const saveIntegration = async (data: Integration) => {
+    if (!data || !automationId) return;
     
     setIsSaving(true);
     try {
-      // If it has an ID, update; otherwise, insert
-      if (webhookData.id) {
-        const response = await (supabase as any)
+      if (data.id) {
+        // Update existing integration
+        const { error } = await supabase
           .from('automation_integrations')
           .update({
-            test_url: webhookData.test_url,
-            production_url: webhookData.production_url,
+            test_url: data.test_url,
+            production_url: data.production_url,
+            integration_code: data.integration_code,
             updated_at: new Date().toISOString()
           })
-          .eq('id', webhookData.id);
+          .eq('id', data.id) as any;
           
-        const error = response.error;
         if (error) throw error;
       } else {
-        const response = await (supabase as any)
+        // Create new integration
+        const { data: newData, error } = await supabase
           .from('automation_integrations')
           .insert({
             automation_id: automationId,
-            integration_type: 'webhook',
-            test_url: webhookData.test_url,
-            production_url: webhookData.production_url
+            integration_type: data.integration_type,
+            test_url: data.test_url,
+            production_url: data.production_url,
+            integration_code: data.integration_code
           })
-          .select();
+          .select() as any;
           
-        const data = response.data as Integration[] | null;
-        const error = response.error;
         if (error) throw error;
         
-        if (data && data.length > 0) {
-          setWebhookData({ ...webhookData, id: data[0].id });
+        if (newData && newData.length > 0) {
+          // Update state with new ID
+          if (data.integration_type === 'webhook') {
+            setWebhookData({ ...data, id: newData[0].id });
+          } else if (data.integration_type === 'form') {
+            setFormData({ ...data, id: newData[0].id });
+          } else if (data.integration_type === 'table') {
+            setTableData({ ...data, id: newData[0].id });
+          }
         }
       }
       
-      toast.success('Webhook integration saved successfully');
+      toast.success(`${data.integration_type} integration saved successfully`);
     } catch (error) {
-      console.error('Failed to save webhook integration:', error);
-      toast.error('Failed to save webhook integration');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
-  const saveFormIntegration = async () => {
-    if (!formData || !automationId) return;
-    
-    setIsSaving(true);
-    try {
-      if (formData.id) {
-        const response = await (supabase as any)
-          .from('automation_integrations')
-          .update({
-            integration_code: formData.integration_code,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', formData.id);
-          
-        const error = response.error;
-        if (error) throw error;
-      } else {
-        const response = await (supabase as any)
-          .from('automation_integrations')
-          .insert({
-            automation_id: automationId,
-            integration_type: 'form',
-            integration_code: formData.integration_code
-          })
-          .select();
-          
-        const data = response.data as Integration[] | null;
-        const error = response.error;
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setFormData({ ...formData, id: data[0].id });
-        }
-      }
-      
-      toast.success('Form integration saved successfully');
-    } catch (error) {
-      console.error('Failed to save form integration:', error);
-      toast.error('Failed to save form integration');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
-  const saveTableIntegration = async () => {
-    if (!tableData || !automationId) return;
-    
-    setIsSaving(true);
-    try {
-      if (tableData.id) {
-        const response = await (supabase as any)
-          .from('automation_integrations')
-          .update({
-            integration_code: tableData.integration_code,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', tableData.id);
-          
-        const error = response.error;
-        if (error) throw error;
-      } else {
-        const response = await (supabase as any)
-          .from('automation_integrations')
-          .insert({
-            automation_id: automationId,
-            integration_type: 'table',
-            integration_code: tableData.integration_code
-          })
-          .select();
-          
-        const data = response.data as Integration[] | null;
-        const error = response.error;
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setTableData({ ...tableData, id: data[0].id });
-        }
-      }
-      
-      toast.success('Table integration saved successfully');
-    } catch (error) {
-      console.error('Failed to save table integration:', error);
-      toast.error('Failed to save table integration');
+      console.error(`Failed to save ${data.integration_type} integration:`, error);
+      toast.error(`Failed to save ${data.integration_type} integration`);
     } finally {
       setIsSaving(false);
     }
@@ -277,32 +365,13 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     }
   };
   
-  const handleTestWebhook = () => {
-    // Placeholder for webhook testing functionality
-    toast.info('Webhook test function not implemented');
-  };
-  
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-2">Loading integrations...</span>
-      </div>
-    );
+    return <LoadingState />;
   }
   
   // No integrations available
   if (!hasWebhook && !hasFormIntegration && !hasTableIntegration) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="bg-gray-50 p-6 rounded-md text-center">
-            <p className="text-gray-500">No integrations have been enabled for this automation.</p>
-            <p className="text-sm text-gray-400 mt-1">Edit the automation to enable integrations.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <NoIntegrations />;
   }
   
   return (
@@ -318,137 +387,37 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             {hasTableIntegration && <TabsTrigger value="table" disabled={!hasTableIntegration}>Table</TabsTrigger>}
           </TabsList>
           
-          {hasWebhook && (
+          {hasWebhook && webhookData && (
             <TabsContent value="webhook" className="pt-4">
-              {webhookData && (
-                <WebhookConfigCard 
-                  title="Webhook Integration" 
-                  description="Configure webhook URLs for this automation"
-                  icon={<Globe className="h-5 w-5" />}
-                  testUrl={webhookData.test_url || ''}
-                  productionUrl={webhookData.production_url || ''}
-                  method="POST"
-                  mode="test"
-                  onTestUrlChange={handleWebhookTestUrlChange}
-                  onProductionUrlChange={handleWebhookProdUrlChange}
-                  onMethodChange={() => {}}
-                  onModeChange={() => {}}
-                  onTest={handleTestWebhook}
-                  onSave={saveWebhookIntegration}
-                />
-              )}
+              <WebhookIntegration
+                webhookData={webhookData}
+                onWebhookTestUrlChange={handleWebhookTestUrlChange}
+                onWebhookProdUrlChange={handleWebhookProdUrlChange}
+                onSaveWebhook={() => saveIntegration(webhookData)}
+                isSaving={isSaving}
+              />
             </TabsContent>
           )}
           
-          {hasFormIntegration && (
+          {hasFormIntegration && formData && (
             <TabsContent value="form" className="pt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Box className="h-5 w-5" />
-                    Form Integration
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="form-code">Form Embed Code</Label>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Paste the HTML code for your n8n form or Google Form embed.
-                    </p>
-                    <Textarea 
-                      id="form-code"
-                      placeholder="<iframe src='https://your-form-url' ...>"
-                      rows={10}
-                      value={formData?.integration_code || ''}
-                      onChange={handleFormCodeChange}
-                      className="font-mono text-sm"
-                    />
-                  </div>
-                  
-                  {formData?.integration_code && (
-                    <div>
-                      <Label>Preview</Label>
-                      <div className="mt-2 border rounded-md p-4 bg-gray-50">
-                        <div dangerouslySetInnerHTML={{ __html: formData.integration_code }} />
-                      </div>
-                    </div>
-                  )}
-                  
-                  <Button 
-                    onClick={saveFormIntegration} 
-                    disabled={isSaving} 
-                    className="w-full"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save Form Integration
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
+              <FormIntegration
+                formData={formData}
+                onChange={handleFormCodeChange}
+                onSave={() => saveIntegration(formData)}
+                isSaving={isSaving}
+              />
             </TabsContent>
           )}
           
-          {hasTableIntegration && (
+          {hasTableIntegration && tableData && (
             <TabsContent value="table" className="pt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Table className="h-5 w-5" />
-                    Table Integration
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="table-code">Table Embed Code</Label>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Paste the HTML code for your Airtable, Google Sheets, or NocoDB table embed.
-                    </p>
-                    <Textarea 
-                      id="table-code"
-                      placeholder="<iframe src='https://your-table-url' ...>"
-                      rows={10}
-                      value={tableData?.integration_code || ''}
-                      onChange={handleTableCodeChange}
-                      className="font-mono text-sm"
-                    />
-                  </div>
-                  
-                  {tableData?.integration_code && (
-                    <div>
-                      <Label>Preview</Label>
-                      <div className="mt-2 border rounded-md p-4 bg-gray-50">
-                        <div dangerouslySetInnerHTML={{ __html: tableData.integration_code }} />
-                      </div>
-                    </div>
-                  )}
-                  
-                  <Button 
-                    onClick={saveTableIntegration} 
-                    disabled={isSaving} 
-                    className="w-full"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save Table Integration
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
+              <TableIntegration
+                tableData={tableData}
+                onChange={handleTableCodeChange}
+                onSave={() => saveIntegration(tableData)}
+                isSaving={isSaving}
+              />
             </TabsContent>
           )}
         </Tabs>

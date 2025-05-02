@@ -44,3 +44,23 @@ export interface TicketResponse {
   is_admin: boolean;
   created_at: string;
 }
+
+export interface CustomPrompt {
+  id: string;
+  prompt_text: string;
+  client_id: string;
+  automation_id: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Integration {
+  id?: string;
+  automation_id: string;
+  integration_type: 'webhook' | 'form' | 'table';
+  test_url?: string;
+  production_url?: string;
+  integration_code?: string;
+  created_at?: string;
+  updated_at?: string;
+}

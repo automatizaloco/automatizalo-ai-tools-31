@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ArrowLeft, Settings, BarChart, Save, Edit } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Automation } from '@/types/automation';
+import { Automation, CustomPrompt, Integration } from '@/types/automation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -15,20 +16,179 @@ interface AutomationDetailProps {
   clientId: string;
 }
 
-interface CustomPrompt {
-  id: string;
-  prompt_text: string;
-  client_id: string;
-  automation_id: string;
-}
+// Custom prompt editor component
+const CustomPromptEditor = ({ 
+  promptData, 
+  isEditing, 
+  customPrompt, 
+  setCustomPrompt,
+  onEdit, 
+  onSave,
+  isSaving,
+  loadingPrompt
+}: { 
+  promptData: CustomPrompt | null;
+  isEditing: boolean;
+  customPrompt: string;
+  setCustomPrompt: (value: string) => void;
+  onEdit: () => void;
+  onSave: () => void;
+  isSaving: boolean;
+  loadingPrompt: boolean;
+}) => (
+  <div>
+    <div className="flex items-center justify-between mb-3">
+      <h3 className="font-medium">Custom Prompt</h3>
+      {!isEditing ? (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onEdit}
+          className="flex items-center gap-1"
+        >
+          <Edit className="h-3 w-3" />
+          <span>Edit</span>
+        </Button>
+      ) : (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onSave}
+          disabled={isSaving}
+          className="flex items-center gap-1 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200"
+        >
+          {isSaving ? (
+            <span>Saving...</span>
+          ) : (
+            <>
+              <Save className="h-3 w-3" />
+              <span>Save</span>
+            </>
+          )}
+        </Button>
+      )}
+    </div>
+    
+    <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+      {isEditing ? (
+        <Textarea
+          className="min-h-[150px] resize-y"
+          placeholder="Enter your custom prompt here..."
+          value={customPrompt}
+          onChange={(e) => setCustomPrompt(e.target.value)}
+        />
+      ) : loadingPrompt ? (
+        <Skeleton className="h-[100px] w-full" />
+      ) : promptData ? (
+        <div className="whitespace-pre-wrap bg-white p-3 rounded border border-gray-100">
+          {promptData.prompt_text}
+        </div>
+      ) : (
+        <p className="text-gray-500 text-sm italic">
+          No custom prompt has been set. Click Edit to create one.
+        </p>
+      )}
+    </div>
+  </div>
+);
 
-interface Integration {
-  id: string;
-  integration_type: 'webhook' | 'form' | 'table';
-  test_url?: string;
-  production_url?: string;
-  integration_code?: string;
-}
+// Integration display component
+const IntegrationDisplay = ({
+  type,
+  integration,
+  isLoading,
+}: {
+  type: 'webhook' | 'form' | 'table';
+  integration: Integration | undefined;
+  isLoading: boolean;
+}) => {
+  const labels = {
+    webhook: {
+      title: 'Webhook Integration',
+      description: 'Webhook integration is available but not yet configured by the administrator.',
+      status: 'This automation has an active webhook integration.'
+    },
+    form: {
+      title: 'Form Integration',
+      description: 'Form integration is available but not yet configured by the administrator.',
+      status: 'This automation has an integrated form:'
+    },
+    table: {
+      title: 'Table Integration',
+      description: 'Table integration is available but not yet configured by the administrator.',
+      status: 'This automation has an integrated table:'
+    }
+  };
+
+  return (
+    <div>
+      <h3 className="font-medium mb-3">{labels[type].title}</h3>
+      <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+        {isLoading ? (
+          <Skeleton className="h-[100px] w-full" />
+        ) : integration?.integration_code ? (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              {labels[type].status}
+            </p>
+            <div 
+              className="bg-white p-4 rounded border border-gray-200"
+              dangerouslySetInnerHTML={{ __html: integration.integration_code }}
+            />
+          </div>
+        ) : integration ? (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">
+              This automation has an active {type} integration.
+            </p>
+            <div className="flex items-center justify-between text-xs bg-green-50 text-green-700 px-3 py-2 rounded">
+              <span>Status:</span>
+              <span className="font-medium">Active</span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm">
+            {labels[type].description}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Loading state component
+const LoadingState = () => (
+  <div className="space-y-4">
+    <div className="flex items-center mb-4">
+      <Skeleton className="h-8 w-8 rounded-full mr-2" />
+      <Skeleton className="h-6 w-48" />
+    </div>
+    <Skeleton className="h-[300px] w-full rounded-lg" />
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+    </div>
+  </div>
+);
+
+// Error state component
+const ErrorState = ({ error, navigate }: { error: Error | null, navigate: Function }) => (
+  <div className="bg-red-50 border border-red-200 p-4 rounded-md">
+    <h3 className="font-medium text-red-600 mb-1">Error Loading Automation</h3>
+    <p className="text-red-500 text-sm">
+      {error ? error.message : 'Automation not found'}
+    </p>
+    <Button 
+      variant="outline"
+      size="sm"
+      className="mt-2"
+      onClick={() => navigate('/client-portal')}
+    >
+      Back to Dashboard
+    </Button>
+  </div>
+);
 
 const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
   const { automationId } = useParams<{ automationId: string }>();
@@ -59,12 +219,12 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
     queryFn: async () => {
       if (!automationId || !clientId) return null;
       
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('automation_custom_prompts')
         .select('*')
         .eq('automation_id', automationId)
         .eq('client_id', clientId)
-        .maybeSingle();
+        .maybeSingle() as any;
       
       if (error) throw error;
       return data as CustomPrompt | null;
@@ -78,10 +238,10 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
     queryFn: async () => {
       if (!automationId) return [];
       
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('automation_integrations')
         .select('*')
-        .eq('automation_id', automationId);
+        .eq('automation_id', automationId) as any;
       
       if (error) throw error;
       return data as Integration[];
@@ -108,21 +268,21 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
       
       if (promptData) {
         // Update existing prompt
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('automation_custom_prompts')
           .update({ prompt_text: promptText, updated_at: new Date().toISOString() })
-          .eq('id', promptData.id);
+          .eq('id', promptData.id) as any;
           
         if (error) throw error;
       } else {
         // Create new prompt
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('automation_custom_prompts')
           .insert({
             automation_id: automationId,
             client_id: clientId,
             prompt_text: promptText
-          });
+          }) as any;
           
         if (error) throw error;
       }
@@ -152,39 +312,11 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
   const isLoading = loadingAutomation || loadingPrompt || loadingIntegrations;
   
   if (isLoading && !automation) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center mb-4">
-          <Skeleton className="h-8 w-8 rounded-full mr-2" />
-          <Skeleton className="h-6 w-48" />
-        </div>
-        <Skeleton className="h-[300px] w-full rounded-lg" />
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-2/3" />
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
   
   if (automationError || !automation) {
-    return (
-      <div className="bg-red-50 border border-red-200 p-4 rounded-md">
-        <h3 className="font-medium text-red-600 mb-1">Error Loading Automation</h3>
-        <p className="text-red-500 text-sm">
-          {automationError ? (automationError as Error).message : 'Automation not found'}
-        </p>
-        <Button 
-          variant="outline"
-          size="sm"
-          className="mt-2"
-          onClick={() => navigate('/client-portal')}
-        >
-          Back to Dashboard
-        </Button>
-      </div>
-    );
+    return <ErrorState error={automationError as Error} navigate={navigate} />;
   }
 
   const webhookIntegration = getIntegration('webhook');
@@ -284,135 +416,40 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
             <CardContent>
               <div className="space-y-6">
                 {automation.has_custom_prompt && (
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium">Custom Prompt</h3>
-                      {!isEditing ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setIsEditing(true)}
-                          className="flex items-center gap-1"
-                        >
-                          <Edit className="h-3 w-3" />
-                          <span>Edit</span>
-                        </Button>
-                      ) : (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleSavePrompt}
-                          disabled={savePromptMutation.isPending}
-                          className="flex items-center gap-1 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200"
-                        >
-                          {savePromptMutation.isPending ? (
-                            <span>Saving...</span>
-                          ) : (
-                            <>
-                              <Save className="h-3 w-3" />
-                              <span>Save</span>
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-                      {isEditing ? (
-                        <Textarea
-                          className="min-h-[150px] resize-y"
-                          placeholder="Enter your custom prompt here..."
-                          value={customPrompt}
-                          onChange={(e) => setCustomPrompt(e.target.value)}
-                        />
-                      ) : loadingPrompt ? (
-                        <Skeleton className="h-[100px] w-full" />
-                      ) : promptData ? (
-                        <div className="whitespace-pre-wrap bg-white p-3 rounded border border-gray-100">
-                          {promptData.prompt_text}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 text-sm italic">
-                          No custom prompt has been set. Click Edit to create one.
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <CustomPromptEditor
+                    promptData={promptData}
+                    isEditing={isEditing}
+                    customPrompt={customPrompt}
+                    setCustomPrompt={setCustomPrompt}
+                    onEdit={() => setIsEditing(true)}
+                    onSave={handleSavePrompt}
+                    isSaving={savePromptMutation.isPending}
+                    loadingPrompt={loadingPrompt}
+                  />
                 )}
                 
                 {automation.has_webhook && (
-                  <div>
-                    <h3 className="font-medium mb-3">Webhook Integration</h3>
-                    <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-                      {loadingIntegrations ? (
-                        <Skeleton className="h-[100px] w-full" />
-                      ) : webhookIntegration ? (
-                        <div className="space-y-3">
-                          <p className="text-sm font-medium text-gray-700">
-                            This automation has an active webhook integration.
-                          </p>
-                          <div className="flex items-center justify-between text-xs bg-green-50 text-green-700 px-3 py-2 rounded">
-                            <span>Status:</span>
-                            <span className="font-medium">Active</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 text-sm">
-                          Webhook integration is available but not yet configured by the administrator.
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <IntegrationDisplay 
+                    type="webhook" 
+                    integration={webhookIntegration} 
+                    isLoading={loadingIntegrations} 
+                  />
                 )}
                 
                 {automation.has_form_integration && (
-                  <div>
-                    <h3 className="font-medium mb-3">Form Integration</h3>
-                    <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-                      {loadingIntegrations ? (
-                        <Skeleton className="h-[100px] w-full" />
-                      ) : formIntegration?.integration_code ? (
-                        <div className="space-y-3">
-                          <p className="text-sm font-medium text-gray-700 mb-2">
-                            This automation has an integrated form:
-                          </p>
-                          <div 
-                            className="bg-white p-4 rounded border border-gray-200"
-                            dangerouslySetInnerHTML={{ __html: formIntegration.integration_code }}
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 text-sm">
-                          Form integration is available but not yet configured by the administrator.
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <IntegrationDisplay 
+                    type="form" 
+                    integration={formIntegration} 
+                    isLoading={loadingIntegrations} 
+                  />
                 )}
                 
                 {automation.has_table_integration && (
-                  <div>
-                    <h3 className="font-medium mb-3">Table Integration</h3>
-                    <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-                      {loadingIntegrations ? (
-                        <Skeleton className="h-[100px] w-full" />
-                      ) : tableIntegration?.integration_code ? (
-                        <div className="space-y-3">
-                          <p className="text-sm font-medium text-gray-700 mb-2">
-                            This automation has an integrated table:
-                          </p>
-                          <div 
-                            className="bg-white p-4 rounded border border-gray-200"
-                            dangerouslySetInnerHTML={{ __html: tableIntegration.integration_code }}
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 text-sm">
-                          Table integration is available but not yet configured by the administrator.
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <IntegrationDisplay 
+                    type="table" 
+                    integration={tableIntegration} 
+                    isLoading={loadingIntegrations} 
+                  />
                 )}
                 
                 {!automation.has_custom_prompt && 
@@ -449,6 +486,12 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
                     {automation.has_webhook && <li>Webhook integrations</li>}
                     {automation.has_form_integration && <li>Form integrations</li>}
                     {automation.has_table_integration && <li>Table/database connections</li>}
+                    {!automation.has_custom_prompt && 
+                      !automation.has_webhook && 
+                      !automation.has_form_integration && 
+                      !automation.has_table_integration && 
+                      <li>Basic automation</li>
+                    }
                   </ul>
                 </div>
                 

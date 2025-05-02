@@ -14,6 +14,10 @@ export type Database = {
           active: boolean
           created_at: string
           description: string
+          has_custom_prompt: boolean | null
+          has_form_integration: boolean | null
+          has_table_integration: boolean | null
+          has_webhook: boolean | null
           id: string
           image_url: string | null
           installation_price: number
@@ -25,6 +29,10 @@ export type Database = {
           active?: boolean
           created_at?: string
           description: string
+          has_custom_prompt?: boolean | null
+          has_form_integration?: boolean | null
+          has_table_integration?: boolean | null
+          has_webhook?: boolean | null
           id?: string
           image_url?: string | null
           installation_price?: number
@@ -36,6 +44,10 @@ export type Database = {
           active?: boolean
           created_at?: string
           description?: string
+          has_custom_prompt?: boolean | null
+          has_form_integration?: boolean | null
+          has_table_integration?: boolean | null
+          has_webhook?: boolean | null
           id?: string
           image_url?: string | null
           installation_price?: number
@@ -637,6 +649,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      exec_sql: {
+        Args: { sql_query: string }
+        Returns: undefined
+      }
       get_users: {
         Args: Record<PropertyKey, never>
         Returns: {

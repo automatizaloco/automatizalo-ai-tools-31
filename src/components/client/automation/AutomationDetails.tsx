@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,7 +59,7 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
     queryFn: async () => {
       if (!automationId || !clientId) return null;
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('automation_custom_prompts')
         .select('*')
         .eq('automation_id', automationId)
@@ -79,7 +78,7 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
     queryFn: async () => {
       if (!automationId) return [];
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('automation_integrations')
         .select('*')
         .eq('automation_id', automationId);
@@ -109,7 +108,7 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
       
       if (promptData) {
         // Update existing prompt
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('automation_custom_prompts')
           .update({ prompt_text: promptText, updated_at: new Date().toISOString() })
           .eq('id', promptData.id);
@@ -117,7 +116,7 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
         if (error) throw error;
       } else {
         // Create new prompt
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('automation_custom_prompts')
           .insert({
             automation_id: automationId,

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import withEditableImage from '@/components/admin/withEditableImage';
+
 interface SolutionCardProps {
   title: string;
   description: string;
@@ -18,6 +20,7 @@ interface SolutionCardProps {
   sectionName?: string;
   imageId?: string;
 }
+
 const SolutionCard: React.FC<SolutionCardProps> = ({
   title,
   description,
@@ -32,6 +35,7 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
   imageId = ""
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
@@ -49,6 +53,10 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
     alt: string;
     className?: string;
   }) => <img src={src} alt={alt} className={className} />);
+  
+  // Check if this is the Lead Generation card
+  const isLeadGeneration = title.toLowerCase().includes('lead generation');
+
   return <motion.div initial={{
     opacity: 0,
     y: 20
@@ -87,6 +95,44 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
                 </div>
                 <span className="text-sm text-gray-600">{feature}</span>
               </div>)}
+              
+            {/* Add channel options for Lead Generation card */}
+            {isLeadGeneration && (
+              <div className="mt-4 pt-3 border-t border-gray-100">
+                <p className="text-sm font-medium mb-2">Choose your channel:</p>
+                <div className="flex flex-wrap gap-2">
+                  <div className="flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                      <path d="M3 21l1.9-5.7a8.5 8.5 0 113.8 3.8z"></path>
+                    </svg>
+                    <span>WhatsApp</span>
+                  </div>
+                  <div className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                      <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                      <path d="M22 7l-10 7L2 7"></path>
+                    </svg>
+                    <span>Email</span>
+                  </div>
+                  <div className="flex items-center bg-cyan-50 text-cyan-700 px-3 py-1 rounded-full text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                      <path d="m22 8-6 4 6 4V8Z"></path>
+                      <rect width="14" height="16" x="2" y="4" rx="2"></rect>
+                      <path d="M6 12h.01M10 12h.01M14 12h.01"></path>
+                    </svg>
+                    <span>Telegram</span>
+                  </div>
+                  <div className="flex items-center bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 8v8"></path>
+                      <path d="M8 12h8"></path>
+                    </svg>
+                    <span>Others</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* View solution button */}
@@ -95,4 +141,5 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
       </Card>
     </motion.div>;
 };
+
 export default SolutionCard;

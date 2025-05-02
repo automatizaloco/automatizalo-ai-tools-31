@@ -2,8 +2,8 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClientDashboard } from '@/components/client/ClientDashboard';
-import { ClientLogin } from '@/components/client/ClientLogin';
+import ClientDashboard from '@/components/client/ClientDashboard';
+import ClientLogin from '@/components/client/ClientLogin';
 import { useAuth } from '@/context/AuthContext';
 import MyAutomationsView from '@/components/client/MyAutomationsView';
 import MarketplaceView from '@/components/client/MarketplaceView';
@@ -14,7 +14,7 @@ import AutomationDetails from '@/components/client/automation/AutomationDetails'
 
 interface ClientPortalProps {
   defaultTab?: string;
-  view?: string;
+  view?: string | null;
 }
 
 const ClientPortal: React.FC<ClientPortalProps> = ({ 

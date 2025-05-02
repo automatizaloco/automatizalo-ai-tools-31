@@ -1,86 +1,51 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { toast } from 'sonner';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { SupportTicket, TicketResponse, ClientAutomation } from '@/types/automation';
-import { useAuth } from '@/context/AuthContext';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SupportTicket, TicketResponse } from '@/types/automation';
+import { TicketHeader } from './ticket/TicketHeader';
+import { TicketDescription } from './ticket/TicketDescription';
+import { TicketConversation } from './ticket/TicketConversation';
+import { TicketResponseForm } from './ticket/TicketResponseForm';
 
-// Import our new components
-import TicketHeader from './ticket/TicketHeader';
-import TicketDescription from './ticket/TicketDescription';
-import TicketConversation from './ticket/TicketConversation';
-import TicketResponseForm from './ticket/TicketResponseForm';
+interface TicketDetailViewProps {
+  ticketId?: string;
+}
 
-const TicketDetailView = () => {
-  const [ticket, setTicket] = useState<SupportTicket | null>(null);
-  const [responses, setResponses] = useState<TicketResponse[]>([]);
-  const [automation, setAutomation] = useState<ClientAutomation | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { ticketId } = useParams<{ ticketId: string }>();
-  const { user } = useAuth();
+const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticketId: propTicketId }) => {
+  const { ticketId: paramTicketId } = useParams<{ ticketId: string }>();
   const navigate = useNavigate();
   
-  useEffect(() => {
-    if (user && ticketId) {
-      fetchTicketDetails();
-      fetchTicketResponses();
-    }
-  }, [user, ticketId]);
-
-  const fetchTicketDetails = async () => {
-    try {
+  // Use the prop ticketId if provided, otherwise use the one from URL params
+  const ticketId = propTicketId || paramTicketId;
+  
+  const { data: ticket, isLoading: ticketLoading } = useQuery({
+    queryKey: ['ticket', ticketId],
+    queryFn: async () => {
+      if (!ticketId) throw new Error('No ticket ID provided');
+      
       const { data, error } = await supabase
         .from('support_tickets')
         .select('*')
         .eq('id', ticketId)
-        .eq('client_id', user?.id)
-        .maybeSingle();
+        .single();
         
       if (error) throw error;
-      
-      if (!data) {
-        toast.error('Ticket not found or you do not have permission to view it');
-        navigate('/client-portal');
-        return;
-      }
-      
-      // Convert string status to the correct type
-      const typedTicket: SupportTicket = {
-        ...data,
-        status: data.status as 'open' | 'in_progress' | 'resolved' | 'closed'
-      };
-      
-      setTicket(typedTicket);
-      
-      // Fetch automation details
-      const { data: automationData, error: automationError } = await supabase
-        .from('client_automations')
-        .select('*, automation:automation_id(*)')
-        .eq('client_id', user?.id)
-        .eq('automation_id', data.automation_id)
-        .maybeSingle();
-        
-      if (automationError) throw automationError;
-      
-      if (automationData) {
-        const typedAutomation: ClientAutomation = {
-          ...automationData,
-          status: automationData.status as 'active' | 'canceled' | 'pending'
-        };
-        setAutomation(typedAutomation);
-      }
-    } catch (error: any) {
-      console.error('Error fetching ticket details:', error);
-      toast.error(error.message || 'Failed to load ticket details');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return data as SupportTicket;
+    },
+    enabled: !!ticketId,
+  });
   
-  const fetchTicketResponses = async () => {
-    try {
+  const { data: responses, isLoading: responsesLoading } = useQuery({
+    queryKey: ['ticket-responses', ticketId],
+    queryFn: async () => {
+      if (!ticketId) throw new Error('No ticket ID provided');
+      
       const { data, error } = await supabase
         .from('ticket_responses')
         .select('*')
@@ -88,54 +53,78 @@ const TicketDetailView = () => {
         .order('created_at', { ascending: true });
         
       if (error) throw error;
-      setResponses(data || []);
-    } catch (error: any) {
-      console.error('Error fetching ticket responses:', error);
-      toast.error(error.message || 'Failed to load ticket responses');
-    }
-  };
-
-  if (isLoading) {
+      return data as TicketResponse[];
+    },
+    enabled: !!ticketId,
+  });
+  
+  if (!ticketId) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (!ticket) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500 mb-4">Ticket not found or you do not have permission to view it.</p>
-        <button 
-          className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
+      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+        <p className="text-red-700">Ticket ID is required.</p>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="mt-2" 
           onClick={() => navigate('/client-portal')}
         >
-          Back to Dashboard
-        </button>
+          Back to Client Portal
+        </Button>
       </div>
     );
   }
-
+  
+  const isLoading = ticketLoading || responsesLoading;
+  
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-2">
-          <TicketHeader ticket={ticket} automation={automation} />
-        </CardHeader>
-        <CardContent>
-          <TicketDescription description={ticket.description} />
-          
-          <h3 className="font-bold mb-2">Conversation</h3>
-          <TicketConversation responses={responses} />
-          
-          <TicketResponseForm 
-            ticketId={ticket.id} 
-            ticketStatus={ticket.status} 
-            onResponseSent={fetchTicketResponses} 
-          />
-        </CardContent>
-      </Card>
+      {/* Back button */}
+      <div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate('/client-portal')}
+          className="flex items-center gap-1 mb-4 text-muted-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Support
+        </Button>
+      </div>
+      
+      {isLoading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-3/4" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      ) : ticket ? (
+        <div className="space-y-6">
+          <TicketHeader ticket={ticket} />
+          <TicketDescription ticket={ticket} />
+          <Card>
+            <CardContent className="pt-6">
+              <TicketConversation responses={responses || []} />
+              
+              {ticket.status !== 'closed' && (
+                <TicketResponseForm ticketId={ticketId} />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
+          <p className="text-amber-700">Ticket not found or you don't have permission to view it.</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-2" 
+            onClick={() => navigate('/client-portal')}
+          >
+            Back to Client Portal
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, AlertTriangle, Trash } from 'lucide-react';
+import { Loader2, AlertTriangle, Trash, Settings, PlusCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,13 +14,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Automation } from '@/types/automation';
+import { Badge } from '@/components/ui/badge';
 
 interface AutomationsListProps {
   automations: Automation[];
   isLoading: boolean;
   onToggleStatus: (id: string, currentlyActive: boolean) => Promise<void>;
   onEdit: (automation: Automation) => void;
-  onDelete?: (id: string) => Promise<void>; // Add delete handler
+  onDelete?: (id: string) => Promise<void>;
+  onManageIntegrations?: (automation: Automation) => void;
   error: string | null;
   onRetry: () => void;
 }
@@ -31,6 +33,7 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
   onToggleStatus,
   onEdit,
   onDelete,
+  onManageIntegrations,
   error,
   onRetry
 }) => {
@@ -119,12 +122,30 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
             <CardContent className="pt-6">
               <div className="flex justify-between">
                 <div>
-                  <h3 className="font-bold text-lg">{automation.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-lg">{automation.title}</h3>
+                    {automation.has_custom_prompt && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Custom Prompt</Badge>}
+                    {automation.has_webhook && <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Webhook</Badge>}
+                    {automation.has_form_integration && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Form</Badge>}
+                    {automation.has_table_integration && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Table</Badge>}
+                  </div>
                   <p className="text-sm text-gray-500 mt-1">
                     Installation: ${automation.installation_price.toFixed(2)} | 
                     Monthly: ${automation.monthly_price.toFixed(2)}
                   </p>
                   <p className="mt-2 text-gray-600">{automation.description}</p>
+                  {automation.image_url && (
+                    <div className="mt-2">
+                      <img 
+                        src={automation.image_url} 
+                        alt={automation.title}
+                        className="h-16 rounded object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://placehold.co/100x100?text=No+Image';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col space-y-2">
                   <Button 
@@ -134,6 +155,23 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
                   >
                     Edit
                   </Button>
+                  
+                  {onManageIntegrations && 
+                   (automation.has_custom_prompt || 
+                    automation.has_webhook || 
+                    automation.has_form_integration || 
+                    automation.has_table_integration) && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100"
+                      onClick={() => onManageIntegrations(automation)}
+                    >
+                      <Settings className="mr-1 h-3 w-3" />
+                      Integrations
+                    </Button>
+                  )}
+                  
                   <Button 
                     size="sm" 
                     variant={automation.active ? "destructive" : "default"}

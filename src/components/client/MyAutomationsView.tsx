@@ -17,7 +17,7 @@ const MyAutomationsView: React.FC = () => {
   const navigate = useNavigate();
 
   // Fetch client automations
-  const { data: clientAutomations, isLoading } = useQuery({
+  const { data: clientAutomations, isLoading, refetch } = useQuery({
     queryKey: ['client-automations', user?.id],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
@@ -47,6 +47,7 @@ const MyAutomationsView: React.FC = () => {
       if (error) throw error;
       
       toast.success('Subscription canceled successfully');
+      refetch(); // Refresh the data
     } catch (error) {
       console.error('Error canceling subscription:', error);
       toast.error('Failed to cancel subscription');

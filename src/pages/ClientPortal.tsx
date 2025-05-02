@@ -30,7 +30,7 @@ const ClientPortal: React.FC<ClientPortalProps> = ({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-16"> {/* Added mt-16 for spacing below header */}
       <h1 className="text-3xl font-bold mb-6">Client Portal</h1>
 
       {/* If we're showing automation details view */}

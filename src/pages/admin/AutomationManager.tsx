@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import type { Automation } from '@/types/automation';
 import AutomationForm from '@/components/admin/automations/AutomationForm';
 import AutomationsList from '@/components/admin/automations/AutomationsList';
+import AutomationIntegrations from '@/components/admin/automations/AutomationIntegrations';
 import { toast } from 'sonner';
 
 const AutomationManager = () => {
@@ -17,6 +17,7 @@ const AutomationManager = () => {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedAutomation, setSelectedAutomation] = useState<Automation | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showIntegrations, setShowIntegrations] = useState(false);
   const { isAdmin, isVerifying } = useAdminVerification();
   const notification = useNotification();
 
@@ -122,9 +123,20 @@ const AutomationManager = () => {
           )
         );
         
-        // Exit edit mode
-        setIsEditing(false);
-        setSelectedAutomation(null);
+        // Show integrations panel if any integration is enabled
+        const hasIntegrations = formData.has_custom_prompt || formData.has_webhook || 
+                             formData.has_form_integration || formData.has_table_integration;
+                             
+        setShowIntegrations(hasIntegrations);
+        
+        if (!hasIntegrations) {
+          // Exit edit mode if no integrations
+          setIsEditing(false);
+          setSelectedAutomation(null);
+        } else {
+          // Keep the selected automation for integration settings
+          setSelectedAutomation({ ...selectedAutomation, ...formData });
+        }
       } else {
         // Create new automation
         console.log('Creating automation with data:', formData);
@@ -151,6 +163,17 @@ const AutomationManager = () => {
         
         console.log('Automation created successfully:', data);
         notification.showSuccess('Success', 'Automation created successfully');
+        
+        // Check if any integration was enabled
+        const hasIntegrations = formData.has_custom_prompt || formData.has_webhook || 
+                             formData.has_form_integration || formData.has_table_integration;
+        
+        if (hasIntegrations && data && data.length > 0) {
+          // Show integration settings for the new automation
+          setSelectedAutomation(data[0]);
+          setIsEditing(true);
+          setShowIntegrations(true);
+        }
       }
       
       // Refresh the automations list
@@ -210,6 +233,15 @@ const AutomationManager = () => {
   const handleEdit = (automation: Automation) => {
     setSelectedAutomation(automation);
     setIsEditing(true);
+    setShowIntegrations(false);
+    // Scroll to the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleManageIntegrations = (automation: Automation) => {
+    setSelectedAutomation(automation);
+    setIsEditing(true);
+    setShowIntegrations(true);
     // Scroll to the form
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -217,6 +249,7 @@ const AutomationManager = () => {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setSelectedAutomation(null);
+    setShowIntegrations(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -246,6 +279,7 @@ const AutomationManager = () => {
       if (selectedAutomation?.id === id) {
         setIsEditing(false);
         setSelectedAutomation(null);
+        setShowIntegrations(false);
       }
     } catch (error: any) {
       console.error('Exception in handleDelete:', error);
@@ -309,12 +343,34 @@ const AutomationManager = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <AutomationForm 
-            onSubmit={handleSubmit}
-            isSaving={isSaving}
-            automation={selectedAutomation || undefined}
-            isEditing={isEditing}
-          />
+          {showIntegrations && selectedAutomation ? (
+            <>
+              <AutomationIntegrations
+                automationId={selectedAutomation.id}
+                hasWebhook={selectedAutomation.has_webhook || false}
+                hasFormIntegration={selectedAutomation.has_form_integration || false}
+                hasTableIntegration={selectedAutomation.has_table_integration || false}
+              />
+              <div className="mt-4 flex justify-end">
+                <Button
+                  onClick={() => {
+                    setShowIntegrations(false);
+                    setIsEditing(true);
+                  }}
+                  variant="outline"
+                >
+                  Back to Automation Settings
+                </Button>
+              </div>
+            </>
+          ) : (
+            <AutomationForm 
+              onSubmit={handleSubmit}
+              isSaving={isSaving}
+              automation={selectedAutomation || undefined}
+              isEditing={isEditing}
+            />
+          )}
         </div>
 
         <div className="lg:col-span-2">
@@ -327,6 +383,7 @@ const AutomationManager = () => {
             onToggleStatus={handleToggleStatus}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onManageIntegrations={handleManageIntegrations}
             error={fetchError}
             onRetry={fetchAutomations}
           />

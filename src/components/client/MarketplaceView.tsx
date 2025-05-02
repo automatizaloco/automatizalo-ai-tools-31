@@ -14,7 +14,7 @@ const MarketplaceView: React.FC = () => {
   const { user } = useAuth();
 
   // Fetch all active automations
-  const { data: automations, isLoading } = useQuery({
+  const { data: automations, isLoading: loadingAutomations } = useQuery({
     queryKey: ['marketplace-automations'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,11 +28,41 @@ const MarketplaceView: React.FC = () => {
     },
   });
   
+  // Fetch user's purchased automations to check ownership
+  const { data: purchasedAutomations, isLoading: loadingPurchased } = useQuery({
+    queryKey: ['purchased-automations', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('client_automations')
+        .select('automation_id')
+        .eq('client_id', user.id)
+        .eq('status', 'active');
+
+      if (error) throw error;
+      return data.map(item => item.automation_id);
+    },
+    enabled: !!user,
+  });
+  
+  // Function to check if user owns an automation
+  const userOwnsAutomation = (automationId: string): boolean => {
+    if (!purchasedAutomations) return false;
+    return purchasedAutomations.includes(automationId);
+  };
+  
   // Function to handle automation purchase
   const handlePurchase = async (automationId: string) => {
     try {
       if (!user) {
         toast.error('Please login to purchase automations');
+        return;
+      }
+
+      // Check if the user already owns this automation
+      if (userOwnsAutomation(automationId)) {
+        toast.info('You already own this automation');
         return;
       }
 
@@ -53,20 +83,21 @@ const MarketplaceView: React.FC = () => {
         
       if (error) {
         console.error('Error purchasing automation:', error);
-        if (error.code === '23505') { // Unique violation
-          toast.warning('You already own this automation');
-        } else {
-          toast.error('Failed to purchase automation');
-        }
+        toast.error('Failed to purchase automation');
         return;
       }
       
       toast.success('Automation purchased successfully!');
+      
+      // Refetch purchased automations
+      await supabase.auth.refreshSession();
     } catch (error) {
       console.error('Error purchasing automation:', error);
       toast.error('An error occurred during purchase');
     }
   };
+
+  const isLoading = loadingAutomations || loadingPurchased;
 
   if (isLoading) {
     return (
@@ -101,67 +132,81 @@ const MarketplaceView: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {automations.map((automation) => (
-        <Card key={automation.id} className="flex flex-col">
-          <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
-            {automation.image_url ? (
-              <img 
-                src={automation.image_url} 
-                alt={automation.title} 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = 'https://placehold.co/600x400?text=Automation';
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                <span className="text-gray-400">No image</span>
-              </div>
-            )}
-          </div>
-          
-          <CardHeader>
-            <CardTitle>{automation.title}</CardTitle>
-            <CardDescription className="line-clamp-2">{automation.description}</CardDescription>
-          </CardHeader>
-          
-          <CardContent className="flex-grow">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-gray-500">Setup</span>
-                <p className="font-medium">${automation.installation_price.toFixed(2)}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Monthly</span>
-                <p className="font-medium">${automation.monthly_price.toFixed(2)}</p>
-              </div>
+      {automations.map((automation) => {
+        const isOwned = userOwnsAutomation(automation.id);
+        
+        return (
+          <Card key={automation.id} className="flex flex-col">
+            <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
+              {automation.image_url ? (
+                <img 
+                  src={automation.image_url} 
+                  alt={automation.title} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/600x400?text=Automation';
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                  <span className="text-gray-400">No image</span>
+                </div>
+              )}
             </div>
             
-            {/* Features list */}
-            {(automation.has_custom_prompt || automation.has_webhook || 
-              automation.has_form_integration || automation.has_table_integration) && (
-              <div className="mt-4">
-                <p className="text-xs text-gray-500 mb-1">Features:</p>
-                <ul className="text-xs text-gray-600">
-                  {automation.has_custom_prompt && <li className="inline-block mr-2">• Custom prompts</li>}
-                  {automation.has_webhook && <li className="inline-block mr-2">• Webhooks</li>}
-                  {automation.has_form_integration && <li className="inline-block mr-2">• Forms</li>}
-                  {automation.has_table_integration && <li className="inline-block mr-2">• Tables</li>}
-                </ul>
+            <CardHeader>
+              <CardTitle>{automation.title}</CardTitle>
+              <CardDescription className="line-clamp-2">{automation.description}</CardDescription>
+            </CardHeader>
+            
+            <CardContent className="flex-grow">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-500">Setup</span>
+                  <p className="font-medium">${automation.installation_price.toFixed(2)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Monthly</span>
+                  <p className="font-medium">${automation.monthly_price.toFixed(2)}</p>
+                </div>
               </div>
-            )}
-          </CardContent>
-          
-          <CardFooter>
-            <Button 
-              className="w-full" 
-              onClick={() => handlePurchase(automation.id)}
-            >
-              Purchase
-            </Button>
-          </CardFooter>
-        </Card>
-      ))}
+              
+              {/* Features list */}
+              {(automation.has_custom_prompt || automation.has_webhook || 
+                automation.has_form_integration || automation.has_table_integration) && (
+                <div className="mt-4">
+                  <p className="text-xs text-gray-500 mb-1">Features:</p>
+                  <ul className="text-xs text-gray-600">
+                    {automation.has_custom_prompt && <li className="inline-block mr-2">• Custom prompts</li>}
+                    {automation.has_webhook && <li className="inline-block mr-2">• Webhooks</li>}
+                    {automation.has_form_integration && <li className="inline-block mr-2">• Forms</li>}
+                    {automation.has_table_integration && <li className="inline-block mr-2">• Tables</li>}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+            
+            <CardFooter>
+              {isOwned ? (
+                <Button 
+                  className="w-full"
+                  variant="secondary"
+                  disabled
+                >
+                  Already Purchased
+                </Button>
+              ) : (
+                <Button 
+                  className="w-full" 
+                  onClick={() => handlePurchase(automation.id)}
+                >
+                  Purchase
+                </Button>
+              )}
+            </CardFooter>
+          </Card>
+        );
+      })}
     </div>
   );
 };

@@ -8,10 +8,10 @@ import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SupportTicket, TicketResponse } from '@/types/automation';
-import { TicketHeader } from './ticket/TicketHeader';
-import { TicketDescription } from './ticket/TicketDescription';
-import { TicketConversation } from './ticket/TicketConversation';
-import { TicketResponseForm } from './ticket/TicketResponseForm';
+import TicketHeader from './ticket/TicketHeader';
+import TicketDescription from './ticket/TicketDescription';
+import TicketConversation from './ticket/TicketConversation';
+import TicketResponseForm from './ticket/TicketResponseForm';
 
 interface TicketDetailViewProps {
   ticketId?: string;

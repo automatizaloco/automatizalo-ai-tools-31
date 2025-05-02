@@ -1,72 +1,77 @@
 
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from "sonner";
 
 interface TicketResponseFormProps {
   ticketId: string;
-  ticketStatus: string;
-  onResponseSent: () => void;
 }
 
-const TicketResponseForm: React.FC<TicketResponseFormProps> = ({ 
-  ticketId, 
-  ticketStatus,
-  onResponseSent
-}) => {
-  const [newResponse, setNewResponse] = useState('');
+const TicketResponseForm: React.FC<TicketResponseFormProps> = ({ ticketId }) => {
+  const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
-  
-  const handleSubmitResponse = async (e: React.FormEvent) => {
+  const queryClient = useQueryClient();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newResponse.trim() || !user || !ticketId) return;
     
+    if (!message.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+
+    if (!user) {
+      toast.error("You must be logged in to respond");
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
       const { error } = await supabase
         .from('ticket_responses')
-        .insert([{
+        .insert({
           ticket_id: ticketId,
-          message: newResponse,
+          message: message.trim(),
           created_by: user.id,
-          is_admin: false,
-          created_at: new Date().toISOString()
-        }]);
-        
+          is_admin: false
+        });
+
       if (error) throw error;
+
+      toast.success("Response submitted successfully");
+      setMessage('');
       
-      toast.success('Response sent successfully');
-      setNewResponse('');
-      onResponseSent();
-    } catch (error: any) {
-      console.error('Error submitting response:', error);
-      toast.error(error.message || 'Failed to send your response');
+      // Invalidate and refetch ticket responses
+      queryClient.invalidateQueries({ queryKey: ['ticket-responses', ticketId] });
+    } catch (error) {
+      console.error("Error submitting response:", error);
+      toast.error("Failed to submit response. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  if (ticketStatus === 'closed') {
-    return null;
-  }
-  
+
   return (
-    <form onSubmit={handleSubmitResponse} className="space-y-3">
+    <form onSubmit={handleSubmit} className="mt-6">
+      <h4 className="font-medium mb-2">Your Response</h4>
       <Textarea
-        value={newResponse}
-        onChange={(e) => setNewResponse(e.target.value)}
-        placeholder="Type your response here..."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Type your message here..."
         rows={4}
-        required
+        className="resize-none mb-3"
+        disabled={isSubmitting}
       />
       <Button 
-        type="submit"
-        disabled={isSubmitting || !newResponse.trim()}
+        type="submit" 
+        disabled={isSubmitting || !message.trim()}
+        className="w-full sm:w-auto"
       >
         {isSubmitting ? 'Sending...' : 'Send Response'}
       </Button>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -213,35 +212,39 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
     },
   });
 
-  // Fetch custom prompt if it exists
+  // Fetch custom prompt if it exists using raw SQL to avoid type errors
   const { data: promptData, isLoading: loadingPrompt, refetch: refetchPrompt } = useQuery({
     queryKey: ['custom-prompt', automationId, clientId],
     queryFn: async () => {
       if (!automationId || !clientId) return null;
       
-      const { data, error } = await supabase
-        .from('automation_custom_prompts')
-        .select('*')
-        .eq('automation_id', automationId)
-        .eq('client_id', clientId)
-        .maybeSingle() as any;
+      const { data, error } = await supabase.rpc('exec_sql', {
+        sql_query: `
+          SELECT * FROM automation_custom_prompts 
+          WHERE automation_id = '${automationId}'
+          AND client_id = '${clientId}'
+          LIMIT 1
+        `
+      });
       
       if (error) throw error;
-      return data as CustomPrompt | null;
+      return data && data.length > 0 ? data[0] as CustomPrompt : null;
     },
     enabled: !!automationId && !!clientId && !!automation?.has_custom_prompt,
   });
 
-  // Fetch integrations
+  // Fetch integrations using raw SQL to avoid type errors
   const { data: integrations, isLoading: loadingIntegrations } = useQuery({
     queryKey: ['integrations', automationId],
     queryFn: async () => {
       if (!automationId) return [];
       
-      const { data, error } = await supabase
-        .from('automation_integrations')
-        .select('*')
-        .eq('automation_id', automationId) as any;
+      const { data, error } = await supabase.rpc('exec_sql', {
+        sql_query: `
+          SELECT * FROM automation_integrations 
+          WHERE automation_id = '${automationId}'
+        `
+      });
       
       if (error) throw error;
       return data as Integration[];
@@ -267,22 +270,33 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
       if (!automationId || !clientId) throw new Error("Missing required IDs");
       
       if (promptData) {
-        // Update existing prompt
-        const { error } = await supabase
-          .from('automation_custom_prompts')
-          .update({ prompt_text: promptText, updated_at: new Date().toISOString() })
-          .eq('id', promptData.id) as any;
+        // Update existing prompt using raw SQL
+        const { error } = await supabase.rpc('exec_sql', {
+          sql_query: `
+            UPDATE automation_custom_prompts 
+            SET 
+              prompt_text = '${promptText.replace(/'/g, "''")}', 
+              updated_at = NOW() 
+            WHERE id = '${promptData.id}'
+          `
+        });
           
         if (error) throw error;
       } else {
-        // Create new prompt
-        const { error } = await supabase
-          .from('automation_custom_prompts')
-          .insert({
-            automation_id: automationId,
-            client_id: clientId,
-            prompt_text: promptText
-          }) as any;
+        // Create new prompt using raw SQL
+        const { error } = await supabase.rpc('exec_sql', {
+          sql_query: `
+            INSERT INTO automation_custom_prompts (
+              automation_id, 
+              client_id, 
+              prompt_text
+            ) VALUES (
+              '${automationId}', 
+              '${clientId}', 
+              '${promptText.replace(/'/g, "''")}'
+            )
+          `
+        });
           
         if (error) throw error;
       }

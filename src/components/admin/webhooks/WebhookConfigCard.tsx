@@ -22,6 +22,8 @@ interface WebhookConfigCardProps {
   onModeChange: (isProduction: boolean) => void;
   onTest: () => void;
   onSave: (e: React.FormEvent) => void;
+  isSaving?: boolean; // Added this missing prop
+  showSaveButton?: boolean; // Make this prop optional
 }
 
 const WebhookConfigCard = ({
@@ -37,7 +39,9 @@ const WebhookConfigCard = ({
   onMethodChange,
   onModeChange,
   onTest,
-  onSave
+  onSave,
+  isSaving = false, // Default value
+  showSaveButton = true // Default value
 }: WebhookConfigCardProps) => {
   return (
     <Card>
@@ -87,7 +91,11 @@ const WebhookConfigCard = ({
             <Send className="h-4 w-4 mr-2" />
             Test Webhook
           </Button>
-          <Button type="submit">Save Settings</Button>
+          {showSaveButton && (
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Settings"}
+            </Button>
+          )}
         </CardFooter>
       </form>
     </Card>

@@ -1,158 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Globe, Box, Table, Code, Webhook, AlertCircle } from 'lucide-react';
+import { Box, Table } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
 import { Integration } from '@/types/automation';
-import { runQuery, validateWebhookUrl, escapeSql } from '@/components/admin/adminActions';
-
-// Separate component for webhook integration
-const WebhookIntegration = ({ 
-  webhookData, 
-  onWebhookTestUrlChange,
-  onWebhookProdUrlChange,
-  onSaveWebhook,
-  isSaving 
-}: { 
-  webhookData: Integration;
-  onWebhookTestUrlChange: (value: string) => void;
-  onWebhookProdUrlChange: (value: string) => void;
-  onSaveWebhook: () => void;
-  isSaving: boolean;
-}) => (
-  <WebhookConfigCard 
-    title="Webhook Integration" 
-    description="Configure webhook URLs for this automation"
-    icon={<Webhook className="h-5 w-5" />}
-    testUrl={webhookData.test_url || ''}
-    productionUrl={webhookData.production_url || ''}
-    method="POST"
-    mode="test"
-    onTestUrlChange={onWebhookTestUrlChange}
-    onProductionUrlChange={onWebhookProdUrlChange}
-    onMethodChange={() => {}}
-    onModeChange={() => {}}
-    onTest={() => toast.info('Webhook test function not implemented')}
-    onSave={(e) => {
-      e.preventDefault();
-      onSaveWebhook();
-    }}
-    isSaving={isSaving}
-    showSaveButton={true}
-  />
-);
-
-// Generic Component for Code Integration (reusable for both Form and Table)
-const CodeIntegration = ({ 
-  data, 
-  type,
-  title,
-  description,
-  placeholder,
-  icon,
-  onChange, 
-  onCodeChange,
-  onSave, 
-  isSaving 
-}: { 
-  data: Integration;
-  type: 'form' | 'table';
-  title: string;
-  description: string;
-  placeholder: string;
-  icon: React.ReactNode;
-  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onCodeChange: (value: string) => void;
-  onSave: () => void;
-  isSaving: boolean;
-}) => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        {icon}
-        {title}
-      </CardTitle>
-      <CardDescription>{description}</CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-4">
-      <div>
-        <Label htmlFor={`${type}-code`}>Embed Code</Label>
-        <div className="flex items-center space-x-2 mb-2">
-          <Code className="h-4 w-4 text-gray-500" />
-          <p className="text-sm text-gray-500">
-            Paste the HTML code for your integration
-          </p>
-        </div>
-        <Textarea 
-          id={`${type}-code`}
-          placeholder={placeholder}
-          rows={10}
-          value={data?.integration_code || ''}
-          onChange={(e) => {
-            if (onChange) onChange(e);
-            onCodeChange(e.target.value);
-          }}
-          className="font-mono text-sm"
-        />
-      </div>
-      
-      {data?.integration_code && (
-        <div>
-          <Label>Preview</Label>
-          <div className="mt-2 border rounded-md p-4 bg-gray-50">
-            <div dangerouslySetInnerHTML={{ __html: data.integration_code }} />
-          </div>
-        </div>
-      )}
-      
-      <Button 
-        onClick={onSave} 
-        disabled={isSaving} 
-        className="w-full"
-      >
-        {isSaving ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Saving...
-          </>
-        ) : (
-          <>
-            <Save className="mr-2 h-4 w-4" />
-            Save {title}
-          </>
-        )}
-      </Button>
-    </CardContent>
-  </Card>
-);
-
-// Loading state component
-const LoadingState = () => (
-  <div className="flex justify-center items-center p-8">
-    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-    <span className="ml-2">Loading integrations...</span>
-  </div>
-);
-
-// No integrations component
-const NoIntegrations = () => (
-  <Card>
-    <CardContent className="pt-6">
-      <div className="bg-gray-50 p-6 rounded-md text-center">
-        <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-        <p className="text-gray-500">No integrations have been enabled for this automation.</p>
-        <p className="text-sm text-gray-400 mt-1">Edit the automation to enable integrations.</p>
-      </div>
-    </CardContent>
-  </Card>
-);
+import WebhookIntegration from './integrations/WebhookIntegration';
+import CodeIntegration from './integrations/CodeIntegration';
+import LoadingState from './integrations/LoadingState';
+import NoIntegrations from './integrations/NoIntegrations';
+import { fetchAutomationIntegrations, saveIntegration, createEmptyIntegration } from './integration-utils';
 
 interface AutomationIntegrationsProps {
   automationId: string;
@@ -180,22 +37,13 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
   
   // Fetch existing integrations
   useEffect(() => {
-    const fetchIntegrations = async () => {
+    const loadIntegrations = async () => {
       if (!automationId) return;
       
       setIsLoading(true);
       try {
-        // Using typed query helper
-        const { data, error } = await runQuery<Integration>(`
-          SELECT * FROM automation_integrations WHERE automation_id = '${automationId}'
-        `);
-        
-        if (error) {
-          throw error;
-        }
-        
-        // Process returned data
-        const integrations = data || [];
+        // Fetch integrations
+        const integrations = await fetchAutomationIntegrations(automationId);
         
         if (integrations && integrations.length > 0) {
           // Sort integrations by type
@@ -211,28 +59,15 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
         } else {
           // Initialize empty integrations if none exist
           if (hasWebhook) {
-            setWebhookData({
-              automation_id: automationId,
-              integration_type: 'webhook',
-              test_url: '',
-              production_url: ''
-            });
+            setWebhookData(createEmptyIntegration(automationId, 'webhook'));
           }
           
           if (hasFormIntegration) {
-            setFormData({
-              automation_id: automationId,
-              integration_type: 'form',
-              integration_code: ''
-            });
+            setFormData(createEmptyIntegration(automationId, 'form'));
           }
           
           if (hasTableIntegration) {
-            setTableData({
-              automation_id: automationId,
-              integration_type: 'table',
-              integration_code: ''
-            });
+            setTableData(createEmptyIntegration(automationId, 'table'));
           }
         }
       } catch (error) {
@@ -243,7 +78,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       }
     };
     
-    fetchIntegrations();
+    loadIntegrations();
   }, [automationId, hasWebhook, hasFormIntegration, hasTableIntegration]);
   
   // Set initial active tab based on available integrations
@@ -257,85 +92,29 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     }
   }, [hasWebhook, hasFormIntegration, hasTableIntegration]);
   
-  const validateWebhookUrls = () => {
-    if (!webhookData) return true;
-    
-    const testUrlValid = !webhookData.test_url || validateWebhookUrl(webhookData.test_url);
-    const prodUrlValid = !webhookData.production_url || validateWebhookUrl(webhookData.production_url);
-    
-    setWebhookErrors({
-      testUrl: !testUrlValid,
-      prodUrl: !prodUrlValid
-    });
-    
-    return testUrlValid && prodUrlValid;
-  };
-  
-  const saveIntegration = async (data: Integration) => {
+  const handleSaveIntegration = async (data: Integration) => {
     if (!data || !automationId) return;
-    
-    // For webhook type, validate URLs first
-    if (data.integration_type === 'webhook' && !validateWebhookUrls()) {
-      toast.error('Please enter valid URLs');
-      return;
-    }
     
     setIsSaving(true);
     try {
-      if (data.id) {
-        // Update existing integration using typed query helper
-        const { error } = await runQuery(`
-          UPDATE automation_integrations 
-          SET 
-            test_url = '${escapeSql(data.test_url || '')}',
-            production_url = '${escapeSql(data.production_url || '')}',
-            integration_code = '${escapeSql(data.integration_code || '')}',
-            updated_at = NOW()
-          WHERE id = '${data.id}'
-        `);
+      const result = await saveIntegration(data);
+      
+      if (result && result.success) {
+        // If we got a new ID back, update the state
+        if (result.id && !data.id) {
+          const updatedData = { ...data, id: result.id };
           
-        if (error) throw error;
-      } else {
-        // Create new integration using typed query helper
-        const { data: newData, error } = await runQuery<{id: string}>(`
-          INSERT INTO automation_integrations (
-            automation_id, 
-            integration_type,
-            test_url,
-            production_url,
-            integration_code
-          ) VALUES (
-            '${automationId}',
-            '${data.integration_type}',
-            '${escapeSql(data.test_url || '')}',
-            '${escapeSql(data.production_url || '')}',
-            '${escapeSql(data.integration_code || '')}' 
-          )
-          RETURNING id
-        `);
-          
-        if (error) throw error;
-        
-        // Check if newData exists and has items
-        if (newData && newData.length > 0) {
-          const newId = newData[0]?.id;
-          if (newId) {
-            // Update state with new ID
-            if (data.integration_type === 'webhook') {
-              setWebhookData({ ...data, id: newId });
-            } else if (data.integration_type === 'form') {
-              setFormData({ ...data, id: newId });
-            } else if (data.integration_type === 'table') {
-              setTableData({ ...data, id: newId });
-            }
+          if (data.integration_type === 'webhook') {
+            setWebhookData(updatedData);
+          } else if (data.integration_type === 'form') {
+            setFormData(updatedData);
+          } else if (data.integration_type === 'table') {
+            setTableData(updatedData);
           }
         }
+        
+        toast.success(`${data.integration_type} integration saved successfully`);
       }
-      
-      toast.success(`${data.integration_type} integration saved successfully`);
-    } catch (error) {
-      console.error(`Failed to save ${data.integration_type} integration:`, error);
-      toast.error(`Failed to save ${data.integration_type} integration`);
     } finally {
       setIsSaving(false);
     }
@@ -383,7 +162,11 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${[hasWebhook, hasFormIntegration, hasTableIntegration].filter(Boolean).length}, 1fr)` }}>
+          <TabsList className="grid w-full" style={{ 
+            gridTemplateColumns: 
+              `repeat(${[hasWebhook, hasFormIntegration, hasTableIntegration]
+                .filter(Boolean).length}, 1fr)` 
+          }}>
             {hasWebhook && <TabsTrigger value="webhook" disabled={!hasWebhook}>Webhook</TabsTrigger>}
             {hasFormIntegration && <TabsTrigger value="form" disabled={!hasFormIntegration}>Form</TabsTrigger>}
             {hasTableIntegration && <TabsTrigger value="table" disabled={!hasTableIntegration}>Table</TabsTrigger>}
@@ -395,7 +178,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
                 webhookData={webhookData}
                 onWebhookTestUrlChange={handleWebhookTestUrlChange}
                 onWebhookProdUrlChange={handleWebhookProdUrlChange}
-                onSaveWebhook={() => saveIntegration(webhookData)}
+                onSaveWebhook={() => handleSaveIntegration(webhookData)}
                 isSaving={isSaving}
               />
             </TabsContent>
@@ -411,7 +194,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
                 placeholder="<iframe src='https://your-form-url' ...>"
                 icon={<Box className="h-5 w-5" />}
                 onCodeChange={handleFormCodeChange}
-                onSave={() => saveIntegration(formData)}
+                onSave={() => handleSaveIntegration(formData)}
                 isSaving={isSaving}
               />
             </TabsContent>
@@ -427,7 +210,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
                 placeholder="<iframe src='https://your-table-url' ...>"
                 icon={<Table className="h-5 w-5" />}
                 onCodeChange={handleTableCodeChange}
-                onSave={() => saveIntegration(tableData)}
+                onSave={() => handleSaveIntegration(tableData)}
                 isSaving={isSaving}
               />
             </TabsContent>

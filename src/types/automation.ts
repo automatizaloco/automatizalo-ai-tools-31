@@ -46,7 +46,7 @@ export interface TicketResponse {
 }
 
 export interface CustomPrompt {
-  id: string;
+  id?: string;
   prompt_text: string;
   client_id: string;
   automation_id: string;

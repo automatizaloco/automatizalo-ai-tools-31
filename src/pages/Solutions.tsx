@@ -7,24 +7,33 @@ import { useAuth } from "@/context/AuthContext";
 import EditableText from "@/components/admin/EditableText";
 import { Link } from 'react-router-dom';
 import { useContactInfo } from "@/stores/contactInfoStore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getPageContent } from "@/services/pageContentService";
 
 const Solutions = () => {
-  const {
-    t
-  } = useLanguage();
-  const {
-    isAuthenticated
-  } = useAuth();
-  const {
-    contactInfo,
-    fetchContactInfo
-  } = useContactInfo();
+  const { t, language } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const { contactInfo, fetchContactInfo } = useContactInfo();
+  const [leadGenSubtitle, setLeadGenSubtitle] = useState<string | null>(null);
   
   useEffect(() => {
     console.log("Solutions page: Fetching contact info");
     fetchContactInfo();
-  }, [fetchContactInfo]);
+    
+    // Load custom lead generation subtitle
+    const loadLeadGenSubtitle = async () => {
+      try {
+        const content = await getPageContent('solutions', 'leadGeneration.subtitle', language);
+        if (content) {
+          setLeadGenSubtitle(content);
+        }
+      } catch (error) {
+        console.error('Error loading lead generation subtitle:', error);
+      }
+    };
+    
+    loadLeadGenSubtitle();
+  }, [fetchContactInfo, language]);
 
   // Add lead generation as the fourth solution card
   const solutionCards = [{
@@ -135,7 +144,10 @@ const Solutions = () => {
             {isAuthenticated ? <EditableText id="solutions-leadgeneration-description" defaultText={t("solutions.leadGeneration.description")} /> : t("solutions.leadGeneration.description")}
           </p>
           <p className="text-gray-600">
-            {isAuthenticated ? <EditableText id="solutions-leadgeneration-subtitle" defaultText={t("solutions.leadGeneration.subtitle")} /> : t("solutions.leadGeneration.subtitle")}
+            {isAuthenticated ? 
+              <EditableText id="solutions-leadgeneration-subtitle" defaultText={leadGenSubtitle || t("solutions.leadGeneration.subtitle")} pageName="solutions" sectionName="leadGeneration.subtitle" /> : 
+              leadGenSubtitle || t("solutions.leadGeneration.subtitle")
+            }
           </p>
         </div>
         <div className="lg:w-1/2">

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import withEditableImage from '@/components/admin/withEditableImage';
+import { useLanguage } from '@/context/LanguageContext';
+import { getPageContent } from '@/services/pageContentService';
 
 interface SolutionCardProps {
   title: string;
@@ -35,13 +37,35 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
   imageId = ""
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const { language } = useLanguage();
+  const [customFeature4, setCustomFeature4] = useState<string | null>(null);
+  
+  // Check if this is the Lead Generation card
+  const isLeadGeneration = title.toLowerCase().includes('lead generation');
   
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 100 + delay);
+    
+    // If this is the lead generation card, load the custom feature4 content
+    if (isLeadGeneration) {
+      const loadFeature4 = async () => {
+        try {
+          const content = await getPageContent('solutions', 'leadGeneration.feature4', language);
+          if (content) {
+            setCustomFeature4(content);
+          }
+        } catch (error) {
+          console.error('Error loading lead generation feature4:', error);
+        }
+      };
+      
+      loadFeature4();
+    }
+    
     return () => clearTimeout(timer);
-  }, [delay]);
+  }, [delay, isLeadGeneration, language]);
 
   // Create an editable image component using withEditableImage HOC
   const EditableImage = withEditableImage(({
@@ -53,9 +77,6 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
     alt: string;
     className?: string;
   }) => <img src={src} alt={alt} className={className} />);
-  
-  // Check if this is the Lead Generation card
-  const isLeadGeneration = title.toLowerCase().includes('lead generation');
 
   return <motion.div initial={{
     opacity: 0,
@@ -87,19 +108,21 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
           
           {/* Features list */}
           <div className="space-y-2 mb-6 flex-grow">
-            {features.map((feature, idx) => <div key={idx} className="flex items-start">
+            {features.map((feature, idx) => (
+              <div key={idx} className="flex items-start">
                 <div className="h-5 w-5 mt-0.5 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3 shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                     <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <span className="text-sm text-gray-600">{feature}</span>
-              </div>)}
+              </div>
+            ))}
               
             {/* Add channel options for Lead Generation card */}
-            {isLeadGeneration && (
+            {isLeadGeneration && customFeature4 && (
               <div className="mt-4 pt-3 border-t border-gray-100">
-                <p className="text-sm font-medium mb-2">Choose your channel:</p>
+                <p className="text-sm font-medium mb-2">{customFeature4}</p>
                 <div className="flex flex-wrap gap-2">
                   <div className="flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
@@ -134,9 +157,6 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
               </div>
             )}
           </div>
-          
-          {/* View solution button */}
-          
         </CardContent>
       </Card>
     </motion.div>;

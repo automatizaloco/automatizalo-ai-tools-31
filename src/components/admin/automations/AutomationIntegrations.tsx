@@ -40,6 +40,7 @@ const WebhookIntegration = ({
     onTest={() => toast.info('Webhook test function not implemented')}
     onSave={onSaveWebhook}
     isSaving={isSaving}
+    showSaveButton={true}
   />
 );
 
@@ -220,10 +221,11 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       
       setIsLoading(true);
       try {
+        // Use 'automation_integrations' table instead of 'automation_integrations'
         const { data, error } = await supabase
           .from('automation_integrations')
           .select('*')
-          .eq('automation_id', automationId) as any;
+          .eq('automation_id', automationId);
         
         if (error) throw error;
         
@@ -302,7 +304,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             integration_code: data.integration_code,
             updated_at: new Date().toISOString()
           })
-          .eq('id', data.id) as any;
+          .eq('id', data.id);
           
         if (error) throw error;
       } else {
@@ -316,7 +318,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
             production_url: data.production_url,
             integration_code: data.integration_code
           })
-          .select() as any;
+          .select();
           
         if (error) throw error;
         
@@ -381,7 +383,7 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3">
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${[hasWebhook, hasFormIntegration, hasTableIntegration].filter(Boolean).length}, 1fr)` }}>
             {hasWebhook && <TabsTrigger value="webhook" disabled={!hasWebhook}>Webhook</TabsTrigger>}
             {hasFormIntegration && <TabsTrigger value="form" disabled={!hasFormIntegration}>Form</TabsTrigger>}
             {hasTableIntegration && <TabsTrigger value="table" disabled={!hasTableIntegration}>Table</TabsTrigger>}

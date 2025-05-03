@@ -18,6 +18,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Read the SQL file content from the _shared directory
     const sqlContent = await Deno.readTextFile('./supabase/functions/_shared/sql/update_automations_table.sql');
     
+    console.log('Executing SQL to update database schema...');
+    
     // Execute the SQL query
     const { error } = await supabase.rpc('exec_sql', { sql_query: sqlContent });
     
@@ -32,6 +34,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    console.log('Database schema updated successfully');
+    
     return new Response(
       JSON.stringify({ success: true, message: 'Database schema updated successfully' }),
       { 

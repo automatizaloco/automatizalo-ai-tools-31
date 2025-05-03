@@ -44,3 +44,21 @@ export const runQuery = async <T = any>(query: string, values?: any[]) => {
     return { data: null, error: err };
   }
 };
+
+// Helper function for webhook validation
+export const validateWebhookUrl = (url: string): boolean => {
+  if (!url) return true; // Empty is valid (optional)
+  
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (e) {
+    return false;
+  }
+};
+
+// Helper function to safely escape SQL strings
+export const escapeSql = (str: string): string => {
+  if (!str) return '';
+  return str.replace(/'/g, "''");
+};

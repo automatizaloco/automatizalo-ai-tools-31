@@ -1,15 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Globe, Box, Table } from 'lucide-react';
+import { Loader2, Save, Globe, Box, Table, Code, Webhook, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
 import { Integration } from '@/types/automation';
-import { runQuery } from '@/components/admin/adminActions';
+import { runQuery, validateWebhookUrl, escapeSql } from '@/components/admin/adminActions';
 
 // Separate component for webhook integration
 const WebhookIntegration = ({ 
@@ -28,7 +30,7 @@ const WebhookIntegration = ({
   <WebhookConfigCard 
     title="Webhook Integration" 
     description="Configure webhook URLs for this automation"
-    icon={<Globe className="h-5 w-5" />}
+    icon={<Webhook className="h-5 w-5" />}
     testUrl={webhookData.test_url || ''}
     productionUrl={webhookData.production_url || ''}
     method="POST"
@@ -47,46 +49,65 @@ const WebhookIntegration = ({
   />
 );
 
-// Separate component for form integration
-const FormIntegration = ({ 
-  formData, 
+// Generic Component for Code Integration (reusable for both Form and Table)
+const CodeIntegration = ({ 
+  data, 
+  type,
+  title,
+  description,
+  placeholder,
+  icon,
   onChange, 
+  onCodeChange,
   onSave, 
   isSaving 
 }: { 
-  formData: Integration;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  data: Integration;
+  type: 'form' | 'table';
+  title: string;
+  description: string;
+  placeholder: string;
+  icon: React.ReactNode;
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onCodeChange: (value: string) => void;
   onSave: () => void;
   isSaving: boolean;
 }) => (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
-        <Box className="h-5 w-5" />
-        Form Integration
+        {icon}
+        {title}
       </CardTitle>
+      <CardDescription>{description}</CardDescription>
     </CardHeader>
     <CardContent className="space-y-4">
       <div>
-        <Label htmlFor="form-code">Form Embed Code</Label>
-        <p className="text-sm text-gray-500 mb-2">
-          Paste the HTML code for your n8n form or Google Form embed.
-        </p>
+        <Label htmlFor={`${type}-code`}>Embed Code</Label>
+        <div className="flex items-center space-x-2 mb-2">
+          <Code className="h-4 w-4 text-gray-500" />
+          <p className="text-sm text-gray-500">
+            Paste the HTML code for your integration
+          </p>
+        </div>
         <Textarea 
-          id="form-code"
-          placeholder="<iframe src='https://your-form-url' ...>"
+          id={`${type}-code`}
+          placeholder={placeholder}
           rows={10}
-          value={formData?.integration_code || ''}
-          onChange={onChange}
+          value={data?.integration_code || ''}
+          onChange={(e) => {
+            if (onChange) onChange(e);
+            onCodeChange(e.target.value);
+          }}
           className="font-mono text-sm"
         />
       </div>
       
-      {formData?.integration_code && (
+      {data?.integration_code && (
         <div>
           <Label>Preview</Label>
           <div className="mt-2 border rounded-md p-4 bg-gray-50">
-            <div dangerouslySetInnerHTML={{ __html: formData.integration_code }} />
+            <div dangerouslySetInnerHTML={{ __html: data.integration_code }} />
           </div>
         </div>
       )}
@@ -104,72 +125,7 @@ const FormIntegration = ({
         ) : (
           <>
             <Save className="mr-2 h-4 w-4" />
-            Save Form Integration
-          </>
-        )}
-      </Button>
-    </CardContent>
-  </Card>
-);
-
-// Separate component for table integration
-const TableIntegration = ({ 
-  tableData, 
-  onChange, 
-  onSave, 
-  isSaving 
-}: { 
-  tableData: Integration;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onSave: () => void;
-  isSaving: boolean;
-}) => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Table className="h-5 w-5" />
-        Table Integration
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="space-y-4">
-      <div>
-        <Label htmlFor="table-code">Table Embed Code</Label>
-        <p className="text-sm text-gray-500 mb-2">
-          Paste the HTML code for your Airtable, Google Sheets, or NocoDB table embed.
-        </p>
-        <Textarea 
-          id="table-code"
-          placeholder="<iframe src='https://your-table-url' ...>"
-          rows={10}
-          value={tableData?.integration_code || ''}
-          onChange={onChange}
-          className="font-mono text-sm"
-        />
-      </div>
-      
-      {tableData?.integration_code && (
-        <div>
-          <Label>Preview</Label>
-          <div className="mt-2 border rounded-md p-4 bg-gray-50">
-            <div dangerouslySetInnerHTML={{ __html: tableData.integration_code }} />
-          </div>
-        </div>
-      )}
-      
-      <Button 
-        onClick={onSave} 
-        disabled={isSaving} 
-        className="w-full"
-      >
-        {isSaving ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Saving...
-          </>
-        ) : (
-          <>
-            <Save className="mr-2 h-4 w-4" />
-            Save Table Integration
+            Save {title}
           </>
         )}
       </Button>
@@ -190,6 +146,7 @@ const NoIntegrations = () => (
   <Card>
     <CardContent className="pt-6">
       <div className="bg-gray-50 p-6 rounded-md text-center">
+        <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
         <p className="text-gray-500">No integrations have been enabled for this automation.</p>
         <p className="text-sm text-gray-400 mt-1">Edit the automation to enable integrations.</p>
       </div>
@@ -216,6 +173,10 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
   const [formData, setFormData] = useState<Integration | null>(null);
   const [tableData, setTableData] = useState<Integration | null>(null);
   const [activeTab, setActiveTab] = useState<string>('webhook');
+  const [webhookErrors, setWebhookErrors] = useState({
+    testUrl: false,
+    prodUrl: false
+  });
   
   // Fetch existing integrations
   useEffect(() => {
@@ -296,8 +257,28 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     }
   }, [hasWebhook, hasFormIntegration, hasTableIntegration]);
   
+  const validateWebhookUrls = () => {
+    if (!webhookData) return true;
+    
+    const testUrlValid = !webhookData.test_url || validateWebhookUrl(webhookData.test_url);
+    const prodUrlValid = !webhookData.production_url || validateWebhookUrl(webhookData.production_url);
+    
+    setWebhookErrors({
+      testUrl: !testUrlValid,
+      prodUrl: !prodUrlValid
+    });
+    
+    return testUrlValid && prodUrlValid;
+  };
+  
   const saveIntegration = async (data: Integration) => {
     if (!data || !automationId) return;
+    
+    // For webhook type, validate URLs first
+    if (data.integration_type === 'webhook' && !validateWebhookUrls()) {
+      toast.error('Please enter valid URLs');
+      return;
+    }
     
     setIsSaving(true);
     try {
@@ -306,9 +287,9 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
         const { error } = await runQuery(`
           UPDATE automation_integrations 
           SET 
-            test_url = '${data.test_url || ''}',
-            production_url = '${data.production_url || ''}',
-            integration_code = '${data.integration_code?.replace(/'/g, "''")}',
+            test_url = '${escapeSql(data.test_url || '')}',
+            production_url = '${escapeSql(data.production_url || '')}',
+            integration_code = '${escapeSql(data.integration_code || '')}',
             updated_at = NOW()
           WHERE id = '${data.id}'
         `);
@@ -326,9 +307,9 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
           ) VALUES (
             '${automationId}',
             '${data.integration_type}',
-            '${data.test_url || ''}',
-            '${data.production_url || ''}',
-            '${data.integration_code?.replace(/'/g, "''")}' 
+            '${escapeSql(data.test_url || '')}',
+            '${escapeSql(data.production_url || '')}',
+            '${escapeSql(data.integration_code || '')}' 
           )
           RETURNING id
         `);
@@ -363,24 +344,26 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
   const handleWebhookTestUrlChange = (value: string) => {
     if (webhookData) {
       setWebhookData({ ...webhookData, test_url: value });
+      setWebhookErrors(prev => ({ ...prev, testUrl: false }));
     }
   };
   
   const handleWebhookProdUrlChange = (value: string) => {
     if (webhookData) {
       setWebhookData({ ...webhookData, production_url: value });
+      setWebhookErrors(prev => ({ ...prev, prodUrl: false }));
     }
   };
   
-  const handleFormCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleFormCodeChange = (value: string) => {
     if (formData) {
-      setFormData({ ...formData, integration_code: e.target.value });
+      setFormData({ ...formData, integration_code: value });
     }
   };
   
-  const handleTableCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTableCodeChange = (value: string) => {
     if (tableData) {
-      setTableData({ ...tableData, integration_code: e.target.value });
+      setTableData({ ...tableData, integration_code: value });
     }
   };
   
@@ -420,9 +403,14 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
           
           {hasFormIntegration && formData && (
             <TabsContent value="form" className="pt-4">
-              <FormIntegration
-                formData={formData}
-                onChange={handleFormCodeChange}
+              <CodeIntegration
+                data={formData}
+                type="form"
+                title="Form Integration"
+                description="Paste the HTML code for your n8n form or Google Form embed"
+                placeholder="<iframe src='https://your-form-url' ...>"
+                icon={<Box className="h-5 w-5" />}
+                onCodeChange={handleFormCodeChange}
                 onSave={() => saveIntegration(formData)}
                 isSaving={isSaving}
               />
@@ -431,9 +419,14 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
           
           {hasTableIntegration && tableData && (
             <TabsContent value="table" className="pt-4">
-              <TableIntegration
-                tableData={tableData}
-                onChange={handleTableCodeChange}
+              <CodeIntegration
+                data={tableData}
+                type="table"
+                title="Table Integration"
+                description="Paste the HTML code for your Airtable, Google Sheets, or NocoDB table embed"
+                placeholder="<iframe src='https://your-table-url' ...>"
+                icon={<Table className="h-5 w-5" />}
+                onCodeChange={handleTableCodeChange}
                 onSave={() => saveIntegration(tableData)}
                 isSaving={isSaving}
               />

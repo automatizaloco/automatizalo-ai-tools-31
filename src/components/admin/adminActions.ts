@@ -27,7 +27,7 @@ export const updateDatabaseSchema = async () => {
 };
 
 // Helper function to run a raw SQL query for tables not in TypeScript types
-export const runQuery = async (query: string, values?: any[]) => {
+export const runQuery = async <T = any>(query: string, values?: any[]) => {
   try {
     const { data, error } = await supabase.rpc('exec_sql', { 
       sql_query: query 
@@ -38,7 +38,7 @@ export const runQuery = async (query: string, values?: any[]) => {
       throw error;
     }
     
-    return { data, error: null };
+    return { data: data as T[], error: null };
   } catch (err) {
     console.error("Query error:", err);
     return { data: null, error: err };

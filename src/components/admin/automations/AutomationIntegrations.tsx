@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
 import { Integration } from '@/types/automation';
+import { runQuery } from '@/components/admin/adminActions';
 
 // Separate component for webhook integration
 const WebhookIntegration = ({ 
@@ -224,11 +224,10 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       
       setIsLoading(true);
       try {
-        // Using raw SQL query to get around TypeScript issues
-        const { data, error } = await supabase
-          .rpc('exec_sql', {
-            sql_query: `SELECT * FROM automation_integrations WHERE automation_id = '${automationId}'`
-          });
+        // Using typed query helper
+        const { data, error } = await runQuery<Integration>(`
+          SELECT * FROM automation_integrations WHERE automation_id = '${automationId}'
+        `);
         
         if (error) {
           throw error;
@@ -303,63 +302,51 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
     setIsSaving(true);
     try {
       if (data.id) {
-        // Update existing integration using raw SQL
-        const { error } = await supabase.rpc('exec_sql', {
-          sql_query: `
-            UPDATE automation_integrations 
-            SET 
-              test_url = '${data.test_url || ''}',
-              production_url = '${data.production_url || ''}',
-              integration_code = '${data.integration_code?.replace(/'/g, "''")}',
-              updated_at = NOW()
-            WHERE id = '${data.id}'
-          `
-        });
+        // Update existing integration using typed query helper
+        const { error } = await runQuery(`
+          UPDATE automation_integrations 
+          SET 
+            test_url = '${data.test_url || ''}',
+            production_url = '${data.production_url || ''}',
+            integration_code = '${data.integration_code?.replace(/'/g, "''")}',
+            updated_at = NOW()
+          WHERE id = '${data.id}'
+        `);
           
         if (error) throw error;
       } else {
-        // Create new integration using raw SQL
-        const { error } = await supabase.rpc('exec_sql', {
-          sql_query: `
-            INSERT INTO automation_integrations (
-              automation_id, 
-              integration_type,
-              test_url,
-              production_url,
-              integration_code
-            ) VALUES (
-              '${automationId}',
-              '${data.integration_type}',
-              '${data.test_url || ''}',
-              '${data.production_url || ''}',
-              '${data.integration_code?.replace(/'/g, "''")}' 
-            )
-            RETURNING id
-          `
-        });
+        // Create new integration using typed query helper
+        const { data: newData, error } = await runQuery<{id: string}>(`
+          INSERT INTO automation_integrations (
+            automation_id, 
+            integration_type,
+            test_url,
+            production_url,
+            integration_code
+          ) VALUES (
+            '${automationId}',
+            '${data.integration_type}',
+            '${data.test_url || ''}',
+            '${data.production_url || ''}',
+            '${data.integration_code?.replace(/'/g, "''")}' 
+          )
+          RETURNING id
+        `);
           
         if (error) throw error;
         
-        // Re-fetch to get the new ID
-        const { data: newData } = await supabase.rpc('exec_sql', {
-          sql_query: `
-            SELECT * FROM automation_integrations 
-            WHERE automation_id = '${automationId}' 
-            AND integration_type = '${data.integration_type}'
-            ORDER BY created_at DESC
-            LIMIT 1
-          `
-        });
-        
+        // Check if newData exists and has items
         if (newData && newData.length > 0) {
-          const newIntegration = newData[0];
-          // Update state with new ID
-          if (data.integration_type === 'webhook') {
-            setWebhookData({ ...data, id: newIntegration.id });
-          } else if (data.integration_type === 'form') {
-            setFormData({ ...data, id: newIntegration.id });
-          } else if (data.integration_type === 'table') {
-            setTableData({ ...data, id: newIntegration.id });
+          const newId = newData[0]?.id;
+          if (newId) {
+            // Update state with new ID
+            if (data.integration_type === 'webhook') {
+              setWebhookData({ ...data, id: newId });
+            } else if (data.integration_type === 'form') {
+              setFormData({ ...data, id: newId });
+            } else if (data.integration_type === 'table') {
+              setTableData({ ...data, id: newId });
+            }
           }
         }
       }

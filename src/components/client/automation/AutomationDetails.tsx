@@ -10,6 +10,7 @@ import { Automation, CustomPrompt, Integration } from '@/types/automation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { runQuery } from '@/components/admin/adminActions';
 
 interface AutomationDetailProps {
   clientId: string;
@@ -212,42 +213,38 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
     },
   });
 
-  // Fetch custom prompt if it exists using raw SQL to avoid type errors
+  // Fetch custom prompt if it exists using our typed query helper
   const { data: promptData, isLoading: loadingPrompt, refetch: refetchPrompt } = useQuery({
     queryKey: ['custom-prompt', automationId, clientId],
     queryFn: async () => {
       if (!automationId || !clientId) return null;
       
-      const { data, error } = await supabase.rpc('exec_sql', {
-        sql_query: `
-          SELECT * FROM automation_custom_prompts 
-          WHERE automation_id = '${automationId}'
-          AND client_id = '${clientId}'
-          LIMIT 1
-        `
-      });
+      const { data, error } = await runQuery<CustomPrompt>(`
+        SELECT * FROM automation_custom_prompts 
+        WHERE automation_id = '${automationId}'
+        AND client_id = '${clientId}'
+        LIMIT 1
+      `);
       
       if (error) throw error;
-      return data && data.length > 0 ? data[0] as CustomPrompt : null;
+      return data && data.length > 0 ? data[0] : null;
     },
     enabled: !!automationId && !!clientId && !!automation?.has_custom_prompt,
   });
 
-  // Fetch integrations using raw SQL to avoid type errors
+  // Fetch integrations using our typed query helper
   const { data: integrations, isLoading: loadingIntegrations } = useQuery({
     queryKey: ['integrations', automationId],
     queryFn: async () => {
       if (!automationId) return [];
       
-      const { data, error } = await supabase.rpc('exec_sql', {
-        sql_query: `
-          SELECT * FROM automation_integrations 
-          WHERE automation_id = '${automationId}'
-        `
-      });
+      const { data, error } = await runQuery<Integration>(`
+        SELECT * FROM automation_integrations 
+        WHERE automation_id = '${automationId}'
+      `);
       
       if (error) throw error;
-      return data as Integration[];
+      return data || [];
     },
     enabled: !!automationId && !!(automation?.has_webhook || automation?.has_form_integration || automation?.has_table_integration),
   });
@@ -270,33 +267,29 @@ const AutomationDetails: React.FC<AutomationDetailProps> = ({ clientId }) => {
       if (!automationId || !clientId) throw new Error("Missing required IDs");
       
       if (promptData) {
-        // Update existing prompt using raw SQL
-        const { error } = await supabase.rpc('exec_sql', {
-          sql_query: `
-            UPDATE automation_custom_prompts 
-            SET 
-              prompt_text = '${promptText.replace(/'/g, "''")}', 
-              updated_at = NOW() 
-            WHERE id = '${promptData.id}'
-          `
-        });
+        // Update existing prompt using typed query helper
+        const { error } = await runQuery(`
+          UPDATE automation_custom_prompts 
+          SET 
+            prompt_text = '${promptText.replace(/'/g, "''")}', 
+            updated_at = NOW() 
+          WHERE id = '${promptData.id}'
+        `);
           
         if (error) throw error;
       } else {
-        // Create new prompt using raw SQL
-        const { error } = await supabase.rpc('exec_sql', {
-          sql_query: `
-            INSERT INTO automation_custom_prompts (
-              automation_id, 
-              client_id, 
-              prompt_text
-            ) VALUES (
-              '${automationId}', 
-              '${clientId}', 
-              '${promptText.replace(/'/g, "''")}'
-            )
-          `
-        });
+        // Create new prompt using typed query helper
+        const { error } = await runQuery(`
+          INSERT INTO automation_custom_prompts (
+            automation_id, 
+            client_id, 
+            prompt_text
+          ) VALUES (
+            '${automationId}', 
+            '${clientId}', 
+            '${promptText.replace(/'/g, "''")}'
+          )
+        `);
           
         if (error) throw error;
       }

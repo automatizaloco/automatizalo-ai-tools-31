@@ -28,7 +28,8 @@ const MyAutomationsView: React.FC = () => {
           *,
           automation:automation_id (*)
         `)
-        .eq('client_id', user.id);
+        .eq('client_id', user.id)
+        .eq('status', 'active'); // Only get active subscriptions
 
       if (error) throw error;
       return data as ClientAutomation[];
@@ -90,9 +91,9 @@ const MyAutomationsView: React.FC = () => {
   if (!clientAutomations || clientAutomations.length === 0) {
     return (
       <div className="text-center p-12 border rounded-lg bg-gray-50">
-        <h2 className="text-xl font-medium text-gray-800 mb-2">No Automations</h2>
+        <h2 className="text-xl font-medium text-gray-800 mb-2">No Active Automations</h2>
         <p className="text-gray-600 mb-4">
-          You haven't purchased any automations yet.
+          You don't have any active automations at the moment.
         </p>
         <Button 
           variant="outline"

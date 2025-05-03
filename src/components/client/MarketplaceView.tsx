@@ -38,7 +38,7 @@ const MarketplaceView: React.FC = () => {
         .from('client_automations')
         .select('automation_id')
         .eq('client_id', user.id)
-        .eq('status', 'active');
+        .eq('status', 'active');  // Only consider active subscriptions
 
       if (error) throw error;
       return data.map(item => item.automation_id);
@@ -60,7 +60,7 @@ const MarketplaceView: React.FC = () => {
         return;
       }
 
-      // Check if the user already owns this automation
+      // Check if the user already has an active subscription for this automation
       if (userOwnsAutomation(automationId)) {
         toast.info('You already own this automation');
         return;
@@ -89,7 +89,7 @@ const MarketplaceView: React.FC = () => {
       
       toast.success('Automation purchased successfully!');
       
-      // Refetch purchased automations
+      // Refresh data
       await supabase.auth.refreshSession();
     } catch (error) {
       console.error('Error purchasing automation:', error);

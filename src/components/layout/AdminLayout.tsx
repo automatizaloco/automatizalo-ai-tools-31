@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactNode, useEffect, useState } from 'react';
 import { 
@@ -154,8 +153,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       
       <div className={`${isMobile ? 'px-2 py-3' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
         <AdminNavTabs 
+          navItems={adminRoutes}
           activeTab={activeTab}
-          adminRoutes={adminRoutes}
           onTabChange={handleTabChange}
         />
         

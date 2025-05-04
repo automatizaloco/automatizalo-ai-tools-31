@@ -6,8 +6,8 @@ import { AdminRouteType } from './types';
 
 interface AdminNavTabsProps {
   navItems: AdminRouteType[];
-  activeTab?: string; // Added this prop
-  onTabChange?: (value: string) => void; // Added this prop
+  activeTab?: string;
+  onTabChange?: (value: string) => void;
 }
 
 const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ 

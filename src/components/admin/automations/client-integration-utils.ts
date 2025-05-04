@@ -62,8 +62,9 @@ export const fetchClientAutomations = async () => {
     
     // Type conversion to ensure proper typing
     return (data || []).map(item => {
-      // Handle case where client might be an error object from the query
-      const clientData = item.client && typeof item.client === 'object' && !('error' in item.client)
+      // Handle case where client might be null or an error object from the query
+      const clientData = item.client && typeof item.client === 'object' && 
+                        item.client !== null && !('error' in item.client)
         ? item.client as { id: string; email: string }
         : { id: item.client_id || 'unknown', email: 'unknown@example.com' };
 

@@ -37,7 +37,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
   // For mobile, render a horizontally scrollable nav
   if (isMobile) {
     return (
-      <ScrollArea className="w-full pb-2" orientation="horizontal">
+      <ScrollArea className="w-full pb-2">
         <div className="flex items-center space-x-4 px-2 py-1 min-w-max">
           {navLinks.map((link) => (
             <Link

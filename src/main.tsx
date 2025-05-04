@@ -7,17 +7,23 @@ import './styles/blog-content.css' // Add blog content styles
 import { ThemeProvider } from './context/ThemeContext.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { LanguageProvider } from './context/LanguageContext.tsx'
+import { AuthProvider } from './context/AuthContext.tsx'
+import { BrowserRouter } from 'react-router-dom'
 
 const queryClient = new QueryClient()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <LanguageProvider>
-        <QueryClientProvider client={queryClient}>
-          <App />
-        </QueryClientProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <QueryClientProvider client={queryClient}>
+              <App />
+            </QueryClientProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 )

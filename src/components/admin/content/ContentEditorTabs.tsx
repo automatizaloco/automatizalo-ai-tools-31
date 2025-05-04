@@ -2,6 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageSectionEditor from './PageSectionEditor';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PageSection {
   id: string;
@@ -33,18 +34,22 @@ const ContentEditorTabs: React.FC<ContentEditorTabsProps> = ({
   uploadingImage,
   setUploadingImage
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Tabs 
       value={activeTab}
       onValueChange={setActiveTab}
       className="space-y-4"
     >
-      <TabsList className="w-full sm:w-auto border-b">
-        <TabsTrigger value="home">Home Page</TabsTrigger>
-        <TabsTrigger value="about">About Page</TabsTrigger>
-        <TabsTrigger value="solutions">Solutions Page</TabsTrigger>
-        <TabsTrigger value="contact">Contact Page</TabsTrigger>
-      </TabsList>
+      <div className="overflow-x-auto pb-2">
+        <TabsList className={`${isMobile ? 'w-auto min-w-full' : 'w-full sm:w-auto'} border-b`}>
+          <TabsTrigger value="home" className="whitespace-nowrap">Home Page</TabsTrigger>
+          <TabsTrigger value="about" className="whitespace-nowrap">About Page</TabsTrigger>
+          <TabsTrigger value="solutions" className="whitespace-nowrap">Solutions Page</TabsTrigger>
+          <TabsTrigger value="contact" className="whitespace-nowrap">Contact Page</TabsTrigger>
+        </TabsList>
+      </div>
 
       {Object.entries(pageSections).map(([pageName, sections]) => (
         <TabsContent key={pageName} value={pageName} className="space-y-8">

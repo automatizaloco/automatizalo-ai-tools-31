@@ -15,9 +15,9 @@ const AdminBaseLayout = ({ title = "Admin Dashboard", description, children }: A
   
   return (
     <AdminLayout>
-      <div className={`container mx-auto ${isMobile ? 'px-3 py-4' : 'px-4 py-6'}`}>
-        {title && <h1 className={`text-xl ${isMobile ? 'mb-2' : 'text-2xl mb-3'} font-bold`}>{title}</h1>}
-        {description && <p className="text-gray-600 mb-4 text-sm">{description}</p>}
+      <div className={`container mx-auto ${isMobile ? 'px-2 py-3 max-w-full' : 'px-4 py-6'}`}>
+        {title && <h1 className={`text-xl ${isMobile ? 'mb-2 px-1' : 'text-2xl mb-3'} font-bold truncate`}>{title}</h1>}
+        {description && <p className="text-gray-600 mb-4 text-sm px-1">{description}</p>}
         {children || <Outlet />}
       </div>
     </AdminLayout>

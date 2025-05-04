@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Automation } from '@/types/automation';
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AutomationsListProps {
   automations: Automation[];
@@ -39,6 +40,7 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
 }) => {
   const [pendingIds, setPendingIds] = React.useState<string[]>([]);
   const [automationToDelete, setAutomationToDelete] = React.useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const handleToggleStatus = async (id: string, currentlyActive: boolean) => {
     try {
@@ -119,11 +121,13 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
       <div className="space-y-4">
         {automations.map((automation) => (
           <Card key={automation.id} className={automation.active ? 'border-green-300' : 'border-gray-300 opacity-75'}>
-            <CardContent className="pt-6">
-              <div className="flex justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-lg">{automation.title}</h3>
+            <CardContent className={`pt-6 ${isMobile ? 'px-3' : ''}`}>
+              <div className={`${isMobile ? 'flex flex-col' : 'flex justify-between'}`}>
+                <div className={isMobile ? 'mb-4' : ''}>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="font-bold text-lg truncate">{automation.title}</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mb-2">
                     {automation.has_custom_prompt && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Custom Prompt</Badge>}
                     {automation.has_webhook && <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Webhook</Badge>}
                     {automation.has_form_integration && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Form</Badge>}
@@ -133,7 +137,7 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
                     Installation: ${automation.installation_price.toFixed(2)} | 
                     Monthly: ${automation.monthly_price.toFixed(2)}
                   </p>
-                  <p className="mt-2 text-gray-600">{automation.description}</p>
+                  <p className="mt-2 text-gray-600 text-sm break-words">{automation.description}</p>
                   {automation.image_url && (
                     <div className="mt-2">
                       <img 
@@ -147,7 +151,7 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col space-y-2">
+                <div className={`${isMobile ? 'flex flex-wrap gap-2' : 'flex flex-col space-y-2'}`}>
                   <Button 
                     size="sm" 
                     variant="outline" 

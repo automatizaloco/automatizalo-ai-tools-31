@@ -10,12 +10,14 @@ import {
 } from '@/components/admin/automations/client-integration-utils';
 import ClientAutomationsList from '@/components/admin/automations/ClientAutomationsList';
 import ClientIntegrationForm from '@/components/admin/automations/ClientIntegrationForm';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ClientAutomationsManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [clientAutomations, setClientAutomations] = useState<ClientAutomationWithDetails[]>([]);
   const [selectedAutomation, setSelectedAutomation] = useState<ClientAutomationWithDetails | null>(null);
   const { isAdmin, isVerifying } = useAdminVerification();
+  const isMobile = useIsMobile();
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -73,11 +75,11 @@ const ClientAutomationsManager: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
+    <div className={`container mx-auto ${isMobile ? 'px-2 py-3' : 'px-4 py-6'}`}>
+      <div className={`flex ${isMobile ? 'flex-col' : 'justify-between items-center'} mb-4`}>
+        <div className="flex items-center mb-2">
           <Users className="h-6 w-6 mr-2 text-blue-600" />
-          <h1 className="text-2xl font-bold">Client Automations Manager</h1>
+          <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>Client Automations Manager</h1>
         </div>
       </div>
 

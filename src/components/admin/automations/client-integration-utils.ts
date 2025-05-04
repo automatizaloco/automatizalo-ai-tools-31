@@ -62,6 +62,11 @@ export const fetchClientAutomations = async () => {
     
     // Type conversion to ensure proper typing
     return (data || []).map(item => {
+      // Handle case where client might be an error object from the query
+      const clientData = item.client && typeof item.client === 'object' && !('error' in item.client)
+        ? item.client as { id: string; email: string }
+        : { id: item.client_id || 'unknown', email: 'unknown@example.com' };
+
       return {
         id: item.id,
         client_id: item.client_id,
@@ -70,7 +75,7 @@ export const fetchClientAutomations = async () => {
         status: item.status as 'active' | 'canceled' | 'pending',
         next_billing_date: item.next_billing_date,
         setup_status: item.setup_status as 'pending' | 'in_progress' | 'completed',
-        client: item.client as { id: string; email: string },
+        client: clientData,
         automation: item.automation
       } as ClientAutomationWithDetails;
     });

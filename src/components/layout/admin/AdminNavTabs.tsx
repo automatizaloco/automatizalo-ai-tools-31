@@ -6,13 +6,21 @@ import { AdminRouteType } from './types';
 
 interface AdminNavTabsProps {
   navItems: AdminRouteType[];
+  activeTab?: string; // Added this prop
+  onTabChange?: (value: string) => void; // Added this prop
 }
 
-const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ navItems }) => {
+const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ 
+  navItems,
+  activeTab: propActiveTab,
+  onTabChange
+}) => {
   const location = useLocation();
   
   // Extract path without considering query params
   const currentPath = location.pathname.split('?')[0];
+  // Use the activeTab prop if provided, otherwise determine from the currentPath
+  const activeTab = propActiveTab || currentPath;
   
   return (
     <nav className="flex items-center space-x-4 lg:space-x-6 mx-6">
@@ -24,6 +32,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ navItems }) => {
             ? "text-primary"
             : "text-muted-foreground"
         )}
+        onClick={() => onTabChange && onTabChange('dashboard')}
       >
         Dashboard
       </Link>
@@ -36,6 +45,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ navItems }) => {
             ? "text-primary"
             : "text-muted-foreground"
         )}
+        onClick={() => onTabChange && onTabChange('client-automations')}
       >
         Client Automations
       </Link>
@@ -47,6 +57,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ navItems }) => {
             ? "text-primary"
             : "text-muted-foreground"
         )}
+        onClick={() => onTabChange && onTabChange('blog')}
       >
         Blog
       </Link>
@@ -58,6 +69,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ navItems }) => {
             ? "text-primary"
             : "text-muted-foreground"
         )}
+        onClick={() => onTabChange && onTabChange('automations')}
       >
         Automations
       </Link>
@@ -69,6 +81,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ navItems }) => {
             ? "text-primary"
             : "text-muted-foreground"
         )}
+        onClick={() => onTabChange && onTabChange('testimonials')}
       >
         Testimonials
       </Link>
@@ -80,6 +93,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ navItems }) => {
             ? "text-primary"
             : "text-muted-foreground"
         )}
+        onClick={() => onTabChange && onTabChange('support')}
       >
         Support
       </Link>

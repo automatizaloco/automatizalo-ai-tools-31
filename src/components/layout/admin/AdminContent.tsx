@@ -10,8 +10,10 @@ const AdminContent: React.FC<AdminContentProps> = ({ children }) => {
   const isMobile = useIsMobile();
   
   return (
-    <div className={`bg-white shadow rounded-lg ${isMobile ? 'p-3' : 'p-6'}`}>
-      {children}
+    <div className={`bg-white shadow rounded-lg overflow-hidden ${isMobile ? 'p-3 mx-2' : 'p-6'}`}>
+      <div className="w-full overflow-x-hidden">
+        {children}
+      </div>
     </div>
   );
 };

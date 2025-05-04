@@ -123,7 +123,7 @@ const Navbar = () => {
         </nav>
 
         {isMenuOpen && (
-          <div className="md:hidden pt-5 pb-4 absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md shadow-lg animate-fade-in z-40">
+          <div className="md:hidden pt-5 pb-4 absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md shadow-lg animate-fade-in z-40 max-h-[80vh] overflow-y-auto">
             <div className="flex flex-col space-y-3 px-6">
               {navItems.map((item) => (
                 <Link

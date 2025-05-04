@@ -79,11 +79,11 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="h-9 w-9 p-0">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] p-0">
+            <SheetContent side="right" className="w-[280px] p-0 z-50">
               <SheetHeader className="p-4 border-b">
                 <SheetTitle>{t.navigation}</SheetTitle>
               </SheetHeader>

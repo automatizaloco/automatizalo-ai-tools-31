@@ -108,7 +108,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
       
       // Notify parent component
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} user:`, error);
       
       if (error.message?.includes('already registered') || error.code === 'user_already_exists') {

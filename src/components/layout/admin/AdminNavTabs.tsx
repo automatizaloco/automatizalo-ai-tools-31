@@ -28,6 +28,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
   const navLinks = [
     { path: "/admin", label: "Dashboard" },
     { path: "/admin/client-automations", label: "Client Automations" },
+    { path: "/admin/users", label: "Users" },
     { path: "/admin/blog", label: "Blog" },
     { path: "/admin/automations", label: "Automations" },
     { path: "/admin/testimonials", label: "Testimonials" },

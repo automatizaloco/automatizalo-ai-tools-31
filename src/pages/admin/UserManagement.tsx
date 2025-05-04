@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { UserForm } from '@/components/admin/users/UserForm';
@@ -9,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useNotification } from '@/hooks/useNotification';
 import { useIsMobile } from '@/hooks/use-mobile';
+import AdminContent from '@/components/layout/admin/AdminContent';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -127,7 +129,7 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>
         <div className="flex flex-wrap gap-2">
@@ -160,26 +162,28 @@ const UserManagement = () => {
         <p className="text-gray-600">Total users: {users.length}</p>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-        </div>
-      ) : (
-        <>
-          {users.length > 0 ? (
-            <div className="overflow-x-auto">
-              <UserTable users={users} onUserUpdated={fetchUsers} />
-            </div>
-          ) : (
-            <div className="border rounded-lg p-8 text-center">
-              <p className="text-gray-500 mb-1">No users found</p>
-              <p className="text-gray-400 text-sm">
-                Create a new user by clicking the "Add New User" button or sync your account
-              </p>
-            </div>
-          )}
-        </>
-      )}
+      <AdminContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+          </div>
+        ) : (
+          <>
+            {users.length > 0 ? (
+              <div className="overflow-x-auto">
+                <UserTable users={users} onUserUpdated={fetchUsers} />
+              </div>
+            ) : (
+              <div className="border rounded-lg p-8 text-center">
+                <p className="text-gray-500 mb-1">No users found</p>
+                <p className="text-gray-400 text-sm">
+                  Create a new user by clicking the "Add New User" button or sync your account
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </AdminContent>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className={isMobile ? "max-w-[95%] p-4" : ""}>
@@ -189,7 +193,7 @@ const UserManagement = () => {
           <UserForm onSuccess={handleUserCreated} />
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 

@@ -6,15 +6,18 @@ import './index.css'
 import './styles/blog-content.css' // Add blog content styles
 import { ThemeProvider } from './context/ThemeContext.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { LanguageProvider } from './context/LanguageContext.tsx'
 
 const queryClient = new QueryClient()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </LanguageProvider>
     </ThemeProvider>
   </React.StrictMode>,
 )

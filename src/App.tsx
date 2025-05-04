@@ -1,6 +1,6 @@
 
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
 /* Public routes */
@@ -38,7 +38,7 @@ const ClientAutomationsManager = lazy(() => import('./pages/admin/ClientAutomati
 
 function App() {
   return (
-    <BrowserRouter>
+    <>
       <Suspense fallback={<p>Loading...</p>}>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -80,7 +80,7 @@ function App() {
         </Routes>
       </Suspense>
       <Toaster closeButton position="bottom-right" />
-    </BrowserRouter>
+    </>
   );
 }
 

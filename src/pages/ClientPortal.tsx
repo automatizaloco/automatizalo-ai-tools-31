@@ -35,7 +35,7 @@ const ClientPortal: React.FC<ClientPortalProps> = ({
 
       {/* If we're showing automation details view */}
       {view === 'details' && automationId && (
-        <AutomationDetails clientId={user.id} />
+        <AutomationDetails automationId={automationId} clientId={user.id} />
       )}
 
       {/* If we're showing support ticket detail or new support ticket form */}

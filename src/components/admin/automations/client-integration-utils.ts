@@ -60,7 +60,20 @@ export const fetchClientAutomations = async () => {
       throw error;
     }
     
-    return data as ClientAutomationWithDetails[];
+    // Type conversion to ensure proper typing
+    return (data || []).map(item => {
+      return {
+        id: item.id,
+        client_id: item.client_id,
+        automation_id: item.automation_id,
+        purchase_date: item.purchase_date,
+        status: item.status as 'active' | 'canceled' | 'pending',
+        next_billing_date: item.next_billing_date,
+        setup_status: item.setup_status as 'pending' | 'in_progress' | 'completed',
+        client: item.client as { id: string; email: string },
+        automation: item.automation
+      } as ClientAutomationWithDetails;
+    });
   } catch (error) {
     console.error('Failed to fetch client automations:', error);
     toast.error('Failed to load client automation data');

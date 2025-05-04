@@ -62,10 +62,18 @@ const SupportTicketsView = () => {
         
       if (error) throw error;
       
-      const typedData = data?.map(item => ({
+      // Properly type the data from the database
+      const typedData = (data || []).map(item => ({
         ...item,
-        status: item.status as 'active' | 'canceled' | 'pending'
-      })) || [];
+        id: item.id,
+        client_id: item.client_id,
+        automation_id: item.automation_id,
+        purchase_date: item.purchase_date,
+        status: item.status as 'active' | 'canceled' | 'pending',
+        next_billing_date: item.next_billing_date,
+        setup_status: item.setup_status as 'pending' | 'in_progress' | 'completed',
+        automation: item.automation
+      }) as ClientAutomation);
       
       setAutomations(typedData);
     } catch (error) {

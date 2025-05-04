@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { IconType } from './types';
+import { AdminRouteType } from './types';
 
 interface AdminNavTabsProps {
-  navItems: IconType[];
+  navItems: AdminRouteType[];
 }
 
 const AdminNavTabs: React.FC<AdminNavTabsProps> = ({ navItems }) => {

@@ -58,7 +58,7 @@ export interface CustomPrompt {
 export interface Integration {
   id?: string;
   automation_id: string;
-  integration_type: 'webhook' | 'form' | 'table';
+  integration_type: 'webhook' | 'form' | 'table' | 'custom_prompt';
   test_url?: string;
   production_url?: string;
   integration_code?: string;

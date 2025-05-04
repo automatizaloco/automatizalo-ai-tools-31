@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -15,7 +16,7 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 /* Client portal routes */
-const ClientPortal = lazy(() => import('./pages/client/ClientPortal'));
+const ClientPortal = lazy(() => import('./pages/ClientPortal'));
 
 /* Admin routes */
 const AdminBaseLayout = lazy(() => import('./pages/admin/layout/AdminBaseLayout'));
@@ -51,6 +52,9 @@ function App() {
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             
             <Route path="client-portal" element={<ClientPortal />} />
+            <Route path="client-portal/automations/:automationId" element={<ClientPortal view="details" />} />
+            <Route path="client-portal/support/new" element={<ClientPortal view="new-ticket" />} />
+            <Route path="client-portal/support/:ticketId" element={<ClientPortal view="ticket-detail" />} />
             
             <Route path="*" element={<NotFound />} />
           </Route>

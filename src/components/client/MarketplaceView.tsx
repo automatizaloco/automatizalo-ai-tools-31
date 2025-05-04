@@ -71,15 +71,17 @@ const MarketplaceView: React.FC = () => {
       nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
       
       // Create a client automation record
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('client_automations')
         .insert({
           client_id: user.id,
           automation_id: automationId,
           purchase_date: purchaseDate,
           next_billing_date: nextBillingDate.toISOString(),
-          status: 'active'
-        });
+          status: 'active',
+          setup_status: 'pending'  // New automation starts with pending setup
+        })
+        .select();
         
       if (error) {
         console.error('Error purchasing automation:', error);
@@ -87,7 +89,7 @@ const MarketplaceView: React.FC = () => {
         return;
       }
       
-      toast.success('Automation purchased successfully!');
+      toast.success('Automation purchased successfully! Our team will set it up for you soon.');
       
       // Refresh data
       await supabase.auth.refreshSession();
@@ -191,9 +193,9 @@ const MarketplaceView: React.FC = () => {
                 <Button 
                   className="w-full"
                   variant="secondary"
-                  disabled
+                  asChild
                 >
-                  Already Purchased
+                  <Link to={`/client-portal/automations/${automation.id}`}>View Details</Link>
                 </Button>
               ) : (
                 <Button 

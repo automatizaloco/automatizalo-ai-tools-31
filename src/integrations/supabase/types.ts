@@ -159,6 +159,7 @@ export type Database = {
           id: string
           next_billing_date: string
           purchase_date: string
+          setup_status: string
           status: string
         }
         Insert: {
@@ -167,6 +168,7 @@ export type Database = {
           id?: string
           next_billing_date: string
           purchase_date?: string
+          setup_status?: string
           status: string
         }
         Update: {
@@ -175,6 +177,7 @@ export type Database = {
           id?: string
           next_billing_date?: string
           purchase_date?: string
+          setup_status?: string
           status?: string
         }
         Relationships: [
@@ -183,6 +186,56 @@ export type Database = {
             columns: ["automation_id"]
             isOneToOne: false
             referencedRelation: "automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_integration_settings: {
+        Row: {
+          client_automation_id: string
+          created_at: string
+          id: string
+          integration_code: string | null
+          integration_type: string
+          last_updated_by: string | null
+          production_url: string | null
+          prompt_text: string | null
+          status: string
+          test_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_automation_id: string
+          created_at?: string
+          id?: string
+          integration_code?: string | null
+          integration_type: string
+          last_updated_by?: string | null
+          production_url?: string | null
+          prompt_text?: string | null
+          status?: string
+          test_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_automation_id?: string
+          created_at?: string
+          id?: string
+          integration_code?: string | null
+          integration_type?: string
+          last_updated_by?: string | null
+          production_url?: string | null
+          prompt_text?: string | null
+          status?: string
+          test_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_integration_settings_client_automation_id_fkey"
+            columns: ["client_automation_id"]
+            isOneToOne: false
+            referencedRelation: "client_automations"
             referencedColumns: ["id"]
           },
         ]

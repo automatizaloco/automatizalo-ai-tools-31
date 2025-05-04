@@ -22,6 +22,7 @@ export interface ClientAutomation {
   purchase_date: string;
   status: 'active' | 'canceled' | 'pending';
   next_billing_date: string;
+  setup_status: 'pending' | 'in_progress' | 'completed';
   automation?: Automation;
 }
 
@@ -61,6 +62,19 @@ export interface Integration {
   test_url?: string;
   production_url?: string;
   integration_code?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ClientIntegrationSetting {
+  id?: string;
+  client_automation_id: string;
+  integration_type: 'webhook' | 'form' | 'table' | 'custom_prompt';
+  test_url?: string;
+  production_url?: string;
+  integration_code?: string;
+  prompt_text?: string;
+  status: 'pending' | 'configured' | 'active';
   created_at?: string;
   updated_at?: string;
 }

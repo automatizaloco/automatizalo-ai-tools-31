@@ -55,16 +55,16 @@ const MyAutomationsView: React.FC = () => {
     }
   };
 
-  const getBadgeColor = (status: string) => {
+  const getSetupStatusBadge = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-700 hover:bg-green-200';
-      case 'canceled':
-        return 'bg-red-100 text-red-700 hover:bg-red-200';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200';
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">Setup Pending</Badge>;
+      case 'in_progress':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Setup In Progress</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Ready to Use</Badge>;
       default:
-        return 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+        return <Badge variant="outline">Unknown</Badge>;
     }
   };
 
@@ -125,9 +125,7 @@ const MyAutomationsView: React.FC = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <CardTitle>{clientAutomation.automation?.title || 'Unknown Automation'}</CardTitle>
-              <Badge className={getBadgeColor(clientAutomation.status)}>
-                {clientAutomation.status}
-              </Badge>
+              {getSetupStatusBadge(clientAutomation.setup_status)}
             </div>
             <CardDescription className="line-clamp-2">
               {clientAutomation.automation?.description || 'No description available'}

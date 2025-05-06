@@ -1,27 +1,11 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { User } from '@/types/user';
 import { useNotification } from '@/hooks/useNotification';
-import { v4 as uuidv4 } from 'uuid';
+import UserFormFields from './UserFormFields';
+import { createUser, updateUser } from './UserCreationLogic';
 
 interface UserFormValues {
   email: string;
@@ -53,109 +37,27 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
     try {
       console.log(`${isEditMode ? 'Updating' : 'Creating'} user:`, data.email, data.role);
       
-      // Get the session for authentication
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        throw new Error('Authentication required. Please sign in again.');
-      }
-      
-      if (isEditMode) {
-        // Direct database update for editing users to avoid edge function
-        if (data.role) {
-          const { error: roleError } = await supabase
-            .from('users')
-            .update({ 
-              role: data.role,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingUser.id);
-          
-          if (roleError) {
-            throw new Error(`Error updating user role: ${roleError.message}`);
-          }
-        }
+      if (isEditMode && existingUser) {
+        // Update existing user
+        const result = await updateUser(existingUser.id, {
+          role: data.role,
+          password: data.password || undefined
+        });
         
-        // Only update password if provided (via auth directly)
-        if (data.password) {
-          try {
-            const { error: updateError } = await supabase.auth.admin.updateUserById(
-              existingUser.id,
-              { password: data.password }
-            );
-            
-            if (updateError) {
-              throw new Error(updateError.message || 'Error updating password');
-            }
-          } catch (passwordError) {
-            console.error('Password update error:', passwordError);
-            throw new Error('Failed to update password. Role was updated successfully.');
-          }
+        if (!result.success) {
+          throw new Error(result.error);
         }
         
         notification.showSuccess('User Updated', `User ${data.email} updated successfully`);
       } else {
         // Create new user
-        try {
-          // First check if the email already exists in auth
-          const { data: userExists, error: checkError } = await supabase
-            .from('users')
-            .select('email')
-            .eq('email', data.email)
-            .maybeSingle();
-            
-          if (userExists) {
-            throw new Error('This email is already registered');
-          }
-          
-          // Now create the auth user and get the new user ID
-          const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: data.email,
-            password: data.password,
-            options: {
-              data: {
-                role: data.role
-              }
-            }
-          });
-          
-          if (authError) {
-            console.error("Auth signup error:", authError);
-            // Check specific error conditions
-            if (authError.message?.includes('already registered') || 
-                authError.message?.includes('already in use') ||
-                authError.message?.includes('already exists')) {
-              throw new Error('This email is already registered');
-            }
-            throw authError;
-          }
-          
-          // If we don't have a user ID from auth, generate one
-          const userId = authData?.user?.id || uuidv4();
-          
-          // Directly add user to the users table
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: userId,
-              email: data.email,
-              role: data.role,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-            
-          if (insertError) {
-            console.error('User insert error:', insertError);
-            if (insertError.code === '23505') {
-              throw new Error('This email is already registered');
-            }
-            throw new Error(`Error creating user: ${insertError.message}`);
-          }
-          
-          notification.showSuccess('User Created', `User ${data.email} created successfully`);
-        } catch (directError: any) {
-          console.error('User creation error:', directError);
-          throw directError;
+        const result = await createUser(data);
+        
+        if (!result.success) {
+          throw new Error(result.error);
         }
+        
+        notification.showSuccess('User Created', `User ${data.email} created successfully`);
       }
       
       // Reset form
@@ -165,16 +67,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
       onSuccess();
     } catch (error: any) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} user:`, error);
-      
-      if (error.message?.includes('already registered') || 
-          error.message?.includes('already in use') || 
-          error.message?.includes('already exists') || 
-          error.code === '23505' || 
-          error.code === 'user_already_exists') {
-        notification.showError('Error', 'This email is already registered');
-      } else {
-        notification.showError('Error', error.message || `Error ${isEditMode ? 'updating' : 'creating'} user`);
-      }
+      notification.showError('Error', error.message || `Error ${isEditMode ? 'updating' : 'creating'} user`);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,71 +76,11 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input 
-                  type="email" 
-                  required 
-                  {...field} 
-                  disabled={isEditMode} // Disable email editing for existing users
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <UserFormFields 
+          form={form} 
+          isEditMode={isEditMode} 
+          isSubmitting={isSubmitting} 
         />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}</FormLabel>
-              <FormControl>
-                <Input 
-                  type="password" 
-                  required={!isEditMode} // Only required for new users
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="client">Client</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting 
-            ? (isEditMode ? 'Updating...' : 'Creating...') 
-            : (isEditMode ? 'Update User' : 'Create User')
-          }
-        </Button>
       </form>
     </Form>
   );

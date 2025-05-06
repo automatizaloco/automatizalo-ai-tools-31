@@ -1,16 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { UserForm } from '@/components/admin/users/UserForm';
-import { UserTable } from '@/components/admin/users/UserTable';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/user';
 import { useAuth } from '@/context/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useNotification } from '@/hooks/useNotification';
 import { useIsMobile } from '@/hooks/use-mobile';
 import AdminContent from '@/components/layout/admin/AdminContent';
+import { UserForm } from '@/components/admin/users/UserForm';
+import { UserTable } from '@/components/admin/users/UserTable';
+import UserManagementHeader from '@/components/admin/users/UserManagementHeader';
+import EmptyUserState from '@/components/admin/users/EmptyUserState';
+import { useUserSyncService } from '@/components/admin/users/UserSyncService';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -18,8 +19,8 @@ const UserManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [syncingCurrentUser, setSyncingCurrentUser] = useState(false);
   const { user } = useAuth();
-  const notification = useNotification();
   const isMobile = useIsMobile();
+  const userSyncService = useUserSyncService();
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -58,60 +59,16 @@ const UserManagement = () => {
     }
   };
 
-  // Check if current user exists in the users table
-  const checkAndSyncCurrentUser = async () => {
-    if (!user) return;
-    
-    try {
-      // Check if the current user exists in the users table
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      // If the user doesn't exist in the users table, offer to add them
-      if (error || !data) {
-        console.log('Current user not found in users table, offering to sync');
-        notification.showWarning(
-          'User Account Issue', 
-          'Your account exists in authentication but not in the users table. Click "Sync Account" to fix this.'
-        );
-      }
-    } catch (error) {
-      console.error('Error checking current user:', error);
-    }
-  };
-  
-  // Function to manually add the current user to the users table with admin role
   const syncCurrentUser = async () => {
     if (!user) return;
     
     setSyncingCurrentUser(true);
     try {
-      // Insert the current user into the users table with admin role
-      const { error } = await supabase
-        .from('users')
-        .insert({
-          id: user.id,
-          email: user.email,
-          role: 'admin',
-        });
-      
-      if (error) {
-        if (error.code === '23505') { // Unique violation error code
-          notification.showWarning('Already Exists', 'Your user already exists in the database.');
-        } else {
-          throw error;
-        }
-      } else {
-        notification.showSuccess('Account Synced', 'Your user account has been synced as an admin.');
-        // Refresh the user list
+      const success = await userSyncService.syncCurrentUser(user);
+      if (success) {
+        // Refresh the user list only if we actually made a change
         fetchUsers();
       }
-    } catch (error) {
-      console.error('Error syncing current user:', error);
-      notification.showError('Sync Failed', 'Could not sync your user account. Please try again.');
     } finally {
       setSyncingCurrentUser(false);
     }
@@ -119,7 +76,9 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
-    checkAndSyncCurrentUser();
+    if (user) {
+      userSyncService.checkAndSyncCurrentUser(user);
+    }
   }, [user]);
 
   const handleUserCreated = () => {
@@ -130,37 +89,14 @@ const UserManagement = () => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            onClick={() => setIsDialogOpen(true)}
-            className="w-full sm:w-auto"
-          >
-            Add New User
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={fetchUsers} 
-            disabled={isLoading}
-            className="w-full sm:w-auto"
-          >
-            Refresh User List
-          </Button>
-          <Button 
-            variant="secondary" 
-            onClick={syncCurrentUser} 
-            disabled={syncingCurrentUser}
-            className="w-full sm:w-auto"
-          >
-            {syncingCurrentUser ? 'Syncing...' : 'Sync My Account'}
-          </Button>
-        </div>
-      </div>
-      
-      <div className="mb-4">
-        <p className="text-gray-600">Total users: {users.length}</p>
-      </div>
+      <UserManagementHeader
+        userCount={users.length}
+        isLoading={isLoading}
+        onAddUserClick={() => setIsDialogOpen(true)}
+        onRefreshClick={fetchUsers}
+        onSyncAccountClick={syncCurrentUser}
+        isSyncing={syncingCurrentUser}
+      />
 
       <AdminContent>
         {isLoading ? (
@@ -174,12 +110,7 @@ const UserManagement = () => {
                 <UserTable users={users} onUserUpdated={fetchUsers} />
               </div>
             ) : (
-              <div className="border rounded-lg p-8 text-center">
-                <p className="text-gray-500 mb-1">No users found</p>
-                <p className="text-gray-400 text-sm">
-                  Create a new user by clicking the "Add New User" button or sync your account
-                </p>
-              </div>
+              <EmptyUserState />
             )}
           </>
         )}

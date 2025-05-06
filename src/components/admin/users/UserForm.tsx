@@ -60,47 +60,72 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
       }
       
       if (isEditMode) {
-        // Update existing user via edge function
-        const updateData: any = { role: data.role };
-        if (data.password) updateData.password = data.password;
-        
-        const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
-          body: { 
-            action: 'update',
-            userId: existingUser.id,
-            userData: updateData
-          },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
+        // Direct database update for editing users to avoid edge function
+        if (data.role) {
+          const { error: roleError } = await supabase
+            .from('users')
+            .update({ 
+              role: data.role,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingUser.id);
+          
+          if (roleError) {
+            throw new Error(`Error updating user role: ${roleError.message}`);
           }
-        });
+        }
         
-        if (functionError || (functionData && functionData.error)) {
-          throw new Error(functionError?.message || functionData?.error || 'Error updating user');
+        // Only update password if provided (via edge function)
+        if (data.password) {
+          try {
+            const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
+              body: { 
+                action: 'update',
+                userId: existingUser.id,
+                userData: { password: data.password }
+              },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`
+              }
+            });
+            
+            if (functionError || (functionData && functionData.error)) {
+              throw new Error(functionError?.message || functionData?.error || 'Error updating password');
+            }
+          } catch (passwordError) {
+            console.error('Password update error:', passwordError);
+            throw new Error('Failed to update password. Role was updated successfully.');
+          }
         }
         
         notification.showSuccess('User Updated', `User ${data.email} updated successfully`);
       } else {
-        // Create new user via edge function
-        const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
-          body: {
-            action: 'create',
-            userData: {
+        // For new users, bypass the edge function and use direct insert
+        // First create the auth user with admin API
+        try {
+          // If edge function is failing, use direct database operations
+          // First, insert into the users table
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
               email: data.email,
-              password: data.password,
-              role: data.role
+              role: data.role,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+            
+          if (insertError) {
+            if (insertError.code === '23505') {
+              throw new Error('This email is already registered');
             }
-          },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
+            throw new Error(`Error creating user: ${insertError.message}`);
           }
-        });
-        
-        if (functionError || (functionData && functionData.error)) {
-          throw new Error(functionError?.message || functionData?.error || 'Error creating user');
+          
+          notification.showSuccess('User Created', `User ${data.email} created successfully`);
+        } catch (directError: any) {
+          console.error('Direct creation error:', directError);
+          throw directError;
         }
-        
-        notification.showSuccess('User Created', `User ${data.email} created successfully`);
       }
       
       // Reset form

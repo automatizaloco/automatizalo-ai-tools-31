@@ -32,55 +32,39 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
     { path: "/admin/blog", label: "Blog" },
     { path: "/admin/automations", label: "Automations" },
     { path: "/admin/testimonials", label: "Testimonials" },
-    { path: "/admin/support", label: "Support" }
+    { path: "/admin/support", label: "Support" },
+    { path: "/admin/newsletters", label: "Newsletter" },
+    { path: "/admin/webhooks", label: "Webhooks" },
+    { path: "/admin/notifications", label: "Notifications" }
   ];
 
-  // For mobile, render a horizontally scrollable nav
+  // Hide the horizontal navigation menu on mobile - The menu is already in the hamburger menu
   if (isMobile) {
-    return (
-      <ScrollArea className="w-full pb-2">
-        <div className="flex items-center space-x-4 px-2 py-1 min-w-max">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={cn(
-                "text-sm whitespace-nowrap py-2 px-3 rounded-md transition-colors",
-                currentPath === link.path || 
-                (link.path !== "/admin" && currentPath.includes(link.path))
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-              )}
-              onClick={() => onTabChange && onTabChange(link.path.split('/').pop() || 'dashboard')}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      </ScrollArea>
-    );
+    return null;
   }
 
   // Desktop version
   return (
-    <nav className="flex items-center space-x-4 lg:space-x-6 mx-6 overflow-x-auto pb-2">
-      {navLinks.map((link) => (
-        <Link
-          key={link.path}
-          to={link.path}
-          className={cn(
-            "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
-            (currentPath === link.path || 
-             (link.path !== "/admin" && currentPath.includes(link.path)))
-              ? "text-primary"
-              : "text-muted-foreground"
-          )}
-          onClick={() => onTabChange && onTabChange(link.path.split('/').pop() || 'dashboard')}
-        >
-          {link.label}
-        </Link>
-      ))}
-    </nav>
+    <ScrollArea className="w-full pb-2">
+      <div className="flex items-center space-x-4 mx-6 overflow-x-auto pb-2 min-w-max">
+        {navLinks.map((link) => (
+          <Link
+            key={link.path}
+            to={link.path}
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap py-2 px-3",
+              (currentPath === link.path || 
+              (link.path !== "/admin" && currentPath.includes(link.path)))
+                ? "text-primary bg-primary/10 rounded-md"
+                : "text-muted-foreground"
+            )}
+            onClick={() => onTabChange && onTabChange(link.path.split('/').pop() || 'dashboard')}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+    </ScrollArea>
   );
 };
 

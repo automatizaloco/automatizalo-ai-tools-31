@@ -1,21 +1,33 @@
 
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface AdminContentProps {
-  children: ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  padded?: boolean;
 }
 
-const AdminContent: React.FC<AdminContentProps> = ({ children }) => {
+const AdminContent: React.FC<AdminContentProps> = ({ 
+  children, 
+  className, 
+  padded = true 
+}) => {
   const isMobile = useIsMobile();
   
   return (
-    <div className={`bg-white shadow rounded-lg ${isMobile ? 'p-3 mx-2 overflow-hidden' : 'p-6'}`}>
-      <div className="w-full overflow-x-auto">
-        {children}
-      </div>
+    <div 
+      className={cn(
+        "bg-white rounded-lg shadow-sm border",
+        padded && (isMobile ? "p-3" : "p-6"), 
+        "overflow-x-auto overflow-y-visible",
+        className
+      )}
+    >
+      {children}
     </div>
   );
 };
 
-export default AdminContent;
+export default React.memo(AdminContent);

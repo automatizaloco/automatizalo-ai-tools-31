@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, useCallback } from 'react';
 import { 
   LayoutDashboard, 
   PenSquare, 
@@ -21,6 +21,7 @@ import AdminNavTabs from './admin/AdminNavTabs';
 import AdminContent from './admin/AdminContent';
 import { AdminRouteType } from './admin/types';
 import { useNotification } from '@/hooks/useNotification';
+import { Progress } from '@/components/ui/progress';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -31,6 +32,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('content');
   const isMobile = useIsMobile();
   const notification = useNotification();
@@ -41,6 +43,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { value: 'users', label: 'Users', icon: Users },
     { value: 'blog', label: 'Blog', icon: PenSquare },
     { value: 'automatic-blog', label: 'AI Blog', icon: Wand2 },
+    { value: 'client-automations', label: 'Client Automations', icon: Zap },
     { value: 'automations', label: 'Automations', icon: Zap },
     { value: 'support', label: 'Support', icon: HelpCircle },
     { value: 'webhooks', label: 'Webhooks', icon: Webhook },
@@ -102,6 +105,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     }
   }, [location.pathname]);
 
+  // Show loading indicator when navigating between pages
+  useEffect(() => {
+    setIsPageLoading(true);
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 300); // Short timeout to avoid flickering for fast loads
+    
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -120,10 +133,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     notification.showInfo("Client View", "You are now viewing the client portal as an admin.");
   };
 
-  const handleTabChange = (value: string) => {
+  const handleTabChange = useCallback((value: string) => {
+    if (value === activeTab) return; // Don't navigate if already on the tab
+    setIsPageLoading(true);
     setActiveTab(value);
     navigate(`/admin/${value}`);
-  };
+  }, [activeTab, navigate]);
 
   const handleHomeClick = () => {
     navigate('/');
@@ -151,6 +166,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         onLogout={handleLogout}
         onViewAsClient={handleViewAsClient}
       />
+      
+      {isPageLoading && (
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <Progress value={100} className="h-1 animate-pulse" />
+        </div>
+      )}
       
       <div className="max-w-full overflow-x-hidden">
         <div className={`${isMobile ? 'mt-2' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>

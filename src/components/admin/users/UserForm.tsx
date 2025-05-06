@@ -100,14 +100,15 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
         
         notification.showSuccess('User Updated', `User ${data.email} updated successfully`);
       } else {
-        // For new users, bypass the edge function and use direct insert
-        // First create the auth user with admin API
+        // For new users, generate a UUID for the user ID
+        const userId = crypto.randomUUID();
+        
         try {
-          // If edge function is failing, use direct database operations
-          // First, insert into the users table
+          // Insert into the users table with the generated ID
           const { error: insertError } = await supabase
             .from('users')
             .insert({
+              id: userId,
               email: data.email,
               role: data.role,
               created_at: new Date().toISOString(),

@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import withEditableImage from '@/components/admin/withEditableImage';
 import { useLanguage } from '@/context/LanguageContext';
 import { getPageContent } from '@/services/pageContentService';
+
 interface SolutionCardProps {
   title: string;
   description: string;
@@ -21,6 +22,7 @@ interface SolutionCardProps {
   sectionName?: string;
   imageId?: string;
 }
+
 const SolutionCard: React.FC<SolutionCardProps> = ({
   title,
   description,
@@ -35,9 +37,7 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
   imageId = ""
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const {
-    language
-  } = useLanguage();
+  const { language } = useLanguage();
   
   // Check if this is the Lead Generation card
   const isLeadGeneration = title.toLowerCase().includes('lead generation');
@@ -91,17 +91,28 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
           
           {/* Features list */}
           <div className="space-y-2 mb-6 flex-grow">
-            {features.map((feature, idx) => <div key={idx} className="flex items-start">
-                <div className="h-5 w-5 mt-0.5 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3 shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                  </svg>
+            {features.map((feature, idx) => {
+              // Replace the fourth feature in Lead Generation card with custom text
+              let displayText = feature;
+              if (isLeadGeneration && idx === 3) {
+                displayText = "Choose your channel: WhatsApp, Email, Telegram, Others";
+              }
+              
+              return (
+                <div key={idx} className="flex items-start">
+                  <div className="h-5 w-5 mt-0.5 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3 shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <span className="text-sm text-gray-600">{displayText}</span>
                 </div>
-                <span className="text-sm text-gray-600">{feature}</span>
-              </div>)}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
     </motion.div>;
 };
+
 export default SolutionCard;

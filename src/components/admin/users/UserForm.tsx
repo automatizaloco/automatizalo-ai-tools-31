@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import { User } from '@/types/user';
 import { useNotification } from '@/hooks/useNotification';
+import { v4 as uuidv4 } from 'uuid';
 
 interface UserFormValues {
   email: string;
@@ -55,7 +56,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
       
       // Get the session for authentication
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
+      if (sessionError) {
         throw new Error('Authentication required. Please sign in again.');
       }
       
@@ -75,22 +76,16 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
           }
         }
         
-        // Only update password if provided (via edge function)
+        // Only update password if provided (via auth directly)
         if (data.password) {
           try {
-            const { error: functionError, data: functionData } = await supabase.functions.invoke('manage-users', {
-              body: { 
-                action: 'update',
-                userId: existingUser.id,
-                userData: { password: data.password }
-              },
-              headers: {
-                Authorization: `Bearer ${session.access_token}`
-              }
-            });
+            const { error: updateError } = await supabase.auth.admin.updateUserById(
+              existingUser.id,
+              { password: data.password }
+            );
             
-            if (functionError || (functionData && functionData.error)) {
-              throw new Error(functionError?.message || functionData?.error || 'Error updating password');
+            if (updateError) {
+              throw new Error(updateError.message || 'Error updating password');
             }
           } catch (passwordError) {
             console.error('Password update error:', passwordError);
@@ -100,27 +95,31 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
         
         notification.showSuccess('User Updated', `User ${data.email} updated successfully`);
       } else {
-        // Create user directly in the auth system first
+        // Create new user
         try {
-          // First create the auth user - this will generate an id
-          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          // Generate a UUID for the new user
+          const userId = uuidv4();
+          
+          // First create the auth user
+          const { error: authError } = await supabase.auth.signUp({
             email: data.email,
             password: data.password,
-            email_confirm: true,
-            user_metadata: {
-              role: data.role
+            options: {
+              data: {
+                role: data.role
+              }
             }
           });
           
-          if (authError || !authData.user) {
-            throw new Error(authError?.message || 'Failed to create user in auth system');
+          if (authError) {
+            throw new Error(authError.message || 'Failed to create user in auth system');
           }
           
-          // Now add the user to our users table with the auth-generated ID
+          // Directly add user to the users table
           const { error: insertError } = await supabase
             .from('users')
             .insert({
-              id: authData.user.id,
+              id: userId,
               email: data.email,
               role: data.role,
               created_at: new Date().toISOString(),

@@ -19,7 +19,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from 'sonner';
 import { User } from '@/types/user';
 import { useNotification } from '@/hooks/useNotification';
 import { v4 as uuidv4 } from 'uuid';
@@ -97,11 +96,19 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
       } else {
         // Create new user
         try {
-          // Generate a UUID for the new user
-          const userId = uuidv4();
+          // First check if the email already exists in auth
+          const { data: userExists, error: checkError } = await supabase
+            .from('users')
+            .select('email')
+            .eq('email', data.email)
+            .maybeSingle();
+            
+          if (userExists) {
+            throw new Error('This email is already registered');
+          }
           
-          // First create the auth user
-          const { error: authError } = await supabase.auth.signUp({
+          // Now create the auth user and get the new user ID
+          const { data: authData, error: authError } = await supabase.auth.signUp({
             email: data.email,
             password: data.password,
             options: {
@@ -112,8 +119,18 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
           });
           
           if (authError) {
-            throw new Error(authError.message || 'Failed to create user in auth system');
+            console.error("Auth signup error:", authError);
+            // Check specific error conditions
+            if (authError.message?.includes('already registered') || 
+                authError.message?.includes('already in use') ||
+                authError.message?.includes('already exists')) {
+              throw new Error('This email is already registered');
+            }
+            throw authError;
           }
+          
+          // If we don't have a user ID from auth, generate one
+          const userId = authData?.user?.id || uuidv4();
           
           // Directly add user to the users table
           const { error: insertError } = await supabase
@@ -149,7 +166,11 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
     } catch (error: any) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} user:`, error);
       
-      if (error.message?.includes('already registered') || error.code === 'user_already_exists') {
+      if (error.message?.includes('already registered') || 
+          error.message?.includes('already in use') || 
+          error.message?.includes('already exists') || 
+          error.code === '23505' || 
+          error.code === 'user_already_exists') {
         notification.showError('Error', 'This email is already registered');
       } else {
         notification.showError('Error', error.message || `Error ${isEditMode ? 'updating' : 'creating'} user`);

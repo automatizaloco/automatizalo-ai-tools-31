@@ -68,7 +68,8 @@ function App() {
             <Route path="content" element={<ContentManager />} />
             <Route path="content/:page" element={<ContentEditor />} />
             <Route path="layout" element={<LayoutManager />} />
-            <Route path="newsletter" element={<NewsletterAdmin />} />
+            <Route path="newsletters" element={<NewsletterAdmin />} /> {/* Fixed path */}
+            <Route path="newsletter" element={<NewsletterAdmin />} /> {/* Keep both paths for backward compatibility */}
             <Route path="notifications" element={<NotificationAdmin />} />
             <Route path="support" element={<SupportManager />} />
             <Route path="testimonials" element={<TestimonialManager />} />

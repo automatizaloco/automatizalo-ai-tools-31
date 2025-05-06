@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
@@ -7,12 +7,14 @@ interface AdminContentProps {
   children: React.ReactNode;
   className?: string;
   padded?: boolean;
+  minHeight?: string;
 }
 
 const AdminContent: React.FC<AdminContentProps> = ({ 
   children, 
   className, 
-  padded = true 
+  padded = true,
+  minHeight = 'auto'
 }) => {
   const isMobile = useIsMobile();
   
@@ -24,10 +26,12 @@ const AdminContent: React.FC<AdminContentProps> = ({
         "overflow-x-auto overflow-y-visible",
         className
       )}
+      style={{ minHeight }}
     >
       {children}
     </div>
   );
 };
 
-export default React.memo(AdminContent);
+// Use React.memo to prevent unnecessary re-renders
+export default memo(AdminContent);

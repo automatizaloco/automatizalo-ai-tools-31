@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,31 +38,17 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
   const {
     language
   } = useLanguage();
-  const [customFeature4, setCustomFeature4] = useState<string | null>(null);
-
+  
   // Check if this is the Lead Generation card
   const isLeadGeneration = title.toLowerCase().includes('lead generation');
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 100 + delay);
 
-    // If this is the lead generation card, load the custom feature4 content
-    if (isLeadGeneration) {
-      const loadFeature4 = async () => {
-        try {
-          const content = await getPageContent('solutions', 'leadGeneration.feature4', language);
-          if (content) {
-            setCustomFeature4(content);
-          }
-        } catch (error) {
-          console.error('Error loading lead generation feature4:', error);
-        }
-      };
-      loadFeature4();
-    }
     return () => clearTimeout(timer);
-  }, [delay, isLeadGeneration, language]);
+  }, [delay, language]);
 
   // Create an editable image component using withEditableImage HOC
   const EditableImage = withEditableImage(({
@@ -73,6 +60,7 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
     alt: string;
     className?: string;
   }) => <img src={src} alt={alt} className={className} />);
+  
   return <motion.div initial={{
     opacity: 0,
     y: 20
@@ -111,9 +99,6 @@ const SolutionCard: React.FC<SolutionCardProps> = ({
                 </div>
                 <span className="text-sm text-gray-600">{feature}</span>
               </div>)}
-              
-            {/* Add channel options for Lead Generation card */}
-            {isLeadGeneration && customFeature4}
           </div>
         </CardContent>
       </Card>

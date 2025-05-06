@@ -100,15 +100,27 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
         
         notification.showSuccess('User Updated', `User ${data.email} updated successfully`);
       } else {
-        // For new users, generate a UUID for the user ID
-        const userId = crypto.randomUUID();
-        
+        // Create user directly in the auth system first
         try {
-          // Insert into the users table with the generated ID
+          // First create the auth user - this will generate an id
+          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+            email: data.email,
+            password: data.password,
+            email_confirm: true,
+            user_metadata: {
+              role: data.role
+            }
+          });
+          
+          if (authError || !authData.user) {
+            throw new Error(authError?.message || 'Failed to create user in auth system');
+          }
+          
+          // Now add the user to our users table with the auth-generated ID
           const { error: insertError } = await supabase
             .from('users')
             .insert({
-              id: userId,
+              id: authData.user.id,
               email: data.email,
               role: data.role,
               created_at: new Date().toISOString(),
@@ -116,6 +128,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
             });
             
           if (insertError) {
+            console.error('User insert error:', insertError);
             if (insertError.code === '23505') {
               throw new Error('This email is already registered');
             }
@@ -124,7 +137,7 @@ export const UserForm: React.FC<UserFormProps> = ({ onSuccess, existingUser }) =
           
           notification.showSuccess('User Created', `User ${data.email} created successfully`);
         } catch (directError: any) {
-          console.error('Direct creation error:', directError);
+          console.error('User creation error:', directError);
           throw directError;
         }
       }

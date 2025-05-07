@@ -132,8 +132,8 @@ export const syncOfflineChanges = async (): Promise<boolean> => {
 export const checkDatabaseSchema = async (): Promise<boolean> => {
   try {
     console.log("Checking database schema...");
-    // Check for critical tables
-    const tables = [
+    // Check for critical tables using system catalog queries via exec_sql RPC
+    const criticalTables = [
       'automations', 
       'client_automations', 
       'client_integration_settings',
@@ -141,18 +141,30 @@ export const checkDatabaseSchema = async (): Promise<boolean> => {
     ];
     
     let hasAllTables = true;
+    const sqlQuery = `
+      SELECT table_name, 
+             (SELECT COUNT(*) FROM information_schema.tables 
+              WHERE table_schema = 'public' AND table_name = t.table_name) as exists_flag
+      FROM unnest(ARRAY['${criticalTables.join("','")}']) as t(table_name)
+    `;
     
-    for (const tableName of tables) {
-      const { count, error } = await supabase
-        .from(tableName)
-        .select('*', { count: 'exact', head: true });
-      
-      if (error) {
-        console.error(`Table ${tableName} check failed:`, error);
-        hasAllTables = false;
-      } else {
-        console.log(`Table ${tableName} exists with count:`, count);
-      }
+    const { data, error } = await supabase.rpc('exec_sql', { 
+      sql_query: sqlQuery 
+    });
+    
+    if (error) {
+      console.error("Schema check query failed:", error);
+      return false;
+    }
+    
+    if (data) {
+      data.forEach((row: any) => {
+        const exists = row.exists_flag > 0;
+        console.log(`Table ${row.table_name} exists: ${exists}`);
+        if (!exists) {
+          hasAllTables = false;
+        }
+      });
     }
     
     return hasAllTables;

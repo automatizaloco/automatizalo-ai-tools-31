@@ -1,58 +1,49 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import { corsHeaders } from "../_shared/cors.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.23.0';
+import { corsHeaders } from '../_shared/cors.ts';
 
-// Create a Supabase client
-const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const supabase = createClient(supabaseUrl, supabaseKey);
+const checkTableExistsSQL = await Deno.readTextFile('./sql/check_table_exists.sql');
 
-const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+// Read the SQL migration files
+const updateAutomationsTableSQL = await Deno.readTextFile('./sql/update_automations_table.sql');
+
+serve(async (req) => {
+  // Handle CORS
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
   }
-
+  
   try {
-    // Read the SQL file content from the _shared directory
-    const sqlContent = await Deno.readTextFile('./supabase/functions/_shared/sql/update_automations_table.sql');
-    
-    console.log('Executing SQL to update database schema...');
-    
-    // Execute the SQL query
-    const { error } = await supabase.rpc('exec_sql', { sql_query: sqlContent });
-    
-    if (error) {
-      console.error('Error executing SQL query:', error);
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    console.log('Database schema updated successfully');
-    
-    return new Response(
-      JSON.stringify({ success: true, message: 'Database schema updated successfully' }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+    // Create Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
-  } catch (error: any) {
-    console.error('Error:', error);
+    
+    // Execute SQL updates
+    console.log("Creating get_table_count function...");
+    const { error: tableCheckError } = await supabaseClient.rpc('exec_sql', { sql_query: checkTableExistsSQL });
+    if (tableCheckError) throw tableCheckError;
+    
+    console.log("Running automations table updates...");
+    const { error: automationsError } = await supabaseClient.rpc('exec_sql', { sql_query: updateAutomationsTableSQL });
+    if (automationsError) throw automationsError;
+    
+    // Check if other migrations need to be run here...
+    
     return new Response(
-      JSON.stringify({ error: error.message || 'Unknown error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ success: true, message: "Database schema updated successfully" }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+    
+  } catch (error) {
+    console.error("Error updating database schema:", error);
+    
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-};
-
-serve(handler);
+});

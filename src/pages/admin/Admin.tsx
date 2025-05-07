@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotification } from '@/hooks/useNotification';
 import { Loader2 } from 'lucide-react';
+import AdminContent from '@/components/layout/admin/AdminContent';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -104,7 +105,7 @@ const Admin = () => {
         
         // Handle exact /admin path to redirect to content dashboard
         if (location.pathname === '/admin') {
-          navigate('/admin/content');
+          navigate('/admin/content', { replace: true });
         }
         
       } catch (error) {
@@ -131,7 +132,11 @@ const Admin = () => {
   }
 
   // Render only the Outlet to prevent duplicate navigation
-  return <Outlet />;
+  return (
+    <AdminContent>
+      <Outlet />
+    </AdminContent>
+  );
 };
 
 export default Admin;

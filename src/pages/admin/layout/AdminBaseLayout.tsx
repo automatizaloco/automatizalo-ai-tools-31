@@ -8,20 +8,22 @@ interface AdminBaseLayoutProps {
   title?: string;
   description?: string;
   children?: React.ReactNode;
-  hideTitle?: boolean; // Add prop to optionally hide the title
+  hideTitle?: boolean;
+  className?: string;
 }
 
 const AdminBaseLayout = ({ 
   title = "Admin Dashboard", 
   description, 
   children,
-  hideTitle = false
+  hideTitle = false,
+  className = ""
 }: AdminBaseLayoutProps) => {
   const isMobile = useIsMobile();
   
   return (
     <AdminLayout>
-      <div className={`container mx-auto ${isMobile ? 'px-2 py-2 max-w-full' : 'px-4 py-4'}`}>
+      <div className={`${className} ${isMobile ? 'px-2 py-2 max-w-full' : 'px-4 py-4'}`}>
         {!hideTitle && title && (
           <h1 className={`text-xl ${isMobile ? 'mb-2 px-1' : 'text-2xl mb-3'} font-bold truncate`}>
             {title}

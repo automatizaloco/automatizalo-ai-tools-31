@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactNode, useEffect, useState, useCallback, Suspense } from 'react';
 import { 
@@ -137,7 +136,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     if (value === activeTab) return; // Don't navigate if already on the tab
     setIsPageLoading(true);
     setActiveTab(value);
-    navigate(`/admin/${value}`);
+    navigate(`/admin/${value === 'content' ? '' : value}`);
   }, [activeTab, navigate]);
 
   const handleHomeClick = () => {
@@ -182,9 +181,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           />
           
           <div className="mt-2">
-            <AdminContent>
-              {children}
-            </AdminContent>
+            {children}
           </div>
         </div>
       </div>

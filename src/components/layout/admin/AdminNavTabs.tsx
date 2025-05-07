@@ -29,41 +29,30 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
   const currentPath = location.pathname.split('?')[0];
   // Use the activeTab prop if provided, otherwise determine from the currentPath
   const activeTab = propActiveTab || currentPath;
-  
-  // Memoize the navigation links to prevent unnecessary re-renders
-  const navLinks = useMemo(() => [
-    { path: "/admin", label: "Dashboard" },
-    { path: "/admin/client-automations", label: "Client Automations" },
-    { path: "/admin/users", label: "Users" },
-    { path: "/admin/blog", label: "Blog" },
-    { path: "/admin/automations", label: "Automations" },
-    { path: "/admin/testimonials", label: "Testimonials" },
-    { path: "/admin/support", label: "Support" },
-    { path: "/admin/newsletters", label: "Newsletter" },
-    { path: "/admin/webhooks", label: "Webhooks" },
-    { path: "/admin/notifications", label: "Notifications" }
-  ], []);
 
-  // Desktop version - with performance optimizations
+  // Use the navItems prop passed from the parent component
   return (
     <ScrollArea className="w-full pb-2">
       <div className="flex items-center space-x-4 mx-6 overflow-x-auto pb-2 min-w-max">
-        {navLinks.map((link) => (
-          <Link
-            key={link.path}
-            to={link.path}
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap py-2 px-3",
-              (currentPath === link.path || 
-              (link.path !== "/admin" && currentPath.includes(link.path)))
-                ? "text-primary bg-primary/10 rounded-md"
-                : "text-muted-foreground"
-            )}
-            onClick={() => onTabChange && onTabChange(link.path.split('/').pop() || 'dashboard')}
-          >
-            {link.label}
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          const path = `/admin/${item.value === 'content' ? '' : item.value}`;
+          return (
+            <Link
+              key={item.value}
+              to={path}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap py-2 px-3",
+                (currentPath === path || 
+                (path !== "/admin" && currentPath.includes(path)))
+                  ? "text-primary bg-primary/10 rounded-md"
+                  : "text-muted-foreground"
+              )}
+              onClick={() => onTabChange && onTabChange(item.value)}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
       </div>
     </ScrollArea>
   );

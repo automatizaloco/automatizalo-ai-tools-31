@@ -1,6 +1,5 @@
-
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ReactNode, useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import { ReactNode, useEffect, useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';

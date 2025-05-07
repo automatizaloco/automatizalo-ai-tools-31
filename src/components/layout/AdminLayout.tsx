@@ -1,5 +1,18 @@
+
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ReactNode, useEffect, useState, useCallback, Suspense } from 'react';
+import { ReactNode, useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
+import { useNotification } from '@/hooks/useNotification';
+
+// Lazy load components for better performance
+const AdminHeader = lazy(() => import('./admin/AdminHeader'));
+const AdminNavTabs = lazy(() => import('./admin/AdminNavTabs'));
+
+// Import types directly to avoid circular dependencies
+import { AdminRouteType } from './admin/types';
 import { 
   LayoutDashboard, 
   PenSquare, 
@@ -10,17 +23,9 @@ import {
   Bell, 
   Users, 
   Zap, 
-  HelpCircle 
+  HelpCircle,
+  Loader2 
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { toast } from 'sonner';
-import AdminHeader from './admin/AdminHeader';
-import AdminNavTabs from './admin/AdminNavTabs';
-import AdminContent from './admin/AdminContent';
-import { AdminRouteType } from './admin/types';
-import { useNotification } from '@/hooks/useNotification';
-import { Progress } from '@/components/ui/progress';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -36,8 +41,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const isMobile = useIsMobile();
   const notification = useNotification();
 
-  // Admin routes definition
-  const adminRoutes: AdminRouteType[] = [
+  // Admin routes definition - memoized to prevent recreating on rerenders
+  const adminRoutes: AdminRouteType[] = useMemo(() => [
     { value: 'content', label: 'Dashboard', icon: LayoutDashboard },
     { value: 'users', label: 'Users', icon: Users },
     { value: 'blog', label: 'Blog', icon: PenSquare },
@@ -49,7 +54,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { value: 'testimonials', label: 'Testimonials', icon: MessageSquare },
     { value: 'newsletters', label: 'Newsletter', icon: Mail },
     { value: 'notifications', label: 'Notifications', icon: Bell }
-  ];
+  ], []);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -72,7 +77,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         }
       } catch (error) {
         console.error("Error in checkSession:", error);
-        notification.showError("Session Error", "Failed to verify your session. Using limited admin mode.");
+        notification.showError("Session Error", "Failed to verify your session.");
         setLoading(false);
       }
     };
@@ -107,9 +112,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   // Show loading indicator when navigating between pages
   useEffect(() => {
     setIsPageLoading(true);
+    // Use shorter timeout for better UX
     const timer = setTimeout(() => {
       setIsPageLoading(false);
-    }, 300); // Short timeout to avoid flickering for fast loads
+    }, 200);
     
     return () => clearTimeout(timer);
   }, [location.pathname]);
@@ -146,7 +152,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-gray-500">Loading admin dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -156,15 +165,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <AdminHeader 
-        activeTab={activeTab}
-        adminRoutes={adminRoutes}
-        onTabChange={handleTabChange}
-        onHomeClick={handleHomeClick}
-        onLogout={handleLogout}
-        onViewAsClient={handleViewAsClient}
-      />
+    <div className="min-h-screen bg-gray-50 overflow-hidden">
+      <Suspense fallback={
+        <div className="h-16 bg-white shadow animate-pulse"></div>
+      }>
+        <AdminHeader 
+          activeTab={activeTab}
+          adminRoutes={adminRoutes}
+          onTabChange={handleTabChange}
+          onHomeClick={handleHomeClick}
+          onLogout={handleLogout}
+          onViewAsClient={handleViewAsClient}
+        />
+      </Suspense>
       
       {isPageLoading && (
         <div className="fixed top-0 left-0 right-0 z-50">
@@ -174,13 +187,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       
       <div className="w-full overflow-hidden">
         <div className={`${isMobile ? 'mt-2 px-2' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'}`}>
-          <AdminNavTabs 
-            navItems={adminRoutes}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
+          <Suspense fallback={<div className="h-10 animate-pulse"></div>}>
+            <AdminNavTabs 
+              navItems={adminRoutes}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+          </Suspense>
           
-          <div className="mt-2">
+          <div className="mt-2 overflow-hidden">
             {children}
           </div>
         </div>

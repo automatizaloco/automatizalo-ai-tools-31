@@ -51,7 +51,7 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-full">
       {clientAutomations.map((clientAutomation) => (
         <Card key={clientAutomation.id} className="overflow-hidden">
           <CardContent className={`pt-6 ${isMobile ? 'px-3' : 'px-6'}`}>
@@ -64,7 +64,7 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
                   {getSetupStatusBadge(clientAutomation.setup_status)}
                 </div>
                 
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 mt-1 break-words">
                   Client: {clientAutomation.client?.email || 'Unknown Client'}
                 </p>
                 

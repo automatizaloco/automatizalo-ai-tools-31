@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotification } from '@/hooks/useNotification';
 import { Loader2 } from 'lucide-react';
-import AdminContent from '@/components/layout/admin/AdminContent';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -131,12 +130,8 @@ const Admin = () => {
     );
   }
 
-  // Render only the Outlet to prevent duplicate navigation
-  return (
-    <AdminContent>
-      <Outlet />
-    </AdminContent>
-  );
+  // Only render the Outlet component directly - let AdminLayout handle the layout
+  return <Outlet />;
 };
 
 export default Admin;

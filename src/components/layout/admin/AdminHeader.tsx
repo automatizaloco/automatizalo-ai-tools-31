@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, Eye } from 'lucide-react';
 import { 
@@ -92,9 +92,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
                     key={route.value}
                     route={route}
                     isActive={activeTab === route.value}
-                    onClick={() => {
-                      onTabChange(route.value);
-                    }}
+                    onClick={() => onTabChange(route.value)}
                   />
                 ))}
                 
@@ -144,4 +142,4 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   );
 };
 
-export default AdminHeader;
+export default memo(AdminHeader);

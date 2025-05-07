@@ -23,9 +23,14 @@ const ClientAutomationsManager: React.FC = () => {
 
   const fetchData = async () => {
     setIsLoading(true);
+    console.log('Fetching client automations...');
     try {
       const data = await fetchClientAutomations();
+      console.log(`Successfully fetched ${data.length} client automations`);
       setClientAutomations(data);
+    } catch (error) {
+      console.error('Error fetching client automations:', error);
+      toast.error('Failed to load client automations');
     } finally {
       setIsLoading(false);
     }
@@ -70,12 +75,10 @@ const ClientAutomationsManager: React.FC = () => {
   if (!isAdmin) {
     return (
       <AdminBaseLayout hideTitle={true}>
-        <AdminContent>
-          <div className="text-center">
-            <p className="text-red-500 mb-2 font-semibold">Access denied</p>
-            <p className="text-gray-600">You don't have permission to access this section.</p>
-          </div>
-        </AdminContent>
+        <div className="text-center">
+          <p className="text-red-500 mb-2 font-semibold">Access denied</p>
+          <p className="text-gray-600">You don't have permission to access this section.</p>
+        </div>
       </AdminBaseLayout>
     );
   }

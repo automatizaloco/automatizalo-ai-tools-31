@@ -23,10 +23,15 @@ const AdminContent: React.FC<AdminContentProps> = ({
       className={cn(
         "bg-white rounded-lg shadow-sm border",
         padded && (isMobile ? "p-3" : "p-6"), 
-        "overflow-x-auto overflow-y-visible",
+        "overflow-hidden", // Changed from overflow-x-auto to prevent horizontal scrolling
         className
       )}
-      style={{ minHeight }}
+      style={{ 
+        minHeight,
+        maxWidth: '100%', // Ensure content doesn't overflow on mobile
+        overflowX: 'hidden', // Hide horizontal overflow
+        overflowY: 'auto' // Allow vertical scrolling
+      }}
     >
       {children}
     </div>

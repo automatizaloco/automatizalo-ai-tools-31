@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { AdminRouteType } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -30,27 +30,33 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
   // Use the activeTab prop if provided, otherwise determine from the currentPath
   const activeTab = propActiveTab || currentPath;
 
-  // Use the navItems prop passed from the parent component
+  const handleTabChange = (value: string) => {
+    if (onTabChange) {
+      onTabChange(value);
+    }
+  };
+
   return (
-    <ScrollArea className="w-full pb-2">
-      <div className="flex items-center space-x-4 mx-6 overflow-x-auto pb-2 min-w-max">
+    <ScrollArea className="w-full">
+      <div className="flex items-center space-x-4 px-2 overflow-x-auto pb-2 min-w-max">
         {navItems.map((item) => {
           const path = `/admin/${item.value === 'content' ? '' : item.value}`;
+          const isActive = activeTab === item.value || 
+                         (path !== "/admin" && currentPath.includes(path));
+          
           return (
-            <Link
+            <button
               key={item.value}
-              to={path}
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap py-2 px-3",
-                (currentPath === path || 
-                (path !== "/admin" && currentPath.includes(path)))
+                isActive
                   ? "text-primary bg-primary/10 rounded-md"
                   : "text-muted-foreground"
               )}
-              onClick={() => onTabChange && onTabChange(item.value)}
+              onClick={() => handleTabChange(item.value)}
             >
               {item.label}
-            </Link>
+            </button>
           );
         })}
       </div>

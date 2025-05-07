@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { ClientAutomationWithDetails } from './client-integration-utils';
+import EmptyClientAutomationsState from './EmptyClientAutomationsState';
 
 interface ClientAutomationsListProps {
   clientAutomations: ClientAutomationWithDetails[];
@@ -30,12 +31,7 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
   }
 
   if (clientAutomations.length === 0) {
-    return (
-      <div className="border rounded-lg p-8 text-center">
-        <p className="text-gray-500">No active client automations found</p>
-        <p className="text-gray-400 text-sm mt-1">Clients need to purchase automations from the marketplace</p>
-      </div>
-    );
+    return <EmptyClientAutomationsState />;
   }
 
   const getSetupStatusBadge = (status: string) => {

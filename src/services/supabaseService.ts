@@ -125,3 +125,39 @@ export const syncOfflineChanges = async (): Promise<boolean> => {
   
   return true;
 };
+
+/**
+ * Check if the database schema has the necessary tables
+ */
+export const checkDatabaseSchema = async (): Promise<boolean> => {
+  try {
+    console.log("Checking database schema...");
+    // Check for critical tables
+    const tables = [
+      'automations', 
+      'client_automations', 
+      'client_integration_settings',
+      'users'
+    ];
+    
+    let hasAllTables = true;
+    
+    for (const tableName of tables) {
+      const { count, error } = await supabase
+        .from(tableName)
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) {
+        console.error(`Table ${tableName} check failed:`, error);
+        hasAllTables = false;
+      } else {
+        console.log(`Table ${tableName} exists with count:`, count);
+      }
+    }
+    
+    return hasAllTables;
+  } catch (error) {
+    console.error("Error checking database schema:", error);
+    return false;
+  }
+};

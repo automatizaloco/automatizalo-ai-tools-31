@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { escapeSql, runQuery } from '@/components/admin/adminActions';
@@ -45,43 +44,51 @@ export interface ClientAutomationWithDetails {
  */
 export const fetchClientAutomations = async () => {
   try {
-    // Using typed query to get client automations with related information
-    const { data, error } = await supabase
+    console.log("Fetching client automations...");
+    
+    // First fetch client automations with automation details
+    const { data: automations, error: automationsError } = await supabase
       .from('client_automations')
       .select(`
         *,
-        automation:automations(*),
-        client:users(id, email)
+        automation:automations(*)
       `)
       .eq('status', 'active')
       .order('purchase_date', { ascending: false });
 
-    if (error) {
-      throw error;
+    if (automationsError) {
+      throw automationsError;
     }
-    
-    // Type conversion to ensure proper typing
-    return (data || []).map(item => {
-      // Handle case where client might be null or an error object from the query
-      const clientData = item.client && 
-                        typeof item.client === 'object' && 
-                        item.client !== null && 
-                        !('error' in (item.client as object))
-        ? item.client as { id: string; email: string }
-        : { id: item.client_id || 'unknown', email: 'unknown@example.com' };
 
+    // For each client automation, fetch the associated user information separately
+    const clientAutomationsWithDetails = await Promise.all((automations || []).map(async (item) => {
+      // Get client info from users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('id', item.client_id)
+        .single();
+      
+      // Even if user fetch fails, continue with default values
+      const clientData = userError ? 
+        { id: item.client_id, email: 'Unknown email' } : 
+        userData;
+      
       return {
         id: item.id,
         client_id: item.client_id,
         automation_id: item.automation_id,
         purchase_date: item.purchase_date,
-        status: item.status as 'active' | 'canceled' | 'pending',
+        status: item.status,
         next_billing_date: item.next_billing_date,
-        setup_status: item.setup_status as 'pending' | 'in_progress' | 'completed',
+        setup_status: item.setup_status,
         client: clientData,
         automation: item.automation
       } as ClientAutomationWithDetails;
-    });
+    }));
+    
+    console.log(`Successfully fetched ${clientAutomationsWithDetails.length} client automations`);
+    return clientAutomationsWithDetails;
   } catch (error) {
     console.error('Failed to fetch client automations:', error);
     toast.error('Failed to load client automation data');

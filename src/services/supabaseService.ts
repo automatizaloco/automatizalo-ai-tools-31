@@ -1,4 +1,3 @@
-
 // Re-export services from their respective files
 export * from './testimonialService';
 export * from './contactService';
@@ -158,7 +157,9 @@ export const checkDatabaseSchema = async (): Promise<boolean> => {
     }
     
     if (data) {
-      data.forEach((row: any) => {
+      // Fix the type issue by explicitly typing the data as an array of objects
+      const tableData = data as Array<{ table_name: string, exists_flag: number }>;
+      tableData.forEach((row) => {
         const exists = row.exists_flag > 0;
         console.log(`Table ${row.table_name} exists: ${exists}`);
         if (!exists) {

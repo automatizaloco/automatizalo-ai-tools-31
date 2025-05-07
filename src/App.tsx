@@ -2,9 +2,9 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import Layout from './components/layout/Layout';
 
-/* Public routes */
-const Layout = lazy(() => import('./components/layout/Layout'));
+/* Public routes - keep lazy loading these */
 const Index = lazy(() => import('./pages/Index'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Login = lazy(() => import('./pages/Login'));

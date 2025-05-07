@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import WhatsAppButton from '../common/WhatsAppButton';
-import { Suspense } from 'react';
 
 const Layout = () => {
   const location = useLocation();
@@ -16,18 +15,12 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Suspense fallback={<div>Loading...</div>}>
-        <Navbar />
-      </Suspense>
+      <Navbar />
       <main className="flex-grow">
         <Outlet />
       </main>
-      <Suspense fallback={<div>Loading footer...</div>}>
-        <Footer />
-      </Suspense>
-      <Suspense fallback={null}>
-        <WhatsAppButton />
-      </Suspense>
+      <Footer />
+      <WhatsAppButton />
     </div>
   );
 };

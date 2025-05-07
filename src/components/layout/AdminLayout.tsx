@@ -1,6 +1,6 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ReactNode, useEffect, useState, useCallback } from 'react';
+import { ReactNode, useEffect, useState, useCallback, Suspense } from 'react';
 import { 
   LayoutDashboard, 
   PenSquare, 
@@ -157,7 +157,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <AdminHeader 
         activeTab={activeTab}
         adminRoutes={adminRoutes}
@@ -173,15 +173,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </div>
       )}
       
-      <div className="max-w-full overflow-x-hidden">
-        <div className={`${isMobile ? 'mt-2' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
+      <div className="w-full overflow-hidden">
+        <div className={`${isMobile ? 'mt-2 px-2' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'}`}>
           <AdminNavTabs 
             navItems={adminRoutes}
             activeTab={activeTab}
             onTabChange={handleTabChange}
           />
           
-          <div className="mt-4">
+          <div className="mt-2">
             <AdminContent>
               {children}
             </AdminContent>

@@ -47,35 +47,34 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         <div className="flex items-center gap-2">
           {!isMobile && <LanguageSwitcher />}
           
-          <div className="hidden sm:flex items-center">
-            <Button 
-              variant="outline" 
-              size={isMobile ? "sm" : "default"} 
-              onClick={onViewAsClient}
-              className="flex items-center gap-1"
-            >
-              <Eye className="h-4 w-4" />
-              {!isMobile && t.viewAsClient}
-            </Button>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            size={isMobile ? "sm" : "default"} 
-            onClick={onHomeClick}
-            className={isMobile ? "hidden" : "inline-flex"}
-          >
-            {t.home}
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size={isMobile ? "sm" : "default"} 
-            onClick={onLogout}
-            className={isMobile ? "hidden" : "mr-2"}
-          >
-            {t.logout}
-          </Button>
+          {!isMobile && (
+            <>
+              <Button 
+                variant="outline" 
+                size="default" 
+                onClick={onViewAsClient}
+                className="flex items-center gap-1"
+              >
+                <Eye className="h-4 w-4" />
+                {t.viewAsClient}
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={onHomeClick}
+              >
+                {t.home}
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={onLogout}
+                className="mr-2"
+              >
+                {t.logout}
+              </Button>
+            </>
+          )}
           
           <Sheet>
             <SheetTrigger asChild>

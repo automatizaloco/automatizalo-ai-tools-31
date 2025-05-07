@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { AdminRouteType } from './types';
@@ -30,7 +30,8 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
   // Use the activeTab prop if provided, otherwise determine from the currentPath
   const activeTab = propActiveTab || currentPath;
   
-  const navLinks = [
+  // Memoize the navigation links to prevent unnecessary re-renders
+  const navLinks = useMemo(() => [
     { path: "/admin", label: "Dashboard" },
     { path: "/admin/client-automations", label: "Client Automations" },
     { path: "/admin/users", label: "Users" },
@@ -41,7 +42,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
     { path: "/admin/newsletters", label: "Newsletter" },
     { path: "/admin/webhooks", label: "Webhooks" },
     { path: "/admin/notifications", label: "Notifications" }
-  ];
+  ], []);
 
   // Desktop version - with performance optimizations
   return (

@@ -56,7 +56,7 @@ const ClientAutomationsManager: React.FC = () => {
 
   if (isVerifying) {
     return (
-      <AdminBaseLayout>
+      <AdminBaseLayout hideTitle={true}>
         <div className="flex justify-center items-center h-64">
           <div className="flex flex-col items-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -69,7 +69,7 @@ const ClientAutomationsManager: React.FC = () => {
   
   if (!isAdmin) {
     return (
-      <AdminBaseLayout>
+      <AdminBaseLayout hideTitle={true}>
         <AdminContent>
           <div className="text-center">
             <p className="text-red-500 mb-2 font-semibold">Access denied</p>
@@ -81,7 +81,7 @@ const ClientAutomationsManager: React.FC = () => {
   }
 
   return (
-    <AdminBaseLayout title="Client Automations Manager">
+    <AdminBaseLayout hideTitle={true}>
       <div className="mb-4">
         <div className="flex items-center mb-2">
           <Users className="h-6 w-6 mr-2 text-blue-600" />

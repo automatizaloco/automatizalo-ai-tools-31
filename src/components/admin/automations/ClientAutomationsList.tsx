@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Loader2, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { ClientAutomationWithDetails } from './client-integration-utils';
 import EmptyClientAutomationsState from './EmptyClientAutomationsState';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ClientAutomationsListProps {
   clientAutomations: ClientAutomationWithDetails[];
@@ -19,6 +20,8 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
   isLoading,
   onViewConfig
 }) => {
+  const isMobile = useIsMobile();
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -50,12 +53,14 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
   return (
     <div className="space-y-4">
       {clientAutomations.map((clientAutomation) => (
-        <Card key={clientAutomation.id}>
-          <CardContent className="pt-6">
-            <div className="flex justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-lg">{clientAutomation.automation?.title || 'Unknown Automation'}</h3>
+        <Card key={clientAutomation.id} className="overflow-hidden">
+          <CardContent className={`pt-6 ${isMobile ? 'px-3' : 'px-6'}`}>
+            <div className={`${isMobile ? 'flex flex-col' : 'flex justify-between'}`}>
+              <div className={`${isMobile ? 'mb-4' : ''}`}>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <h3 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'} break-words`}>
+                    {clientAutomation.automation?.title || 'Unknown Automation'}
+                  </h3>
                   {getSetupStatusBadge(clientAutomation.setup_status)}
                 </div>
                 
@@ -64,8 +69,18 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
                 </p>
                 
                 <p className="text-sm text-gray-500">
-                  Purchased: {format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')} | 
-                  Next Billing: {format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy')}
+                  {isMobile ? (
+                    <>
+                      Purchased: {format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')}
+                      <br />
+                      Next Billing: {format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy')}
+                    </>
+                  ) : (
+                    <>
+                      Purchased: {format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')} | 
+                      Next Billing: {format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy')}
+                    </>
+                  )}
                 </p>
                 
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -80,11 +95,11 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
                 </div>
               </div>
               
-              <div>
+              <div className={`${isMobile ? 'w-full' : ''}`}>
                 <Button
-                  size="sm"
+                  size={isMobile ? "sm" : "default"}
                   variant="outline"
-                  className="bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  className={`bg-blue-50 text-blue-600 hover:bg-blue-100 ${isMobile ? 'w-full' : ''}`}
                   onClick={() => onViewConfig(clientAutomation)}
                 >
                   <Settings className="mr-1 h-3 w-3" />

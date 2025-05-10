@@ -1,8 +1,9 @@
 
 import { useNavigate } from 'react-router-dom';
-import { ReactNode, useState, lazy, Suspense } from 'react';
+import { ReactNode, useState, lazy, Suspense, useEffect } from 'react';
 import { useNotification } from '@/hooks/useNotification';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import AdminPageLoader from './admin/AdminPageLoader';
 import AdminLayoutContent from './admin/AdminLayoutContent';
 import AdminSessionManager from './admin/AdminSessionManager';
@@ -21,13 +22,73 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
   const navigate = useNavigate();
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated, user } = useAuth();
   const notification = useNotification();
   const { activeTab, isPageLoading, adminRoutes, handleTabChange } = useAdminRouteState();
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
+
+  // Set a timeout to prevent infinite loading
+  useEffect(() => {
+    const loadingTimeout = setTimeout(() => {
+      if (loading) {
+        console.log("Loading timeout reached, forcing UI update");
+        setLoading(false);
+      }
+    }, 3000); // 3 second timeout
+
+    return () => clearTimeout(loadingTimeout);
+  }, [loading]);
+
+  // Check if user has admin privileges
+  useEffect(() => {
+    const checkAdminAccess = async () => {
+      if (!user) return;
+      
+      try {
+        // For the main admin account, bypass the check
+        if (user.email === 'contact@automatizalo.co') {
+          setAdminCheckComplete(true);
+          return;
+        }
+        
+        // For other users, verify admin status
+        const { data, error } = await supabase.rpc('is_admin', { user_uid: user.id });
+        
+        if (error || !data) {
+          console.error("Admin verification failed:", error);
+          notification.showError("Access Denied", "You don't have admin privileges.");
+          navigate('/client-portal');
+          return;
+        }
+        
+        setAdminCheckComplete(true);
+      } catch (error) {
+        console.error("Admin check error:", error);
+        notification.showError("Verification Error", "Could not verify admin status.");
+        navigate('/client-portal');
+      }
+    };
+    
+    if (user) {
+      checkAdminAccess();
+    }
+  }, [user, navigate, notification]);
 
   const handleSessionChange = (newSession: any | null) => {
+    console.log("Session changed:", !!newSession);
     setSession(newSession);
-    setLoading(newSession === null);
+    // Don't set loading to false immediately, wait for admin check
+    if (!newSession) {
+      setLoading(false); // Only stop loading if there's no session
+    }
   };
+
+  // Only stop loading when we have both session and admin check complete
+  useEffect(() => {
+    if (session && adminCheckComplete) {
+      setLoading(false);
+    }
+  }, [session, adminCheckComplete]);
 
   const handleLogout = async () => {
     try {
@@ -50,12 +111,18 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
     navigate('/');
   };
 
+  // Don't show a loading state if we know there's no session
+  if (loading && (!isAuthenticated || !user)) {
+    setLoading(false);
+  }
+
   if (loading) {
     return <AdminPageLoader />;
   }
   
   if (!session) {
-    return null;
+    // Don't render anything if not authenticated - the session manager will redirect
+    return <AdminSessionManager onSessionChange={handleSessionChange} />;
   }
 
   return (

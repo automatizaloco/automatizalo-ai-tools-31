@@ -9,91 +9,44 @@ import { Loader2 } from 'lucide-react';
 const Admin = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const [isChecking, setIsChecking] = useState(true);
+  const { user, isAuthenticated } = useAuth();
+  const [isChecking, setIsChecking] = useState(false);
   const notification = useNotification();
 
   useEffect(() => {
-    // Check for authentication
-    if (!user) {
+    // Check for authentication first
+    if (!isAuthenticated || !user) {
+      console.log("Admin page: User not authenticated, redirecting to login");
       navigate('/login?redirect=/admin');
       return;
     }
 
-    // Check if user has admin role
+    // Special case for main admin
+    if (user.email === 'contact@automatizalo.co') {
+      console.log("Main admin detected, allowing access");
+      
+      // Handle exact /admin path to redirect to content dashboard
+      if (location.pathname === '/admin') {
+        navigate('/admin/content', { replace: true });
+      }
+      
+      return;
+    }
+
+    // Only perform admin check once
+    setIsChecking(true);
+    
     const checkAdminRole = async () => {
       try {
-        setIsChecking(true);
         console.log('Checking admin privileges for:', user.email);
         
-        // Special case for main admin account
-        if (user.email === 'contact@automatizalo.co') {
-          console.log('Main admin detected, ensuring admin role');
-          
-          // Check if user exists in the users table
-          const { data: userData, error: fetchError } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-            
-          if (fetchError || !userData || userData.role !== 'admin') {
-            console.log('Updating admin role for main account');
-            
-            // Upsert to create/update the user with admin role
-            const { error: upsertError } = await supabase
-              .from('users')
-              .upsert({
-                id: user.id,
-                email: user.email,
-                role: 'admin',
-                updated_at: new Date().toISOString(),
-                created_at: new Date().toISOString()
-              });
-              
-            if (upsertError) {
-              console.error('Error upserting admin user:', upsertError);
-              notification.showWarning('Admin Setup', 'Could not update admin role, but continuing as admin');
-            }
-          }
-          
-          // Handle exact /admin path to redirect to content dashboard
-          if (location.pathname === '/admin') {
-            navigate('/admin/content');
-          }
-          
-          setIsChecking(false);
-          return; // Main admin is always allowed
-        }
-        
         // Try both methods to check admin status for more reliability
+        const { data: isAdmin, error: rpcError } = await supabase.rpc('is_admin', { user_uid: user.id });
         
-        // 1. Direct database query (most reliable, but may be affected by RLS)
-        const { data: directData, error: directError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        let isAdmin = false;
-        
-        if (!directError && directData) {
-          isAdmin = directData.role === 'admin';
-        } else if (directError) {
-          console.log('Direct query failed, trying RPC function:', directError);
-          
-          // 2. RPC function as fallback (bypasses some RLS issues)
-          const { data: rpcData, error: rpcError } = await supabase.rpc('is_admin', { user_uid: user.id });
-          
-          if (rpcError) {
-            console.error('Error checking admin role via RPC:', rpcError);
-            throw new Error(`Failed to verify admin status: ${rpcError.message}`);
-          }
-          
-          isAdmin = !!rpcData;
+        if (rpcError) {
+          console.error('Error checking admin role via RPC:', rpcError);
+          throw new Error(`Failed to verify admin status: ${rpcError.message}`);
         }
-        
-        console.log('Admin check result:', isAdmin);
         
         if (!isAdmin) {
           console.log('Non-admin user tried to access admin area:', user.email);
@@ -117,9 +70,25 @@ const Admin = () => {
     };
     
     checkAdminRole();
-  }, [user, navigate, location.pathname, notification]);
+  }, [user, navigate, location.pathname, notification, isAuthenticated]);
 
-  if (!user || isChecking) {
+  // Add a timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isChecking) {
+        console.log("Admin check timeout reached");
+        setIsChecking(false);
+      }
+    }, 5000);
+    
+    return () => clearTimeout(timeout);
+  }, [isChecking]);
+
+  if (!user) {
+    return null; // Let the router redirect to login
+  }
+
+  if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-2">

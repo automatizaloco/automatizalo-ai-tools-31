@@ -1,18 +1,45 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 const ClientLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user } = useAuth();
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+
+  // Check for redirect parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const redirect = params.get('redirect');
+    if (redirect) {
+      setRedirectTo(redirect);
+    }
+  }, [location]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log("Already authenticated in client login, redirecting");
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else if (user.email === 'contact@automatizalo.co') {
+        navigate('/admin');
+      } else {
+        navigate('/client-portal');
+      }
+    }
+  }, [isAuthenticated, user, navigate, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +90,12 @@ const ClientLogin = () => {
           }
         }
         
-        navigate('/admin');
+        // If there's a redirect URL, use it; otherwise go to admin
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate('/admin');
+        }
         toast.success('Successfully logged in as administrator');
         return;
       }
@@ -91,7 +123,11 @@ const ClientLogin = () => {
           console.error('Error creating user record:', createError);
         }
         
-        navigate('/client-portal');
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate('/client-portal');
+        }
         toast.success('Successfully logged in');
         return;
       }
@@ -100,10 +136,18 @@ const ClientLogin = () => {
       
       // Redirect based on role
       if (userData?.role === 'admin') {
-        navigate('/admin');
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate('/admin');
+        }
         toast.success('Successfully logged in as administrator');
       } else {
-        navigate('/client-portal');
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate('/client-portal');
+        }
         toast.success('Successfully logged in');
       }
     } catch (error: any) {

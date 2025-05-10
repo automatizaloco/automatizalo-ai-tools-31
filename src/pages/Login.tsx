@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,10 +15,33 @@ const Login = () => {
   const [password, setPassword] = useState("Automatizalo2025@");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+
+  // Check for redirect parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const redirect = params.get('redirect');
+    if (redirect) {
+      setRedirectTo(redirect);
+    }
+  }, [location]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log("Already authenticated, redirecting");
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else {
+        navigate("/admin");
+      }
+    }
+  }, [isAuthenticated, user, navigate, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +56,15 @@ const Login = () => {
       if (loginError) {
         setError(loginError.message || "Invalid login credentials. Please try again.");
       } else {
+        console.log("Login successful");
         toast.success("Login successful!");
-        navigate("/admin");
+        
+        // Redirect to the requested page or admin dashboard
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate("/admin");
+        }
       }
     } catch (error: any) {
       console.error("Login error:", error);

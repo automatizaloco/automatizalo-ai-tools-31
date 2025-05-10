@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import { AdminRouteType } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface AdminNavTabsProps {
   navItems: AdminRouteType[];

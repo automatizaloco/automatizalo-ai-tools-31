@@ -64,11 +64,11 @@ function App() {
             <Route path="blog" element={<BlogAdmin />} />
             <Route path="blog/new" element={<BlogPostForm />} />
             <Route path="blog/edit/:id" element={<BlogPostForm />} />
-            <Route path="blog/automatic" element={<AutomaticBlog />} />
+            <Route path="automatic-blog" element={<AutomaticBlog />} /> {/* Fixed route */}
             <Route path="content" element={<ContentManager />} />
             <Route path="content/:page" element={<ContentEditor />} />
             <Route path="layout" element={<LayoutManager />} />
-            <Route path="newsletters" element={<NewsletterAdmin />} /> {/* Fixed path */}
+            <Route path="newsletters" element={<NewsletterAdmin />} />
             <Route path="newsletter" element={<NewsletterAdmin />} /> {/* Keep both paths for backward compatibility */}
             <Route path="notifications" element={<NotificationAdmin />} />
             <Route path="support" element={<SupportManager />} />

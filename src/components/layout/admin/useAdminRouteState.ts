@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   PenSquare, 
@@ -17,22 +17,23 @@ import { AdminRouteType } from './types';
 
 export const useAdminRouteState = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('content');
 
   // Admin routes definition - memoized to prevent recreating on rerenders
   const adminRoutes: AdminRouteType[] = useMemo(() => [
-    { value: 'content', label: 'Dashboard', icon: LayoutDashboard },
-    { value: 'users', label: 'Users', icon: Users },
-    { value: 'blog', label: 'Blog', icon: PenSquare },
-    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2 },
-    { value: 'client-automations', label: 'Client Automations', icon: Zap },
-    { value: 'automations', label: 'Automations', icon: Zap },
-    { value: 'support', label: 'Support', icon: HelpCircle },
-    { value: 'webhooks', label: 'Webhooks', icon: Webhook },
-    { value: 'testimonials', label: 'Testimonials', icon: MessageSquare },
-    { value: 'newsletters', label: 'Newsletter', icon: Mail },
-    { value: 'notifications', label: 'Notifications', icon: Bell }
+    { value: 'content', label: 'Dashboard', icon: LayoutDashboard, priority: 10 },
+    { value: 'users', label: 'Users', icon: Users, priority: 9 },
+    { value: 'blog', label: 'Blog', icon: PenSquare, priority: 8 },
+    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2, priority: 7 }, // Fixed route value
+    { value: 'client-automations', label: 'Client Automations', icon: Zap, priority: 6 },
+    { value: 'automations', label: 'Automations', icon: Zap, priority: 5 },
+    { value: 'support', label: 'Support', icon: HelpCircle, priority: 4 },
+    { value: 'webhooks', label: 'Webhooks', icon: Webhook, priority: 3 },
+    { value: 'testimonials', label: 'Testimonials', icon: MessageSquare, priority: 2 },
+    { value: 'newsletters', label: 'Newsletter', icon: Mail, priority: 1 },
+    { value: 'notifications', label: 'Notifications', icon: Bell, priority: 0 }
   ], []);
 
   useEffect(() => {
@@ -60,7 +61,10 @@ export const useAdminRouteState = () => {
     if (value === activeTab) return;
     setIsPageLoading(true);
     setActiveTab(value);
-  }, [activeTab]);
+    
+    // Navigate to the appropriate route
+    navigate(`/admin/${value === 'content' ? '' : value}`);
+  }, [activeTab, navigate]);
 
   return {
     activeTab,

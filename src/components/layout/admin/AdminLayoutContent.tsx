@@ -36,16 +36,18 @@ const AdminLayoutContent: React.FC<AdminLayoutContentProps> = ({
       )}
       
       <div className={`${isMobile ? 'mt-2 px-2' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'}`}>
-        <Suspense fallback={<div className="h-10 bg-gray-100 animate-pulse rounded"></div>}>
-          <AdminNavTabs 
-            navItems={adminRoutes}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </Suspense>
+        {!isMobile && (
+          <Suspense fallback={<div className="h-10 bg-gray-100 animate-pulse rounded"></div>}>
+            <AdminNavTabs 
+              navItems={adminRoutes}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+          </Suspense>
+        )}
         
         {!hideTitle && title && (
-          <h1 className={`${isMobile ? 'text-xl mb-2 px-1' : 'text-2xl mb-3'} font-bold mt-4`}>
+          <h1 className={`${isMobile ? 'text-xl mb-2 px-1' : 'text-2xl mb-3'} font-bold ${!isMobile ? 'mt-4' : ''}`}>
             {title}
           </h1>
         )}

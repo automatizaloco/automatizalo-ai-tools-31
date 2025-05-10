@@ -8,6 +8,7 @@ import AdminPageLoader from './admin/AdminPageLoader';
 import AdminLayoutContent from './admin/AdminLayoutContent';
 import AdminSessionManager from './admin/AdminSessionManager';
 import { useAdminRouteState } from './admin/useAdminRouteState';
+import { useAdminVerification } from '@/hooks/useAdminVerification';
 
 // Lazy load components for better performance
 const AdminHeader = lazy(() => import('./admin/AdminHeader'));
@@ -23,9 +24,9 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated, user } = useAuth();
+  const { isAdmin, isVerifying } = useAdminVerification();
   const notification = useNotification();
   const { activeTab, isPageLoading, adminRoutes, handleTabChange } = useAdminRouteState();
-  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
   // Set a timeout to prevent infinite loading
   useEffect(() => {
@@ -39,56 +40,30 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
     return () => clearTimeout(loadingTimeout);
   }, [loading]);
 
-  // Check if user has admin privileges
-  useEffect(() => {
-    const checkAdminAccess = async () => {
-      if (!user) return;
-      
-      try {
-        // For the main admin account, bypass the check
-        if (user.email === 'contact@automatizalo.co') {
-          setAdminCheckComplete(true);
-          return;
-        }
-        
-        // For other users, verify admin status
-        const { data, error } = await supabase.rpc('is_admin', { user_uid: user.id });
-        
-        if (error || !data) {
-          console.error("Admin verification failed:", error);
-          notification.showError("Access Denied", "You don't have admin privileges.");
-          navigate('/client-portal');
-          return;
-        }
-        
-        setAdminCheckComplete(true);
-      } catch (error) {
-        console.error("Admin check error:", error);
-        notification.showError("Verification Error", "Could not verify admin status.");
-        navigate('/client-portal');
-      }
-    };
-    
-    if (user) {
-      checkAdminAccess();
-    }
-  }, [user, navigate, notification]);
-
   const handleSessionChange = (newSession: any | null) => {
-    console.log("Session changed:", !!newSession);
     setSession(newSession);
-    // Don't set loading to false immediately, wait for admin check
-    if (!newSession) {
-      setLoading(false); // Only stop loading if there's no session
+    if (newSession) {
+      // Delay setting loading to false to allow admin verification
+      setTimeout(() => setLoading(false), 500);
+    } else {
+      setLoading(false);
     }
   };
 
-  // Only stop loading when we have both session and admin check complete
+  // Update loading state based on verification status
   useEffect(() => {
-    if (session && adminCheckComplete) {
+    if (!isVerifying && session) {
       setLoading(false);
     }
-  }, [session, adminCheckComplete]);
+  }, [isVerifying, session]);
+
+  // Redirect if not admin
+  useEffect(() => {
+    if (!isVerifying && !isAdmin && !loading && user) {
+      notification.showError("Access Denied", "You don't have admin privileges.");
+      navigate('/client-portal');
+    }
+  }, [isAdmin, isVerifying, loading, user, navigate, notification]);
 
   const handleLogout = async () => {
     try {
@@ -111,17 +86,12 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
     navigate('/');
   };
 
-  // Don't show a loading state if we know there's no session
-  if (loading && (!isAuthenticated || !user)) {
-    setLoading(false);
-  }
-
-  if (loading) {
+  if (loading || isVerifying) {
     return <AdminPageLoader />;
   }
   
-  if (!session) {
-    // Don't render anything if not authenticated - the session manager will redirect
+  if (!session || !isAdmin) {
+    // Don't render anything if not authenticated or not admin - the session manager will redirect
     return <AdminSessionManager onSessionChange={handleSessionChange} />;
   }
 

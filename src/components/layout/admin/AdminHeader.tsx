@@ -1,13 +1,14 @@
 
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, Eye } from 'lucide-react';
+import { Menu, Eye, Home, LogOut } from 'lucide-react';
 import { 
   Sheet, 
   SheetContent, 
   SheetHeader, 
   SheetTitle, 
-  SheetTrigger 
+  SheetTrigger,
+  SheetClose
 } from "@/components/ui/sheet";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AdminNavItem } from './AdminNavItem';
@@ -15,6 +16,7 @@ import { AdminRouteType } from './types';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import { useLanguage } from '@/context/LanguageContext';
 import { adminTranslations } from '@/translations/adminTranslations';
+import { useNavigate } from 'react-router-dom';
 
 interface AdminHeaderProps {
   activeTab: string;
@@ -35,13 +37,30 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { language } = useLanguage();
-  const t = adminTranslations[language].adminHeader;
+  const navigate = useNavigate();
+  const t = adminTranslations[language]?.adminHeader || {
+    adminTitle: 'Admin Panel',
+    navigation: 'Navigation',
+    viewAsClient: 'Client View',
+    home: 'Home',
+    logout: 'Logout'
+  };
+
+  // Sort routes by priority for mobile view
+  const sortedRoutes = [...adminRoutes].sort((a, b) => 
+    (b.priority ?? 0) - (a.priority ?? 0)
+  );
 
   return (
     <div className="bg-white shadow sticky top-0 z-50">
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-shrink-0 flex items-center">
-          <h1 className="text-lg font-bold">{t.adminTitle}</h1>
+          <h1 
+            className="text-lg font-bold cursor-pointer" 
+            onClick={() => navigate('/admin')}
+          >
+            {t.adminTitle}
+          </h1>
         </div>
         
         <div className="flex items-center gap-2">
@@ -51,27 +70,31 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             <>
               <Button 
                 variant="outline" 
-                size="default" 
+                size="sm" 
                 onClick={onViewAsClient}
                 className="flex items-center gap-1"
               >
                 <Eye className="h-4 w-4" />
-                {t.viewAsClient}
+                <span className="hidden sm:inline">{t.viewAsClient}</span>
               </Button>
               
               <Button 
-                variant="outline" 
+                variant="outline"
+                size="sm"
                 onClick={onHomeClick}
               >
-                {t.home}
+                <Home className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">{t.home}</span>
               </Button>
               
               <Button 
-                variant="outline" 
+                variant="outline"
+                size="sm"
                 onClick={onLogout}
-                className="mr-2"
+                className="text-red-600 hover:bg-red-50"
               >
-                {t.logout}
+                <LogOut className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">{t.logout}</span>
               </Button>
             </>
           )}
@@ -82,57 +105,62 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] p-0 z-50">
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0 z-50">
               <SheetHeader className="p-4 border-b">
                 <SheetTitle>{t.navigation}</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col py-2 overflow-y-auto max-h-[calc(100vh-80px)]">
-                {adminRoutes.map((route) => (
-                  <AdminNavItem
-                    key={route.value}
-                    route={route}
-                    isActive={activeTab === route.value}
-                    onClick={() => onTabChange(route.value)}
-                  />
+                {sortedRoutes.map((route) => (
+                  <SheetClose asChild key={route.value}>
+                    <AdminNavItem
+                      route={route}
+                      isActive={activeTab === route.value}
+                      onClick={() => onTabChange(route.value)}
+                    />
+                  </SheetClose>
                 ))}
                 
-                {isMobile && (
-                  <>
-                    <div className="px-4 py-2 mt-4 border-t">
-                      <div className="mb-4">
-                        <LanguageSwitcher />
-                      </div>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={onViewAsClient}
-                        className="w-full flex items-center justify-center gap-1 mb-2"
-                      >
-                        <Eye className="h-4 w-4" />
-                        {t.viewAsClient}
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={onHomeClick}
-                        className="w-full mb-2"
-                      >
-                        {t.home}
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={onLogout}
-                        className="w-full"
-                      >
-                        {t.logout}
-                      </Button>
-                    </div>
-                  </>
-                )}
+                <div className="px-4 py-2 mt-4 border-t">
+                  <div className="mb-4">
+                    <LanguageSwitcher />
+                  </div>
+                  
+                  <SheetClose asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={onViewAsClient}
+                      className="w-full flex items-center justify-start gap-2 mb-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      {t.viewAsClient}
+                    </Button>
+                  </SheetClose>
+                  
+                  <SheetClose asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={onHomeClick}
+                      className="w-full flex items-center justify-start gap-2 mb-2"
+                    >
+                      <Home className="h-4 w-4" />
+                      {t.home}
+                    </Button>
+                  </SheetClose>
+                  
+                  <SheetClose asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={onLogout}
+                      className="w-full flex items-center justify-start gap-2 text-red-600 hover:bg-red-50"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {t.logout}
+                    </Button>
+                  </SheetClose>
+                </div>
               </div>
             </SheetContent>
           </Sheet>

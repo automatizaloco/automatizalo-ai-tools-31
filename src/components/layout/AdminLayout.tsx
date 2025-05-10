@@ -28,9 +28,11 @@ import {
 
 interface AdminLayoutProps {
   children: ReactNode;
+  title?: string;
+  hideTitle?: boolean;
 }
 
-const AdminLayout = ({ children }: AdminLayoutProps) => {
+const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [session, setSession] = useState<any>(null);
@@ -98,20 +100,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }, [navigate, notification]);
   
   useEffect(() => {
-    // Extract the current admin section from the URL path
     const path = location.pathname;
     const segments = path.split('/');
+    
     if (segments.length > 2 && segments[1] === 'admin') {
-      setActiveTab(segments[2] || 'content');
+      const section = segments[2] || 'content';
+      setActiveTab(section);
     } else {
       setActiveTab('content');
     }
   }, [location.pathname]);
 
-  // Show loading indicator when navigating between pages
   useEffect(() => {
     setIsPageLoading(true);
-    // Use shorter timeout for better UX
     const timer = setTimeout(() => {
       setIsPageLoading(false);
     }, 200);
@@ -127,7 +128,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     } catch (error) {
       console.error("Error signing out:", error);
       notification.showError("Sign Out Failed", "Failed to sign out. Please try again.");
-      // Force a redirect to login page even if signOut fails
       navigate('/login');
     }
   };
@@ -138,7 +138,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   const handleTabChange = useCallback((value: string) => {
-    if (value === activeTab) return; // Don't navigate if already on the tab
+    if (value === activeTab) return;
     setIsPageLoading(true);
     setActiveTab(value);
     navigate(`/admin/${value === 'content' ? '' : value}`);
@@ -165,9 +165,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-hidden">
-      <Suspense fallback={
-        <div className="h-16 bg-white shadow animate-pulse"></div>
-      }>
+      <Suspense fallback={<div className="h-16 bg-white shadow animate-pulse"></div>}>
         <AdminHeader 
           activeTab={activeTab}
           adminRoutes={adminRoutes}
@@ -193,6 +191,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               onTabChange={handleTabChange}
             />
           </Suspense>
+          
+          {!hideTitle && title && (
+            <h1 className={`${isMobile ? 'text-xl mb-2 px-1' : 'text-2xl mb-3'} font-bold mt-2`}>
+              {title}
+            </h1>
+          )}
           
           <div className="mt-2 overflow-hidden">
             {children}

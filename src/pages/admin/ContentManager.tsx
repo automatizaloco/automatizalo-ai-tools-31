@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import AdminBaseLayout from "./layout/AdminBaseLayout";
 import { 
   Accordion,
   AccordionContent,
@@ -43,9 +43,11 @@ const ContentManager = () => {
 
   if (!user) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
+      <AdminBaseLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+        </div>
+      </AdminBaseLayout>
     );
   }
 
@@ -128,97 +130,92 @@ const ContentManager = () => {
   const sortedCategories = Object.keys(groupedOptions).sort();
 
   return (
-    <div className="container mx-auto px-0 md:px-4">
-      <div className="mb-4 md:mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-xl md:text-3xl font-bold">Admin Dashboard</h1>
-          {!isMobile && (
-            <Button onClick={() => navigate("/")}>Back to Homepage</Button>
+    <AdminBaseLayout hideTitle={false}>
+      <div className="container mx-auto px-0 md:px-4">
+        <div className="mb-4 md:mb-4">
+          {user && (
+            <div className="text-sm text-gray-600">
+              Logged in as: {user.email}
+            </div>
           )}
         </div>
         
-        {user && (
-          <div className="text-sm text-gray-600">
-            Logged in as: {user.email}
+        {isMobile ? (
+          <Accordion type="single" collapsible className="w-full">
+            {sortedCategories.map((category) => (
+              <AccordionItem key={category} value={category}>
+                <AccordionTrigger className="px-2">
+                  <span className="font-medium">{category}</span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-1 gap-3 px-2">
+                    {groupedOptions[category].map((option) => {
+                      const Icon = option.icon;
+                      return (
+                        <Card 
+                          key={option.route} 
+                          className="hover:shadow-lg transition-shadow"
+                        >
+                          <div className="p-4">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="p-2 bg-gray-50 rounded-lg">
+                                <Icon className="h-5 w-5 text-gray-600" />
+                              </div>
+                              <h3 className="text-lg font-medium">{option.title}</h3>
+                            </div>
+                            <p className="text-gray-500 text-sm mb-3">{option.description}</p>
+                            <Button 
+                              onClick={() => navigate(option.route)}
+                              className="w-full"
+                              size="sm"
+                            >
+                              Manage
+                            </Button>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+            {adminOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <Card 
+                  key={option.route} 
+                  className="hover:shadow-lg transition-shadow"
+                >
+                  <CardHeader className="pb-2 md:pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gray-50 rounded-lg">
+                        <Icon className="h-5 w-5 text-gray-600" />
+                      </div>
+                      <CardTitle className="text-lg md:text-xl">{option.title}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pb-2 md:pb-4">
+                    <CardDescription className="text-sm md:text-base">{option.description}</CardDescription>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      onClick={() => navigate(option.route)}
+                      className="w-full"
+                      size={isMobile ? "sm" : "default"}
+                    >
+                      Manage {option.title}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
-      
-      {isMobile ? (
-        <Accordion type="single" collapsible className="w-full">
-          {sortedCategories.map((category) => (
-            <AccordionItem key={category} value={category}>
-              <AccordionTrigger className="px-2">
-                <span className="font-medium">{category}</span>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 gap-3 px-2">
-                  {groupedOptions[category].map((option) => {
-                    const Icon = option.icon;
-                    return (
-                      <Card 
-                        key={option.route} 
-                        className="hover:shadow-lg transition-shadow"
-                      >
-                        <div className="p-4">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-gray-50 rounded-lg">
-                              <Icon className="h-5 w-5 text-gray-600" />
-                            </div>
-                            <h3 className="text-lg font-medium">{option.title}</h3>
-                          </div>
-                          <p className="text-gray-500 text-sm mb-3">{option.description}</p>
-                          <Button 
-                            onClick={() => navigate(option.route)}
-                            className="w-full"
-                            size="sm"
-                          >
-                            Manage
-                          </Button>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-          {adminOptions.map((option) => {
-            const Icon = option.icon;
-            return (
-              <Card 
-                key={option.route} 
-                className="hover:shadow-lg transition-shadow"
-              >
-                <CardHeader className="pb-2 md:pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-50 rounded-lg">
-                      <Icon className="h-5 w-5 text-gray-600" />
-                    </div>
-                    <CardTitle className="text-lg md:text-xl">{option.title}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-2 md:pb-4">
-                  <CardDescription className="text-sm md:text-base">{option.description}</CardDescription>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    onClick={() => navigate(option.route)}
-                    className="w-full"
-                    size={isMobile ? "sm" : "default"}
-                  >
-                    Manage {option.title}
-                  </Button>
-                </CardFooter>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    </AdminBaseLayout>
   );
 };
 

@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/context/AuthContext";
-import AdminLayout from "@/components/layout/AdminLayout";
+import AdminBaseLayout from "./layout/AdminBaseLayout";
 import ContentHeader from '@/components/admin/content/ContentHeader';
 import ContentLoading from '@/components/admin/content/ContentLoading';
 import ContentEditorTabs from '@/components/admin/content/ContentEditorTabs';
@@ -32,23 +32,23 @@ const ContentEditor = () => {
 
   if (!user) {
     return (
-      <AdminLayout>
+      <AdminBaseLayout title="Content Editor">
         <ContentLoading />
-      </AdminLayout>
+      </AdminBaseLayout>
     );
   }
 
   if (loading) {
     return (
-      <AdminLayout>
+      <AdminBaseLayout title="Content Editor">
         <ContentLoading />
-      </AdminLayout>
+      </AdminBaseLayout>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="container mx-auto px-4">
+    <AdminBaseLayout title="Content Editor">
+      <div className="container mx-auto px-0 sm:px-4">
         <ContentHeader />
 
         <ContentEditorTabs
@@ -63,7 +63,7 @@ const ContentEditor = () => {
           setUploadingImage={setUploadingImage}
         />
       </div>
-    </AdminLayout>
+    </AdminBaseLayout>
   );
 };
 

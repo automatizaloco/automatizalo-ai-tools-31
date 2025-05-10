@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
+import AdminLayout from '@/components/layout/AdminLayout';
 
 interface AdminBaseLayoutProps {
   title?: string;
@@ -18,18 +18,13 @@ const AdminBaseLayout = ({
   hideTitle = false,
   className = ""
 }: AdminBaseLayoutProps) => {
-  const isMobile = useIsMobile();
-  
   return (
-    <div className={`${className} ${isMobile ? 'px-2 py-2 max-w-full' : 'px-4 py-4'}`}>
-      {!hideTitle && title && (
-        <h1 className={`text-xl ${isMobile ? 'mb-2 px-1' : 'text-2xl mb-3'} font-bold truncate`}>
-          {title}
-        </h1>
-      )}
-      {description && <p className="text-gray-600 mb-4 text-sm px-1">{description}</p>}
-      {children || <Outlet />}
-    </div>
+    <AdminLayout title={title} hideTitle={hideTitle}>
+      <div className={className}>
+        {description && <p className="text-gray-600 mb-4 text-sm">{description}</p>}
+        {children || <Outlet />}
+      </div>
+    </AdminLayout>
   );
 };
 

@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { AdminRouteType } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -18,6 +18,7 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
   onTabChange
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   
   // Early return for mobile devices - no horizontal nav
@@ -34,15 +35,20 @@ const AdminNavTabs: React.FC<AdminNavTabsProps> = ({
     if (onTabChange) {
       onTabChange(value);
     }
+    
+    // Navigate to the appropriate route
+    const route = value === 'content' ? '/admin' : `/admin/${value}`;
+    navigate(route);
   };
 
   return (
     <ScrollArea className="w-full">
-      <div className="flex items-center space-x-4 px-2 overflow-x-auto pb-2 min-w-max">
+      <div className="flex items-center space-x-4 px-2 overflow-x-auto pb-2 min-w-max border-b mb-4">
         {navItems.map((item) => {
-          const path = `/admin/${item.value === 'content' ? '' : item.value}`;
+          const path = item.value === 'content' ? '/admin' : `/admin/${item.value}`;
           const isActive = activeTab === item.value || 
-                         (path !== "/admin" && currentPath.includes(path));
+                         (currentPath === path) ||
+                         (currentPath.startsWith(path + '/'));
           
           return (
             <button

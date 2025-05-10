@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotification } from '@/hooks/useNotification';
@@ -11,9 +11,14 @@ interface AdminSessionManagerProps {
 const AdminSessionManager: React.FC<AdminSessionManagerProps> = ({ onSessionChange }) => {
   const navigate = useNavigate();
   const notification = useNotification();
+  const hasCheckedSession = useRef(false);
 
   useEffect(() => {
     const checkSession = async () => {
+      if (hasCheckedSession.current) return;
+      
+      hasCheckedSession.current = true;
+      
       try {
         const { data, error } = await supabase.auth.getSession();
         

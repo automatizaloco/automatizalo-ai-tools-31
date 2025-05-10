@@ -15,11 +15,13 @@ const AdminSessionManager: React.FC<AdminSessionManagerProps> = ({ onSessionChan
 
   useEffect(() => {
     const checkSession = async () => {
+      // Only run this once
       if (hasCheckedSession.current) return;
       
       hasCheckedSession.current = true;
       
       try {
+        // Get current session state
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -33,6 +35,7 @@ const AdminSessionManager: React.FC<AdminSessionManagerProps> = ({ onSessionChan
         onSessionChange(data.session);
         
         if (!data.session) {
+          // If no session, redirect to login
           navigate('/login?redirect=/admin');
         }
       } catch (error) {
@@ -42,8 +45,10 @@ const AdminSessionManager: React.FC<AdminSessionManagerProps> = ({ onSessionChan
       }
     };
     
+    // Check session immediately
     checkSession();
     
+    // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         onSessionChange(session);
@@ -53,8 +58,11 @@ const AdminSessionManager: React.FC<AdminSessionManagerProps> = ({ onSessionChan
       }
     );
     
+    // Clean up listener on unmount
     return () => {
-      authListener?.subscription.unsubscribe();
+      if (authListener) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, [navigate, notification, onSessionChange]);
 

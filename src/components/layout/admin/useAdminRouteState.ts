@@ -23,10 +23,10 @@ export const useAdminRouteState = () => {
 
   // Admin routes definition - memoized to prevent recreating on rerenders
   const adminRoutes: AdminRouteType[] = useMemo(() => [
-    { value: 'content', label: 'Dashboard', icon: LayoutDashboard, priority: 10 },
+    { value: 'content', label: 'Home', icon: LayoutDashboard, priority: 10 },
     { value: 'users', label: 'Users', icon: Users, priority: 9 },
     { value: 'blog', label: 'Blog', icon: PenSquare, priority: 8 },
-    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2, priority: 7 }, // Fixed route value
+    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2, priority: 7 },
     { value: 'client-automations', label: 'Client Automations', icon: Zap, priority: 6 },
     { value: 'automations', label: 'Automations', icon: Zap, priority: 5 },
     { value: 'support', label: 'Support', icon: HelpCircle, priority: 4 },

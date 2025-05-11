@@ -21,7 +21,6 @@ import { useNavigate } from 'react-router-dom';
 interface AdminHeaderProps {
   activeTab: string;
   adminRoutes: AdminRouteType[];
-  onTabChange: (value: string) => void;
   onHomeClick: () => void;
   onLogout: () => void;
   onViewAsClient: () => void;
@@ -30,7 +29,6 @@ interface AdminHeaderProps {
 const AdminHeader: React.FC<AdminHeaderProps> = ({
   activeTab,
   adminRoutes,
-  onTabChange,
   onHomeClick,
   onLogout,
   onViewAsClient
@@ -46,10 +44,16 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
     logout: 'Logout'
   };
 
-  // Sort routes by priority for mobile view
+  // Sort routes by priority for menu view
   const sortedRoutes = [...adminRoutes].sort((a, b) => 
     (b.priority ?? 0) - (a.priority ?? 0)
   );
+
+  const handleTabChange = (value: string) => {
+    // Navigate to the appropriate route
+    const route = value === 'content' ? '/admin' : `/admin/${value}`;
+    navigate(route);
+  };
 
   return (
     <div className="bg-white shadow sticky top-0 z-50">
@@ -115,7 +119,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
                     <AdminNavItem
                       route={route}
                       isActive={activeTab === route.value}
-                      onClick={() => onTabChange(route.value)}
+                      onClick={() => handleTabChange(route.value)}
                     />
                   </SheetClose>
                 ))}

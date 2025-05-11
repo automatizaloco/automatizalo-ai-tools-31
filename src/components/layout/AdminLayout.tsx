@@ -26,7 +26,7 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
   const { isAuthenticated, user } = useAuth();
   const { isAdmin, isVerifying } = useAdminVerification();
   const notification = useNotification();
-  const { activeTab, isPageLoading, adminRoutes, handleTabChange } = useAdminRouteState();
+  const { activeTab, isPageLoading, adminRoutes } = useAdminRouteState();
 
   // Set a timeout to prevent infinite loading
   useEffect(() => {
@@ -103,7 +103,6 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
         <AdminHeader 
           activeTab={activeTab}
           adminRoutes={adminRoutes}
-          onTabChange={handleTabChange}
           onHomeClick={handleHomeClick}
           onLogout={handleLogout}
           onViewAsClient={handleViewAsClient}
@@ -113,10 +112,7 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
       <AdminLayoutContent
         title={title}
         hideTitle={hideTitle}
-        activeTab={activeTab}
         isPageLoading={isPageLoading}
-        adminRoutes={adminRoutes}
-        handleTabChange={handleTabChange}
       >
         {children}
       </AdminLayoutContent>

@@ -7,7 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import AdminPageLoader from './admin/AdminPageLoader';
 import AdminLayoutContent from './admin/AdminLayoutContent';
 import AdminSessionManager from './admin/AdminSessionManager';
-import { useAdminRouteState } from './admin/useAdminRouteState';
 import { useAdminVerification } from '@/hooks/useAdminVerification';
 
 // Lazy load components for better performance
@@ -26,7 +25,7 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
   const { isAuthenticated, user } = useAuth();
   const { isAdmin, isVerifying } = useAdminVerification();
   const notification = useNotification();
-  const { activeTab, isPageLoading, adminRoutes } = useAdminRouteState();
+  const { isPageLoading } = useAdminRouteState();
 
   // Set a timeout to prevent infinite loading
   useEffect(() => {
@@ -101,8 +100,6 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
       
       <Suspense fallback={<div className="h-16 bg-white shadow animate-pulse"></div>}>
         <AdminHeader 
-          activeTab={activeTab}
-          adminRoutes={adminRoutes}
           onHomeClick={handleHomeClick}
           onLogout={handleLogout}
           onViewAsClient={handleViewAsClient}
@@ -119,5 +116,8 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
     </div>
   );
 };
+
+// Add missing import at the top
+import { useAdminRouteState } from './admin/useAdminRouteState';
 
 export default AdminLayout;

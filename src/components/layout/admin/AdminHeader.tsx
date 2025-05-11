@@ -17,18 +17,15 @@ import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import { useLanguage } from '@/context/LanguageContext';
 import { adminTranslations } from '@/translations/adminTranslations';
 import { useNavigate } from 'react-router-dom';
+import { useAdminRouteState } from './useAdminRouteState';
 
 interface AdminHeaderProps {
-  activeTab: string;
-  adminRoutes: AdminRouteType[];
   onHomeClick: () => void;
   onLogout: () => void;
   onViewAsClient: () => void;
 }
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({
-  activeTab,
-  adminRoutes,
   onHomeClick,
   onLogout,
   onViewAsClient
@@ -36,6 +33,8 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   const isMobile = useIsMobile();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { activeTab, adminRoutes, handleTabChange } = useAdminRouteState();
+  
   const t = adminTranslations[language]?.adminHeader || {
     adminTitle: 'Admin Panel',
     navigation: 'Navigation',
@@ -48,12 +47,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   const sortedRoutes = [...adminRoutes].sort((a, b) => 
     (b.priority ?? 0) - (a.priority ?? 0)
   );
-
-  const handleTabChange = (value: string) => {
-    // Navigate to the appropriate route
-    const route = value === 'content' ? '/admin' : `/admin/${value}`;
-    navigate(route);
-  };
 
   return (
     <div className="bg-white shadow sticky top-0 z-50">

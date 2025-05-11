@@ -19,7 +19,7 @@ export const useAdminRouteState = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isPageLoading, setIsPageLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>('content');
+  const [activeTab, setActiveTab] = useState<string>('');
 
   // Admin routes definition - memoized to prevent recreating on rerenders
   const adminRoutes: AdminRouteType[] = useMemo(() => [
@@ -36,6 +36,7 @@ export const useAdminRouteState = () => {
     { value: 'notifications', label: 'Notifications', icon: Bell, priority: 0 }
   ], []);
 
+  // Update active tab based on current route
   useEffect(() => {
     const path = location.pathname;
     const segments = path.split('/');
@@ -43,11 +44,12 @@ export const useAdminRouteState = () => {
     if (segments.length > 2 && segments[1] === 'admin') {
       const section = segments[2] || 'content';
       setActiveTab(section);
-    } else {
+    } else if (path === '/admin') {
       setActiveTab('content');
     }
   }, [location.pathname]);
 
+  // Add loading state when switching pages
   useEffect(() => {
     setIsPageLoading(true);
     const timer = setTimeout(() => {
@@ -57,13 +59,16 @@ export const useAdminRouteState = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Handle tab changes and navigation
   const handleTabChange = useCallback((value: string) => {
     if (value === activeTab) return;
+    
     setIsPageLoading(true);
     setActiveTab(value);
     
     // Navigate to the appropriate route
-    navigate(`/admin/${value === 'content' ? '' : value}`);
+    const route = value === 'content' ? '/admin' : `/admin/${value}`;
+    navigate(route);
   }, [activeTab, navigate]);
 
   return {

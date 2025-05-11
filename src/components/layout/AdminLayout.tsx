@@ -8,6 +8,7 @@ import AdminPageLoader from './admin/AdminPageLoader';
 import AdminLayoutContent from './admin/AdminLayoutContent';
 import AdminSessionManager from './admin/AdminSessionManager';
 import { useAdminVerification } from '@/hooks/useAdminVerification';
+import { useAdminRouteState } from './admin/useAdminRouteState';
 
 // Lazy load components for better performance
 const AdminHeader = lazy(() => import('./admin/AdminHeader'));
@@ -116,8 +117,5 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
     </div>
   );
 };
-
-// Add missing import at the top
-import { useAdminRouteState } from './admin/useAdminRouteState';
 
 export default AdminLayout;

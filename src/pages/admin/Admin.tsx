@@ -12,6 +12,12 @@ const Admin = () => {
     if (!isAuthenticated || !user) {
       console.log("Admin page: User not authenticated, redirecting to login");
       navigate('/login?redirect=/admin');
+      return;
+    }
+    
+    // If authenticated, redirect to blog section (removing dashboard)
+    if (location.pathname === '/admin') {
+      navigate('/admin/blog');
     }
   }, [user, navigate, isAuthenticated]);
 

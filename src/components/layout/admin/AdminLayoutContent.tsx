@@ -41,5 +41,4 @@ const AdminLayoutContent: React.FC<AdminLayoutContentProps> = ({
   );
 };
 
-// Use React.memo to prevent unnecessary re-renders
 export default memo(AdminLayoutContent);

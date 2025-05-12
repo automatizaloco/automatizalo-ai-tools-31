@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -8,14 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-
 const ClientLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, user } = useAuth();
+  const {
+    isAuthenticated,
+    user
+  } = useAuth();
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
   // Check for redirect parameter
@@ -40,56 +41,51 @@ const ClientLogin = () => {
       }
     }
   }, [isAuthenticated, user, navigate, redirectTo]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const {
+        data,
+        error
+      } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-
       if (error) throw error;
-      
       console.log('Login successful, checking user role');
-      
+
       // Special case for the main admin account
       if (email === 'contact@automatizalo.co') {
         console.log('Main admin account detected, redirecting to admin');
-        
+
         // Ensure the user has admin role in the database
-        const { data: userData, error: fetchError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-          
+        const {
+          data: userData,
+          error: fetchError
+        } = await supabase.from('users').select('role').eq('id', data.user.id).single();
         console.log('User data for admin:', userData);
-        
         if (fetchError) {
           console.error('Error fetching user role:', fetchError);
         }
-        
+
         // If user doesn't exist or doesn't have admin role, update it
         if (!userData || userData.role !== 'admin') {
           console.log('Setting admin role for main account');
-          const { error: updateError } = await supabase
-            .from('users')
-            .upsert({ 
-              id: data.user.id, 
-              email: email, 
-              role: 'admin' 
-            });
-            
+          const {
+            error: updateError
+          } = await supabase.from('users').upsert({
+            id: data.user.id,
+            email: email,
+            role: 'admin'
+          });
           if (updateError) {
             console.error('Error updating admin role:', updateError);
           } else {
             console.log('Successfully updated to admin role');
           }
         }
-        
+
         // If there's a redirect URL, use it; otherwise go to admin
         if (redirectTo) {
           navigate(redirectTo);
@@ -99,30 +95,26 @@ const ClientLogin = () => {
         toast.success('Successfully logged in as administrator');
         return;
       }
-      
+
       // For regular users, check role in database
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', data.user.id)
-        .single();
-        
+      const {
+        data: userData,
+        error: userError
+      } = await supabase.from('users').select('role').eq('id', data.user.id).single();
       if (userError) {
         console.error('Error fetching user role:', userError);
-        
+
         // Try to create a user entry if it doesn't exist
-        const { error: createError } = await supabase
-          .from('users')
-          .upsert({
-            id: data.user.id,
-            email: email,
-            role: 'client' // Default to client role
-          });
-          
+        const {
+          error: createError
+        } = await supabase.from('users').upsert({
+          id: data.user.id,
+          email: email,
+          role: 'client' // Default to client role
+        });
         if (createError) {
           console.error('Error creating user record:', createError);
         }
-        
         if (redirectTo) {
           navigate(redirectTo);
         } else {
@@ -131,9 +123,8 @@ const ClientLogin = () => {
         toast.success('Successfully logged in');
         return;
       }
-      
       console.log('User data:', userData);
-      
+
       // Redirect based on role
       if (userData?.role === 'admin') {
         if (redirectTo) {
@@ -157,9 +148,7 @@ const ClientLogin = () => {
       setIsLoading(false);
     }
   };
-
-  return (
-    <Card className="max-w-md mx-auto">
+  return <Card className="max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Client Login</CardTitle>
         <CardDescription>
@@ -170,37 +159,19 @@ const ClientLogin = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default ClientLogin;

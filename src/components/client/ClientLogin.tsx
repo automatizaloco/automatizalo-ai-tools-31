@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+
 const ClientLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -41,6 +42,7 @@ const ClientLogin = () => {
       }
     }
   }, [isAuthenticated, user, navigate, redirectTo]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -148,7 +150,8 @@ const ClientLogin = () => {
       setIsLoading(false);
     }
   };
-  return <Card className="max-w-md mx-auto">
+
+  return <Card className="max-w-md mx-auto mt-[100px]">
       <CardHeader>
         <CardTitle>Client Login</CardTitle>
         <CardDescription>
@@ -174,4 +177,5 @@ const ClientLogin = () => {
       </CardContent>
     </Card>;
 };
+
 export default ClientLogin;

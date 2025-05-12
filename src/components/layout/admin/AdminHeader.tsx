@@ -52,6 +52,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
     <div className="bg-white shadow sticky top-0 z-50">
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-shrink-0 flex items-center">
+          {/* Esto mostrará el título "Admin Panel" */}
           <h1 
             className="text-lg font-bold cursor-pointer" 
             onClick={() => navigate('/admin')}

@@ -18,8 +18,9 @@ const BlogAdminHeader = ({
   isMobile 
 }: BlogAdminHeaderProps) => {
   return (
-    <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-8 gap-3">
-      <h1 className="text-xl md:text-3xl font-bold">Blog Management</h1>
+    <div className="flex flex-col md:flex-row md:justify-end md:items-center mb-4 md:mb-8 gap-3">
+      {/* Título oculto con sr-only para mantener accesibilidad pero ocultarlo visualmente */}
+      <h1 className="sr-only">Blog Management</h1>
       <div className="flex gap-2">
         <Button 
           variant="outline"

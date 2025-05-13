@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { ReactNode, useState, lazy, Suspense, useEffect } from 'react';
 import { useNotification } from '@/hooks/useNotification';
@@ -99,7 +98,7 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
     <div className="min-h-screen bg-gray-50 overflow-hidden">
       <AdminSessionManager onSessionChange={handleSessionChange} />
       
-      {/* Only render the header once at the top level */}
+      {/* Render the header only at this level, not in child components */}
       <Suspense fallback={<div className="h-16 bg-white shadow animate-pulse"></div>}>
         <AdminHeader 
           onHomeClick={handleHomeClick}

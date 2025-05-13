@@ -50,8 +50,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   return (
     <div className="bg-white shadow sticky top-0 z-50">
-      {/* Adding display: none to hide the duplicate container */}
-      <div className="px-4 h-16 flex justify-between items-center" style={{ display: 'none' }}>
+      <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-shrink-0 flex items-center">
           <h1 
             className="text-lg font-bold cursor-pointer" 

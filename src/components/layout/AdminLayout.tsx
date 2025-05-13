@@ -99,6 +99,7 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
     <div className="min-h-screen bg-gray-50 overflow-hidden">
       <AdminSessionManager onSessionChange={handleSessionChange} />
       
+      {/* Only render the header once at the top level */}
       <Suspense fallback={<div className="h-16 bg-white shadow animate-pulse"></div>}>
         <AdminHeader 
           onHomeClick={handleHomeClick}

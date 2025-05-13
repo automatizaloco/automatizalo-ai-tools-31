@@ -13,7 +13,7 @@ interface AdminLayoutContentProps {
 const AdminLayoutContent: React.FC<AdminLayoutContentProps> = ({
   children,
   title,
-  hideTitle = true, // Cambiado a true por defecto para ocultar todos los títulos
+  hideTitle = true, // Mantener en true por defecto para ocultar todos los títulos
   isPageLoading
 }) => {
   const isMobile = useIsMobile();

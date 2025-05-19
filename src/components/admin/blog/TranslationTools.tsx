@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { translateBlogContent } from "@/services/translationService";
+import { translateBlogContent } from "@/services/translation";
 import { Loader2, Globe } from "lucide-react";
 import { BlogPost } from "@/types/blog";
 import { TranslationFormData } from "@/types/form";

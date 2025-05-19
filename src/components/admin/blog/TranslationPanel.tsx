@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Globe, Check, Edit, Loader2, Save, AlertCircle } from "lucide-react";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
-import { translateBlogContent } from "@/services/translationService";
+import { translateBlogContent } from "@/services/translation";
 import { toast } from "sonner";
 import "../../../styles/blog-content.css";
 

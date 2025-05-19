@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { BlogPost } from "@/types/blog";
 import { TranslationFormData } from "@/types/form";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Check, Edit, Loader2, Save } from "lucide-react";
+import { Globe, Check, Edit, Loader2, Save, AlertCircle } from "lucide-react";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { translateBlogContent } from "@/services/translationService";
 import { toast } from "sonner";
@@ -36,6 +37,10 @@ const TranslationPanel = ({
     fr: false,
     es: false
   });
+  const [translationErrors, setTranslationErrors] = useState<{ [key: string]: boolean }>({
+    fr: false,
+    es: false
+  });
 
   if (!post) return null;
   
@@ -44,6 +49,7 @@ const TranslationPanel = ({
     
     try {
       setIsTranslating(prev => ({ ...prev, [language]: true }));
+      setTranslationErrors(prev => ({ ...prev, [language]: false }));
       
       const translated = await translateBlogContent(
         post.content,
@@ -52,17 +58,26 @@ const TranslationPanel = ({
         language
       );
 
-      console.log(`Translation results for ${language}:`, translated);
-      console.log(`Translation HTML preserved?: ${translated.content.includes('<p>') || translated.content.includes('<strong>')}`);
-      
-      onTranslationChange(language, "title", translated.title);
-      onTranslationChange(language, "excerpt", translated.excerpt);
-      onTranslationChange(language, "content", translated.content);
-      
-      toast.success(`Content translated to ${language === 'fr' ? 'French' : 'Spanish'} successfully`);
+      // Check if this is an error response (look for the error marker in title)
+      if (translated.title.startsWith('[Translation Error]')) {
+        setTranslationErrors(prev => ({ ...prev, [language]: true }));
+        toast.error(`Translation to ${language === 'fr' ? 'French' : 'Spanish'} failed. Please try again later.`);
+      } else {
+        console.log(`Translation results for ${language}:`, translated);
+        console.log(`Translation HTML preserved?: ${translated.content.includes('<p>') || translated.content.includes('<strong>')}`);
+        
+        onTranslationChange(language, "title", translated.title);
+        onTranslationChange(language, "excerpt", translated.excerpt);
+        onTranslationChange(language, "content", translated.content);
+        
+        toast.success(`Content translated to ${language === 'fr' ? 'French' : 'Spanish'} successfully`);
+        
+        setTranslationErrors(prev => ({ ...prev, [language]: false }));
+      }
     } catch (error) {
       console.error(`Error auto-translating to ${language}:`, error);
       toast.error(`Failed to translate to ${language === 'fr' ? 'French' : 'Spanish'}`);
+      setTranslationErrors(prev => ({ ...prev, [language]: true }));
     } finally {
       setIsTranslating(prev => ({ ...prev, [language]: false }));
     }
@@ -117,12 +132,16 @@ const TranslationPanel = ({
             🇫🇷 French
             {post.translations?.fr ? (
               <Check className="ml-1 h-3 w-3 text-green-500" />
+            ) : translationErrors.fr ? (
+              <AlertCircle className="ml-1 h-3 w-3 text-red-500" />
             ) : null}
           </TabsTrigger>
           <TabsTrigger value="es" className="flex items-center">
             🇨🇴 Spanish
             {post.translations?.es ? (
               <Check className="ml-1 h-3 w-3 text-green-500" />
+            ) : translationErrors.es ? (
+              <AlertCircle className="ml-1 h-3 w-3 text-red-500" />
             ) : null}
           </TabsTrigger>
         </TabsList>
@@ -155,6 +174,14 @@ const TranslationPanel = ({
               </Button>
             )}
           </div>
+          {translationErrors.fr && (
+            <div className="mt-2 p-3 bg-red-50 text-red-700 border border-red-200 rounded-md flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              <p className="text-sm">
+                Translation failed. Please try again or edit manually.
+              </p>
+            </div>
+          )}
           {editingTranslation ? (
             <div className="space-y-4 mt-3">
               <div>
@@ -229,6 +256,14 @@ const TranslationPanel = ({
               </Button>
             )}
           </div>
+          {translationErrors.es && (
+            <div className="mt-2 p-3 bg-red-50 text-red-700 border border-red-200 rounded-md flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              <p className="text-sm">
+                Translation failed. Please try again or edit manually.
+              </p>
+            </div>
+          )}
           {editingTranslation ? (
             <div className="space-y-4 mt-3">
               <div>

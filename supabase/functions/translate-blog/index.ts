@@ -43,40 +43,57 @@ serve(async (req) => {
           format: "html"  // Using html to preserve HTML formatting
         };
 
-        // Make API request
-        const response = await fetch(`${GOOGLE_API_URL}?key=${API_KEY}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody)
-        });
+        // Make API request with retry logic
+        let attempts = 0;
+        const maxAttempts = 3;
+        let lastError: Error | null = null;
+        
+        while (attempts < maxAttempts) {
+          attempts++;
+          console.log(`Translation attempt ${attempts} of ${maxAttempts}`);
+          
+          try {
+            const response = await fetch(`${GOOGLE_API_URL}?key=${API_KEY}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody)
+            });
 
-        console.log(`Translation API response status for ${target}: ${response.status}`);
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          console.error("Google Translate API error:", {
-            status: response.status,
-            statusText: response.statusText,
-            error: data.error
-          });
-          throw new Error(`Translation API error: ${data.error?.message || response.statusText}`);
+            console.log(`Translation API response status for ${target}: ${response.status}`);
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`Translation API error (${response.status}): ${errorText}`);
+              throw new Error(`Translation API error: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            const translatedText = data.data?.translations?.[0]?.translatedText;
+            
+            if (!translatedText) {
+              console.error("No translation in response for content:", { data });
+              throw new Error('No translation returned from API');
+            }
+
+            console.log(`Translation successful, translated text contains HTML?: ${translatedText.includes('<p>') || translatedText.includes('<strong>')}`);
+            return translatedText;
+          } catch (attemptError: any) {
+            console.error(`Translation attempt ${attempts} failed:`, attemptError);
+            lastError = attemptError;
+            
+            if (attempts < maxAttempts) {
+              // Wait before retrying
+              const delay = attempts * 1000; // Progressive delay: 1s, 2s...
+              console.log(`Waiting ${delay}ms before retry...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
+          }
         }
 
-        // Log data structure for debugging
-        console.log(`Response data structure for ${target}:`, JSON.stringify(data).substring(0, 200) + "...");
-
-        const translatedText = data.data?.translations?.[0]?.translatedText;
-        
-        if (!translatedText) {
-          console.error("No translation in response for content:", { data });
-          throw new Error('No translation returned from API');
-        }
-
-        console.log(`Translation successful, translated text contains HTML?: ${translatedText.includes('<p>') || translatedText.includes('<strong>')}`);
-        return translatedText;
+        // If all attempts failed, throw the last error
+        throw lastError || new Error('Translation failed after multiple attempts');
       } catch (error) {
         console.error(`Error translating text to ${target}: ${error.message}`);
         throw error;
@@ -170,4 +187,4 @@ serve(async (req) => {
       },
     );
   }
-})
+});

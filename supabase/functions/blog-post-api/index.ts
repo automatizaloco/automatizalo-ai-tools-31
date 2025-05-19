@@ -38,22 +38,54 @@ const estimateReadTime = (content: string): string => {
 // Translate blog content to the target language using existing functions
 const translateContent = async (content: string, title: string, excerpt: string, targetLang: string) => {
   try {
-    // Call the existing translate-blog function
-    const { data, error } = await supabase.functions.invoke("translate-blog", {
-      body: {
+    console.log(`Attempting to translate to ${targetLang}`);
+
+    // Create a client that doesn't timeout too quickly
+    const fetchWithTimeout = async (url: string, options: any, timeout = 60000) => {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+      } catch (error) {
+        clearTimeout(id);
+        throw error;
+      }
+    };
+
+    // Call the existing translate-blog function with the custom fetch
+    const translateUrl = `${supabaseUrl}/functions/v1/translate-blog`;
+    console.log(`Calling translation service at: ${translateUrl}`);
+
+    const response = await fetchWithTimeout(translateUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify({
         text: content,
         title: title,
         excerpt: excerpt,
         targetLang: targetLang,
         preserveFormatting: true,
         format: "html"
-      }
+      })
     });
 
-    if (error) {
-      console.error(`Error translating to ${targetLang}:`, error);
-      throw new Error(`Translation to ${targetLang} failed: ${error.message}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Error response from translate-blog: ${response.status}`, errorText);
+      throw new Error(`Translation API returned ${response.status}: ${errorText}`);
     }
+
+    const data = await response.json();
+    console.log(`Translation to ${targetLang} successful`);
 
     return {
       title: data?.title || "",
@@ -62,7 +94,12 @@ const translateContent = async (content: string, title: string, excerpt: string,
     };
   } catch (error) {
     console.error(`Error in translateContent to ${targetLang}:`, error);
-    throw error;
+    // Return empty results rather than throwing to allow the process to continue
+    return {
+      title: "",
+      excerpt: "",
+      content: ""
+    };
   }
 };
 
@@ -75,6 +112,12 @@ const saveTranslation = async (
   translatedContent: string
 ) => {
   try {
+    // Skip saving if no content was translated successfully
+    if (!translatedTitle || !translatedContent) {
+      console.log(`Skipping ${language} translation save - empty content`);
+      return;
+    }
+
     console.log(`Saving ${language} translation for post ${blogPostId}`);
 
     const translationRecord = {
@@ -97,7 +140,7 @@ const saveTranslation = async (
     console.log(`Successfully saved ${language} translation`);
   } catch (error) {
     console.error(`Error in saveTranslation for ${language}:`, error);
-    throw error;
+    // Don't rethrow - we want to continue even if saving translations fails
   }
 };
 
@@ -180,67 +223,70 @@ serve(async (req) => {
 
     console.log("Blog post saved successfully, ID:", savedPost.id);
 
-    // Start translations in the background
-    const translationPromises = [];
-
-    try {
-      console.log("Starting translations to Spanish and French...");
-      // Translate to Spanish
-      translationPromises.push((async () => {
-        try {
-          console.log("Translating to Spanish...");
-          const esTranslation = await translateContent(
+    // Run translations in a background task to avoid timeout issues
+    const runTranslations = async () => {
+      try {
+        console.log("Starting translations to Spanish and French...");
+        
+        // Run translations in parallel but catch errors individually
+        const [esTranslation, frTranslation] = await Promise.all([
+          // Spanish translation
+          translateContent(
             requestData.content,
             requestData.title,
             requestData.excerpt,
             "es"
-          );
-          await saveTranslation(
+          ).catch(error => {
+            console.error("Error translating to Spanish:", error);
+            return { title: "", excerpt: "", content: "" };
+          }),
+          
+          // French translation
+          translateContent(
+            requestData.content,
+            requestData.title,
+            requestData.excerpt,
+            "fr"
+          ).catch(error => {
+            console.error("Error translating to French:", error);
+            return { title: "", excerpt: "", content: "" };
+          })
+        ]);
+
+        // Save translations independently - don't wait for both to complete
+        await Promise.allSettled([
+          saveTranslation(
             savedPost.id,
             "es",
             esTranslation.title,
             esTranslation.excerpt,
             esTranslation.content
-          );
-          console.log("Spanish translation completed and saved.");
-        } catch (esError) {
-          console.error("Error in Spanish translation:", esError);
-          // We continue with the process even if one translation fails
-        }
-      })());
-
-      // Translate to French
-      translationPromises.push((async () => {
-        try {
-          console.log("Translating to French...");
-          const frTranslation = await translateContent(
-            requestData.content,
-            requestData.title,
-            requestData.excerpt,
-            "fr"
-          );
-          await saveTranslation(
+          ),
+          saveTranslation(
             savedPost.id,
             "fr",
             frTranslation.title,
             frTranslation.excerpt,
             frTranslation.content
-          );
-          console.log("French translation completed and saved.");
-        } catch (frError) {
-          console.error("Error in French translation:", frError);
-          // We continue with the process even if one translation fails
-        }
-      })());
+          )
+        ]);
+        
+        console.log("Translation process completed");
+      } catch (translationError) {
+        console.error("Error during translation process:", translationError);
+        // Translation errors don't fail the entire operation
+      }
+    };
 
-      // Wait for translations to complete or timeout after 30 seconds
-      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 30000));
-      await Promise.race([Promise.all(translationPromises), timeoutPromise]);
-      
-    } catch (translationError) {
-      console.error("Error during translation process:", translationError);
-      // We still consider the API call successful if the main post was created,
-      // even if translations failed
+    // Start translations in the background without awaiting
+    if (typeof EdgeRuntime !== 'undefined') {
+      // In environments supporting waitUntil
+      EdgeRuntime.waitUntil(runTranslations());
+      console.log("Translations started in background");
+    } else {
+      // Fallback for environments without waitUntil
+      runTranslations().catch(error => console.error("Translation background task failed:", error));
+      console.log("Translations started in background (without waitUntil)");
     }
 
     // Create the full URL for the blog post

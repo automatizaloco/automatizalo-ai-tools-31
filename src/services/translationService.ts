@@ -155,12 +155,25 @@ export const translateBlogContent = async (
       }
     }
     
-    // If all attempts failed, throw the last error
-    throw lastError || new Error('Translation failed after multiple attempts');
+    // If all attempts failed, provide fallback data
+    console.error(`All ${maxAttempts} translation attempts failed. Using fallback data.`);
+    toast.error(`Translation failed after ${maxAttempts} attempts. Please try again later.`);
+    
+    return {
+      title: `[Translation Error] ${title}`,
+      excerpt: `[Translation Error] ${excerpt}`,
+      content: `<p>[Translation Error] The content could not be translated. Please try again later.</p><hr/><p>${content}</p>`
+    };
   } catch (error: any) {
     console.error(`Error translating content to ${targetLang}:`, error);
     toast.error(`Failed to translate content: ${error.message}`);
-    throw error;
+    
+    // Return fallback data instead of throwing
+    return {
+      title: `[Translation Error] ${title}`,
+      excerpt: `[Translation Error] ${excerpt}`,
+      content: `<p>[Translation Error] The content could not be translated. Please try again later.</p>`
+    };
   }
 };
 

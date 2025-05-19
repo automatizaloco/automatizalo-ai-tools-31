@@ -36,51 +36,74 @@ const TranslationTools: React.FC<TranslationToolsProps> = ({
     setIsTranslating(true);
 
     try {
-      // French translation
-      const frTranslation = await translateBlogContent(
-        formData.content,
-        formData.title,
-        formData.excerpt,
-        'fr'
-      );
+      // Create a toast to indicate the translation is in progress
+      const toastId = toast.loading("Translating content to all languages...");
+      let errorOccurred = false;
 
-      // Spanish translation
-      const esTranslation = await translateBlogContent(
-        formData.content,
-        formData.title,
-        formData.excerpt,
-        'es'
-      );
+      try {
+        // French translation
+        console.log("Starting French translation...");
+        const frTranslation = await translateBlogContent(
+          formData.content,
+          formData.title,
+          formData.excerpt,
+          'fr'
+        );
 
-      // Update the translation data state
-      const updatedTranslations = {
-        fr: {
-          title: frTranslation.title,
-          excerpt: frTranslation.excerpt,
-          content: frTranslation.content
-        },
-        es: {
-          title: esTranslation.title,
-          excerpt: esTranslation.excerpt,
-          content: esTranslation.content
+        // Spanish translation
+        console.log("Starting Spanish translation...");
+        const esTranslation = await translateBlogContent(
+          formData.content,
+          formData.title,
+          formData.excerpt,
+          'es'
+        );
+
+        // Check if any translations failed
+        if (frTranslation.title.startsWith('[Translation Error]') ||
+            esTranslation.title.startsWith('[Translation Error]')) {
+          errorOccurred = true;
         }
-      };
 
-      // Update both states to ensure consistency
-      setTranslationData(updatedTranslations);
-      
-      // Also update the form data with the translations
-      setFormData(prev => ({
-        ...prev,
-        translations: updatedTranslations
-      }));
+        // Update the translation data state
+        const updatedTranslations = {
+          fr: {
+            title: frTranslation.title,
+            excerpt: frTranslation.excerpt,
+            content: frTranslation.content
+          },
+          es: {
+            title: esTranslation.title,
+            excerpt: esTranslation.excerpt,
+            content: esTranslation.content
+          }
+        };
 
-      console.log("Translations updated:", updatedTranslations);
-      toast.success("Content translated to all languages");
+        // Update both states to ensure consistency
+        setTranslationData(updatedTranslations);
+        
+        // Also update the form data with the translations
+        setFormData(prev => ({
+          ...prev,
+          translations: updatedTranslations
+        }));
+
+        console.log("Translations updated:", updatedTranslations);
+      } finally {
+        // Always dismiss the loading toast
+        toast.dismiss(toastId);
+        
+        // Show appropriate toast based on result
+        if (errorOccurred) {
+          toast.warning("Some translations could not be completed. You can try again or edit them manually.");
+        } else {
+          toast.success("Content translated to all languages");
+        }
+      }
       
       // Save translations to database if in edit mode
       if (id) {
-        await saveTranslations(updatedTranslations);
+        await saveTranslations(translationData);
       }
     } catch (error) {
       console.error("Error auto-translating all content:", error);
@@ -97,7 +120,9 @@ const TranslationTools: React.FC<TranslationToolsProps> = ({
     }
     
     try {
+      const savingToast = toast.loading("Saving translations...");
       await saveBlogTranslations(id, translations);
+      toast.dismiss(savingToast);
       toast.success("Translations saved successfully");
     } catch (error) {
       console.error("Error saving translations:", error);

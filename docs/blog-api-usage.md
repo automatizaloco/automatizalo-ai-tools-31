@@ -11,9 +11,10 @@ POST https://juwbamkqkawyibcvllvo.supabase.co/functions/v1/blog-post-api
 
 ```
 Content-Type: application/json
+apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1d2JhbWtxa2F3eWliY3ZsbHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MDUxMDIsImV4cCI6MjA1NzI4MTEwMn0.uqwyR5lwp8JXa7qAZu6nZcCEdaoKOxX0XxQls2vg7Fk
 ```
 
-No authentication is required as the endpoint is public.
+The `apikey` header is required for authorization when calling the function.
 
 ## Request Body
 

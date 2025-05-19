@@ -102,13 +102,17 @@ const saveTranslation = async (
 };
 
 serve(async (req) => {
+  console.log("Received request", req.method);
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders, status: 204 });
   }
 
   // Verify that request method is POST
   if (req.method !== "POST") {
+    console.log(`Method not allowed: ${req.method}`);
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 405 }

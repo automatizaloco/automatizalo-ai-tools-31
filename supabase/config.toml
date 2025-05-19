@@ -58,3 +58,33 @@ enabled = true
 
 [edge_functions.blog-post-api]
 verify_jwt = false
+
+[edge_functions.blog-webhook]
+verify_jwt = false
+
+[edge_functions.check-newsletter-automation]
+verify_jwt = false
+
+[edge_functions.contact-form]
+verify_jwt = false
+
+[edge_functions.manage-users]
+verify_jwt = false
+
+[edge_functions.send-newsletter]
+verify_jwt = false
+
+[edge_functions.send-notification]
+verify_jwt = false
+
+[edge_functions.toggle-newsletter-automation]
+verify_jwt = false
+
+[edge_functions.translate]
+verify_jwt = false
+
+[edge_functions.translate-blog]
+verify_jwt = false
+
+[edge_functions.update-db-schema]
+verify_jwt = false

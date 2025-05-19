@@ -1,6 +1,6 @@
 
 import { supabase, handleSupabaseError, retryOperation } from "@/integrations/supabase/client";
-import { translateBlogContent } from "./translationService";
+import { translateBlogContent } from "./translation";
 import { toast } from "sonner";
 
 // Define proper types for testimonials and translations

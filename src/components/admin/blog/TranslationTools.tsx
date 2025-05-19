@@ -38,10 +38,13 @@ const TranslationTools: React.FC<TranslationToolsProps> = ({
     try {
       // Create a toast to indicate the translation is in progress
       const toastId = toast.loading("Translating content to all languages...");
-      let errorOccurred = false;
-
+      
+      // Track if any translation failed
+      let translationFailed = false;
+      const updatedTranslations = { ...translationData };
+      
+      // Try French translation
       try {
-        // French translation
         console.log("Starting French translation...");
         const frTranslation = await translateBlogContent(
           formData.content,
@@ -49,8 +52,25 @@ const TranslationTools: React.FC<TranslationToolsProps> = ({
           formData.excerpt,
           'fr'
         );
-
-        // Spanish translation
+        
+        // Only update if we didn't get an error response
+        if (!frTranslation.title.startsWith('[Translation Error]')) {
+          updatedTranslations.fr = {
+            title: frTranslation.title,
+            excerpt: frTranslation.excerpt,
+            content: frTranslation.content
+          };
+        } else {
+          translationFailed = true;
+          console.error("French translation returned an error");
+        }
+      } catch (frError) {
+        translationFailed = true;
+        console.error("Error in French translation:", frError);
+      }
+      
+      // Try Spanish translation
+      try {
         console.log("Starting Spanish translation...");
         const esTranslation = await translateBlogContent(
           formData.content,
@@ -58,52 +78,42 @@ const TranslationTools: React.FC<TranslationToolsProps> = ({
           formData.excerpt,
           'es'
         );
-
-        // Check if any translations failed
-        if (frTranslation.title.startsWith('[Translation Error]') ||
-            esTranslation.title.startsWith('[Translation Error]')) {
-          errorOccurred = true;
-        }
-
-        // Update the translation data state
-        const updatedTranslations = {
-          fr: {
-            title: frTranslation.title,
-            excerpt: frTranslation.excerpt,
-            content: frTranslation.content
-          },
-          es: {
+        
+        // Only update if we didn't get an error response
+        if (!esTranslation.title.startsWith('[Translation Error]')) {
+          updatedTranslations.es = {
             title: esTranslation.title,
             excerpt: esTranslation.excerpt,
             content: esTranslation.content
-          }
-        };
-
-        // Update both states to ensure consistency
-        setTranslationData(updatedTranslations);
-        
-        // Also update the form data with the translations
-        setFormData(prev => ({
-          ...prev,
-          translations: updatedTranslations
-        }));
-
-        console.log("Translations updated:", updatedTranslations);
-      } finally {
-        // Always dismiss the loading toast
-        toast.dismiss(toastId);
-        
-        // Show appropriate toast based on result
-        if (errorOccurred) {
-          toast.warning("Some translations could not be completed. You can try again or edit them manually.");
+          };
         } else {
-          toast.success("Content translated to all languages");
+          translationFailed = true;
+          console.error("Spanish translation returned an error");
         }
+      } catch (esError) {
+        translationFailed = true;
+        console.error("Error in Spanish translation:", esError);
       }
       
-      // Save translations to database if in edit mode
-      if (id) {
-        await saveTranslations(translationData);
+      // Update states with the successful translations
+      setTranslationData(updatedTranslations);
+      setFormData(prev => ({
+        ...prev,
+        translations: updatedTranslations
+      }));
+      
+      // Dismiss the loading toast and show appropriate message
+      toast.dismiss(toastId);
+      
+      if (translationFailed) {
+        toast.error("Some translations could not be completed. You can edit them manually.");
+      } else {
+        toast.success("Content translated to all languages");
+      }
+      
+      // Save translations to database if in edit mode and at least one translation succeeded
+      if (id && (updatedTranslations.fr.title || updatedTranslations.es.title)) {
+        await saveTranslations(updatedTranslations);
       }
     } catch (error) {
       console.error("Error auto-translating all content:", error);

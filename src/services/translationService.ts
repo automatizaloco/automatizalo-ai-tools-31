@@ -24,7 +24,6 @@ export const translateBlogContent = async (
     // Add retry mechanism
     let attempts = 0;
     const maxAttempts = 3;
-    let lastError: Error | null = null;
     
     while (attempts < maxAttempts) {
       try {
@@ -94,13 +93,18 @@ export const translateBlogContent = async (
             },
           });
           
-          if (firstChunkError || !firstChunkData) {
+          if (firstChunkError) {
             console.error(`Error getting metadata for ${targetLang}:`, firstChunkError);
-            throw new Error(`Failed to get translated metadata: ${firstChunkError?.message || "Unknown error"}`);
+            throw new Error(`Failed to get translated metadata: ${firstChunkError.message}`);
+          }
+          
+          if (!firstChunkData || !firstChunkData.title) {
+            console.error('Missing title in translation metadata response');
+            throw new Error('Missing title in translation metadata response');
           }
           
           return {
-            title: firstChunkData.title || '',
+            title: firstChunkData.title,
             excerpt: firstChunkData.excerpt || '',
             content: processTranslatedContent(translatedContent)
           };
@@ -137,42 +141,40 @@ export const translateBlogContent = async (
           }
 
           return {
-            title: data.title || '',
+            title: data.title,
             excerpt: data.excerpt || '',
-            content: processTranslatedContent(data.content || '')
+            content: processTranslatedContent(data.content)
           };
         }
       } catch (attemptError: any) {
         console.error(`Translation attempt ${attempts} failed:`, attemptError);
-        lastError = attemptError;
         
         // Wait before retrying
         if (attempts < maxAttempts) {
           const delay = attempts * 1000; // Progressive delay: 1s, 2s, 3s...
           console.log(`Waiting ${delay}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          // All attempts failed
+          throw attemptError;
         }
       }
     }
     
-    // If all attempts failed, provide fallback data
-    console.error(`All ${maxAttempts} translation attempts failed. Using fallback data.`);
-    toast.error(`Translation failed after ${maxAttempts} attempts. Please try again later.`);
+    // This should never be reached due to the throw in the last iteration of the while loop
+    throw new Error(`All ${maxAttempts} translation attempts failed`);
     
-    return {
-      title: `[Translation Error] ${title}`,
-      excerpt: `[Translation Error] ${excerpt}`,
-      content: `<p>[Translation Error] The content could not be translated. Please try again later.</p><hr/><p>${content}</p>`
-    };
   } catch (error: any) {
     console.error(`Error translating content to ${targetLang}:`, error);
-    toast.error(`Failed to translate content: ${error.message}`);
     
-    // Return fallback data instead of throwing
+    // Return fallback data with clear error message
     return {
       title: `[Translation Error] ${title}`,
       excerpt: `[Translation Error] ${excerpt}`,
-      content: `<p>[Translation Error] The content could not be translated. Please try again later.</p>`
+      content: `<div class="translation-error-container">
+                  <p class="translation-error-message">The content could not be translated to ${targetLang === 'fr' ? 'French' : 'Spanish'}.</p>
+                  <p>Please try again later or edit the translation manually.</p>
+                </div>`
     };
   }
 };
@@ -181,6 +183,8 @@ export const translateBlogContent = async (
  * Process translated content to ensure formatting is preserved and HTML entities are decoded
  */
 const processTranslatedContent = (content: string): string => {
+  if (!content) return '';
+  
   // First decode HTML entities (like &#39; to ', &amp; to &, etc.)
   let decodedContent = decodeHTMLEntities(content);
   
@@ -203,6 +207,8 @@ const processTranslatedContent = (content: string): string => {
  * Decode HTML entities like &#39; to '
  */
 const decodeHTMLEntities = (text: string): string => {
+  if (!text) return '';
+  
   const element = document.createElement('div');
   // This is a safe way to decode HTML entities
   element.innerHTML = text;

@@ -1,3 +1,4 @@
+
 # Blog Post API Usage
 
 ## Endpoint
@@ -38,6 +39,7 @@ No authentication is required as the endpoint is public.
 
 ### Optional Fields
 - image (defaults to a placeholder if not provided)
+- image_url (alternative to image, will be used if both are provided)
 - tags (defaults to empty array if not provided)
 - status (defaults to "published" if not provided)
 - featured (defaults to false if not provided)
@@ -54,7 +56,8 @@ No authentication is required as the endpoint is public.
   "message": "Blog post created successfully",
   "id": "uuid-of-created-post",
   "slug": "generated-slug",
-  "url": "/blog/generated-slug"
+  "url": "/blog/generated-slug",
+  "fullUrl": "https://automatizalo.co/blog/generated-slug"
 }
 ```
 
@@ -71,3 +74,6 @@ No authentication is required as the endpoint is public.
 - The API automatically translates the content to Spanish and French using Google Translate API
 - Translations are saved in the database and can be accessed through the blog post page
 - Read time is automatically calculated based on the content length
+- The API accepts both object and array inputs (if an array is passed, the first item will be used)
+
+```

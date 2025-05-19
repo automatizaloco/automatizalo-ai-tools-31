@@ -60,6 +60,8 @@ const TranslationTools: React.FC<TranslationToolsProps> = ({
             excerpt: frTranslation.excerpt,
             content: frTranslation.content
           };
+          console.log("French translation successful");
+          console.log("Content contains HTML:", frTranslation.content.includes('<p>') || frTranslation.content.includes('<strong>'));
         } else {
           translationFailed = true;
           console.error("French translation returned an error");
@@ -86,6 +88,8 @@ const TranslationTools: React.FC<TranslationToolsProps> = ({
             excerpt: esTranslation.excerpt,
             content: esTranslation.content
           };
+          console.log("Spanish translation successful");
+          console.log("Content contains HTML:", esTranslation.content.includes('<p>') || esTranslation.content.includes('<strong>'));
         } else {
           translationFailed = true;
           console.error("Spanish translation returned an error");

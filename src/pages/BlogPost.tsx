@@ -65,6 +65,11 @@ const BlogPost = () => {
   console.log(`Original content length: ${post.content.length}`);
   if (language !== 'en' && post.translations && post.translations[language]) {
     console.log(`${language} content length: ${post.translations[language]?.content?.length || 0}`);
+    console.log(`${language} content contains HTML?: ${
+      post.translations[language]?.content?.includes('<p>') || 
+      post.translations[language]?.content?.includes('<strong>') || 
+      post.translations[language]?.content?.includes('<h')
+    }`);
   }
 
   return (

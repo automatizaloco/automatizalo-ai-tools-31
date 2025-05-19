@@ -117,8 +117,11 @@ serve(async (req) => {
 
   try {
     // Parse request body
-    const requestData = await req.json();
-    console.log("Received blog post creation request:", JSON.stringify(requestData).substring(0, 200) + "...");
+    const rawRequestData = await req.json();
+    console.log("Received blog post creation request:", JSON.stringify(rawRequestData).substring(0, 200) + "...");
+    
+    // Handle both array and object formats
+    const requestData = Array.isArray(rawRequestData) ? rawRequestData[0] : rawRequestData;
 
     // Validate required fields
     const requiredFields = ["title", "content", "excerpt", "category", "author"];
@@ -136,6 +139,9 @@ serve(async (req) => {
     const currentDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
     const readTime = estimateReadTime(requestData.content);
     const status = requestData.status || "published";
+    
+    // Use image_url if provided, otherwise use image
+    const imageUrl = requestData.image_url || requestData.image || "https://juwbamkqkawyibcvllvo.supabase.co/storage/v1/object/public/blog_images/placeholder.jpg";
 
     // Create the blog post
     const blogPostData = {
@@ -148,7 +154,7 @@ serve(async (req) => {
       author: requestData.author,
       date: requestData.date || currentDate,
       read_time: readTime,
-      image: requestData.image || "https://juwbamkqkawyibcvllvo.supabase.co/storage/v1/object/public/blog_images/placeholder.jpg",
+      image: imageUrl,
       featured: requestData.featured || false,
       status: status
     };
@@ -233,6 +239,10 @@ serve(async (req) => {
       // even if translations failed
     }
 
+    // Create the full URL for the blog post
+    const relativeUrl = `/blog/${savedPost.slug}`;
+    const fullUrl = `https://automatizalo.co${relativeUrl}`;
+
     // Return success response
     return new Response(
       JSON.stringify({
@@ -240,7 +250,8 @@ serve(async (req) => {
         message: "Blog post created successfully",
         id: savedPost.id,
         slug: savedPost.slug,
-        url: `/blog/${savedPost.slug}`
+        url: relativeUrl,
+        fullUrl: fullUrl
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

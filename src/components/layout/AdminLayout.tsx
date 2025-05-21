@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { ReactNode, useState, lazy, Suspense, useEffect } from 'react';
 import { useNotification } from '@/hooks/useNotification';
@@ -9,8 +10,8 @@ import AdminSessionManager from './admin/AdminSessionManager';
 import { useAdminVerification } from '@/hooks/useAdminVerification';
 import { useAdminRouteState } from './admin/useAdminRouteState';
 
-// Lazy load components for better performance
-const AdminHeader = lazy(() => import('./admin/AdminHeader'));
+// Eager load instead of lazy load to prevent dynamic import issues
+import AdminHeader from './admin/AdminHeader';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -98,14 +99,12 @@ const AdminLayout = ({ children, title = "Admin Dashboard", hideTitle = false }:
     <div className="min-h-screen bg-gray-50 overflow-hidden">
       <AdminSessionManager onSessionChange={handleSessionChange} />
       
-      {/* Render the header only at this level, not in child components */}
-      <Suspense fallback={<div className="h-16 bg-white shadow animate-pulse"></div>}>
-        <AdminHeader 
-          onHomeClick={handleHomeClick}
-          onLogout={handleLogout}
-          onViewAsClient={handleViewAsClient}
-        />
-      </Suspense>
+      {/* Render the header without Suspense to avoid dynamic imports */}
+      <AdminHeader 
+        onHomeClick={handleHomeClick}
+        onLogout={handleLogout}
+        onViewAsClient={handleViewAsClient}
+      />
       
       <AdminLayoutContent
         title={title}

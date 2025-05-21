@@ -18,8 +18,8 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 /* Client portal routes */
 const ClientPortal = lazy(() => import('./pages/ClientPortal'));
 
-/* Admin routes */
-const AdminBaseLayout = lazy(() => import('./pages/admin/layout/AdminBaseLayout'));
+/* Admin routes - eager load AdminBaseLayout to prevent dynamic import issues */
+import AdminBaseLayout from './pages/admin/layout/AdminBaseLayout';
 const Admin = lazy(() => import('./pages/admin/Admin'));
 const AutomaticBlog = lazy(() => import('./pages/admin/AutomaticBlog'));
 const BlogAdmin = lazy(() => import('./pages/admin/BlogAdmin'));
@@ -64,12 +64,12 @@ function App() {
             <Route path="blog" element={<BlogAdmin />} />
             <Route path="blog/new" element={<BlogPostForm />} />
             <Route path="blog/edit/:id" element={<BlogPostForm />} />
-            <Route path="automatic-blog" element={<AutomaticBlog />} /> {/* Fixed route */}
+            <Route path="automatic-blog" element={<AutomaticBlog />} />
             <Route path="content" element={<ContentManager />} />
             <Route path="content/:page" element={<ContentEditor />} />
             <Route path="layout" element={<LayoutManager />} />
             <Route path="newsletters" element={<NewsletterAdmin />} />
-            <Route path="newsletter" element={<NewsletterAdmin />} /> {/* Keep both paths for backward compatibility */}
+            <Route path="newsletter" element={<NewsletterAdmin />} />
             <Route path="notifications" element={<NotificationAdmin />} />
             <Route path="support" element={<SupportManager />} />
             <Route path="testimonials" element={<TestimonialManager />} />

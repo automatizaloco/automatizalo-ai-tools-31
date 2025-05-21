@@ -15,7 +15,7 @@ const AdminBaseLayout = ({
   title = "Admin Dashboard", 
   description, 
   children,
-  hideTitle = true, // Set default to true to avoid duplication
+  hideTitle = true,
   className = ""
 }: AdminBaseLayoutProps) => {
   return (

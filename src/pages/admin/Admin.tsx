@@ -15,13 +15,13 @@ const Admin = () => {
       return;
     }
     
-    // If authenticated, redirect to blog section (removing dashboard)
+    // If authenticated, redirect to blog section
     if (location.pathname === '/admin') {
+      console.log("Admin page: Redirecting to blog section");
       navigate('/admin/blog');
     }
   }, [user, navigate, isAuthenticated]);
 
-  // Simply render the outlet for nested routes
   return <Outlet />;
 };
 

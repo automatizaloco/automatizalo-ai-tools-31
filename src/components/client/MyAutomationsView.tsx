@@ -8,8 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Activity, Webhook, FileCode, Table, FileText, Settings, BarChart3 } from 'lucide-react';
 import type { ClientAutomation } from '@/types/automation';
 
 const MyAutomationsView: React.FC = () => {
@@ -29,7 +30,8 @@ const MyAutomationsView: React.FC = () => {
           automation:automation_id (*)
         `)
         .eq('client_id', user.id)
-        .eq('status', 'active'); // Only get active subscriptions
+        .eq('status', 'active')
+        .order('purchase_date', { ascending: false });
 
       if (error) throw error;
       return data as ClientAutomation[];
@@ -39,7 +41,6 @@ const MyAutomationsView: React.FC = () => {
 
   const handleCancelSubscription = async (clientAutomationId: string) => {
     try {
-      // Update the status to canceled
       const { error } = await supabase
         .from('client_automations')
         .update({ status: 'canceled' })
@@ -48,7 +49,7 @@ const MyAutomationsView: React.FC = () => {
       if (error) throw error;
       
       toast.success('Subscription canceled successfully');
-      refetch(); // Refresh the data
+      refetch();
     } catch (error) {
       console.error('Error canceling subscription:', error);
       toast.error('Failed to cancel subscription');
@@ -68,15 +69,25 @@ const MyAutomationsView: React.FC = () => {
     }
   };
 
+  const getIntegrationBadges = (automation: any) => {
+    const badges = [];
+    if (automation?.has_webhook) badges.push({ icon: Webhook, label: 'Webhook', color: 'bg-purple-50 text-purple-700' });
+    if (automation?.has_custom_prompt) badges.push({ icon: FileText, label: 'Custom Prompt', color: 'bg-blue-50 text-blue-700' });
+    if (automation?.has_form_integration) badges.push({ icon: FileCode, label: 'Form', color: 'bg-green-50 text-green-700' });
+    if (automation?.has_table_integration) badges.push({ icon: Table, label: 'Table', color: 'bg-amber-50 text-amber-700' });
+    return badges;
+  };
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {[1, 2].map((i) => (
-          <Card key={i}>
-            <Skeleton className="h-[150px] rounded-t-lg" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="overflow-hidden">
+            <Skeleton className="h-48 w-full" />
             <CardHeader>
               <Skeleton className="h-6 w-3/4 mb-2" />
               <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
             </CardHeader>
             <CardFooter className="flex justify-between">
               <Skeleton className="h-8 w-20" />
@@ -90,14 +101,17 @@ const MyAutomationsView: React.FC = () => {
 
   if (!clientAutomations || clientAutomations.length === 0) {
     return (
-      <div className="text-center p-12 border rounded-lg bg-gray-50">
-        <h2 className="text-xl font-medium text-gray-800 mb-2">No Active Automations</h2>
-        <p className="text-gray-600 mb-4">
-          You don't have any active automations at the moment.
+      <div className="text-center py-12">
+        <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+          <Activity className="h-12 w-12 text-gray-400" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">No Active Automations</h2>
+        <p className="text-gray-600 mb-8 max-w-md mx-auto">
+          You don't have any active automations at the moment. Browse our marketplace to find automations that can help streamline your workflows.
         </p>
         <Button 
-          variant="outline"
-          onClick={() => navigate('/client-portal/marketplace')}
+          onClick={() => navigate('/client-portal?tab=marketplace')}
+          className="bg-blue-600 hover:bg-blue-700"
         >
           Browse Marketplace
         </Button>
@@ -106,76 +120,123 @@ const MyAutomationsView: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {clientAutomations.map((clientAutomation) => (
-        <Card key={clientAutomation.id} className="flex flex-col">
-          {clientAutomation.automation?.image_url && (
-            <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
-              <img 
-                src={clientAutomation.automation.image_url} 
-                alt={clientAutomation.automation?.title || 'Automation'} 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = 'https://placehold.co/600x400?text=Automation';
-                }}
-              />
-            </div>
-          )}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">My Automations</h2>
+          <p className="text-gray-600">Manage and monitor your active automation workflows</p>
+        </div>
+        <Badge variant="outline" className="bg-blue-50 text-blue-700">
+          {clientAutomations.length} Active
+        </Badge>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {clientAutomations.map((clientAutomation) => {
+          const integrationBadges = getIntegrationBadges(clientAutomation.automation);
           
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <CardTitle>{clientAutomation.automation?.title || 'Unknown Automation'}</CardTitle>
-              {getSetupStatusBadge(clientAutomation.setup_status)}
-            </div>
-            <CardDescription className="line-clamp-2">
-              {clientAutomation.automation?.description || 'No description available'}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="flex-grow">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <div>
-                <span className="text-gray-500">Purchase Date</span>
-                <p>{format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Next Billing</span>
-                <p>{clientAutomation.status === 'active' 
-                    ? format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy') 
-                    : 'N/A'}
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-500">Monthly Price</span>
-                <p className="font-medium">
-                  ${clientAutomation.automation?.monthly_price.toFixed(2) || '0.00'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-          
-          <CardFooter className="flex justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/client-portal/automations/${clientAutomation.automation_id}`)}
-            >
-              View Details
-            </Button>
-            
-            {clientAutomation.status === 'active' && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                onClick={() => handleCancelSubscription(clientAutomation.id)}
-              >
-                Cancel Subscription
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
-      ))}
+          return (
+            <Card key={clientAutomation.id} className="overflow-hidden hover:shadow-lg transition-all duration-200 group">
+              {clientAutomation.automation?.image_url && (
+                <div className="aspect-video bg-gray-100 overflow-hidden">
+                  <img 
+                    src={clientAutomation.automation.image_url} 
+                    alt={clientAutomation.automation?.title || 'Automation'} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://placehold.co/600x400?text=Automation';
+                    }}
+                  />
+                </div>
+              )}
+              
+              <CardHeader className="pb-4">
+                <div className="flex justify-between items-start mb-2">
+                  <CardTitle className="text-lg leading-tight">
+                    {clientAutomation.automation?.title || 'Unknown Automation'}
+                  </CardTitle>
+                  {getSetupStatusBadge(clientAutomation.setup_status)}
+                </div>
+                <CardDescription className="text-sm line-clamp-2 leading-relaxed">
+                  {clientAutomation.automation?.description || 'No description available'}
+                </CardDescription>
+                
+                {/* Integration Badges */}
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {integrationBadges.map((badge, index) => (
+                    <Badge key={index} variant="outline" className={`text-xs ${badge.color}`}>
+                      <badge.icon className="w-3 h-3 mr-1" />
+                      {badge.label}
+                    </Badge>
+                  ))}
+                </div>
+              </CardHeader>
+              
+              <CardContent className="pb-4">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <div>
+                    <span className="text-gray-500 block">Purchase Date</span>
+                    <p className="font-medium">{format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Next Billing</span>
+                    <p className="font-medium">
+                      {clientAutomation.status === 'active' 
+                        ? format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy') 
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Monthly Price</span>
+                    <p className="font-bold text-green-600">
+                      ${clientAutomation.automation?.monthly_price?.toFixed(2) || '0.00'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Status</span>
+                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                      {clientAutomation.status}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+              
+              <CardFooter className="flex justify-between pt-4 border-t">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => navigate(`/client-portal/automations/${clientAutomation.automation_id}`)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={clientAutomation.setup_status === 'pending'}
+                >
+                  {clientAutomation.setup_status === 'pending' ? (
+                    <>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Setting Up...
+                    </>
+                  ) : (
+                    <>
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Manage
+                    </>
+                  )}
+                </Button>
+                
+                {clientAutomation.status === 'active' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => handleCancelSubscription(clientAutomation.id)}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 };

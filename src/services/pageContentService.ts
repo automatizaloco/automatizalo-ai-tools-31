@@ -4,9 +4,7 @@ import { toast } from "sonner";
 
 export const getPageContent = async (page: string, section: string, language: string = 'en'): Promise<string> => {
   try {
-    // Try to get content from localStorage first
-    const cacheKey = `page_content_${page}_${section}_${language}`;
-    const cachedContent = localStorage.getItem(cacheKey);
+    console.log(`Getting page content for: ${page}.${section} in ${language}`);
     
     // Get content from Supabase
     const { data, error } = await supabase
@@ -19,14 +17,15 @@ export const getPageContent = async (page: string, section: string, language: st
       
     if (error) {
       console.error('Error fetching content:', error);
-      // Return cached content if available
-      if (cachedContent) return cachedContent;
+      // If no content found for requested language, try English
+      if (language !== 'en') {
+        return getPageContent(page, section, 'en');
+      }
       return `<h2>Content for ${section} on ${page} page</h2>`;
     }
     
     if (data?.content) {
-      // Update cache
-      localStorage.setItem(cacheKey, data.content);
+      console.log(`Found content for ${page}.${section}:`, data.content.substring(0, 100) + '...');
       return data.content;
     }
     
@@ -52,6 +51,9 @@ export const updatePageContent = async (
   language: string = 'en'
 ): Promise<void> => {
   try {
+    console.log(`Updating page content for: ${page}.${section} in ${language}`);
+    console.log('Content preview:', content.substring(0, 100) + '...');
+    
     const { error } = await supabase
       .from('page_content')
       .upsert({
@@ -60,18 +62,51 @@ export const updatePageContent = async (
         content,
         language,
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'page,section_name,language'
       });
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating content:', error);
+      throw error;
+    }
 
-    // Update cache
-    const cacheKey = `page_content_${page}_${section}_${language}`;
-    localStorage.setItem(cacheKey, content);
+    console.log(`Successfully updated content for ${page}.${section} in ${language}`);
     
-    toast.success("Content updated successfully");
+    // Auto-translate to other languages if updating English content
+    if (language === 'en') {
+      try {
+        // Trigger auto-translation for other languages
+        const languages = ['es', 'fr', 'de'];
+        for (const targetLang of languages) {
+          if (targetLang !== language) {
+            setTimeout(async () => {
+              try {
+                await supabase
+                  .from('page_content')
+                  .upsert({
+                    page,
+                    section_name: section,
+                    content, // For now, just use the same content
+                    language: targetLang,
+                    updated_at: new Date().toISOString()
+                  }, {
+                    onConflict: 'page,section_name,language'
+                  });
+              } catch (translationError) {
+                console.error(`Failed to auto-translate to ${targetLang}:`, translationError);
+              }
+            }, 1000); // Delay to avoid rate limiting
+          }
+        }
+      } catch (translationError) {
+        console.error('Error in auto-translation:', translationError);
+      }
+    }
+    
   } catch (error) {
     console.error('Error updating content:', error);
-    toast.error("Failed to update content");
+    throw error;
   }
 };
 

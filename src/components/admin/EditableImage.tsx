@@ -44,25 +44,38 @@ const EditableImage = ({
           setCurrentSrc(storedImage);
         } else {
           console.log(`No stored image found for ${pageName}/${sectionName}/${imageId}, using default:`, src);
+          setCurrentSrc(src);
         }
       } catch (error) {
         console.error(`Error loading image for ${pageName}/${sectionName}/${imageId}:`, error);
+        setCurrentSrc(src);
       } finally {
         setIsLoaded(true);
       }
     };
     
-    loadImage();
+    if (pageName && sectionName && imageId) {
+      loadImage();
+    } else {
+      setCurrentSrc(src);
+      setIsLoaded(true);
+    }
   }, [pageName, sectionName, imageId, src]);
 
   // If user is not authenticated, just render the regular image
   if (!user) {
-    return <img src={isLoaded && currentSrc ? currentSrc : src} alt={alt} className={className} width={width} height={height} />;
+    return <img src={isLoaded ? currentSrc : src} alt={alt} className={className} width={width} height={height} />;
   }
 
   const handleUpload = async (file: File) => {
+    if (!pageName || !sectionName || !imageId) {
+      toast.error("Missing required image parameters");
+      return null;
+    }
+
     setIsUploading(true);
     try {
+      console.log(`Uploading image for ${pageName}/${sectionName}/${imageId}`);
       const newImageUrl = await uploadPageSectionImage(file, pageName, sectionName, imageId);
       
       if (newImageUrl) {
@@ -96,7 +109,7 @@ const EditableImage = ({
       />
       
       {/* Edit overlay button */}
-      {!isEditing && (
+      {!isEditing && pageName && sectionName && imageId && (
         <button
           onClick={() => setIsEditing(true)}
           className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -121,6 +134,7 @@ const EditableImage = ({
             <button
               onClick={() => setIsEditing(false)}
               className="mt-2 w-full py-1 text-sm text-gray-600 hover:text-gray-900"
+              disabled={isUploading}
             >
               Cancel
             </button>

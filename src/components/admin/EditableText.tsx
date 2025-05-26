@@ -30,7 +30,7 @@ const EditableText = ({
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(defaultText);
   const [pendingText, setPendingText] = useState(defaultText);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { language } = useLanguage();
   const [isTranslating, setIsTranslating] = useState(false);
   
@@ -40,12 +40,18 @@ const EditableText = ({
         setIsLoading(true);
         try {
           const content = await getPageContent(pageName, sectionName, language);
-          if (content) {
+          if (content && content !== `<h2>Content for ${sectionName} on ${pageName} page</h2>`) {
             setText(content);
             setPendingText(content);
+          } else {
+            // If no content found, use defaultText
+            setText(defaultText);
+            setPendingText(defaultText);
           }
         } catch (error) {
           console.error('Error loading content for', pageName, sectionName, error);
+          setText(defaultText);
+          setPendingText(defaultText);
         } finally {
           setIsLoading(false);
         }
@@ -53,9 +59,11 @@ const EditableText = ({
       
       loadContent();
     } else {
+      setText(defaultText);
+      setPendingText(defaultText);
       setIsLoading(false);
     }
-  }, [pageName, sectionName, language]);
+  }, [pageName, sectionName, language, defaultText]);
 
   const handleEdit = () => {
     if (disabled || isLoading) return;
@@ -69,6 +77,11 @@ const EditableText = ({
   };
 
   const handleSave = async () => {
+    if (!pendingText.trim()) {
+      toast.error("Content cannot be empty");
+      return;
+    }
+
     setText(pendingText);
     setIsEditing(false);
     
@@ -87,6 +100,9 @@ const EditableText = ({
       } catch (error) {
         console.error('Error saving content:', error);
         toast.error("Failed to save content. Please try again.");
+        // Revert the text change on error
+        setText(text);
+        setPendingText(text);
       } finally {
         setIsTranslating(false);
       }
@@ -106,6 +122,11 @@ const EditableText = ({
     return <span className="text-gray-400">Loading...</span>;
   }
 
+  // Don't render editing UI if no pageName/sectionName provided
+  if (!pageName || !sectionName) {
+    return <span>{text || defaultText}</span>;
+  }
+
   if (isEditing) {
     return (
       <div className="relative">
@@ -115,7 +136,7 @@ const EditableText = ({
             onChange={(e) => setPendingText(e.target.value)}
             className="w-full min-h-[60px] p-2 border-2 border-blue-400 focus:border-blue-500 rounded"
             placeholder="Enter text..."
-            disabled={disabled}
+            disabled={disabled || isTranslating}
           />
         ) : (
           <Input
@@ -123,7 +144,7 @@ const EditableText = ({
             onChange={(e) => setPendingText(e.target.value)}
             className="w-full p-2 border-2 border-blue-400 focus:border-blue-500 rounded"
             placeholder="Enter text..."
-            disabled={disabled}
+            disabled={disabled || isTranslating}
           />
         )}
         <div className="flex mt-2 justify-end gap-2">
@@ -132,7 +153,7 @@ const EditableText = ({
             variant="outline"
             className="p-1 h-8 w-8"
             onClick={handleCancel}
-            disabled={disabled}
+            disabled={disabled || isTranslating}
           >
             <XIcon className="h-4 w-4" />
           </Button>
@@ -140,7 +161,7 @@ const EditableText = ({
             size="sm"
             className="p-1 h-8 w-8 bg-green-600 hover:bg-green-700"
             onClick={handleSave}
-            disabled={disabled || isTranslating}
+            disabled={disabled || isTranslating || !pendingText.trim()}
           >
             <CheckIcon className="h-4 w-4" />
           </Button>
@@ -154,7 +175,7 @@ const EditableText = ({
       className={`group relative inline-block ${disabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
       onClick={handleEdit}
     >
-      {text}
+      {text || defaultText}
       {!disabled && (
         <span className="absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
           <PencilIcon className="h-4 w-4 text-blue-500" />

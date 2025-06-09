@@ -21,7 +21,7 @@ export const useAdminRouteState = () => {
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('');
 
-  // Admin routes definition - memoized to prevent recreating on rerenders
+  // Memoizar rutas para evitar recreación en cada render
   const adminRoutes: AdminRouteType[] = useMemo(() => [
     { value: 'content', label: 'Home', icon: LayoutDashboard, priority: 10 },
     { value: 'users', label: 'Users', icon: Users, priority: 9 },
@@ -36,46 +36,52 @@ export const useAdminRouteState = () => {
     { value: 'notifications', label: 'Notifications', icon: Bell, priority: 0 }
   ], []);
 
-  // Update active tab based on current route
-  useEffect(() => {
-    const path = location.pathname;
-    const segments = path.split('/');
-    
+  // Optimización: memoizar el cálculo del activeTab
+  const calculateActiveTab = useCallback((pathname: string) => {
+    const segments = pathname.split('/');
     if (segments.length > 2 && segments[1] === 'admin') {
-      const section = segments[2] || 'content';
-      setActiveTab(section);
-    } else if (path === '/admin') {
-      setActiveTab('content');
+      return segments[2] || 'content';
     }
-  }, [location.pathname]);
+    return pathname === '/admin' ? 'content' : '';
+  }, []);
 
-  // Add loading state when switching pages
+  // Actualizar activeTab de manera optimizada
+  useEffect(() => {
+    const newActiveTab = calculateActiveTab(location.pathname);
+    if (newActiveTab !== activeTab) {
+      setActiveTab(newActiveTab);
+    }
+  }, [location.pathname, activeTab, calculateActiveTab]);
+
+  // Loading state más rápido y optimizado
   useEffect(() => {
     setIsPageLoading(true);
+    
+    // Reducir tiempo de loading para mejor UX
     const timer = setTimeout(() => {
       setIsPageLoading(false);
-    }, 200);
+    }, 100); // Reducido de 200ms a 100ms
     
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // Handle tab changes and navigation
+  // Optimización: memoizar handler de navegación
   const handleTabChange = useCallback((value: string) => {
     if (value === activeTab) return;
     
     setIsPageLoading(true);
     setActiveTab(value);
     
-    // Navigate to the appropriate route
     const route = value === 'content' ? '/admin' : `/admin/${value}`;
     navigate(route);
   }, [activeTab, navigate]);
 
-  return {
+  // Memoizar el valor de retorno para evitar re-renderizados
+  return useMemo(() => ({
     activeTab,
     setActiveTab,
     isPageLoading,
     adminRoutes,
     handleTabChange,
-  };
+  }), [activeTab, isPageLoading, adminRoutes, handleTabChange]);
 };

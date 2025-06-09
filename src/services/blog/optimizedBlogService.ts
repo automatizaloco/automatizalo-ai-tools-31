@@ -3,58 +3,102 @@ import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogTranslation } from "@/types/blog";
 import { transformDatabasePost } from "./utils";
 
+// Cache en memoria para evitar llamadas repetidas
+const cache = new Map<string, { data: any, timestamp: number }>();
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutos
+
+const getCachedData = (key: string) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedData = (key: string, data: any) => {
+  cache.set(key, { data, timestamp: Date.now() });
+};
+
 /**
- * Optimized function to fetch all blog posts with translations in a single query
+ * Función optimizada para fetch de posts con cache agresivo
  */
 export const fetchOptimizedBlogPosts = async (): Promise<BlogPost[]> => {
-  // Single query to get posts with all translations joined
+  const cacheKey = 'all_posts';
+  const cachedData = getCachedData(cacheKey);
+  
+  if (cachedData) {
+    console.log("Returning cached blog posts");
+    return cachedData;
+  }
+
+  // Query optimizada con menos datos
   const { data: postsWithTranslations, error } = await supabase
     .from('blog_posts')
     .select(`
-      *,
-      blog_translations (
+      id,
+      title,
+      slug,
+      excerpt,
+      category,
+      status,
+      featured,
+      image,
+      author,
+      date,
+      read_time,
+      created_at,
+      updated_at,
+      blog_translations!inner (
         language,
         title,
-        excerpt,
-        content
+        excerpt
       )
     `)
-    .order('date', { ascending: false });
+    .order('date', { ascending: false })
+    .limit(50); // Limitar resultados para mejor rendimiento
 
   if (error) {
     console.error("Error fetching blog posts:", error);
     throw new Error(`Failed to fetch blog posts: ${error.message}`);
   }
 
-  // Transform and organize the data efficiently
+  // Procesamiento optimizado
   const posts = (postsWithTranslations || []).map(post => {
     const transformedPost = transformDatabasePost(post);
     
-    // Process translations if they exist
-    if (post.blog_translations && post.blog_translations.length > 0) {
+    // Procesamiento más eficiente de traducciones
+    if (post.blog_translations?.length > 0) {
       transformedPost.translations = {};
       
-      post.blog_translations.forEach((translation: any) => {
+      for (const translation of post.blog_translations) {
         if (translation.language === 'fr' || translation.language === 'es') {
-          transformedPost.translations![translation.language] = {
+          transformedPost.translations[translation.language] = {
             title: translation.title,
             excerpt: translation.excerpt,
-            content: translation.content
+            content: '' // No cargar contenido completo aquí para mejor rendimiento
           };
         }
-      });
+      }
     }
     
     return transformedPost;
   });
 
+  setCachedData(cacheKey, posts);
   return posts;
 };
 
 /**
- * Optimized function to fetch a single blog post by slug with translations
+ * Función optimizada para fetch de post individual
  */
 export const fetchOptimizedBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
+  const cacheKey = `post_${slug}`;
+  const cachedData = getCachedData(cacheKey);
+  
+  if (cachedData) {
+    return cachedData;
+  }
+
   const { data, error } = await supabase
     .from('blog_posts')
     .select(`
@@ -78,65 +122,88 @@ export const fetchOptimizedBlogPostBySlug = async (slug: string): Promise<BlogPo
   
   const post = transformDatabasePost(data);
 
-  // Process translations efficiently
-  if (data.blog_translations && data.blog_translations.length > 0) {
+  if (data.blog_translations?.length > 0) {
     post.translations = {};
     
-    data.blog_translations.forEach((translation: any) => {
+    for (const translation of data.blog_translations) {
       if (translation.language === 'fr' || translation.language === 'es') {
-        post.translations![translation.language] = {
+        post.translations[translation.language] = {
           title: translation.title,
           excerpt: translation.excerpt,
           content: translation.content
         };
       }
-    });
+    }
   }
 
+  setCachedData(cacheKey, post);
   return post;
 };
 
 /**
- * Get featured posts efficiently
+ * Featured posts con cache optimizado
  */
 export const fetchOptimizedFeaturedPosts = async (): Promise<BlogPost[]> => {
+  const cacheKey = 'featured_posts';
+  const cachedData = getCachedData(cacheKey);
+  
+  if (cachedData) {
+    return cachedData;
+  }
+
   const { data, error } = await supabase
     .from('blog_posts')
     .select(`
-      *,
-      blog_translations (
+      id,
+      title,
+      slug,
+      excerpt,
+      category,
+      image,
+      author,
+      date,
+      read_time,
+      featured,
+      blog_translations!inner (
         language,
         title,
-        excerpt,
-        content
+        excerpt
       )
     `)
     .eq('featured', true)
     .order('date', { ascending: false })
-    .limit(6); // Limit to improve performance
+    .limit(6);
 
   if (error) {
     console.error("Error fetching featured blog posts:", error);
     throw new Error(`Failed to fetch featured blog posts: ${error.message}`);
   }
 
-  return (data || []).map(post => {
+  const posts = (data || []).map(post => {
     const transformedPost = transformDatabasePost(post);
     
-    if (post.blog_translations && post.blog_translations.length > 0) {
+    if (post.blog_translations?.length > 0) {
       transformedPost.translations = {};
       
-      post.blog_translations.forEach((translation: any) => {
+      for (const translation of post.blog_translations) {
         if (translation.language === 'fr' || translation.language === 'es') {
-          transformedPost.translations![translation.language] = {
+          transformedPost.translations[translation.language] = {
             title: translation.title,
             excerpt: translation.excerpt,
-            content: translation.content
+            content: ''
           };
         }
-      });
+      }
     }
     
     return transformedPost;
   });
+
+  setCachedData(cacheKey, posts);
+  return posts;
+};
+
+// Función para limpiar cache cuando sea necesario
+export const clearBlogCache = () => {
+  cache.clear();
 };

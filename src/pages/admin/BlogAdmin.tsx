@@ -6,40 +6,47 @@ import BlogAdminHeader from "@/components/admin/blog/BlogAdminHeader";
 import MobilePostCard from "@/components/admin/blog/MobilePostCard";
 import BlogPostsTable from "@/components/admin/blog/BlogPostsTable";
 import { useOptimizedBlogPosts } from "@/hooks/useOptimizedBlogPosts";
+import { memo, useCallback, useMemo } from "react";
 
-const BlogAdmin = () => {
+const BlogAdmin = memo(() => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { posts, loading, handleDelete, handleToggleStatus } = useOptimizedBlogPosts();
 
-  // Redirect if not authenticated
+  // Redirect si no está autenticado (optimizado)
   if (!isAuthenticated) {
     navigate("/login");
     return null;
   }
 
-  const handleEdit = (id: string) => {
+  // Memoizar handlers para evitar re-creaciones
+  const handleEdit = useCallback((id: string) => {
     navigate(`/admin/blog/edit/${id}`);
-  };
+  }, [navigate]);
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     navigate("/admin/blog/new");
-  };
+  }, [navigate]);
   
-  const handleCreateAutomatic = () => {
+  const handleCreateAutomatic = useCallback(() => {
     navigate("/admin/automatic-blog");
-  };
+  }, [navigate]);
   
-  const navigateToWebhookSettings = () => {
+  const navigateToWebhookSettings = useCallback(() => {
     navigate("/admin/webhooks");
-  };
+  }, [navigate]);
 
-  const navigateToNotifications = () => {
+  const navigateToNotifications = useCallback(() => {
     navigate("/admin/notifications");
-  };
+  }, [navigate]);
 
-  if (loading && posts.length === 0) {
+  // Memoizar el estado de loading para optimizar renders
+  const shouldShowLoading = useMemo(() => {
+    return loading && posts.length === 0;
+  }, [loading, posts.length]);
+
+  if (shouldShowLoading) {
     return (
       <div className="flex justify-center items-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
@@ -89,6 +96,8 @@ const BlogAdmin = () => {
       )}
     </>
   );
-};
+});
+
+BlogAdmin.displayName = 'BlogAdmin';
 
 export default BlogAdmin;

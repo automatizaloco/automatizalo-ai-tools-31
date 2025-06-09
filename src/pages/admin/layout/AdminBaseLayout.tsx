@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useNotification } from '@/hooks/useNotification';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,13 @@ interface AdminBaseLayoutProps {
   className?: string;
 }
 
+// Componente de loading optimizado
+const LoadingSpinner = React.memo(() => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+  </div>
+));
+
 const AdminBaseLayout = ({ 
   title = "Admin Dashboard", 
   description, 
@@ -33,44 +40,51 @@ const AdminBaseLayout = ({
   const notification = useNotification();
   const { isPageLoading } = useAdminRouteState();
 
-  // Set a timeout to prevent infinite loading
+  // Optimización: reducir tiempo de loading con timeout más agresivo
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
       if (loading) {
         console.log("Loading timeout reached, forcing UI update");
         setLoading(false);
       }
-    }, 3000); // 3 second timeout
+    }, 1500); // Reducido de 3000ms a 1500ms
 
     return () => clearTimeout(loadingTimeout);
   }, [loading]);
 
-  const handleSessionChange = (newSession: any | null) => {
+  const handleSessionChange = React.useCallback((newSession: any | null) => {
     setSession(newSession);
     if (newSession) {
-      // Delay setting loading to false to allow admin verification
-      setTimeout(() => setLoading(false), 500);
+      // Delay más corto para mejorar la percepción de velocidad
+      setTimeout(() => setLoading(false), 200);
     } else {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Update loading state based on verification status
-  useEffect(() => {
-    if (!isVerifying && session) {
-      setLoading(false);
-    }
-  }, [isVerifying, session]);
+  // Optimización: memoizar las verificaciones de estado
+  const shouldShowLoading = React.useMemo(() => {
+    return loading || isVerifying;
+  }, [loading, isVerifying]);
 
-  // Redirect if not admin
-  useEffect(() => {
-    if (!isVerifying && !isAdmin && !loading && user) {
+  const shouldRedirect = React.useMemo(() => {
+    return !isVerifying && !isAdmin && !loading && user;
+  }, [isAdmin, isVerifying, loading, user]);
+
+  // Redirect si no es admin (optimizado con useCallback)
+  const handleRedirect = React.useCallback(() => {
+    if (shouldRedirect) {
       notification.showError("Access Denied", "You don't have admin privileges.");
       navigate('/client-portal');
     }
-  }, [isAdmin, isVerifying, loading, user, navigate, notification]);
+  }, [shouldRedirect, notification, navigate]);
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    handleRedirect();
+  }, [handleRedirect]);
+
+  // Optimización: memoizar handlers para evitar re-creaciones
+  const handleLogout = React.useCallback(async () => {
     try {
       await supabase.auth.signOut();
       notification.showSuccess("Signed Out", "You have been signed out successfully.");
@@ -80,25 +94,29 @@ const AdminBaseLayout = ({
       notification.showError("Sign Out Failed", "Failed to sign out. Please try again.");
       navigate('/login');
     }
-  };
+  }, [notification, navigate]);
 
-  const handleViewAsClient = () => {
+  const handleViewAsClient = React.useCallback(() => {
     navigate('/client-portal');
     notification.showInfo("Client View", "You are now viewing the client portal as an admin.");
-  };
+  }, [navigate, notification]);
 
-  const handleHomeClick = () => {
+  const handleHomeClick = React.useCallback(() => {
     navigate('/');
-  };
+  }, [navigate]);
 
-  if (loading || isVerifying) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-    </div>;
+  // Update loading state más rápido
+  useEffect(() => {
+    if (!isVerifying && session) {
+      setLoading(false);
+    }
+  }, [isVerifying, session]);
+
+  if (shouldShowLoading) {
+    return <LoadingSpinner />;
   }
   
   if (!session || !isAdmin) {
-    // Don't render anything if not authenticated or not admin - the session manager will redirect
     return <AdminSessionManager onSessionChange={handleSessionChange} />;
   }
 
@@ -106,7 +124,6 @@ const AdminBaseLayout = ({
     <div className="min-h-screen bg-gray-50 overflow-hidden">
       <AdminSessionManager onSessionChange={handleSessionChange} />
       
-      {/* AdminHeader is now directly included here and only once */}
       <AdminHeader 
         onHomeClick={handleHomeClick}
         onLogout={handleLogout}
@@ -118,13 +135,15 @@ const AdminBaseLayout = ({
         hideTitle={hideTitle}
         isPageLoading={isPageLoading}
       >
-        <div className={className}>
-          {description && <p className="text-gray-600 mb-4 text-sm">{description}</p>}
-          {children || <Outlet />}
-        </div>
+        <Suspense fallback={<div className="p-4">Loading...</div>}>
+          <div className={className}>
+            {description && <p className="text-gray-600 mb-4 text-sm">{description}</p>}
+            {children || <Outlet />}
+          </div>
+        </Suspense>
       </AdminLayoutContent>
     </div>
   );
 };
 
-export default AdminBaseLayout;
+export default React.memo(AdminBaseLayout);

@@ -15,6 +15,7 @@ import WebhookAnalyticsDashboard from './WebhookAnalyticsDashboard';
 import CustomPromptEditor from './CustomPromptEditor';
 import FormIntegrationViewer from './FormIntegrationViewer';
 import TableDataManager from './TableDataManager';
+import CreateTicketModal from './CreateTicketModal';
 
 interface AutomationWithDetails {
   id: string;
@@ -151,7 +152,18 @@ const AdvancedAutomationDetails: React.FC = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Portal
           </Button>
-          {getStatusBadge(clientAutomation.setup_status)}
+          
+          <div className="flex items-center gap-3">
+            {/* Add ticket creation button */}
+            {clientAutomation && (
+              <CreateTicketModal
+                automationId={automationId!}
+                automationTitle={automation.title}
+                clientAutomationId={clientAutomation.id}
+              />
+            )}
+            {getStatusBadge(clientAutomation?.setup_status || 'pending')}
+          </div>
         </div>
 
         {/* Automation Info */}

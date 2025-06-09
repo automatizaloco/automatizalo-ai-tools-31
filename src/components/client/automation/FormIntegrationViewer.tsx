@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FileCode, ExternalLink, AlertCircle, Activity, BarChart3 } from 'lucide-react';
-import { toast } from 'sonner';
+import { FileCode, AlertCircle, Activity, BarChart3 } from 'lucide-react';
+import { format } from 'date-fns';
+import { useFormAnalytics } from '@/hooks/useFormAnalytics';
 
 interface FormIntegrationViewerProps {
   clientAutomationId: string;
@@ -23,8 +23,6 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
   clientAutomationId,
   automationTitle
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   // Fetch form integration settings
   const { data: formSetting, isLoading: settingsLoading } = useQuery({
     queryKey: ['form-settings', clientAutomationId],
@@ -42,12 +40,11 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
     },
   });
 
-  // Mock form submission data
-  const mockSubmissions = [
-    { id: 1, date: '2024-01-26', name: 'John Doe', email: 'john@example.com', status: 'processed' },
-    { id: 2, date: '2024-01-25', name: 'Jane Smith', email: 'jane@example.com', status: 'processed' },
-    { id: 3, date: '2024-01-24', name: 'Bob Johnson', email: 'bob@example.com', status: 'pending' },
-  ];
+  // Fetch real form analytics
+  const { 
+    data: analyticsData, 
+    isLoading: analyticsLoading 
+  } = useFormAnalytics(clientAutomationId);
 
   const processFormCode = (code: string) => {
     // Basic validation and processing of embed code
@@ -117,7 +114,7 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
     );
   };
 
-  if (settingsLoading) {
+  if (settingsLoading || analyticsLoading) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -129,6 +126,15 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
       </Card>
     );
   }
+
+  const stats = analyticsData?.stats || {
+    totalSubmissions: 0,
+    processedSubmissions: 0,
+    pendingSubmissions: 0,
+    processingRate: 0
+  };
+
+  const recentSubmissions = analyticsData?.submissions || [];
 
   return (
     <div className="space-y-6">
@@ -154,7 +160,7 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
               <BarChart3 className="h-4 w-4 text-green-500" />
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Total Submissions</p>
-                <p className="text-2xl font-bold">{mockSubmissions.length}</p>
+                <p className="text-2xl font-bold">{stats.totalSubmissions}</p>
               </div>
             </div>
           </CardContent>
@@ -166,9 +172,7 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
               <Activity className="h-4 w-4 text-orange-500" />
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Processing Rate</p>
-                <p className="text-2xl font-bold">
-                  {Math.round((mockSubmissions.filter(s => s.status === 'processed').length / mockSubmissions.length) * 100)}%
-                </p>
+                <p className="text-2xl font-bold">{stats.processingRate}%</p>
               </div>
             </div>
           </CardContent>
@@ -196,31 +200,51 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockSubmissions.map((submission) => (
-              <div key={submission.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-3 h-3 rounded-full ${
-                    submission.status === 'processed' ? 'bg-green-500' : 'bg-yellow-500'
-                  }`} />
-                  <div>
-                    <p className="font-medium">{submission.name}</p>
-                    <p className="text-sm text-gray-500">{submission.email}</p>
+            {recentSubmissions.length === 0 ? (
+              <div className="text-center py-8">
+                <FileCode className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Submissions Yet</h3>
+                <p className="text-gray-600">
+                  No form submissions have been received yet.
+                </p>
+              </div>
+            ) : (
+              recentSubmissions.map((submission) => (
+                <div key={submission.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-3 h-3 rounded-full ${
+                      submission.status === 'processed' ? 'bg-green-500' : 
+                      submission.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                    }`} />
+                    <div>
+                      <p className="font-medium">
+                        Form Submission #{submission.id.slice(0, 8)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {Object.keys(submission.form_data).length} fields submitted
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        submission.status === 'processed' 
+                          ? 'bg-green-50 text-green-700' 
+                          : submission.status === 'pending'
+                          ? 'bg-yellow-50 text-yellow-700'
+                          : 'bg-red-50 text-red-700'
+                      }
+                    >
+                      {submission.status}
+                    </Badge>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {format(new Date(submission.created_at), 'MMM dd, yyyy HH:mm')}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <Badge 
-                    variant="outline" 
-                    className={submission.status === 'processed' 
-                      ? 'bg-green-50 text-green-700' 
-                      : 'bg-yellow-50 text-yellow-700'
-                    }
-                  >
-                    {submission.status}
-                  </Badge>
-                  <p className="text-sm text-gray-500 mt-1">{submission.date}</p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

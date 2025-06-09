@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +8,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Activity, AlertCircle, CheckCircle, Clock, Copy, ExternalLink, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { useWebhookAnalytics } from '@/hooks/useWebhookAnalytics';
 
 interface WebhookAnalyticsDashboardProps {
   clientAutomationId: string;
@@ -23,22 +24,12 @@ interface WebhookSetting {
   status: string;
 }
 
-interface WebhookLog {
-  id: string;
-  url: string;
-  method: string;
-  status_code: number;
-  response_time: number;
-  created_at: string;
-  success: boolean;
-}
-
 const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
   clientAutomationId,
   automationTitle
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [timeRange, setTimeRange] = useState(7); // days
+  const [timeRange, setTimeRange] = useState(7);
 
   // Fetch webhook configuration
   const { data: webhookSetting, isLoading: settingsLoading } = useQuery({
@@ -57,44 +48,12 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
     },
   });
 
-  // Mock data for webhook logs (you'd replace this with real data)
-  const mockLogs: WebhookLog[] = [
-    {
-      id: '1',
-      url: webhookSetting?.production_url || 'https://api.example.com/webhook',
-      method: 'POST',
-      status_code: 200,
-      response_time: 245,
-      created_at: new Date().toISOString(),
-      success: true
-    },
-    {
-      id: '2',
-      url: webhookSetting?.production_url || 'https://api.example.com/webhook',
-      method: 'POST',
-      status_code: 500,
-      response_time: 1200,
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      success: false
-    }
-  ];
-
-  // Mock analytics data
-  const mockAnalyticsData = [
-    { date: '2024-01-20', requests: 45, successful: 43, failed: 2, avgResponseTime: 234 },
-    { date: '2024-01-21', requests: 52, successful: 50, failed: 2, avgResponseTime: 198 },
-    { date: '2024-01-22', requests: 38, successful: 36, failed: 2, avgResponseTime: 267 },
-    { date: '2024-01-23', requests: 61, successful: 58, failed: 3, avgResponseTime: 312 },
-    { date: '2024-01-24', requests: 44, successful: 44, failed: 0, avgResponseTime: 189 },
-    { date: '2024-01-25', requests: 56, successful: 53, failed: 3, avgResponseTime: 245 },
-    { date: '2024-01-26', requests: 49, successful: 47, failed: 2, avgResponseTime: 276 }
-  ];
-
-  const totalRequests = mockAnalyticsData.reduce((sum, day) => sum + day.requests, 0);
-  const totalSuccessful = mockAnalyticsData.reduce((sum, day) => sum + day.successful, 0);
-  const totalFailed = mockAnalyticsData.reduce((sum, day) => sum + day.failed, 0);
-  const avgResponseTime = Math.round(mockAnalyticsData.reduce((sum, day) => sum + day.avgResponseTime, 0) / mockAnalyticsData.length);
-  const successRate = Math.round((totalSuccessful / totalRequests) * 100);
+  // Fetch real webhook analytics
+  const { 
+    data: analyticsData, 
+    isLoading: analyticsLoading, 
+    refetch: refetchAnalytics 
+  } = useWebhookAnalytics(clientAutomationId, timeRange);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -104,16 +63,46 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
   const testWebhook = async (url: string) => {
     try {
       toast.info('Testing webhook...');
-      // Mock webhook test
-      setTimeout(() => {
+      
+      // Simular llamada de webhook de prueba
+      const startTime = Date.now();
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ test: true, timestamp: new Date().toISOString() })
+      });
+      const endTime = Date.now();
+      
+      // Registrar el resultado
+      await supabase.functions.invoke('webhook-analytics', {
+        method: 'POST',
+        body: {
+          client_automation_id: clientAutomationId,
+          webhook_url: url,
+          method: 'POST',
+          status_code: response.status,
+          response_time: endTime - startTime,
+          payload: { test: true },
+          response_body: await response.text(),
+          success: response.ok
+        }
+      });
+      
+      if (response.ok) {
         toast.success('Webhook test successful!');
-      }, 1500);
+      } else {
+        toast.error(`Webhook test failed with status ${response.status}`);
+      }
+      
+      // Refrescar datos
+      refetchAnalytics();
     } catch (error) {
       toast.error('Webhook test failed');
+      console.error('Webhook test error:', error);
     }
   };
 
-  if (settingsLoading) {
+  if (settingsLoading || analyticsLoading) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -142,8 +131,33 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
     );
   }
 
+  const stats = analyticsData?.stats || {
+    totalRequests: 0,
+    successfulRequests: 0,
+    failedRequests: 0,
+    avgResponseTime: 0,
+    successRate: 0
+  };
+
+  const chartData = analyticsData?.chartData || [];
+  const recentLogs = analyticsData?.logs || [];
+
   return (
     <div className="space-y-6">
+      {/* Time Range Selector */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Webhook Analytics</h2>
+        <select
+          value={timeRange}
+          onChange={(e) => setTimeRange(parseInt(e.target.value))}
+          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value={7}>Last 7 days</option>
+          <option value={30}>Last 30 days</option>
+          <option value={90}>Last 90 days</option>
+        </select>
+      </div>
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -153,7 +167,7 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Total Requests</p>
                 <div className="flex items-center">
-                  <p className="text-2xl font-bold">{totalRequests}</p>
+                  <p className="text-2xl font-bold">{stats.totalRequests}</p>
                   <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700">
                     Last {timeRange} days
                   </Badge>
@@ -170,9 +184,9 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Success Rate</p>
                 <div className="flex items-center">
-                  <p className="text-2xl font-bold">{successRate}%</p>
+                  <p className="text-2xl font-bold">{stats.successRate}%</p>
                   <Badge variant="outline" className="ml-2 bg-green-50 text-green-700">
-                    {totalSuccessful}/{totalRequests}
+                    {stats.successfulRequests}/{stats.totalRequests}
                   </Badge>
                 </div>
               </div>
@@ -187,7 +201,7 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Avg Response Time</p>
                 <div className="flex items-center">
-                  <p className="text-2xl font-bold">{avgResponseTime}ms</p>
+                  <p className="text-2xl font-bold">{stats.avgResponseTime}ms</p>
                 </div>
               </div>
             </div>
@@ -201,9 +215,9 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Failed Requests</p>
                 <div className="flex items-center">
-                  <p className="text-2xl font-bold">{totalFailed}</p>
+                  <p className="text-2xl font-bold">{stats.failedRequests}</p>
                   <Badge variant="outline" className="ml-2 bg-red-50 text-red-700">
-                    {Math.round((totalFailed / totalRequests) * 100)}%
+                    {stats.totalRequests > 0 ? Math.round((stats.failedRequests / stats.totalRequests) * 100) : 0}%
                   </Badge>
                 </div>
               </div>
@@ -230,7 +244,7 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={mockAnalyticsData}>
+                  <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" tickFormatter={(value) => format(new Date(value), 'MMM dd')} />
                     <YAxis />
@@ -248,7 +262,7 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={mockAnalyticsData}>
+                  <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" tickFormatter={(value) => format(new Date(value), 'MMM dd')} />
                     <YAxis />
@@ -350,25 +364,35 @@ const WebhookAnalyticsDashboard: React.FC<WebhookAnalyticsDashboardProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockLogs.map((log) => (
-                  <div key={log.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-3 h-3 rounded-full ${log.success ? 'bg-green-500' : 'bg-red-500'}`} />
-                      <div>
-                        <p className="font-medium">{log.method} {log.url}</p>
-                        <p className="text-sm text-gray-500">
-                          {format(new Date(log.created_at), 'MMM dd, yyyy HH:mm:ss')}
+                {recentLogs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Webhook Logs</h3>
+                    <p className="text-gray-600">
+                      No webhook calls have been made yet.
+                    </p>
+                  </div>
+                ) : (
+                  recentLogs.map((log) => (
+                    <div key={log.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-3 h-3 rounded-full ${log.success ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <div>
+                          <p className="font-medium">{log.method} {log.webhook_url}</p>
+                          <p className="text-sm text-gray-500">
+                            {format(new Date(log.created_at), 'MMM dd, yyyy HH:mm:ss')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-medium ${log.success ? 'text-green-600' : 'text-red-600'}`}>
+                          {log.status_code}
                         </p>
+                        <p className="text-sm text-gray-500">{log.response_time}ms</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`font-medium ${log.success ? 'text-green-600' : 'text-red-600'}`}>
-                        {log.status_code}
-                      </p>
-                      <p className="text-sm text-gray-500">{log.response_time}ms</p>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

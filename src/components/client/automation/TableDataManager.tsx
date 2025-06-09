@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Table, Search, Download, Filter, AlertCircle, Activity, Maximize2 } from 'lucide-react';
+import { Table, Search, Download, AlertCircle, Activity, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TableDataManagerProps {
@@ -46,26 +46,48 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
     },
   });
 
-  // Mock table data
-  const mockTableData = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', status: 'active', lastActive: '2024-01-26', score: 85 },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', status: 'pending', lastActive: '2024-01-25', score: 92 },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', status: 'active', lastActive: '2024-01-24', score: 78 },
-    { id: 4, name: 'Alice Wilson', email: 'alice@example.com', status: 'inactive', lastActive: '2024-01-20', score: 65 },
-    { id: 5, name: 'Charlie Brown', email: 'charlie@example.com', status: 'active', lastActive: '2024-01-26', score: 89 },
-  ];
+  // Fetch real table data
+  const { data: tableData, isLoading: dataLoading } = useQuery({
+    queryKey: ['table-data', clientAutomationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('table_data_entries')
+        .select('*')
+        .eq('client_automation_id', clientAutomationId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
 
-  const filteredData = mockTableData.filter(row => {
-    const matchesSearch = row.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         row.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || row.status === filterStatus;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!clientAutomationId
+  });
+
+  const filteredData = (tableData || []).filter(row => {
+    const searchString = JSON.stringify(row.data).toLowerCase();
+    const matchesSearch = searchString.includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || row.entry_type === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
   const exportData = () => {
+    if (!tableData || tableData.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    // Extract all unique keys from the data
+    const allKeys = new Set<string>();
+    tableData.forEach(row => {
+      Object.keys(row.data || {}).forEach(key => allKeys.add(key));
+    });
+
+    const headers = Array.from(allKeys);
     const csvContent = [
-      ['Name', 'Email', 'Status', 'Last Active', 'Score'],
-      ...filteredData.map(row => [row.name, row.email, row.status, row.lastActive, row.score])
+      headers,
+      ...tableData.map(row => 
+        headers.map(header => row.data?.[header] || '')
+      )
     ].map(row => row.join(',')).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -110,12 +132,17 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
                     Fullscreen
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full">
-                  <DialogHeader>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0">
+                  <DialogHeader className="p-6 pb-2">
                     <DialogTitle>Table Integration - Fullscreen View</DialogTitle>
                   </DialogHeader>
-                  <div className="flex-1 overflow-hidden">
-                    {renderTableEmbed(true)}
+                  <div className="flex-1 overflow-hidden p-6 pt-2">
+                    <div className="w-full h-[calc(95vh-8rem)] border rounded-lg overflow-hidden">
+                      <div 
+                        dangerouslySetInnerHTML={{ __html: tableSetting.integration_code }} 
+                        className="w-full h-full"
+                      />
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -126,16 +153,11 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
         <div className={`border rounded-lg overflow-hidden ${
           isFullscreen 
             ? 'w-full h-[calc(100vh-8rem)]' 
-            : 'h-[400px]'
+            : 'h-[500px]'
         }`}>
           <div 
             dangerouslySetInnerHTML={{ __html: tableSetting.integration_code }} 
             className="w-full h-full"
-            style={{
-              width: '100%',
-              height: '100%',
-              overflow: 'auto'
-            }}
           />
         </div>
       </div>
@@ -145,17 +167,18 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
   const getStatusBadge = (status: string) => {
     const variants = {
       active: 'bg-green-50 text-green-700',
-      pending: 'bg-yellow-50 text-yellow-700',
-      inactive: 'bg-red-50 text-red-700',
+      manual: 'bg-blue-50 text-blue-700',
+      automated: 'bg-purple-50 text-purple-700',
+      imported: 'bg-yellow-50 text-yellow-700',
     };
     return (
-      <Badge variant="outline" className={variants[status as keyof typeof variants] || variants.inactive}>
+      <Badge variant="outline" className={variants[status as keyof typeof variants] || variants.active}>
         {status}
       </Badge>
     );
   };
 
-  if (settingsLoading) {
+  if (settingsLoading || dataLoading) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -168,6 +191,11 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
     );
   }
 
+  const totalRecords = tableData?.length || 0;
+  const manualEntries = tableData?.filter(row => row.entry_type === 'manual').length || 0;
+  const automatedEntries = tableData?.filter(row => row.entry_type === 'automated').length || 0;
+  const importedEntries = tableData?.filter(row => row.entry_type === 'imported').length || 0;
+
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
@@ -178,7 +206,7 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
               <Table className="h-4 w-4 text-blue-500" />
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Total Records</p>
-                <p className="text-2xl font-bold">{mockTableData.length}</p>
+                <p className="text-2xl font-bold">{totalRecords}</p>
               </div>
             </div>
           </CardContent>
@@ -189,10 +217,8 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
             <div className="flex items-center">
               <Activity className="h-4 w-4 text-green-500" />
               <div className="ml-2">
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold">
-                  {mockTableData.filter(row => row.status === 'active').length}
-                </p>
+                <p className="text-sm font-medium text-gray-600">Manual</p>
+                <p className="text-2xl font-bold">{manualEntries}</p>
               </div>
             </div>
           </CardContent>
@@ -201,12 +227,10 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
-              <AlertCircle className="h-4 w-4 text-yellow-500" />
+              <Activity className="h-4 w-4 text-purple-500" />
               <div className="ml-2">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold">
-                  {mockTableData.filter(row => row.status === 'pending').length}
-                </p>
+                <p className="text-sm font-medium text-gray-600">Automated</p>
+                <p className="text-2xl font-bold">{automatedEntries}</p>
               </div>
             </div>
           </CardContent>
@@ -215,12 +239,10 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
-              <Download className="h-4 w-4 text-purple-500" />
+              <Download className="h-4 w-4 text-yellow-500" />
               <div className="ml-2">
-                <p className="text-sm font-medium text-gray-600">Avg Score</p>
-                <p className="text-2xl font-bold">
-                  {Math.round(mockTableData.reduce((sum, row) => sum + row.score, 0) / mockTableData.length)}
-                </p>
+                <p className="text-sm font-medium text-gray-600">Imported</p>
+                <p className="text-2xl font-bold">{importedEntries}</p>
               </div>
             </div>
           </CardContent>
@@ -257,7 +279,7 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search by name or email..."
+                  placeholder="Search data..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -270,10 +292,10 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="pending">Pending</option>
-                <option value="inactive">Inactive</option>
+                <option value="all">All Types</option>
+                <option value="manual">Manual</option>
+                <option value="automated">Automated</option>
+                <option value="imported">Imported</option>
               </select>
               <Button variant="outline" onClick={exportData}>
                 <Download className="h-4 w-4 mr-2" />
@@ -283,52 +305,60 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
           </div>
 
           {/* Data Table */}
-          <div className="border rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last Active
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Score
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {row.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {row.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(row.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {row.lastActive}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {row.score}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {totalRecords === 0 ? (
+            <div className="text-center py-8">
+              <Table className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
+              <p className="text-gray-600">
+                No table data has been collected yet.
+              </p>
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <div className="max-h-96 overflow-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Data
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredData.map((row) => (
+                      <tr key={row.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {row.id.slice(0, 8)}...
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          <div className="max-w-xs truncate">
+                            {JSON.stringify(row.data).slice(0, 100)}...
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(row.entry_type)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(row.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
-          {filteredData.length === 0 && (
+          {filteredData.length === 0 && totalRecords > 0 && (
             <div className="text-center py-8">
               <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Found</h3>

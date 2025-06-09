@@ -300,6 +300,47 @@ export type Database = {
         }
         Relationships: []
       }
+      form_submissions: {
+        Row: {
+          client_automation_id: string
+          created_at: string
+          form_data: Json
+          id: string
+          processed_at: string | null
+          status: string
+          submission_ip: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          client_automation_id: string
+          created_at?: string
+          form_data: Json
+          id?: string
+          processed_at?: string | null
+          status?: string
+          submission_ip?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          client_automation_id?: string
+          created_at?: string
+          form_data?: Json
+          id?: string
+          processed_at?: string | null
+          status?: string
+          submission_ip?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_client_automation_id_fkey"
+            columns: ["client_automation_id"]
+            isOneToOne: false
+            referencedRelation: "client_automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_content: {
         Row: {
           content: string
@@ -528,6 +569,47 @@ export type Database = {
           },
         ]
       }
+      table_data_entries: {
+        Row: {
+          client_automation_id: string
+          created_at: string
+          created_by: string | null
+          data: Json
+          entry_type: string
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_automation_id: string
+          created_at?: string
+          created_by?: string | null
+          data: Json
+          entry_type?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_automation_id?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          entry_type?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_data_entries_client_automation_id_fkey"
+            columns: ["client_automation_id"]
+            isOneToOne: false
+            referencedRelation: "client_automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       testimonials: {
         Row: {
           company: string | null
@@ -696,6 +778,56 @@ export type Database = {
           website_domain?: string
         }
         Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          client_automation_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          method: string
+          payload: Json | null
+          response_body: string | null
+          response_time: number
+          status_code: number
+          success: boolean
+          webhook_url: string
+        }
+        Insert: {
+          client_automation_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          method?: string
+          payload?: Json | null
+          response_body?: string | null
+          response_time: number
+          status_code: number
+          success?: boolean
+          webhook_url: string
+        }
+        Update: {
+          client_automation_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          method?: string
+          payload?: Json | null
+          response_body?: string | null
+          response_time?: number
+          status_code?: number
+          success?: boolean
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_client_automation_id_fkey"
+            columns: ["client_automation_id"]
+            isOneToOne: false
+            referencedRelation: "client_automations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

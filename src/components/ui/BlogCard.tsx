@@ -35,6 +35,7 @@ const BlogCard = ({
 }: BlogCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const { user } = useAuth();
   const isAdmin = !!user;
   
@@ -60,14 +61,14 @@ const BlogCard = ({
     <div
       ref={cardRef}
       className={cn(
-        "bg-white rounded-xl overflow-hidden shadow-md border border-gray-100 transition-all duration-700 hover:shadow-lg",
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16",
+        "bg-white rounded-xl overflow-hidden shadow-md border border-gray-100 transition-all duration-500 hover:shadow-lg",
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
         className
       )}
       style={{ transitionDelay: `${delay}ms` }}
     >
       <Link to={`/blog/${id}`} className="block">
-        <div className={`relative ${featured ? 'h-64' : 'h-48'} overflow-hidden`}>
+        <div className={`relative ${featured ? 'h-64' : 'h-48'} overflow-hidden bg-gray-100`}>
           {isAdmin ? (
             <EditableImage
               src={imageUrl}
@@ -75,13 +76,19 @@ const BlogCard = ({
               pageName="blog"
               sectionName="blog-card"
               imageId={id}
-              className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+              onLoad={() => setImageLoaded(true)}
             />
           ) : (
             <img
               src={imageUrl}
               alt={title}
-              className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+              className={cn(
+                "w-full h-full object-cover transition-all duration-500 hover:scale-105",
+                imageLoaded ? "opacity-100" : "opacity-0"
+              )}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
             />
           )}
           <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium">
@@ -104,7 +111,7 @@ const BlogCard = ({
 
         <Link to={`/blog/${id}`} className="block">
           <h3 className={cn(
-            "font-heading font-semibold mb-2 hover:text-automatizalo-blue transition-colors", 
+            "font-heading font-semibold mb-2 hover:text-automatizalo-blue transition-colors line-clamp-2", 
             featured ? "text-2xl" : "text-lg"
           )}>
             {title}
@@ -112,7 +119,7 @@ const BlogCard = ({
         </Link>
 
         <p className={cn(
-          "text-gray-600 mb-4",
+          "text-gray-600 mb-4 line-clamp-3",
           featured ? "text-base" : "text-sm"
         )}>
           {excerpt}

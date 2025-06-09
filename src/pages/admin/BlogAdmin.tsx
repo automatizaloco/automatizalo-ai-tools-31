@@ -5,13 +5,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import BlogAdminHeader from "@/components/admin/blog/BlogAdminHeader";
 import MobilePostCard from "@/components/admin/blog/MobilePostCard";
 import BlogPostsTable from "@/components/admin/blog/BlogPostsTable";
-import { useBlogPosts } from "@/hooks/useBlogPosts";
+import { useOptimizedBlogPosts } from "@/hooks/useOptimizedBlogPosts";
 
 const BlogAdmin = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { posts, loading, handleDelete, handleToggleStatus } = useBlogPosts();
+  const { posts, loading, handleDelete, handleToggleStatus } = useOptimizedBlogPosts();
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
@@ -39,7 +39,7 @@ const BlogAdmin = () => {
     navigate("/admin/notifications");
   };
 
-  if (loading) {
+  if (loading && posts.length === 0) {
     return (
       <div className="flex justify-center items-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>

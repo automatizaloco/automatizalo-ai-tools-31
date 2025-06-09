@@ -1,6 +1,6 @@
 
-import { useState, useEffect, Suspense } from "react";
-import { fetchBlogPosts } from "@/services/blogService";
+import { useState, useEffect, useMemo } from "react";
+import { fetchOptimizedBlogPosts, fetchOptimizedFeaturedPosts } from "@/services/blog/optimizedBlogService";
 import { BlogPost } from "@/types/blog";
 import BlogHero from "@/components/blog/BlogHero";
 import FeaturedPosts from "@/components/blog/FeaturedPosts";
@@ -14,45 +14,46 @@ import { toast } from "sonner";
 
 const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("All");
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
   const { theme } = useTheme();
 
   // Categories
   const categories = ["All", "AI", "Automation", "Technology"];
 
-  // Fetch blog posts using React Query with better error handling and retry logic
+  // Optimized blog posts query with better caching
   const { 
     data: blogPosts = [] as BlogPost[], 
     isLoading, 
     isError, 
     error 
   } = useQuery({
-    queryKey: ['blogPosts'],
-    queryFn: fetchBlogPosts,
-    staleTime: 5 * 60 * 1000, // 5 minutes before refetching
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    retry: 2,
-    meta: {
-      onError: (err: Error) => {
-        console.error("Failed to load blog posts:", err);
-        toast.error("Failed to load blog posts. Please try again.");
-      }
-    }
+    queryKey: ['optimized-blog-posts'],
+    queryFn: fetchOptimizedBlogPosts,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 1, // Reduce retries for better performance
+    retryDelay: 1000,
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
 
-  useEffect(() => {
-    if (blogPosts && blogPosts.length > 0) {
-      if (activeCategory === "All") {
-        setFilteredPosts(blogPosts);
-      } else {
-        setFilteredPosts(blogPosts.filter(post => post.category === activeCategory));
-      }
-    } else {
-      setFilteredPosts([]);
+  // Separate query for featured posts for better performance
+  const { data: featuredPosts = [] as BlogPost[] } = useQuery({
+    queryKey: ['featured-blog-posts'],
+    queryFn: fetchOptimizedFeaturedPosts,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  // Memoized filtered posts for better performance
+  const filteredPosts = useMemo(() => {
+    if (activeCategory === "All") {
+      return blogPosts;
     }
+    return blogPosts.filter(post => post.category === activeCategory);
   }, [activeCategory, blogPosts]);
 
-  // Handle rendering based on loading state
+  // Handle error state
   if (isError) {
     return (
       <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
@@ -76,15 +77,13 @@ const Blog = () => {
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          {/* Blog hero is always shown while loading */}
           <BlogHero />
           
-          {/* For other sections, render loading skeletons or actual content */}
           {isLoading ? (
-            <LoadingState />
+            <SimplifiedLoadingState />
           ) : (
             <>
-              <FeaturedPosts posts={blogPosts} />
+              <FeaturedPosts posts={featuredPosts} />
               <CategoryFilter 
                 categories={categories} 
                 activeCategory={activeCategory}
@@ -100,41 +99,29 @@ const Blog = () => {
   );
 };
 
-// Separate loading state component
-const LoadingState = () => (
-  <>
-    <div className="my-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex flex-col gap-4">
-            <Skeleton className="h-40 w-full rounded-lg" />
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-          </div>
-        ))}
-      </div>
+// Simplified loading state for better performance
+const SimplifiedLoadingState = () => (
+  <div className="space-y-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {[1, 2].map((i) => (
+        <div key={i} className="flex flex-col gap-4">
+          <Skeleton className="h-48 w-full rounded-lg" />
+          <Skeleton className="h-6 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+      ))}
     </div>
-    <div className="my-8">
-      <Skeleton className="h-10 w-96 mb-6" />
-      <div className="flex gap-4 mb-12">
-        {[1, 2, 3, 4].map(i => (
-          <Skeleton key={i} className="h-8 w-24" />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex flex-col gap-4">
-            <Skeleton className="h-48 w-full rounded-lg" />
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-4/6" />
-          </div>
-        ))}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex flex-col gap-3">
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+        </div>
+      ))}
     </div>
-  </>
+  </div>
 );
 
 export default Blog;

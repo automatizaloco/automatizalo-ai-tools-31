@@ -156,7 +156,8 @@ export const checkDatabaseSchema = async (): Promise<boolean> => {
           continue;
         }
         
-        const count = Array.isArray(data) ? data[0]?.count : data?.count;
+        // Fix: Handle the RPC response properly with type assertion
+        const count = Array.isArray(data) ? (data[0] as any)?.count : (data as any)?.count;
         const exists = count !== undefined && count >= 0;
         
         console.log(`Table ${tableName} exists: ${exists} (count: ${count})`);
@@ -194,12 +195,16 @@ export const executeAdminOperation = async <T>(
     
     // Handle specific admin access errors
     if (error?.message?.includes('Access denied') || error?.message?.includes('Admin privileges required')) {
-      toast.error("Admin access required", "This operation requires administrator privileges.");
+      toast.error("Admin access required", {
+        description: "This operation requires administrator privileges."
+      });
       return null;
     }
     
     // Handle other errors with generic message
-    toast.error(`${operationName} failed`, handleSupabaseError(error, `Failed to execute ${operationName}`));
+    toast.error(`${operationName} failed`, {
+      description: handleSupabaseError(error, `Failed to execute ${operationName}`)
+    });
     return null;
   }
 };

@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Table, Search, Download, Filter, AlertCircle, Activity } from 'lucide-react';
+import { Table, Search, Download, Filter, AlertCircle, Activity, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TableDataManagerProps {
@@ -26,6 +27,7 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
 
   // Fetch table integration settings
   const { data: tableSetting, isLoading: settingsLoading } = useQuery({
@@ -79,7 +81,7 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
     toast.success('Data exported successfully');
   };
 
-  const renderTableEmbed = () => {
+  const renderTableEmbed = (isFullscreen: boolean = false) => {
     if (!tableSetting?.integration_code) {
       return (
         <div className="text-center py-8">
@@ -96,13 +98,45 @@ const TableDataManager: React.FC<TableDataManagerProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Integrated Table</h3>
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            External Source
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+              External Source
+            </Badge>
+            {!isFullscreen && (
+              <Dialog open={isFullscreenOpen} onOpenChange={setIsFullscreenOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Maximize2 className="h-4 w-4 mr-1" />
+                    Fullscreen
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full">
+                  <DialogHeader>
+                    <DialogTitle>Table Integration - Fullscreen View</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex-1 overflow-hidden">
+                    {renderTableEmbed(true)}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </div>
         
-        <div className="border rounded-lg p-4 bg-gray-50 min-h-[300px]">
-          <div dangerouslySetInnerHTML={{ __html: tableSetting.integration_code }} />
+        <div className={`border rounded-lg overflow-hidden ${
+          isFullscreen 
+            ? 'w-full h-[calc(100vh-8rem)]' 
+            : 'h-[400px]'
+        }`}>
+          <div 
+            dangerouslySetInnerHTML={{ __html: tableSetting.integration_code }} 
+            className="w-full h-full"
+            style={{
+              width: '100%',
+              height: '100%',
+              overflow: 'auto'
+            }}
+          />
         </div>
       </div>
     );

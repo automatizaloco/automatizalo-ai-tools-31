@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { AlertCircle, ArrowLeft, Save, Webhook, Box, Table, Loader2 } from 'luci
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
+import FormUrlConverter from './FormUrlConverter';
 import { 
   ClientAutomationWithDetails, 
   ClientIntegrationSetting,
@@ -269,26 +271,53 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
     if (!formSetting) return null;
     
     return (
-      <CodeIntegration
-        data={{
-          automation_id: '',
-          integration_type: 'form',
-          ...formSetting
-        }}
-        type="form"
-        title="Form Integration"
-        description="Paste the HTML code for the client's form embed"
-        placeholder="<iframe src='https://form-url' ...>"
-        icon={<Box className="h-5 w-5" />}
-        onCodeChange={(value) => {
-          const updatedSettings = integrationSettings.map(s =>
-            s.id === formSetting.id ? { ...s, integration_code: value } : s
-          );
-          setIntegrationSettings(updatedSettings);
-        }}
-        onSave={() => handleSave(formSetting)}
-        isSaving={isSaving}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Box className="h-5 w-5" />
+            Form Integration
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="form-integration" className="block text-sm font-medium text-gray-700 mb-1">
+                Form URL or Iframe Code
+              </label>
+              <FormUrlConverter
+                value={formSetting.integration_code || ''}
+                onChange={(value) => {
+                  const updatedSettings = integrationSettings.map(s =>
+                    s.id === formSetting.id ? { ...s, integration_code: value } : s
+                  );
+                  setIntegrationSettings(updatedSettings);
+                }}
+                placeholder="Enter form URL (e.g., https://forms.google.com/...) or paste iframe code"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Paste either a direct URL to your form or the complete iframe embed code.
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => handleSave(formSetting)}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Form Integration
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   };
   
@@ -297,26 +326,53 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
     if (!tableSetting) return null;
     
     return (
-      <CodeIntegration
-        data={{
-          automation_id: '',
-          integration_type: 'table',
-          ...tableSetting
-        }}
-        type="table"
-        title="Table Integration"
-        description="Paste the HTML code for the client's table embed"
-        placeholder="<iframe src='https://table-url' ...>"
-        icon={<Table className="h-5 w-5" />}
-        onCodeChange={(value) => {
-          const updatedSettings = integrationSettings.map(s =>
-            s.id === tableSetting.id ? { ...s, integration_code: value } : s
-          );
-          setIntegrationSettings(updatedSettings);
-        }}
-        onSave={() => handleSave(tableSetting)}
-        isSaving={isSaving}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Table className="h-5 w-5" />
+            Table Integration
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="table-integration" className="block text-sm font-medium text-gray-700 mb-1">
+                Table URL or Iframe Code
+              </label>
+              <FormUrlConverter
+                value={tableSetting.integration_code || ''}
+                onChange={(value) => {
+                  const updatedSettings = integrationSettings.map(s =>
+                    s.id === tableSetting.id ? { ...s, integration_code: value } : s
+                  );
+                  setIntegrationSettings(updatedSettings);
+                }}
+                placeholder="Enter table URL (e.g., https://docs.google.com/spreadsheets/...) or paste iframe code"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Paste either a direct URL to your table/spreadsheet or the complete iframe embed code.
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => handleSave(tableSetting)}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Table Integration
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   };
   

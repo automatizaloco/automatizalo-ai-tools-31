@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, X, Settings } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import { useAdminVerification } from '@/hooks/useAdminVerification';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const Navbar = () => {
@@ -13,6 +14,7 @@ const Navbar = () => {
   const location = useLocation();
   const { t } = useLanguage();
   const { isAuthenticated, logout } = useAuth();
+  const { isAdmin, isVerifying } = useAdminVerification();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -76,7 +78,7 @@ const Navbar = () => {
               </Link>
             ))}
             
-            {isAuthenticated && (
+            {isAuthenticated && isAdmin && !isVerifying && (
               <Link 
                 to="/admin"
                 className={`
@@ -141,7 +143,7 @@ const Navbar = () => {
                 </Link>
               ))}
               
-              {isAuthenticated && (
+              {isAuthenticated && isAdmin && !isVerifying && (
                 <Link
                   to="/admin"
                   className={`

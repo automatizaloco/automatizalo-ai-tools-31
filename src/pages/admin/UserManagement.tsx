@@ -12,6 +12,7 @@ import { UserTable } from '@/components/admin/users/UserTable';
 import UserManagementHeader from '@/components/admin/users/UserManagementHeader';
 import EmptyUserState from '@/components/admin/users/EmptyUserState';
 import { useUserSyncService } from '@/components/admin/users/UserSyncService';
+import { executeAdminOperation } from '@/services/supabaseService';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -25,35 +26,43 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      console.log('Fetching users...');
+      console.log('Fetching users with enhanced security...');
       
-      // First try using the RPC function (more secure)
-      const { data: rpcData, error: rpcError } = await supabase.rpc('get_users');
-      
-      if (rpcError) {
-        console.error('RPC error:', rpcError);
+      // Use the secure admin operation wrapper
+      const result = await executeAdminOperation(async () => {
+        const { data, error } = await supabase.rpc('get_users');
         
-        // Fallback: Try direct query if RPC fails
-        console.log('Trying direct query...');
+        if (error) {
+          throw error;
+        }
+        
+        return data;
+      }, 'fetch users');
+      
+      if (result) {
+        console.log('Users loaded successfully:', result.length);
+        setUsers(result as User[]);
+      } else {
+        // If admin operation failed, try fallback but expect it might fail too
+        console.log('Trying fallback direct query...');
         const { data: directData, error: directError } = await supabase
           .from('users')
           .select('*')
           .order('created_at', { ascending: false });
           
         if (directError) {
-          console.error('Direct query error:', directError);
-          toast.error('Failed to load users');
+          console.error('Direct query also failed:', directError);
+          toast.error('Failed to load users - admin access required');
+          setUsers([]);
         } else if (directData) {
-          console.log('Users loaded via direct query:', directData.length);
+          console.log('Users loaded via fallback:', directData.length);
           setUsers(directData as User[]);
         }
-      } else if (rpcData) {
-        console.log('Users loaded via RPC:', rpcData.length);
-        setUsers(rpcData as User[]);
       }
     } catch (error) {
       console.error('Unexpected error fetching users:', error);
-      toast.error('An unexpected error occurred');
+      toast.error('An unexpected error occurred while loading users');
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }

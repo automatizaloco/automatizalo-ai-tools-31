@@ -1,3 +1,4 @@
+
 // Re-export services from their respective files
 export * from './testimonialService';
 export * from './contactService';
@@ -126,12 +127,13 @@ export const syncOfflineChanges = async (): Promise<boolean> => {
 };
 
 /**
- * Check if the database schema has the necessary tables
+ * Check if the database schema has the necessary tables with improved error handling
  */
 export const checkDatabaseSchema = async (): Promise<boolean> => {
   try {
     console.log("Checking database schema...");
-    // Check for critical tables using system catalog queries via exec_sql RPC
+    
+    // Check for critical tables using the new secure get_table_count function
     const criticalTables = [
       'automations', 
       'client_automations', 
@@ -140,37 +142,64 @@ export const checkDatabaseSchema = async (): Promise<boolean> => {
     ];
     
     let hasAllTables = true;
-    const sqlQuery = `
-      SELECT table_name, 
-             (SELECT COUNT(*) FROM information_schema.tables 
-              WHERE table_schema = 'public' AND table_name = t.table_name) as exists_flag
-      FROM unnest(ARRAY['${criticalTables.join("','")}']) as t(table_name)
-    `;
     
-    const { data, error } = await supabase.rpc('exec_sql', { 
-      sql_query: sqlQuery 
-    });
-    
-    if (error) {
-      console.error("Schema check query failed:", error);
-      return false;
-    }
-    
-    if (data) {
-      // Fix the type issue by explicitly typing the data as an array of objects
-      const tableData = data as Array<{ table_name: string, exists_flag: number }>;
-      tableData.forEach((row) => {
-        const exists = row.exists_flag > 0;
-        console.log(`Table ${row.table_name} exists: ${exists}`);
+    for (const tableName of criticalTables) {
+      try {
+        const { data, error } = await supabase.rpc('get_table_count', { 
+          table_name: tableName 
+        });
+        
+        if (error) {
+          console.error(`Error checking table ${tableName}:`, error);
+          // If we can't check, assume it doesn't exist for safety
+          hasAllTables = false;
+          continue;
+        }
+        
+        const count = Array.isArray(data) ? data[0]?.count : data?.count;
+        const exists = count !== undefined && count >= 0;
+        
+        console.log(`Table ${tableName} exists: ${exists} (count: ${count})`);
+        
         if (!exists) {
           hasAllTables = false;
         }
-      });
+      } catch (tableError) {
+        console.error(`Error checking table ${tableName}:`, tableError);
+        hasAllTables = false;
+      }
     }
     
     return hasAllTables;
   } catch (error) {
     console.error("Error checking database schema:", error);
     return false;
+  }
+};
+
+/**
+ * Safely execute admin-only operations with proper error handling
+ */
+export const executeAdminOperation = async <T>(
+  operation: () => Promise<T>,
+  operationName: string = "admin operation"
+): Promise<T | null> => {
+  try {
+    console.log(`Executing ${operationName}...`);
+    const result = await operation();
+    console.log(`${operationName} completed successfully`);
+    return result;
+  } catch (error: any) {
+    console.error(`Error in ${operationName}:`, error);
+    
+    // Handle specific admin access errors
+    if (error?.message?.includes('Access denied') || error?.message?.includes('Admin privileges required')) {
+      toast.error("Admin access required", "This operation requires administrator privileges.");
+      return null;
+    }
+    
+    // Handle other errors with generic message
+    toast.error(`${operationName} failed`, handleSupabaseError(error, `Failed to execute ${operationName}`));
+    return null;
   }
 };

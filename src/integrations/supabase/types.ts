@@ -706,6 +706,12 @@ export type Database = {
         Args: { sql_query: string }
         Returns: undefined
       }
+      get_table_count: {
+        Args: { table_name: string }
+        Returns: {
+          count: number
+        }[]
+      }
       get_users: {
         Args: Record<PropertyKey, never>
         Returns: {

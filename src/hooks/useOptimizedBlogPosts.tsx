@@ -83,7 +83,7 @@ export const useOptimizedBlogPosts = () => {
 
   const handleToggleStatus = useCallback(async (post: BlogPost) => {
     try {
-      const newStatus = post.status === 'draft' ? 'published' : 'draft';
+      const newStatus: "draft" | "published" = post.status === 'draft' ? 'published' : 'draft';
       
       // Actualización optimista del estado
       setPosts(prevPosts => {

@@ -1,12 +1,13 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FileCode, AlertCircle, Activity, BarChart3 } from 'lucide-react';
+import { FileCode, AlertCircle, Activity, BarChart3, ExternalLink, Maximize2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useFormAnalytics } from '@/hooks/useFormAnalytics';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface FormIntegrationViewerProps {
   clientAutomationId: string;
@@ -23,6 +24,8 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
   clientAutomationId,
   automationTitle
 }) => {
+  const [showFullscreen, setShowFullscreen] = useState(false);
+
   // Fetch form integration settings
   const { data: formSetting, isLoading: settingsLoading } = useQuery({
     queryKey: ['form-settings', clientAutomationId],
@@ -64,6 +67,28 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
     return { type: 'html', code };
   };
 
+  const extractUrlFromCode = (code: string): string | null => {
+    if (code.includes('<iframe')) {
+      const srcMatch = code.match(/src="([^"]+)"/);
+      return srcMatch ? srcMatch[1] : null;
+    }
+    return null;
+  };
+
+  const isN8nForm = (code: string): boolean => {
+    const url = extractUrlFromCode(code);
+    if (!url) return false;
+    
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.includes('n8n') || 
+             urlObj.pathname.includes('/webhook/') ||
+             urlObj.pathname.includes('/form/');
+    } catch {
+      return false;
+    }
+  };
+
   const renderFormEmbed = () => {
     if (!formSetting?.integration_code) {
       return (
@@ -78,6 +103,8 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
     }
 
     const processedForm = processFormCode(formSetting.integration_code);
+    const formUrl = extractUrlFromCode(formSetting.integration_code);
+    const isN8n = isN8nForm(formSetting.integration_code);
     
     if (!processedForm) {
       return (
@@ -94,21 +121,67 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Integrated Form</h3>
-          <Badge variant="outline" className="bg-green-50 text-green-700">
-            {processedForm.type.toUpperCase()}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-medium">Integrated Form</h3>
+            {isN8n && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                ⚡ n8n Form
+              </Badge>
+            )}
+            <Badge variant="outline" className="bg-green-50 text-green-700">
+              {processedForm.type.toUpperCase()}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {formUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(formUrl, '_blank')}
+              >
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Open Direct
+              </Button>
+            )}
+            
+            <Dialog open={showFullscreen} onOpenChange={setShowFullscreen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Maximize2 className="h-3 w-3 mr-1" />
+                  Fullscreen
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl h-[80vh]">
+                <DialogHeader>
+                  <DialogTitle>Form - {automationTitle}</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-hidden">
+                  <div 
+                    dangerouslySetInnerHTML={{ __html: processedForm.code }}
+                    className="w-full h-full"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
         
-        <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="border rounded-lg overflow-hidden bg-white">
           <div 
             dangerouslySetInnerHTML={{ __html: processedForm.code }}
-            className="min-h-[300px]"
+            className="min-h-[400px] w-full"
           />
         </div>
         
-        <div className="text-sm text-gray-500">
-          <p>Form submissions will automatically trigger your automation workflow.</p>
+        <div className="text-sm text-gray-500 space-y-1">
+          <p>✅ Form submissions will automatically trigger your automation workflow.</p>
+          {isN8n && (
+            <p className="text-blue-600">⚡ This n8n form is configured with optimized settings for better compatibility.</p>
+          )}
+          {formUrl && (
+            <p>🔗 Direct URL: <code className="bg-gray-100 px-1 rounded text-xs">{formUrl}</code></p>
+          )}
         </div>
       </div>
     );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -107,7 +106,7 @@ const AdvancedAutomationDetails: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="flex justify-center items-center h-64">
           <div className="flex flex-col items-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -120,7 +119,7 @@ const AdvancedAutomationDetails: React.FC = () => {
 
   if (error || !clientAutomation) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Automation Not Found</h2>
           <p className="text-gray-600 mb-6">
@@ -139,130 +138,137 @@ const AdvancedAutomationDetails: React.FC = () => {
   const availableTabs = getAvailableTabs();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={() => navigate('/client-portal')} variant="outline" size="sm">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Portal
-        </Button>
-        {getStatusBadge(clientAutomation.setup_status)}
-      </div>
+    <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header with proper spacing and z-index */}
+        <div className="flex items-center justify-between mb-6 relative z-10">
+          <Button 
+            onClick={() => navigate('/client-portal')} 
+            variant="outline" 
+            size="sm"
+            className="relative z-20 bg-white hover:bg-gray-50 border-gray-200 shadow-sm"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Portal
+          </Button>
+          {getStatusBadge(clientAutomation.setup_status)}
+        </div>
 
-      {/* Automation Info */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          {automation.image_url && (
-            <div className="md:w-48 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-              <img 
-                src={automation.image_url} 
-                alt={automation.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = 'https://placehold.co/300x200?text=Automation';
-                }}
-              />
-            </div>
-          )}
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{automation.title}</h1>
-            <p className="text-gray-600 mb-4">{automation.description}</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500 block">Purchase Date</span>
-                <span className="font-medium">{format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')}</span>
+        {/* Automation Info */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row gap-6">
+            {automation.image_url && (
+              <div className="md:w-48 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                <img 
+                  src={automation.image_url} 
+                  alt={automation.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/300x200?text=Automation';
+                  }}
+                />
               </div>
-              <div>
-                <span className="text-gray-500 block">Next Billing</span>
-                <span className="font-medium">{format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy')}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 block">Status</span>
-                <span className="font-medium capitalize">{clientAutomation.status}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 block">Setup</span>
-                <span className="font-medium">{getStatusBadge(clientAutomation.setup_status)}</span>
+            )}
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{automation.title}</h1>
+              <p className="text-gray-600 mb-4">{automation.description}</p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500 block">Purchase Date</span>
+                  <span className="font-medium">{format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block">Next Billing</span>
+                  <span className="font-medium">{format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy')}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block">Status</span>
+                  <span className="font-medium capitalize">{clientAutomation.status}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block">Setup</span>
+                  <span className="font-medium">{getStatusBadge(clientAutomation.setup_status)}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Main Content */}
+        {clientAutomation.setup_status === 'pending' ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Setup in Progress</h3>
+                <p className="text-gray-600">
+                  Our team is currently configuring your automation. You'll receive a notification once it's ready to use.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : availableTabs.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Integrations Available</h3>
+                <p className="text-gray-600">
+                  This automation doesn't have any active integrations configured yet.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${availableTabs.length}, 1fr)` }}>
+              {availableTabs.map((tab) => (
+                <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
+                  <tab.icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {automation.has_webhook && (
+              <TabsContent value="webhooks">
+                <WebhookAnalyticsDashboard 
+                  clientAutomationId={clientAutomation.id}
+                  automationTitle={automation.title}
+                />
+              </TabsContent>
+            )}
+
+            {automation.has_custom_prompt && (
+              <TabsContent value="prompts">
+                <CustomPromptEditor 
+                  clientAutomationId={clientAutomation.id}
+                  automationName={automation.title}
+                />
+              </TabsContent>
+            )}
+
+            {automation.has_form_integration && (
+              <TabsContent value="forms">
+                <FormIntegrationViewer 
+                  clientAutomationId={clientAutomation.id}
+                  automationTitle={automation.title}
+                />
+              </TabsContent>
+            )}
+
+            {automation.has_table_integration && (
+              <TabsContent value="tables">
+                <TableDataManager 
+                  clientAutomationId={clientAutomation.id}
+                  automationTitle={automation.title}
+                />
+              </TabsContent>
+            )}
+          </Tabs>
+        )}
       </div>
-
-      {/* Main Content */}
-      {clientAutomation.setup_status === 'pending' ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Setup in Progress</h3>
-              <p className="text-gray-600">
-                Our team is currently configuring your automation. You'll receive a notification once it's ready to use.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : availableTabs.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Integrations Available</h3>
-              <p className="text-gray-600">
-                This automation doesn't have any active integrations configured yet.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${availableTabs.length}, 1fr)` }}>
-            {availableTabs.map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
-                <tab.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {automation.has_webhook && (
-            <TabsContent value="webhooks">
-              <WebhookAnalyticsDashboard 
-                clientAutomationId={clientAutomation.id}
-                automationTitle={automation.title}
-              />
-            </TabsContent>
-          )}
-
-          {automation.has_custom_prompt && (
-            <TabsContent value="prompts">
-              <CustomPromptEditor 
-                clientAutomationId={clientAutomation.id}
-                automationName={automation.title}
-              />
-            </TabsContent>
-          )}
-
-          {automation.has_form_integration && (
-            <TabsContent value="forms">
-              <FormIntegrationViewer 
-                clientAutomationId={clientAutomation.id}
-                automationTitle={automation.title}
-              />
-            </TabsContent>
-          )}
-
-          {automation.has_table_integration && (
-            <TabsContent value="tables">
-              <TableDataManager 
-                clientAutomationId={clientAutomation.id}
-                automationTitle={automation.title}
-              />
-            </TabsContent>
-          )}
-        </Tabs>
-      )}
     </div>
   );
 };

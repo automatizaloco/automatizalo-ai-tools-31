@@ -15,6 +15,7 @@ interface EditableImageProps {
   className?: string;
   width?: string | number;
   height?: string | number;
+  onLoad?: () => void;
 }
 
 const EditableImage = ({
@@ -26,6 +27,7 @@ const EditableImage = ({
   className = '',
   width,
   height,
+  onLoad,
 }: EditableImageProps) => {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
@@ -62,9 +64,24 @@ const EditableImage = ({
     }
   }, [pageName, sectionName, imageId, src]);
 
+  const handleImageLoad = () => {
+    if (onLoad) {
+      onLoad();
+    }
+  };
+
   // If user is not authenticated, just render the regular image
   if (!user) {
-    return <img src={isLoaded ? currentSrc : src} alt={alt} className={className} width={width} height={height} />;
+    return (
+      <img 
+        src={isLoaded ? currentSrc : src} 
+        alt={alt} 
+        className={className} 
+        width={width} 
+        height={height} 
+        onLoad={handleImageLoad}
+      />
+    );
   }
 
   const handleUpload = async (file: File) => {
@@ -102,6 +119,7 @@ const EditableImage = ({
         className={`${className} ${isEditing ? 'opacity-50' : ''}`} 
         width={width}
         height={height}
+        onLoad={handleImageLoad}
         onError={(e) => {
           console.error(`Image failed to load: ${currentSrc}`);
           e.currentTarget.src = src; // Fallback to default

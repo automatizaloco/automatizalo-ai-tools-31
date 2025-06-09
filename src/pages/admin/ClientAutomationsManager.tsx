@@ -17,6 +17,7 @@ const ClientAutomationsManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [clientAutomations, setClientAutomations] = useState<ClientAutomationWithDetails[]>([]);
   const [selectedAutomation, setSelectedAutomation] = useState<ClientAutomationWithDetails | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const { isAdmin, isVerifying } = useAdminVerification();
   const isMobile = useIsMobile();
 
@@ -58,6 +59,10 @@ const ClientAutomationsManager: React.FC = () => {
     fetchData();
   };
 
+  const handleClientFilterChange = (clientId: string | null) => {
+    setSelectedClientId(clientId);
+  };
+
   if (isVerifying) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -91,6 +96,8 @@ const ClientAutomationsManager: React.FC = () => {
           clientAutomations={clientAutomations}
           isLoading={isLoading}
           onViewConfig={handleViewConfig}
+          selectedClientId={selectedClientId}
+          onClientFilterChange={handleClientFilterChange}
         />
       )}
     </AdminContent>

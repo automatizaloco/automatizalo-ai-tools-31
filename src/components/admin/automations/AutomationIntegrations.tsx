@@ -1,223 +1,86 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Box, Table } from 'lucide-react';
-import { toast } from 'sonner';
-import { Integration } from '@/types/automation';
-import WebhookIntegration from './integrations/WebhookIntegration';
+import { Loader2 } from 'lucide-react';
+import CustomPromptIntegration from './integrations/CustomPromptIntegration';
 import CodeIntegration from './integrations/CodeIntegration';
-import LoadingState from './integrations/LoadingState';
-import NoIntegrations from './integrations/NoIntegrations';
-import { fetchAutomationIntegrations, saveIntegration, createEmptyIntegration } from './integration-utils';
+import { toast } from 'sonner';
 
 interface AutomationIntegrationsProps {
   automationId: string;
-  hasWebhook: boolean;
-  hasFormIntegration: boolean;
-  hasTableIntegration: boolean;
+  hasWebhook?: boolean;
+  hasFormIntegration?: boolean;
+  hasTableIntegration?: boolean;
+  hasCustomPrompt?: boolean;
 }
 
 const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
   automationId,
-  hasWebhook,
-  hasFormIntegration,
-  hasTableIntegration
+  hasFormIntegration = false,
+  hasTableIntegration = false,
+  hasCustomPrompt = false
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [webhookData, setWebhookData] = useState<Integration | null>(null);
-  const [formData, setFormData] = useState<Integration | null>(null);
-  const [tableData, setTableData] = useState<Integration | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('webhook');
-  const [webhookErrors, setWebhookErrors] = useState({
-    testUrl: false,
-    prodUrl: false
-  });
-  
-  // Fetch existing integrations
-  useEffect(() => {
-    const loadIntegrations = async () => {
-      if (!automationId) return;
-      
-      setIsLoading(true);
-      try {
-        // Fetch integrations
-        const integrations = await fetchAutomationIntegrations(automationId);
-        
-        if (integrations && integrations.length > 0) {
-          // Sort integrations by type
-          integrations.forEach((integration: Integration) => {
-            if (integration.integration_type === 'webhook') {
-              setWebhookData(integration);
-            } else if (integration.integration_type === 'form') {
-              setFormData(integration);
-            } else if (integration.integration_type === 'table') {
-              setTableData(integration);
-            }
-          });
-        } else {
-          // Initialize empty integrations if none exist
-          if (hasWebhook) {
-            setWebhookData(createEmptyIntegration(automationId, 'webhook'));
-          }
-          
-          if (hasFormIntegration) {
-            setFormData(createEmptyIntegration(automationId, 'form'));
-          }
-          
-          if (hasTableIntegration) {
-            setTableData(createEmptyIntegration(automationId, 'table'));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch integrations:', error);
-        toast.error('Failed to load integration data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadIntegrations();
-  }, [automationId, hasWebhook, hasFormIntegration, hasTableIntegration]);
-  
-  // Set initial active tab based on available integrations
-  useEffect(() => {
-    if (hasWebhook) {
-      setActiveTab('webhook');
-    } else if (hasFormIntegration) {
-      setActiveTab('form');
-    } else if (hasTableIntegration) {
-      setActiveTab('table');
-    }
-  }, [hasWebhook, hasFormIntegration, hasTableIntegration]);
-  
-  const handleSaveIntegration = async (data: Integration) => {
-    if (!data || !automationId) return;
-    
-    setIsSaving(true);
-    try {
-      const result = await saveIntegration(data);
-      
-      if (result && result.success) {
-        // If we got a new ID back, update the state
-        if (result.id && !data.id) {
-          const updatedData = { ...data, id: result.id };
-          
-          if (data.integration_type === 'webhook') {
-            setWebhookData(updatedData);
-          } else if (data.integration_type === 'form') {
-            setFormData(updatedData);
-          } else if (data.integration_type === 'table') {
-            setTableData(updatedData);
-          }
-        }
-        
-        toast.success(`${data.integration_type} integration saved successfully`);
-      }
-    } finally {
-      setIsSaving(false);
-    }
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleUpdate = () => {
+    toast.success('Integration updated successfully');
   };
-  
-  const handleWebhookTestUrlChange = (value: string) => {
-    if (webhookData) {
-      setWebhookData({ ...webhookData, test_url: value });
-      setWebhookErrors(prev => ({ ...prev, testUrl: false }));
-    }
-  };
-  
-  const handleWebhookProdUrlChange = (value: string) => {
-    if (webhookData) {
-      setWebhookData({ ...webhookData, production_url: value });
-      setWebhookErrors(prev => ({ ...prev, prodUrl: false }));
-    }
-  };
-  
-  const handleFormCodeChange = (value: string) => {
-    if (formData) {
-      setFormData({ ...formData, integration_code: value });
-    }
-  };
-  
-  const handleTableCodeChange = (value: string) => {
-    if (tableData) {
-      setTableData({ ...tableData, integration_code: value });
-    }
-  };
-  
-  if (isLoading) {
-    return <LoadingState />;
+
+  const hasAnyIntegration = hasCustomPrompt || hasFormIntegration || hasTableIntegration;
+
+  if (!hasAnyIntegration) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="bg-gray-50 p-6 rounded-md text-center">
+            <p className="text-gray-500">No integrations enabled for this automation.</p>
+            <p className="text-sm text-gray-400 mt-1">Enable integrations in the automation settings to configure them here.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
-  
-  // No integrations available
-  if (!hasWebhook && !hasFormIntegration && !hasTableIntegration) {
-    return <NoIntegrations />;
-  }
-  
+
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Integration Settings</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full" style={{ 
-            gridTemplateColumns: 
-              `repeat(${[hasWebhook, hasFormIntegration, hasTableIntegration]
-                .filter(Boolean).length}, 1fr)` 
-          }}>
-            {hasWebhook && <TabsTrigger value="webhook" disabled={!hasWebhook}>Webhook</TabsTrigger>}
-            {hasFormIntegration && <TabsTrigger value="form" disabled={!hasFormIntegration}>Form</TabsTrigger>}
-            {hasTableIntegration && <TabsTrigger value="table" disabled={!hasTableIntegration}>Table</TabsTrigger>}
-          </TabsList>
-          
-          {hasWebhook && webhookData && (
-            <TabsContent value="webhook" className="pt-4">
-              <WebhookIntegration
-                webhookData={webhookData}
-                onWebhookTestUrlChange={handleWebhookTestUrlChange}
-                onWebhookProdUrlChange={handleWebhookProdUrlChange}
-                onSaveWebhook={() => handleSaveIntegration(webhookData)}
-                isSaving={isSaving}
-              />
-            </TabsContent>
-          )}
-          
-          {hasFormIntegration && formData && (
-            <TabsContent value="form" className="pt-4">
-              <CodeIntegration
-                data={formData}
-                type="form"
-                title="Form Integration"
-                description="Paste the HTML code for your n8n form or Google Form embed"
-                placeholder="<iframe src='https://your-form-url' ...>"
-                icon={<Box className="h-5 w-5" />}
-                onCodeChange={handleFormCodeChange}
-                onSave={() => handleSaveIntegration(formData)}
-                isSaving={isSaving}
-              />
-            </TabsContent>
-          )}
-          
-          {hasTableIntegration && tableData && (
-            <TabsContent value="table" className="pt-4">
-              <CodeIntegration
-                data={tableData}
-                type="table"
-                title="Table Integration"
-                description="Paste the HTML code for your Airtable, Google Sheets, or NocoDB table embed"
-                placeholder="<iframe src='https://your-table-url' ...>"
-                icon={<Table className="h-5 w-5" />}
-                onCodeChange={handleTableCodeChange}
-                onSave={() => handleSaveIntegration(tableData)}
-                isSaving={isSaving}
-              />
-            </TabsContent>
-          )}
-        </Tabs>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Integration Settings</h2>
+      </div>
+
+      {isLoading && (
+        <div className="flex justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          <span className="ml-2">Loading integrations...</span>
+        </div>
+      )}
+
+      {hasCustomPrompt && (
+        <CustomPromptIntegration
+          automationId={automationId}
+          onUpdate={handleUpdate}
+        />
+      )}
+
+      {hasFormIntegration && (
+        <CodeIntegration
+          automationId={automationId}
+          integrationType="form"
+          title="Form Integration"
+          description="Configure form integration code for this automation"
+          onUpdate={handleUpdate}
+        />
+      )}
+
+      {hasTableIntegration && (
+        <CodeIntegration
+          automationId={automationId}
+          integrationType="table"
+          title="Table Integration"
+          description="Configure table integration code for this automation"
+          onUpdate={handleUpdate}
+        />
+      )}
+    </div>
   );
 };
 

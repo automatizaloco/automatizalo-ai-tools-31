@@ -16,6 +16,7 @@ interface PromptSetting {
   id: string;
   client_automation_id: string;
   prompt_text: string | null;
+  prompt_webhook_url: string | null;
   status: 'pending' | 'configured' | 'active';
 }
 
@@ -57,6 +58,33 @@ const CustomPromptEditor: React.FC<CustomPromptEditorProps> = ({
       setIsLoading(false);
     }
   };
+
+  const sendPromptToWebhook = async (promptText: string, webhookUrl: string) => {
+    try {
+      console.log('Sending prompt to webhook:', webhookUrl);
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: promptText,
+          automation_name: automationName,
+          client_automation_id: clientAutomationId,
+          timestamp: new Date().toISOString()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook request failed: ${response.status}`);
+      }
+
+      console.log('Prompt sent to webhook successfully');
+    } catch (error) {
+      console.error('Failed to send prompt to webhook:', error);
+      // Don't show error to user, just log it
+    }
+  };
   
   const handleSavePrompt = async () => {
     if (!promptSetting || !clientAutomationId) return;
@@ -69,6 +97,11 @@ const CustomPromptEditor: React.FC<CustomPromptEditorProps> = ({
         .eq('id', promptSetting.id);
       
       if (error) throw error;
+
+      // Send prompt to webhook if webhook URL exists
+      if (promptSetting.prompt_webhook_url && customPrompt.trim()) {
+        await sendPromptToWebhook(customPrompt, promptSetting.prompt_webhook_url);
+      }
       
       toast.success('Custom prompt saved successfully');
     } catch (error) {

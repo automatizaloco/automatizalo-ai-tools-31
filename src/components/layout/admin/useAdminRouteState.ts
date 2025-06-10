@@ -2,7 +2,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
   PenSquare, 
   Webhook, 
   Wand2, 
@@ -21,28 +20,27 @@ export const useAdminRouteState = () => {
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('');
 
-  // Memoizar rutas para evitar recreación en cada render
+  // Memoizar rutas para evitar recreación en cada render - removed Home/content route
   const adminRoutes: AdminRouteType[] = useMemo(() => [
-    { value: 'content', label: 'Home', icon: LayoutDashboard, priority: 10 },
+    { value: 'blog', label: 'Blog', icon: PenSquare, priority: 10 },
     { value: 'users', label: 'Users', icon: Users, priority: 9 },
-    { value: 'blog', label: 'Blog', icon: PenSquare, priority: 8 },
-    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2, priority: 7 },
-    { value: 'client-automations', label: 'Client Automations', icon: Zap, priority: 6 },
-    { value: 'automations', label: 'Automations', icon: Zap, priority: 5 },
-    { value: 'support', label: 'Support', icon: HelpCircle, priority: 4 },
-    { value: 'webhooks', label: 'Webhooks', icon: Webhook, priority: 3 },
-    { value: 'testimonials', label: 'Testimonials', icon: MessageSquare, priority: 2 },
-    { value: 'newsletters', label: 'Newsletter', icon: Mail, priority: 1 },
-    { value: 'notifications', label: 'Notifications', icon: Bell, priority: 0 }
+    { value: 'automatic-blog', label: 'AI Blog', icon: Wand2, priority: 8 },
+    { value: 'client-automations', label: 'Client Automations', icon: Zap, priority: 7 },
+    { value: 'automations', label: 'Automations', icon: Zap, priority: 6 },
+    { value: 'support', label: 'Support', icon: HelpCircle, priority: 5 },
+    { value: 'webhooks', label: 'Webhooks', icon: Webhook, priority: 4 },
+    { value: 'testimonials', label: 'Testimonials', icon: MessageSquare, priority: 3 },
+    { value: 'newsletters', label: 'Newsletter', icon: Mail, priority: 2 },
+    { value: 'notifications', label: 'Notifications', icon: Bell, priority: 1 }
   ], []);
 
   // Optimización: memoizar el cálculo del activeTab
   const calculateActiveTab = useCallback((pathname: string) => {
     const segments = pathname.split('/');
     if (segments.length > 2 && segments[1] === 'admin') {
-      return segments[2] || 'content';
+      return segments[2] || 'blog'; // Default to blog instead of content
     }
-    return pathname === '/admin' ? 'content' : '';
+    return pathname === '/admin' ? 'blog' : ''; // Default to blog
   }, []);
 
   // Actualizar activeTab de manera optimizada
@@ -72,7 +70,7 @@ export const useAdminRouteState = () => {
     setIsPageLoading(true);
     setActiveTab(value);
     
-    const route = value === 'content' ? '/admin' : `/admin/${value}`;
+    const route = value === 'blog' ? '/admin/blog' : `/admin/${value}`;
     navigate(route);
   }, [activeTab, navigate]);
 

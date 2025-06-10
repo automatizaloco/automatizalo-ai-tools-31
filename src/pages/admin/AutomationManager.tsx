@@ -123,8 +123,8 @@ const AutomationManager = () => {
           )
         );
         
-        // Show integrations panel if any integration is enabled
-        const hasIntegrations = formData.has_custom_prompt || formData.has_webhook || 
+        // Show integrations panel if any integration is enabled (removed webhook check)
+        const hasIntegrations = formData.has_custom_prompt || 
                              formData.has_form_integration || formData.has_table_integration;
                              
         setShowIntegrations(hasIntegrations);
@@ -164,8 +164,8 @@ const AutomationManager = () => {
         console.log('Automation created successfully:', data);
         notification.showSuccess('Success', 'Automation created successfully');
         
-        // Check if any integration was enabled
-        const hasIntegrations = formData.has_custom_prompt || formData.has_webhook || 
+        // Check if any integration was enabled (removed webhook check)
+        const hasIntegrations = formData.has_custom_prompt || 
                              formData.has_form_integration || formData.has_table_integration;
         
         if (hasIntegrations && data && data.length > 0) {
@@ -347,7 +347,7 @@ const AutomationManager = () => {
             <>
               <AutomationIntegrations
                 automationId={selectedAutomation.id}
-                hasWebhook={selectedAutomation.has_webhook || false}
+                hasCustomPrompt={selectedAutomation.has_custom_prompt || false}
                 hasFormIntegration={selectedAutomation.has_form_integration || false}
                 hasTableIntegration={selectedAutomation.has_table_integration || false}
               />

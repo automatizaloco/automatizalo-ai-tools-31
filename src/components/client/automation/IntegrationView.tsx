@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Webhook, Sparkles, Table, FileCode } from 'lucide-react';
+import { Loader2, Sparkles, Table, FileCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import WebhookUrlDisplay from './WebhookUrlDisplay';
 import CodeEmbedView from './CodeEmbedView';
 import CustomPromptEditor from './CustomPromptEditor';
 
@@ -32,7 +31,6 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
   clientAutomationId,
   automationTitle,
   hasCustomPrompt,
-  hasWebhook,
   hasFormIntegration,
   hasTableIntegration
 }) => {
@@ -49,10 +47,12 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
     
     setIsLoading(true);
     try {
+      // Only load non-webhook integrations
       const { data, error } = await supabase
         .from('client_integration_settings')
         .select('*')
         .eq('client_automation_id', clientAutomationId)
+        .neq('integration_type', 'webhook')
         .eq('status', 'active')
         .order('integration_type');
       
@@ -95,7 +95,6 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
   }
   
   const availableTypes = integrationSettings.map(s => s.integration_type);
-  const webhookSetting = integrationSettings.find(s => s.integration_type === 'webhook');
   const formSetting = integrationSettings.find(s => s.integration_type === 'form');
   const tableSetting = integrationSettings.find(s => s.integration_type === 'table');
   
@@ -109,8 +108,6 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
           <TabsList className="grid w-full" style={{ 
             gridTemplateColumns: `repeat(${availableTypes.length}, 1fr)` 
           }}>
-            {availableTypes.includes('webhook') && 
-              <TabsTrigger value="webhook">Webhook</TabsTrigger>}
             {availableTypes.includes('custom_prompt') && 
               <TabsTrigger value="custom_prompt">Custom Prompt</TabsTrigger>}
             {availableTypes.includes('form') && 
@@ -118,14 +115,6 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
             {availableTypes.includes('table') && 
               <TabsTrigger value="table">Table</TabsTrigger>}
           </TabsList>
-          
-          {availableTypes.includes('webhook') && (
-            <TabsContent value="webhook" className="pt-4">
-              <WebhookUrlDisplay 
-                webhookData={webhookSetting!}
-              />
-            </TabsContent>
-          )}
           
           {availableTypes.includes('custom_prompt') && (
             <TabsContent value="custom_prompt" className="pt-4">

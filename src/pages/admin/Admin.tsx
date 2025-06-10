@@ -15,7 +15,7 @@ const Admin = () => {
       return;
     }
     
-    // If authenticated, redirect to blog section
+    // If authenticated, redirect to blog section instead of content
     if (location.pathname === '/admin') {
       console.log("Admin page: Redirecting to blog section");
       navigate('/admin/blog');

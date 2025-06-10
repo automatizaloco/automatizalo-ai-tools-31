@@ -62,6 +62,7 @@ export interface Integration {
   test_url?: string;
   production_url?: string;
   integration_code?: string;
+  prompt_webhook_url?: string; // New field for custom prompt webhook
   created_at?: string;
   updated_at?: string;
 }
@@ -74,6 +75,7 @@ export interface ClientIntegrationSetting {
   production_url?: string;
   integration_code?: string;
   prompt_text?: string;
+  prompt_webhook_url?: string; // New field for custom prompt webhook
   status: 'pending' | 'configured' | 'active';
   created_at?: string;
   updated_at?: string;

@@ -12,23 +12,23 @@ interface RelatedPostsProps {
 const RelatedPosts = ({ currentPost, allPosts }: RelatedPostsProps) => {
   const { t, language } = useLanguage();
 
-  // Función para encontrar posts relacionados
-  const getRelatedPosts = () => {
-    const related = allPosts
-      .filter(post => post.id !== currentPost.id) // Excluir el post actual
-      .filter(post => {
-        // Filtrar por categoría o tags similares
-        const sameCategory = post.category === currentPost.category;
-        const sharedTags = post.tags.some(tag => currentPost.tags.includes(tag));
-        return sameCategory || sharedTags;
-      })
-      .slice(0, 3); // Máximo 3 posts relacionados
-
-    return related;
+  // Función para obtener 3 posts aleatorios (excluyendo el post actual)
+  const getRandomPosts = () => {
+    const otherPosts = allPosts.filter(post => post.id !== currentPost.id);
+    
+    // Si hay 3 o menos posts, devolver todos
+    if (otherPosts.length <= 3) {
+      return otherPosts;
+    }
+    
+    // Mezclar aleatoriamente y tomar los primeros 3
+    const shuffled = [...otherPosts].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 3);
   };
 
-  const relatedPosts = getRelatedPosts();
+  const relatedPosts = getRandomPosts();
 
+  // Si no hay otros posts disponibles, no mostrar la sección
   if (relatedPosts.length === 0) {
     return null;
   }

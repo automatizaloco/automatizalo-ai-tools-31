@@ -15,7 +15,7 @@ const ClientLogin: React.FC = () => {
   const [password, setPassword] = useState('');
   const [rememberPassword, setRememberPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { login } = useAuth();
   const { t } = useLanguage();
 
   // Load saved credentials on component mount
@@ -35,7 +35,7 @@ const ClientLogin: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      await login(email, password);
 
       // Save credentials if remember password is checked
       if (rememberPassword) {

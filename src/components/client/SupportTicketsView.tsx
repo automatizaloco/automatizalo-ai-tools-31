@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SupportTicket, ClientAutomation } from '@/types/automation';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Link } from 'react-router-dom';
 import TicketCard from './ticket/TicketCard';
 
@@ -13,6 +14,7 @@ const SupportTicketsView = () => {
   const [automations, setAutomations] = useState<ClientAutomation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (user) {
@@ -45,7 +47,7 @@ const SupportTicketsView = () => {
       setTickets(typedData);
     } catch (error) {
       console.error('Error fetching support tickets:', error);
-      toast.error('Failed to load your support tickets');
+      toast.error(t('support.loadError'));
     }
   };
   
@@ -97,17 +99,17 @@ const SupportTicketsView = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-3">
-        <h2 className="text-xl font-bold">Support Tickets</h2>
+        <h2 className="text-xl font-bold">{t('support.tickets')}</h2>
         <Link to="/client-portal/support/new">
-          <Button>Create New Ticket</Button>
+          <Button>{t('support.createNewTicket')}</Button>
         </Link>
       </div>
       
       {tickets.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-gray-500">You haven't created any support tickets yet.</p>
+          <p className="text-gray-500">{t('support.noTickets')}</p>
           <Link to="/client-portal/support/new">
-            <Button className="mt-4">Create Your First Ticket</Button>
+            <Button className="mt-4">{t('support.createFirstTicket')}</Button>
           </Link>
         </div>
       ) : (

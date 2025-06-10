@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/context/LanguageContext';
 import { SupportTicket, TicketResponse } from '@/types/automation';
 import TicketHeader from './ticket/TicketHeader';
 import TicketDescription from './ticket/TicketDescription';
@@ -20,6 +21,7 @@ interface TicketDetailViewProps {
 const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticketId: propTicketId }) => {
   const { ticketId: paramTicketId } = useParams<{ ticketId: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   // Use the prop ticketId if provided, otherwise use the one from URL params
   const ticketId = propTicketId || paramTicketId;
@@ -61,14 +63,14 @@ const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticketId: propTicke
   if (!ticketId) {
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-red-700">Ticket ID is required.</p>
+        <p className="text-red-700">{t('support.ticketIdRequired')}</p>
         <Button 
           variant="outline" 
           size="sm" 
           className="mt-2" 
           onClick={() => navigate('/client-portal')}
         >
-          Back to Client Portal
+          {t('support.backToPortal')}
         </Button>
       </div>
     );
@@ -86,7 +88,7 @@ const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticketId: propTicke
           onClick={() => navigate('/client-portal')}
           className="flex items-center gap-1 mb-4 text-muted-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Support
+          <ArrowLeft className="h-4 w-4" /> {t('support.backToSupport')}
         </Button>
       </div>
       
@@ -114,14 +116,14 @@ const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticketId: propTicke
         </div>
       ) : (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
-          <p className="text-amber-700">Ticket not found or you don't have permission to view it.</p>
+          <p className="text-amber-700">{t('support.ticketNotFound')}</p>
           <Button 
             variant="outline" 
             size="sm" 
             className="mt-2" 
             onClick={() => navigate('/client-portal')}
           >
-            Back to Client Portal
+            {t('support.backToPortal')}
           </Button>
         </div>
       )}

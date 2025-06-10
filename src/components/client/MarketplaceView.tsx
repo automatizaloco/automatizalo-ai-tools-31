@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -12,6 +13,7 @@ import type { Automation } from '@/types/automation';
 
 const MarketplaceView: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Fetch all active automations
   const { data: automations, isLoading: loadingAutomations } = useQuery({
@@ -56,13 +58,13 @@ const MarketplaceView: React.FC = () => {
   const handlePurchase = async (automationId: string) => {
     try {
       if (!user) {
-        toast.error('Please login to purchase automations');
+        toast.error(t('marketplace.loginToPurchase'));
         return;
       }
 
       // Check if the user already has an active subscription for this automation
       if (userOwnsAutomation(automationId)) {
-        toast.info('You already own this automation');
+        toast.info(t('marketplace.alreadyOwned'));
         return;
       }
 
@@ -85,17 +87,17 @@ const MarketplaceView: React.FC = () => {
         
       if (error) {
         console.error('Error purchasing automation:', error);
-        toast.error('Failed to purchase automation');
+        toast.error(t('marketplace.purchaseError'));
         return;
       }
       
-      toast.success('Automation purchased successfully! Our team will set it up for you soon.');
+      toast.success(t('marketplace.purchaseSuccess'));
       
       // Refresh data
       await supabase.auth.refreshSession();
     } catch (error) {
       console.error('Error purchasing automation:', error);
-      toast.error('An error occurred during purchase');
+      toast.error(t('marketplace.purchaseError'));
     }
   };
 
@@ -124,9 +126,9 @@ const MarketplaceView: React.FC = () => {
   if (!automations || automations.length === 0) {
     return (
       <div className="text-center p-12 border rounded-lg bg-gray-50">
-        <h2 className="text-xl font-medium text-gray-800 mb-2">No Automations Available</h2>
+        <h2 className="text-xl font-medium text-gray-800 mb-2">{t('marketplace.noAutomations')}</h2>
         <p className="text-gray-600 mb-4">
-          There are currently no automations available in the marketplace.
+          {t('marketplace.noAutomationsDesc')}
         </p>
       </div>
     );
@@ -164,11 +166,11 @@ const MarketplaceView: React.FC = () => {
             <CardContent className="flex-grow">
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <span className="text-gray-500">Setup</span>
+                  <span className="text-gray-500">{t('marketplace.setup')}</span>
                   <p className="font-medium">${automation.installation_price.toFixed(2)}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Monthly</span>
+                  <span className="text-gray-500">{t('marketplace.monthly')}</span>
                   <p className="font-medium">${automation.monthly_price.toFixed(2)}</p>
                 </div>
               </div>
@@ -177,12 +179,12 @@ const MarketplaceView: React.FC = () => {
               {(automation.has_custom_prompt || automation.has_webhook || 
                 automation.has_form_integration || automation.has_table_integration) && (
                 <div className="mt-4">
-                  <p className="text-xs text-gray-500 mb-1">Features:</p>
+                  <p className="text-xs text-gray-500 mb-1">{t('marketplace.features')}:</p>
                   <ul className="text-xs text-gray-600">
-                    {automation.has_custom_prompt && <li className="inline-block mr-2">• Custom prompts</li>}
-                    {automation.has_webhook && <li className="inline-block mr-2">• Webhooks</li>}
-                    {automation.has_form_integration && <li className="inline-block mr-2">• Forms</li>}
-                    {automation.has_table_integration && <li className="inline-block mr-2">• Tables</li>}
+                    {automation.has_custom_prompt && <li className="inline-block mr-2">• {t('marketplace.customPrompts')}</li>}
+                    {automation.has_webhook && <li className="inline-block mr-2">• {t('marketplace.webhooks')}</li>}
+                    {automation.has_form_integration && <li className="inline-block mr-2">• {t('marketplace.forms')}</li>}
+                    {automation.has_table_integration && <li className="inline-block mr-2">• {t('marketplace.tables')}</li>}
                   </ul>
                 </div>
               )}
@@ -195,14 +197,14 @@ const MarketplaceView: React.FC = () => {
                   variant="secondary"
                   asChild
                 >
-                  <Link to={`/client-portal/automations/${automation.id}`}>View Details</Link>
+                  <Link to={`/client-portal/automations/${automation.id}`}>{t('marketplace.viewDetails')}</Link>
                 </Button>
               ) : (
                 <Button 
                   className="w-full" 
                   onClick={() => handlePurchase(automation.id)}
                 >
-                  Purchase
+                  {t('marketplace.purchase')}
                 </Button>
               )}
             </CardFooter>

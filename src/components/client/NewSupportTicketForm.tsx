@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ClientAutomation } from '@/types/automation';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
 interface NewSupportTicketFormProps {
@@ -25,6 +27,7 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
     automationId: preselectedAutomationId || ''
   });
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -69,7 +72,7 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
       }
     } catch (error) {
       console.error('Error fetching client automations:', error);
-      toast.error('Failed to load your automations');
+      toast.error(t('support.loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -94,12 +97,12 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
     e.preventDefault();
     
     if (!user) {
-      toast.error('You must be logged in to create a support ticket');
+      toast.error(t('marketplace.loginToPurchase'));
       return;
     }
     
     if (!formData.automationId) {
-      toast.error('Please select an automation');
+      toast.error(t('support.selectAutomation'));
       return;
     }
     
@@ -120,11 +123,11 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
         
       if (error) throw error;
       
-      toast.success('Support ticket created successfully');
-      navigate('/client-portal'); // Fixed: Navigate to client-portal instead of client-portal/support
+      toast.success(t('support.createSuccess'));
+      navigate('/client-portal');
     } catch (error: any) {
       console.error('Error creating support ticket:', error);
-      toast.error(error.message || 'Failed to create support ticket');
+      toast.error(error.message || t('support.createError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -141,10 +144,10 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
   if (automations.length === 0) {
     return (
       <div className="text-center py-10">
-        <h2 className="text-xl font-bold mb-2">No Active Automations</h2>
-        <p className="text-gray-500 mb-4">You need an active automation to create a support ticket.</p>
+        <h2 className="text-xl font-bold mb-2">{t('support.noActiveAutomations')}</h2>
+        <p className="text-gray-500 mb-4">{t('support.noActiveAutomationsDesc')}</p>
         <Button onClick={() => navigate('/client-portal/marketplace')}>
-          Browse Marketplace
+          {t('support.browseMarketplace')}
         </Button>
       </div>
     );
@@ -153,19 +156,19 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create Support Ticket</CardTitle>
+        <CardTitle>{t('support.createNewTicket')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="automationId">Select Automation</Label>
+            <Label htmlFor="automationId">{t('support.selectAutomation')}</Label>
             <Select 
               value={formData.automationId} 
               onValueChange={handleAutomationChange}
               disabled={!!preselectedAutomationId}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select an automation" />
+                <SelectValue placeholder={t('support.selectAutomationPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {automations.map((item) => (
@@ -178,25 +181,25 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t('support.title')}</Label>
             <Input
               id="title"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="Brief description of your issue"
+              placeholder={t('support.titlePlaceholder')}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('support.description')}</Label>
             <Textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Please provide details about your issue"
+              placeholder={t('support.descriptionPlaceholder')}
               rows={6}
               required
             />
@@ -208,10 +211,10 @@ const NewSupportTicketForm: React.FC<NewSupportTicketFormProps> = ({ preselected
               variant="outline" 
               onClick={() => navigate('/client-portal/support')}
             >
-              Cancel
+              {t('support.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit Ticket'}
+              {isSubmitting ? t('support.submitting') : t('support.submit')}
             </Button>
           </div>
         </form>

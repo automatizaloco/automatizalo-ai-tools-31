@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Loader2, ArrowLeft, Activity, Settings, BarChart3, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -42,6 +44,7 @@ interface ClientAutomationDetails {
 const AdvancedAutomationDetails: React.FC = () => {
   const { automationId } = useParams<{ automationId: string }>();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -82,9 +85,9 @@ const AdvancedAutomationDetails: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      pending: { variant: 'outline' as const, className: 'bg-yellow-100 text-yellow-800 border-yellow-200', text: 'Setup Pending' },
-      in_progress: { variant: 'outline' as const, className: 'bg-blue-100 text-blue-800 border-blue-200', text: 'Setup In Progress' },
-      completed: { variant: 'outline' as const, className: 'bg-green-100 text-green-800 border-green-200', text: 'Active' },
+      pending: { variant: 'outline' as const, className: 'bg-yellow-100 text-yellow-800 border-yellow-200', text: t('clientPortal.setupPending') },
+      in_progress: { variant: 'outline' as const, className: 'bg-blue-100 text-blue-800 border-blue-200', text: t('clientPortal.setupInProgress') },
+      completed: { variant: 'outline' as const, className: 'bg-green-100 text-green-800 border-green-200', text: t('clientPortal.readyToUse') },
     };
     
     const config = variants[status as keyof typeof variants] || variants.pending;
@@ -97,10 +100,10 @@ const AdvancedAutomationDetails: React.FC = () => {
     const tabs = [];
     const automation = clientAutomation.automation;
     
-    if (automation.has_webhook) tabs.push({ id: 'webhooks', label: 'Webhooks', icon: Activity });
-    if (automation.has_custom_prompt) tabs.push({ id: 'prompts', label: 'Custom Prompts', icon: FileText });
-    if (automation.has_form_integration) tabs.push({ id: 'forms', label: 'Forms', icon: Settings });
-    if (automation.has_table_integration) tabs.push({ id: 'tables', label: 'Tables', icon: BarChart3 });
+    if (automation.has_webhook) tabs.push({ id: 'webhooks', label: t('automationDetails.webhooks'), icon: Activity });
+    if (automation.has_custom_prompt) tabs.push({ id: 'prompts', label: t('automationDetails.customPrompts'), icon: FileText });
+    if (automation.has_form_integration) tabs.push({ id: 'forms', label: t('automationDetails.forms'), icon: Settings });
+    if (automation.has_table_integration) tabs.push({ id: 'tables', label: t('automationDetails.tables'), icon: BarChart3 });
     
     return tabs;
   };
@@ -111,7 +114,7 @@ const AdvancedAutomationDetails: React.FC = () => {
         <div className="flex justify-center items-center h-64">
           <div className="flex flex-col items-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="mt-2 text-gray-600">Loading automation details...</p>
+            <p className="mt-2 text-gray-600">{t('automationDetails.loadingDetails')}</p>
           </div>
         </div>
       </div>
@@ -122,13 +125,13 @@ const AdvancedAutomationDetails: React.FC = () => {
     return (
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Automation Not Found</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('automationDetails.notFound')}</h2>
           <p className="text-gray-600 mb-6">
-            The automation you're looking for doesn't exist or you don't have access to it.
+            {t('automationDetails.notFoundDesc')}
           </p>
           <Button onClick={() => navigate('/client-portal')} variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Portal
+            {t('automationDetails.backToPortal')}
           </Button>
         </div>
       </div>
@@ -150,7 +153,7 @@ const AdvancedAutomationDetails: React.FC = () => {
             className="relative z-20 bg-white hover:bg-gray-50 border-gray-200 shadow-sm"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Portal
+            {t('automationDetails.backToPortal')}
           </Button>
           
           <div className="flex items-center gap-3">
@@ -187,19 +190,19 @@ const AdvancedAutomationDetails: React.FC = () => {
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500 block">Purchase Date</span>
+                  <span className="text-gray-500 block">{t('automationDetails.purchaseDate')}</span>
                   <span className="font-medium">{format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500 block">Next Billing</span>
+                  <span className="text-gray-500 block">{t('automationDetails.nextBilling')}</span>
                   <span className="font-medium">{format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy')}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500 block">Status</span>
+                  <span className="text-gray-500 block">{t('automationDetails.status')}</span>
                   <span className="font-medium capitalize">{clientAutomation.status}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500 block">Setup</span>
+                  <span className="text-gray-500 block">{t('automationDetails.setup')}</span>
                   <span className="font-medium">{getStatusBadge(clientAutomation.setup_status)}</span>
                 </div>
               </div>
@@ -213,9 +216,9 @@ const AdvancedAutomationDetails: React.FC = () => {
             <CardContent className="pt-6">
               <div className="text-center py-8">
                 <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Setup in Progress</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('automationDetails.setupInProgress')}</h3>
                 <p className="text-gray-600">
-                  Our team is currently configuring your automation. You'll receive a notification once it's ready to use.
+                  {t('automationDetails.setupInProgressDesc')}
                 </p>
               </div>
             </CardContent>
@@ -225,9 +228,9 @@ const AdvancedAutomationDetails: React.FC = () => {
             <CardContent className="pt-6">
               <div className="text-center py-8">
                 <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Integrations Available</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('automationDetails.noIntegrationsAvailable')}</h3>
                 <p className="text-gray-600">
-                  This automation doesn't have any active integrations configured yet.
+                  {t('automationDetails.noIntegrationsDesc')}
                 </p>
               </div>
             </CardContent>

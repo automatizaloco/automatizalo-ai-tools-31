@@ -2,18 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Table, FileCode } from 'lucide-react';
+import { Loader2, ExternalLink, FileCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import CodeEmbedView from './CodeEmbedView';
 import CustomPromptEditor from './CustomPromptEditor';
+import ButtonIntegrationViewer from './ButtonIntegrationViewer';
 
 interface IntegrationViewProps {
   clientAutomationId: string;
   automationTitle: string;
   hasCustomPrompt?: boolean;
   hasFormIntegration?: boolean;
-  hasTableIntegration?: boolean;
+  hasButtonIntegration?: boolean;
 }
 
 interface IntegrationSetting {
@@ -23,6 +24,8 @@ interface IntegrationSetting {
   production_url?: string;
   integration_code?: string;
   prompt_text?: string;
+  button_url?: string;
+  button_text?: string;
   status: 'pending' | 'configured' | 'active';
 }
 
@@ -31,7 +34,7 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
   automationTitle,
   hasCustomPrompt,
   hasFormIntegration,
-  hasTableIntegration
+  hasButtonIntegration
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [integrationSettings, setIntegrationSettings] = useState<IntegrationSetting[]>([]);
@@ -46,12 +49,12 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
     
     setIsLoading(true);
     try {
-      // Only load non-webhook integrations (custom_prompt, form, table)
+      // Only load non-webhook integrations (custom_prompt, form, button)
       const { data, error } = await supabase
         .from('client_integration_settings')
         .select('*')
         .eq('client_automation_id', clientAutomationId)
-        .in('integration_type', ['custom_prompt', 'form', 'table'])
+        .in('integration_type', ['custom_prompt', 'form', 'button'])
         .eq('status', 'active')
         .order('integration_type');
       
@@ -95,7 +98,7 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
   
   const availableTypes = integrationSettings.map(s => s.integration_type);
   const formSetting = integrationSettings.find(s => s.integration_type === 'form');
-  const tableSetting = integrationSettings.find(s => s.integration_type === 'table');
+  const buttonSetting = integrationSettings.find(s => s.integration_type === 'button');
   
   return (
     <Card>
@@ -111,8 +114,8 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
               <TabsTrigger value="custom_prompt">Custom Prompt</TabsTrigger>}
             {availableTypes.includes('form') && 
               <TabsTrigger value="form">Form</TabsTrigger>}
-            {availableTypes.includes('table') && 
-              <TabsTrigger value="table">Table</TabsTrigger>}
+            {availableTypes.includes('button') && 
+              <TabsTrigger value="button">Editor</TabsTrigger>}
           </TabsList>
           
           {availableTypes.includes('custom_prompt') && (
@@ -141,17 +144,28 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
             </TabsContent>
           )}
           
-          {availableTypes.includes('table') && (
-            <TabsContent value="table" className="pt-4">
+          {availableTypes.includes('button') && (
+            <TabsContent value="button" className="pt-4">
               <div className="space-y-4">
-                <CodeEmbedView 
-                  data={tableSetting!}
-                  title="Table Integration"
-                  icon={<Table className="h-5 w-5 text-amber-500" />}
-                />
-                <div className="bg-amber-50 p-4 rounded-md">
-                  <p className="text-sm text-amber-700">
-                    Table data will be synchronized automatically. New entries will trigger the automation workflow.
+                <div className="text-center py-8">
+                  <button 
+                    onClick={() => {
+                      if (buttonSetting?.button_url) {
+                        window.open(buttonSetting.button_url, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg rounded-md transition-colors duration-200 flex items-center mx-auto"
+                  >
+                    <ExternalLink className="h-5 w-5 mr-2" />
+                    {buttonSetting?.button_text || 'Abrir Editor'}
+                  </button>
+                  <p className="text-sm text-gray-500 mt-4">
+                    This will open the external editor in a new tab
+                  </p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-md">
+                  <p className="text-sm text-green-700">
+                    Access your external editor to work with your automation data and configurations.
                   </p>
                 </div>
               </div>

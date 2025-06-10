@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, ArrowLeft, Save, Webhook, Box, Table, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Save, Webhook, Box, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
@@ -197,8 +197,8 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
             <TabsTrigger value="custom_prompt">Custom Prompt</TabsTrigger>}
           {availableIntegrations.includes('form') && 
             <TabsTrigger value="form">Form</TabsTrigger>}
-          {availableIntegrations.includes('table') && 
-            <TabsTrigger value="table">Table</TabsTrigger>}
+          {availableIntegrations.includes('button') && 
+            <TabsTrigger value="button">Editor Button</TabsTrigger>}
         </TabsList>
         
         {availableIntegrations.includes('webhook') && (
@@ -219,9 +219,9 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
           </TabsContent>
         )}
         
-        {availableIntegrations.includes('table') && (
-          <TabsContent value="table" className="pt-4">
-            {renderTableIntegration()}
+        {availableIntegrations.includes('button') && (
+          <TabsContent value="button" className="pt-4">
+            {renderButtonIntegration()}
           </TabsContent>
         )}
       </Tabs>
@@ -387,41 +387,62 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
     );
   };
   
-  const renderTableIntegration = () => {
-    const tableSetting = getSettingByType('table');
-    if (!tableSetting) return null;
+  const renderButtonIntegration = () => {
+    const buttonSetting = getSettingByType('button');
+    if (!buttonSetting) return null;
     
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Table className="h-5 w-5" />
-            Table Integration
+            <ExternalLink className="h-5 w-5" />
+            Editor Button Integration
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
-              <label htmlFor="table-integration" className="block text-sm font-medium text-gray-700 mb-1">
-                Table URL or Iframe Code
-              </label>
-              <FormUrlConverter
-                value={tableSetting.integration_code || ''}
-                onChange={(value) => {
+              <Label htmlFor="button-url">Button URL</Label>
+              <Input
+                id="button-url"
+                type="url"
+                value={buttonSetting.button_url || ''}
+                onChange={(e) => {
                   const updatedSettings = integrationSettings.map(s =>
-                    s.id === tableSetting.id ? { ...s, integration_code: value } : s
+                    s.id === buttonSetting.id ? { ...s, button_url: e.target.value } : s
                   );
                   setIntegrationSettings(updatedSettings);
                 }}
-                placeholder="Enter table URL (e.g., https://docs.google.com/spreadsheets/...) or paste iframe code"
+                placeholder="https://your-editor.com/automation/123"
+                className="mt-1"
               />
               <p className="mt-1 text-sm text-gray-500">
-                Paste either a direct URL to your table/spreadsheet or the complete iframe embed code.
+                URL that the button will redirect to when clicked.
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="button-text">Button Text</Label>
+              <Input
+                id="button-text"
+                type="text"
+                value={buttonSetting.button_text || 'Abrir Editor'}
+                onChange={(e) => {
+                  const updatedSettings = integrationSettings.map(s =>
+                    s.id === buttonSetting.id ? { ...s, button_text: e.target.value } : s
+                  );
+                  setIntegrationSettings(updatedSettings);
+                }}
+                placeholder="Abrir Editor / Open Editor"
+                className="mt-1"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Text that will be displayed on the button. Use "Abrir Editor" for Spanish or "Open Editor" for English.
               </p>
             </div>
             
             <Button 
-              onClick={() => handleSave(tableSetting)}
+              onClick={() => handleSave(buttonSetting)}
               disabled={isSaving}
             >
               {isSaving ? (
@@ -432,7 +453,7 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
               ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  Save Table Integration
+                  Save Button Integration
                 </>
               )}
             </Button>

@@ -6,12 +6,14 @@ import { escapeSql, runQuery } from '@/components/admin/adminActions';
 export interface ClientIntegrationSetting {
   id?: string;
   client_automation_id: string;
-  integration_type: 'webhook' | 'form' | 'table' | 'custom_prompt';
+  integration_type: 'webhook' | 'form' | 'button' | 'custom_prompt';
   test_url?: string;
   production_url?: string;
   integration_code?: string;
   prompt_text?: string;
   prompt_webhook_url?: string;
+  button_url?: string;
+  button_text?: string;
   status: 'pending' | 'configured' | 'active';
   created_at?: string;
   updated_at?: string;
@@ -37,7 +39,7 @@ export interface ClientAutomationWithDetails {
     has_webhook: boolean;
     has_custom_prompt: boolean;
     has_form_integration: boolean;
-    has_table_integration: boolean;
+    has_button_integration: boolean;
   };
 }
 
@@ -222,7 +224,7 @@ export const initializeClientIntegrationSettings = async (clientAutomation: Clie
   if (!clientAutomation?.id || !clientAutomation.automation) return false;
   
   const settingsToCreate = [];
-  const { has_webhook, has_custom_prompt, has_form_integration, has_table_integration } = clientAutomation.automation;
+  const { has_webhook, has_custom_prompt, has_form_integration, has_button_integration } = clientAutomation.automation;
   
   if (has_webhook) {
     settingsToCreate.push({
@@ -248,10 +250,10 @@ export const initializeClientIntegrationSettings = async (clientAutomation: Clie
     });
   }
   
-  if (has_table_integration) {
+  if (has_button_integration) {
     settingsToCreate.push({
       client_automation_id: clientAutomation.id,
-      integration_type: 'table' as const,
+      integration_type: 'button' as const,
       status: 'pending' as const
     });
   }

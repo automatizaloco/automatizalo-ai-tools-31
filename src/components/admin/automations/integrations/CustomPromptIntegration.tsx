@@ -44,7 +44,6 @@ const CustomPromptIntegration: React.FC<CustomPromptIntegrationProps> = ({
       }
 
       if (data) {
-        // Cast the data to match our Integration type
         const integrationData: Integration = {
           ...data,
           integration_type: data.integration_type as 'custom_prompt'

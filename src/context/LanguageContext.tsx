@@ -20,7 +20,8 @@ const translations = {
       solutions: 'Solutions',
       blog: 'Blog',
       contact: 'Contact',
-      logout: 'Logout'
+      logout: 'Logout',
+      login: 'Login'
     },
     // Home page translations
     home: {
@@ -34,10 +35,24 @@ const translations = {
     },
     // Solutions page translations
     solutions: {
+      title: 'Our Solutions',
+      subtitle: 'Comprehensive AI Automation Solutions',
+      description: 'Discover how our AI-powered automation solutions can transform your business operations and boost productivity.',
       sectionTag: 'Our Solutions',
       sectionTitle: 'Automate Your Business with AI',
       sectionDescription: 'Discover our comprehensive suite of AI-powered automation solutions designed to streamline your operations and boost productivity.',
       viewAllButton: 'View All Solutions',
+      cta: {
+        title: 'Ready to Transform Your Business?',
+        subtitle: 'Get started with our AI automation solutions today',
+        button: 'Get Started',
+        contact: 'Contact Us'
+      },
+      futureproof: {
+        title: 'Future-Proof Your Business',
+        description: 'Stay ahead of the competition with cutting-edge AI automation technologies that adapt to your growing business needs.',
+        features: ['Scalable Solutions', 'Advanced AI', 'Custom Integration', '24/7 Support']
+      },
       chatbots: {
         title: 'AI Chatbots',
         description: 'Intelligent chatbots that provide 24/7 customer support and lead generation',
@@ -66,6 +81,37 @@ const translations = {
         feature2: 'Data Analysis',
         feature3: 'Custom Workflows'
       }
+    },
+    // Blog translations
+    blog: {
+      title: 'Our Blog',
+      subtitle: 'Latest insights and updates on AI automation',
+      description: 'Stay up to date with the latest trends and insights in AI automation technology.',
+      newsletter: {
+        title: 'Stay Updated',
+        subtitle: 'Subscribe to our newsletter for the latest AI automation insights',
+        placeholder: 'Enter your email',
+        button: 'Subscribe',
+        success: 'Successfully subscribed!',
+        error: 'Failed to subscribe. Please try again.'
+      },
+      readMore: 'Read More',
+      categories: 'Categories',
+      allPosts: 'All Posts',
+      featured: 'Featured Posts'
+    },
+    // Footer translations
+    footer: {
+      company: 'Company',
+      about: 'About Us',
+      blog: 'Blog',
+      contact: 'Contact',
+      resources: 'Resources',
+      solutions: 'Solutions',
+      description: 'Transform your business with cutting-edge AI automation solutions. From chatbots to data analysis, we help you automate repetitive tasks and scale your operations efficiently.',
+      copyright: '© 2024 Automatízalo. All rights reserved.',
+      privacyPolicy: 'Privacy Policy',
+      termsOfService: 'Terms of Service'
     },
     // Testimonials translations
     testimonials: {
@@ -286,7 +332,8 @@ const translations = {
       solutions: 'Soluciones',
       blog: 'Blog',
       contact: 'Contacto',
-      logout: 'Cerrar Sesión'
+      logout: 'Cerrar Sesión',
+      login: 'Iniciar Sesión'
     },
     // Home page translations
     home: {
@@ -300,10 +347,24 @@ const translations = {
     },
     // Solutions page translations
     solutions: {
+      title: 'Nuestras Soluciones',
+      subtitle: 'Soluciones Integrales de Automatización IA',
+      description: 'Descubre cómo nuestras soluciones de automatización impulsadas por IA pueden transformar las operaciones de tu negocio y aumentar la productividad.',
       sectionTag: 'Nuestras Soluciones',
       sectionTitle: 'Automatiza Tu Negocio con IA',
       sectionDescription: 'Descubre nuestra suite integral de soluciones de automatización impulsadas por IA diseñadas para optimizar tus operaciones y aumentar la productividad.',
       viewAllButton: 'Ver Todas las Soluciones',
+      cta: {
+        title: '¿Listo para Transformar Tu Negocio?',
+        subtitle: 'Comienza con nuestras soluciones de automatización IA hoy',
+        button: 'Comenzar',
+        contact: 'Contáctanos'
+      },
+      futureproof: {
+        title: 'Prepara Tu Negocio para el Futuro',
+        description: 'Mantén por delante de la competencia con tecnologías de automatización IA de vanguardia que se adaptan a las necesidades crecientes de tu negocio.',
+        features: ['Soluciones Escalables', 'IA Avanzada', 'Integración Personalizada', 'Soporte 24/7']
+      },
       chatbots: {
         title: 'Chatbots IA',
         description: 'Chatbots inteligentes que brindan soporte al cliente 24/7 y generación de leads',
@@ -332,6 +393,37 @@ const translations = {
         feature2: 'Análisis de Datos',
         feature3: 'Flujos de Trabajo Personalizados'
       }
+    },
+    // Blog translations
+    blog: {
+      title: 'Nuestro Blog',
+      subtitle: 'Últimas perspectivas y actualizaciones sobre automatización IA',
+      description: 'Mantén al día con las últimas tendencias y perspectivas en tecnología de automatización IA.',
+      newsletter: {
+        title: 'Mantente Actualizado',
+        subtitle: 'Suscríbete a nuestro boletín para las últimas perspectivas de automatización IA',
+        placeholder: 'Ingresa tu email',
+        button: 'Suscribirse',
+        success: '¡Suscripción exitosa!',
+        error: 'Error al suscribirse. Por favor intenta de nuevo.'
+      },
+      readMore: 'Leer Más',
+      categories: 'Categorías',
+      allPosts: 'Todas las Publicaciones',
+      featured: 'Publicaciones Destacadas'
+    },
+    // Footer translations
+    footer: {
+      company: 'Empresa',
+      about: 'Acerca de Nosotros',
+      blog: 'Blog',
+      contact: 'Contacto',
+      resources: 'Recursos',
+      solutions: 'Soluciones',
+      description: 'Transforma tu negocio con soluciones de automatización IA de vanguardia. Desde chatbots hasta análisis de datos, te ayudamos a automatizar tareas repetitivas y escalar tus operaciones eficientemente.',
+      copyright: '© 2024 Automatízalo. Todos los derechos reservados.',
+      privacyPolicy: 'Política de Privacidad',
+      termsOfService: 'Términos de Servicio'
     },
     // ... keep existing code (spanish client portal translations) the same ...
     clientPortal: {
@@ -550,7 +642,8 @@ const translations = {
       solutions: 'Solutions',
       blog: 'Blog',
       contact: 'Contact',
-      logout: 'Se Déconnecter'
+      logout: 'Se Déconnecter',
+      login: 'Se Connecter'
     },
     // Home page translations
     home: {
@@ -564,10 +657,24 @@ const translations = {
     },
     // Solutions page translations
     solutions: {
+      title: 'Nos Solutions',
+      subtitle: 'Solutions Complètes d\'Automatisation IA',
+      description: 'Découvrez comment nos solutions d\'automatisation alimentées par l\'IA peuvent transformer les opérations de votre entreprise et augmenter la productivité.',
       sectionTag: 'Nos Solutions',
       sectionTitle: 'Automatisez Votre Entreprise avec l\'IA',
       sectionDescription: 'Découvrez notre suite complète de solutions d\'automatisation alimentées par l\'IA conçues pour rationaliser vos opérations et augmenter la productivité.',
       viewAllButton: 'Voir Toutes les Solutions',
+      cta: {
+        title: 'Prêt à Transformer Votre Entreprise?',
+        subtitle: 'Commencez avec nos solutions d\'automatisation IA aujourd\'hui',
+        button: 'Commencer',
+        contact: 'Contactez-Nous'
+      },
+      futureproof: {
+        title: 'Préparez Votre Entreprise pour l\'Avenir',
+        description: 'Gardez une longueur d\'avance sur la concurrence avec des technologies d\'automatisation IA de pointe qui s\'adaptent aux besoins croissants de votre entreprise.',
+        features: ['Solutions Évolutives', 'IA Avancée', 'Intégration Personnalisée', 'Support 24/7']
+      },
       chatbots: {
         title: 'Chatbots IA',
         description: 'Chatbots intelligents qui fournissent un support client 24/7 et la génération de leads',
@@ -596,6 +703,37 @@ const translations = {
         feature2: 'Analyse de Données',
         feature3: 'Flux de Travail Personnalisés'
       }
+    },
+    // Blog translations
+    blog: {
+      title: 'Notre Blog',
+      subtitle: 'Dernières perspectives et mises à jour sur l\'automatisation IA',
+      description: 'Restez à jour avec les dernières tendances et perspectives en technologie d\'automatisation IA.',
+      newsletter: {
+        title: 'Restez Informé',
+        subtitle: 'Abonnez-vous à notre newsletter pour les dernières perspectives d\'automatisation IA',
+        placeholder: 'Entrez votre email',
+        button: 'S\'abonner',
+        success: 'Abonnement réussi!',
+        error: 'Échec de l\'abonnement. Veuillez réessayer.'
+      },
+      readMore: 'Lire Plus',
+      categories: 'Catégories',
+      allPosts: 'Tous les Articles',
+      featured: 'Articles en Vedette'
+    },
+    // Footer translations
+    footer: {
+      company: 'Entreprise',
+      about: 'À Propos',
+      blog: 'Blog',
+      contact: 'Contact',
+      resources: 'Ressources',
+      solutions: 'Solutions',
+      description: 'Transformez votre entreprise avec des solutions d\'automatisation IA de pointe. Des chatbots à l\'analyse de données, nous vous aidons à automatiser les tâches répétitives et à faire évoluer vos opérations efficacement.',
+      copyright: '© 2024 Automatízalo. Tous droits réservés.',
+      privacyPolicy: 'Politique de Confidentialité',
+      termsOfService: 'Conditions de Service'
     },
     // ... keep existing code (french client portal translations) the same ...
     clientPortal: {

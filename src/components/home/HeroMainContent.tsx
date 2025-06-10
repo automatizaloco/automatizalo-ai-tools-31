@@ -27,12 +27,12 @@ const HeroMainContent: React.FC<HeroMainContentProps> = ({
         {isAuthenticated ? (
           <EditableText 
             id="hero-tagline"
-            defaultText="🚀 Automated Business Solutions"
+            defaultText={t('home.hero.tagline')}
             pageName="home"
             sectionName="hero-tagline"
           />
         ) : (
-          "🚀 Automated Business Solutions"
+          t('home.hero.tagline')
         )}
       </span>
       
@@ -40,12 +40,12 @@ const HeroMainContent: React.FC<HeroMainContentProps> = ({
         {isAuthenticated ? (
           <EditableText 
             id="hero-title"
-            defaultText="Transform Your Business with AI Automation"
+            defaultText={t('home.hero.title')}
             pageName="home"
             sectionName="hero-title"
           />
         ) : (
-          "Transform Your Business with AI Automation"
+          t('home.hero.title')
         )}
       </h1>
       
@@ -53,12 +53,12 @@ const HeroMainContent: React.FC<HeroMainContentProps> = ({
         {isAuthenticated ? (
           <EditableText 
             id="hero-description"
-            defaultText="helps businesses automate repetitive tasks, improve efficiency, and scale operations with cutting-edge AI technology. From chatbots to data analysis, we've got you covered."
+            defaultText={t('home.hero.description')}
             pageName="home"
             sectionName="hero-description"
           />
         ) : (
-          "helps businesses automate repetitive tasks, improve efficiency, and scale operations with cutting-edge AI technology. From chatbots to data analysis, we've got you covered."
+          t('home.hero.description')
         )}
       </p>
       
@@ -67,7 +67,7 @@ const HeroMainContent: React.FC<HeroMainContentProps> = ({
           className="bg-gray-900 hover:bg-gray-800 px-6 text-base transition-all duration-300 rounded-xl h-12" 
           size="lg"
         >
-          {getStartedText}
+          {t('home.hero.getStarted')}
           <ArrowRight size={18} className="ml-2" />
         </Button>
         
@@ -77,7 +77,7 @@ const HeroMainContent: React.FC<HeroMainContentProps> = ({
             className="border-gray-300 text-gray-800 hover:bg-gray-100 px-6 text-base transition-all duration-300 rounded-xl h-12" 
             size="lg"
           >
-            {learnMoreText}
+            {t('home.hero.learnMore')}
           </Button>
         </Link>
       </div>

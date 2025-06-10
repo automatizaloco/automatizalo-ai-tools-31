@@ -8,7 +8,7 @@ const ResourcesSection = () => {
   const { t } = useLanguage();
   
   return (
-    <FooterSection titleId="footer-solutions" defaultTitle={t("footer.resources")}>
+    <FooterSection titleId="footer-resources" defaultTitle={t("footer.resources")}>
       <li>
         <FooterLink 
           to="/solutions#chatbots" 

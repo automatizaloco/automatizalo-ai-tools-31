@@ -37,49 +37,49 @@ const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
   const solutions: Solution[] = [
     {
       id: "chatbots",
-      titleKey: "AI Chatbots",
-      descriptionKey: "Intelligent chatbots that provide 24/7 customer support and lead generation",
+      titleKey: t('solutions.chatbots.title'),
+      descriptionKey: t('solutions.chatbots.description'),
       icon: <MessageSquare size={24} />,
       features: [
-        "24/7 Customer Support",
-        "Lead Generation",
-        "Multi-language Support"
+        t('solutions.chatbots.feature1'),
+        t('solutions.chatbots.feature2'),
+        t('solutions.chatbots.feature3')
       ],
       imageUrl: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: "lead-generation",
-      titleKey: "Lead Generation",
-      descriptionKey: "Automated systems to capture, qualify and nurture leads for your business",
+      titleKey: t('solutions.leadGeneration.title'),
+      descriptionKey: t('solutions.leadGeneration.description'),
       icon: <PieChart size={24} />,
       features: [
-        "Lead Capture Forms",
-        "Automated Follow-up",
-        "CRM Integration"
+        t('solutions.leadGeneration.feature1'),
+        t('solutions.leadGeneration.feature2'),
+        t('solutions.leadGeneration.feature3')
       ],
       imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: "social-media",
-      titleKey: "Social Media Automation",
-      descriptionKey: "Streamline your social media presence with automated posting and engagement",
+      titleKey: t('solutions.socialMedia.title'),
+      descriptionKey: t('solutions.socialMedia.description'),
       icon: <Smartphone size={24} />,
       features: [
-        "Automated Posting",
-        "Content Scheduling",
-        "Engagement Tracking"
+        t('solutions.socialMedia.feature1'),
+        t('solutions.socialMedia.feature2'),
+        t('solutions.socialMedia.feature3')
       ],
       imageUrl: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: "ai-agents",
-      titleKey: "AI Agents",
-      descriptionKey: "Custom AI agents that handle complex business processes and decision-making",
+      titleKey: t('solutions.aiAgents.title'),
+      descriptionKey: t('solutions.aiAgents.description'),
       icon: <Brain size={24} />,
       features: [
-        "Process Automation",
-        "Data Analysis",
-        "Custom Workflows"
+        t('solutions.aiAgents.feature1'),
+        t('solutions.aiAgents.feature2'),
+        t('solutions.aiAgents.feature3')
       ],
       imageUrl: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80&w=800"
     }
@@ -93,36 +93,36 @@ const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
             {isAuthenticated ? (
               <EditableText 
                 id="solutions-section-tag"
-                defaultText="Our Solutions"
+                defaultText={t('solutions.sectionTag')}
                 pageName="home"
                 sectionName="solutions-tag"
               />
             ) : (
-              "Our Solutions"
+              t('solutions.sectionTag')
             )}
           </span>
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">
             {isAuthenticated ? (
               <EditableText 
                 id="solutions-section-title"
-                defaultText="Automate Your Business with AI"
+                defaultText={t('solutions.sectionTitle')}
                 pageName="home"
                 sectionName="solutions-title"
               />
             ) : (
-              "Automate Your Business with AI"
+              t('solutions.sectionTitle')
             )}
           </h2>
           <p className="text-gray-600">
             {isAuthenticated ? (
               <EditableText 
                 id="solutions-section-description"
-                defaultText="Discover our comprehensive suite of AI-powered automation solutions designed to streamline your operations and boost productivity."
+                defaultText={t('solutions.sectionDescription')}
                 pageName="home"
                 sectionName="solutions-description"
               />
             ) : (
-              "Discover our comprehensive suite of AI-powered automation solutions designed to streamline your operations and boost productivity."
+              t('solutions.sectionDescription')
             )}
           </p>
         </div>
@@ -149,7 +149,7 @@ const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
         <div className="text-center mt-12">
           <Link to="/solutions">
             <Button className="bg-automatizalo-blue hover:bg-automatizalo-blue/90 transition-all duration-300 rounded-xl">
-              {t('nav.solutions')}
+              {t('solutions.viewAllButton')}
               <ArrowRight size={16} className="ml-2" />
             </Button>
           </Link>

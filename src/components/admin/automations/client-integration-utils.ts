@@ -143,6 +143,7 @@ export const saveClientIntegrationSetting = async (data: ClientIntegrationSettin
           production_url: data.production_url,
           integration_code: data.integration_code,
           prompt_text: data.prompt_text,
+          prompt_webhook_url: data.prompt_webhook_url,
           status: data.status,
           last_updated_by: (await supabase.auth.getUser()).data.user?.id,
           updated_at: new Date().toISOString()
@@ -169,6 +170,7 @@ export const saveClientIntegrationSetting = async (data: ClientIntegrationSettin
           production_url: data.production_url,
           integration_code: data.integration_code,
           prompt_text: data.prompt_text,
+          prompt_webhook_url: data.prompt_webhook_url,
           status: data.status,
           last_updated_by: (await supabase.auth.getUser()).data.user?.id
         })

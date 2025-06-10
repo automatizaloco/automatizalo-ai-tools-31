@@ -40,7 +40,9 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
   const loadIntegrationSettings = async () => {
     setIsLoading(true);
     try {
+      console.log('Loading integration settings for client automation:', clientAutomation.id);
       const settings = await fetchClientIntegrationSettings(clientAutomation.id);
+      console.log('Integration settings loaded:', settings);
       setIntegrationSettings(settings);
       
       // Set initial active tab based on available integrations
@@ -62,6 +64,8 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
   const handleSave = async (setting: ClientIntegrationSetting) => {
     setIsSaving(true);
     try {
+      console.log('Saving integration setting:', setting.integration_type);
+      
       const result = await saveClientIntegrationSetting({
         ...setting,
         status: 'configured'
@@ -69,6 +73,8 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
       
       if (result?.success) {
         toast.success(`${setting.integration_type} integration configured successfully`);
+        
+        // Reload settings to get the latest data
         await loadIntegrationSettings();
         
         // Update client automation status to in_progress if it was pending
@@ -76,6 +82,8 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
           await updateClientAutomationStatus(clientAutomation.id, 'in_progress');
           onConfigUpdate();
         }
+      } else {
+        throw new Error('Failed to save setting');
       }
     } catch (error) {
       console.error(`Failed to save ${setting.integration_type} integration:`, error);
@@ -287,6 +295,7 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
               <FormUrlConverter
                 value={formSetting.integration_code || ''}
                 onChange={(value) => {
+                  console.log('Form integration code changed:', value);
                   const updatedSettings = integrationSettings.map(s =>
                     s.id === formSetting.id ? { ...s, integration_code: value } : s
                   );

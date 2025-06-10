@@ -18,33 +18,47 @@ interface FormSetting {
   id: string;
   integration_code?: string;
   status: string;
+  updated_at: string;
 }
 
 const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
   clientAutomationId,
   automationTitle
 }) => {
-  // Fetch form integration settings
-  const { data: formSetting, isLoading: settingsLoading } = useQuery({
+  console.log('FormIntegrationViewer loading for client automation:', clientAutomationId);
+
+  // Fetch form integration settings with proper error handling
+  const { data: formSetting, isLoading: settingsLoading, error: settingsError } = useQuery({
     queryKey: ['form-settings', clientAutomationId],
     queryFn: async () => {
+      console.log('Fetching form settings for client automation:', clientAutomationId);
+      
       const { data, error } = await supabase
         .from('client_integration_settings')
         .select('*')
         .eq('client_automation_id', clientAutomationId)
         .eq('integration_type', 'form')
-        .eq('status', 'active')
-        .single();
+        .in('status', ['configured', 'active'])
+        .order('updated_at', { ascending: false })
+        .limit(1);
 
-      if (error) throw error;
-      return data as FormSetting;
+      if (error) {
+        console.error('Error fetching form settings:', error);
+        throw error;
+      }
+
+      console.log('Form settings fetched:', data);
+      return data?.[0] as FormSetting || null;
     },
+    enabled: !!clientAutomationId,
+    retry: 2
   });
 
   // Fetch real form analytics
   const { 
     data: analyticsData, 
-    isLoading: analyticsLoading 
+    isLoading: analyticsLoading,
+    error: analyticsError
   } = useFormAnalytics(clientAutomationId);
 
   if (settingsLoading || analyticsLoading) {
@@ -54,6 +68,22 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
           <div className="flex justify-center items-center h-32">
             <Activity className="h-6 w-6 animate-spin text-blue-500" />
             <span className="ml-2">Loading form integration...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (settingsError || analyticsError) {
+    console.error('Error loading form integration:', settingsError || analyticsError);
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <div className="text-red-500 mb-2">Error loading form integration</div>
+            <p className="text-sm text-gray-500">
+              {settingsError?.message || analyticsError?.message || 'Unknown error occurred'}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -73,7 +103,7 @@ const FormIntegrationViewer: React.FC<FormIntegrationViewerProps> = ({
     <div className="space-y-6">
       {/* Overview Cards */}
       <FormStatsCards 
-        formConfigured={!!formSetting}
+        formConfigured={!!formSetting && !!formSetting.integration_code}
         stats={stats}
       />
 

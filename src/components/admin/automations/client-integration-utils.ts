@@ -128,6 +128,8 @@ export const saveClientIntegrationSetting = async (data: ClientIntegrationSettin
   if (!data || !data.client_automation_id) return null;
   
   try {
+    console.log('Saving integration setting:', data);
+    
     let result;
     
     if (data.id) {
@@ -140,13 +142,20 @@ export const saveClientIntegrationSetting = async (data: ClientIntegrationSettin
           integration_code: data.integration_code,
           prompt_text: data.prompt_text,
           status: data.status,
-          last_updated_by: (await supabase.auth.getUser()).data.user?.id
+          last_updated_by: (await supabase.auth.getUser()).data.user?.id,
+          updated_at: new Date().toISOString()
         })
         .eq('id', data.id)
-        .select();
+        .select()
+        .single();
       
-      if (error) throw error;
-      result = updatedData?.[0];
+      if (error) {
+        console.error('Error updating integration setting:', error);
+        throw error;
+      }
+      
+      console.log('Integration setting updated successfully:', updatedData);
+      result = updatedData;
     } else {
       // Create new setting
       const { data: newData, error } = await supabase
@@ -161,10 +170,16 @@ export const saveClientIntegrationSetting = async (data: ClientIntegrationSettin
           status: data.status,
           last_updated_by: (await supabase.auth.getUser()).data.user?.id
         })
-        .select();
+        .select()
+        .single();
       
-      if (error) throw error;
-      result = newData?.[0];
+      if (error) {
+        console.error('Error creating integration setting:', error);
+        throw error;
+      }
+      
+      console.log('Integration setting created successfully:', newData);
+      result = newData;
     }
     
     return { success: true, data: result };

@@ -16,6 +16,8 @@ import {
   updateClientAutomationStatus
 } from './client-integration-utils';
 import CodeIntegration from './integrations/CodeIntegration';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface ClientIntegrationFormProps {
   clientAutomation: ClientAutomationWithDetails;
@@ -230,6 +232,26 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="webhook-url">Webhook URL</Label>
+              <Input
+                id="webhook-url"
+                type="url"
+                value={promptSetting.prompt_webhook_url || ''}
+                onChange={(e) => {
+                  const updatedSettings = integrationSettings.map(s =>
+                    s.id === promptSetting.id ? { ...s, prompt_webhook_url: e.target.value } : s
+                  );
+                  setIntegrationSettings(updatedSettings);
+                }}
+                placeholder="https://your-n8n-instance.com/webhook/custom-prompt"
+                className="mt-1"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                This webhook will receive POST requests with custom prompt data when the client saves their prompts.
+              </p>
+            </div>
+            
             <div>
               <label htmlFor="prompt-template" className="block text-sm font-medium text-gray-700 mb-1">
                 Prompt Template

@@ -349,5 +349,3 @@ const AutomationManager = () => {
 };
 
 export default AutomationManager;
-
-}

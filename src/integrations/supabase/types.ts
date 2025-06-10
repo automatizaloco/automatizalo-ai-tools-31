@@ -200,6 +200,7 @@ export type Database = {
           last_updated_by: string | null
           production_url: string | null
           prompt_text: string | null
+          prompt_webhook_url: string | null
           status: string
           test_url: string | null
           updated_at: string
@@ -213,6 +214,7 @@ export type Database = {
           last_updated_by?: string | null
           production_url?: string | null
           prompt_text?: string | null
+          prompt_webhook_url?: string | null
           status?: string
           test_url?: string | null
           updated_at?: string
@@ -226,6 +228,7 @@ export type Database = {
           last_updated_by?: string | null
           production_url?: string | null
           prompt_text?: string | null
+          prompt_webhook_url?: string | null
           status?: string
           test_url?: string | null
           updated_at?: string
@@ -337,6 +340,50 @@ export type Database = {
             columns: ["client_automation_id"]
             isOneToOne: false
             referencedRelation: "client_automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integrations: {
+        Row: {
+          automation_id: string
+          created_at: string
+          id: string
+          integration_code: string | null
+          integration_type: string
+          production_url: string | null
+          prompt_webhook_url: string | null
+          test_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          automation_id: string
+          created_at?: string
+          id?: string
+          integration_code?: string | null
+          integration_type: string
+          production_url?: string | null
+          prompt_webhook_url?: string | null
+          test_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          automation_id?: string
+          created_at?: string
+          id?: string
+          integration_code?: string | null
+          integration_type?: string
+          production_url?: string | null
+          prompt_webhook_url?: string | null
+          test_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integrations_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
             referencedColumns: ["id"]
           },
         ]

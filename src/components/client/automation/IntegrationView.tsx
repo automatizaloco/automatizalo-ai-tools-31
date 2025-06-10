@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Sparkles, Table, FileCode } from 'lucide-react';
+import { Loader2, Table, FileCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import CodeEmbedView from './CodeEmbedView';
@@ -12,7 +12,6 @@ interface IntegrationViewProps {
   clientAutomationId: string;
   automationTitle: string;
   hasCustomPrompt?: boolean;
-  hasWebhook?: boolean;
   hasFormIntegration?: boolean;
   hasTableIntegration?: boolean;
 }
@@ -47,12 +46,12 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
     
     setIsLoading(true);
     try {
-      // Only load non-webhook integrations
+      // Only load non-webhook integrations (custom_prompt, form, table)
       const { data, error } = await supabase
         .from('client_integration_settings')
         .select('*')
         .eq('client_automation_id', clientAutomationId)
-        .neq('integration_type', 'webhook')
+        .in('integration_type', ['custom_prompt', 'form', 'table'])
         .eq('status', 'active')
         .order('integration_type');
       

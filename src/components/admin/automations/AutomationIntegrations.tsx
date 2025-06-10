@@ -62,23 +62,15 @@ const AutomationIntegrations: React.FC<AutomationIntegrationsProps> = ({
       )}
 
       {hasFormIntegration && (
-        <CodeIntegration
-          automationId={automationId}
-          integrationType="form"
-          title="Form Integration"
-          description="Configure form integration code for this automation"
-          onUpdate={handleUpdate}
-        />
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800 text-sm">Form integration configuration will be available soon.</p>
+        </div>
       )}
 
       {hasTableIntegration && (
-        <CodeIntegration
-          automationId={automationId}
-          integrationType="table"
-          title="Table Integration"
-          description="Configure table integration code for this automation"
-          onUpdate={handleUpdate}
-        />
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800 text-sm">Table integration configuration will be available soon.</p>
+        </div>
       )}
     </div>
   );

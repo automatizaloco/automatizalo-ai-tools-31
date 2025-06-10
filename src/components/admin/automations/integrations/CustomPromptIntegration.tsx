@@ -30,20 +30,20 @@ const CustomPromptIntegration: React.FC<CustomPromptIntegrationProps> = ({
   const loadIntegration = async () => {
     setIsLoading(true);
     try {
+      // Query the integrations table using a different approach
       const { data, error } = await supabase
-        .from('integrations')
-        .select('*')
-        .eq('automation_id', automationId)
-        .eq('integration_type', 'custom_prompt')
-        .maybeSingle();
+        .rpc('exec_sql', { 
+          sql_query: `SELECT * FROM integrations WHERE automation_id = '${automationId}' AND integration_type = 'custom_prompt' LIMIT 1` 
+        });
 
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
-      if (data) {
-        setIntegration(data);
-        setWebhookUrl(data.prompt_webhook_url || '');
+      if (data && data.length > 0) {
+        const integrationData = data[0];
+        setIntegration(integrationData);
+        setWebhookUrl(integrationData.prompt_webhook_url || '');
       }
     } catch (error) {
       console.error('Failed to load custom prompt integration:', error);
@@ -59,24 +59,16 @@ const CustomPromptIntegration: React.FC<CustomPromptIntegrationProps> = ({
       if (integration) {
         // Update existing integration
         const { error } = await supabase
-          .from('integrations')
-          .update({ 
-            prompt_webhook_url: webhookUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', integration.id);
+          .rpc('exec_sql', { 
+            sql_query: `UPDATE integrations SET prompt_webhook_url = '${webhookUrl}', updated_at = NOW() WHERE id = '${integration.id}'` 
+          });
 
         if (error) throw error;
       } else {
         // Create new integration
         const { error } = await supabase
-          .from('integrations')
-          .insert({
-            automation_id: automationId,
-            integration_type: 'custom_prompt',
-            prompt_webhook_url: webhookUrl,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+          .rpc('exec_sql', { 
+            sql_query: `INSERT INTO integrations (automation_id, integration_type, prompt_webhook_url, created_at, updated_at) VALUES ('${automationId}', 'custom_prompt', '${webhookUrl}', NOW(), NOW())` 
           });
 
         if (error) throw error;

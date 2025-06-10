@@ -48,7 +48,13 @@ const CustomPromptEditor: React.FC<CustomPromptEditorProps> = ({
       if (error) throw error;
       
       if (data) {
-        setPromptSetting(data as PromptSetting);
+        setPromptSetting({
+          id: data.id,
+          client_automation_id: data.client_automation_id,
+          prompt_text: data.prompt_text,
+          prompt_webhook_url: data.prompt_webhook_url,
+          status: data.status as 'pending' | 'configured' | 'active'
+        });
         setCustomPrompt(data.prompt_text || '');
       }
     } catch (error) {

@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ClientAutomationWithDetails } from './client-integration-utils';
 import EmptyClientAutomationsState from './EmptyClientAutomationsState';
 import ClientFilter from './ClientFilter';
+import StatusFilter from './StatusFilter';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ClientAutomationsListProps {
@@ -16,6 +17,8 @@ interface ClientAutomationsListProps {
   onViewConfig: (automation: ClientAutomationWithDetails) => void;
   selectedClientId: string | null;
   onClientFilterChange: (clientId: string | null) => void;
+  selectedStatus: string | null;
+  onStatusFilterChange: (status: string | null) => void;
 }
 
 const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
@@ -23,14 +26,46 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
   isLoading,
   onViewConfig,
   selectedClientId,
-  onClientFilterChange
+  onClientFilterChange,
+  selectedStatus,
+  onStatusFilterChange
 }) => {
   const isMobile = useIsMobile();
 
-  // Filter automations based on selected client
-  const filteredAutomations = selectedClientId
-    ? clientAutomations.filter(automation => automation.client_id === selectedClientId)
-    : clientAutomations;
+  // Filter and sort automations
+  const filteredAndSortedAutomations = React.useMemo(() => {
+    let filtered = clientAutomations;
+
+    // Filter by client
+    if (selectedClientId) {
+      filtered = filtered.filter(automation => automation.client_id === selectedClientId);
+    }
+
+    // Filter by status
+    if (selectedStatus) {
+      filtered = filtered.filter(automation => automation.setup_status === selectedStatus);
+    }
+
+    // Sort: completed first, then in_progress, then pending
+    return filtered.sort((a, b) => {
+      const statusOrder = { 'completed': 0, 'in_progress': 1, 'pending': 2 };
+      return statusOrder[a.setup_status as keyof typeof statusOrder] - statusOrder[b.setup_status as keyof typeof statusOrder];
+    });
+  }, [clientAutomations, selectedClientId, selectedStatus]);
+
+  // Calculate status counts for the filter
+  const statusCounts = React.useMemo(() => {
+    const baseAutomations = selectedClientId 
+      ? clientAutomations.filter(automation => automation.client_id === selectedClientId)
+      : clientAutomations;
+
+    return {
+      pending: baseAutomations.filter(a => a.setup_status === 'pending').length,
+      in_progress: baseAutomations.filter(a => a.setup_status === 'in_progress').length,
+      completed: baseAutomations.filter(a => a.setup_status === 'completed').length,
+      total: baseAutomations.length
+    };
+  }, [clientAutomations, selectedClientId]);
 
   if (isLoading) {
     return (
@@ -60,26 +95,48 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
     <div className="space-y-4 max-w-full">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Client Automations</h2>
-        <Badge variant="outline" className="bg-blue-50 text-blue-700">
-          {filteredAutomations.length} of {clientAutomations.length}
-        </Badge>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="bg-green-50 text-green-700">
+            {statusCounts.completed} Ready
+          </Badge>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            {filteredAndSortedAutomations.length} of {clientAutomations.length}
+          </Badge>
+        </div>
       </div>
 
-      <ClientFilter
-        selectedClientId={selectedClientId}
-        onClientChange={onClientFilterChange}
-      />
+      <div className={`flex gap-4 ${isMobile ? 'flex-col' : 'flex-row'}`}>
+        <ClientFilter
+          selectedClientId={selectedClientId}
+          onClientChange={onClientFilterChange}
+        />
+        <StatusFilter
+          selectedStatus={selectedStatus}
+          onStatusChange={onStatusFilterChange}
+          statusCounts={statusCounts}
+        />
+      </div>
 
-      {filteredAutomations.length === 0 ? (
-        selectedClientId ? (
+      {filteredAndSortedAutomations.length === 0 ? (
+        selectedClientId || selectedStatus ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">No automations found for the selected client.</p>
+            <p className="text-gray-500">No automations found with the selected filters.</p>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                onClientFilterChange(null);
+                onStatusFilterChange(null);
+              }}
+              className="mt-2"
+            >
+              Clear Filters
+            </Button>
           </div>
         ) : (
           <EmptyClientAutomationsState />
         )
       ) : (
-        filteredAutomations.map((clientAutomation) => (
+        filteredAndSortedAutomations.map((clientAutomation) => (
           <Card key={clientAutomation.id} className="overflow-hidden">
             <CardContent className={`pt-6 ${isMobile ? 'px-3' : 'px-6'}`}>
               <div className={`${isMobile ? 'flex flex-col' : 'flex justify-between'}`}>

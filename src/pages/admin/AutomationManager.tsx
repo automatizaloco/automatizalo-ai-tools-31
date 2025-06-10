@@ -123,7 +123,7 @@ const AutomationManager = () => {
           )
         );
         
-        // Show integrations panel if any integration is enabled (removed webhook check)
+        // Show integrations panel if any integration is enabled
         const hasIntegrations = formData.has_custom_prompt || 
                              formData.has_form_integration || formData.has_table_integration;
                              
@@ -164,7 +164,7 @@ const AutomationManager = () => {
         console.log('Automation created successfully:', data);
         notification.showSuccess('Success', 'Automation created successfully');
         
-        // Check if any integration was enabled (removed webhook check)
+        // Check if any integration was enabled
         const hasIntegrations = formData.has_custom_prompt || 
                              formData.has_form_integration || formData.has_table_integration;
         
@@ -247,6 +247,12 @@ const AutomationManager = () => {
   };
 
   const handleCancelEdit = () => {
+    setIsEditing(false);
+    setSelectedAutomation(null);
+    setShowIntegrations(false);
+  };
+
+  const handleNewAutomation = () => {
     setIsEditing(false);
     setSelectedAutomation(null);
     setShowIntegrations(false);
@@ -369,6 +375,7 @@ const AutomationManager = () => {
               isSaving={isSaving}
               automation={selectedAutomation || undefined}
               isEditing={isEditing}
+              onNewAutomation={handleNewAutomation}
             />
           )}
         </div>

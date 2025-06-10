@@ -10,7 +10,6 @@ export interface Automation {
   image_url?: string;
   active: boolean;
   has_custom_prompt?: boolean;
-  has_webhook?: boolean;
   has_form_integration?: boolean;
   has_table_integration?: boolean;
 }
@@ -62,7 +61,7 @@ export interface Integration {
   test_url?: string;
   production_url?: string;
   integration_code?: string;
-  prompt_webhook_url?: string; // New field for custom prompt webhook
+  prompt_webhook_url?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -75,7 +74,7 @@ export interface ClientIntegrationSetting {
   production_url?: string;
   integration_code?: string;
   prompt_text?: string;
-  prompt_webhook_url?: string; // New field for custom prompt webhook
+  prompt_webhook_url?: string;
   status: 'pending' | 'configured' | 'active';
   created_at?: string;
   updated_at?: string;

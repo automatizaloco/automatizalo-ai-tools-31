@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle, Upload, Image as ImageIcon } from 'lucide-react';
+import { Loader2, AlertCircle, Upload, Image as ImageIcon, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { FileUploader } from '@/components/admin/FileUploader';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,7 +18,6 @@ interface AutomationFormProps {
     monthly_price: number;
     image_url?: string;
     has_custom_prompt?: boolean;
-    has_webhook?: boolean;
     has_form_integration?: boolean;
     has_table_integration?: boolean;
   }) => Promise<void>;
@@ -32,18 +30,19 @@ interface AutomationFormProps {
     monthly_price: number;
     image_url?: string;
     has_custom_prompt?: boolean;
-    has_webhook?: boolean;
     has_form_integration?: boolean;
     has_table_integration?: boolean;
   };
   isEditing?: boolean;
+  onNewAutomation?: () => void;
 }
 
 const AutomationForm: React.FC<AutomationFormProps> = ({ 
   onSubmit, 
   isSaving, 
   automation = null, 
-  isEditing = false 
+  isEditing = false,
+  onNewAutomation
 }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -52,7 +51,6 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
     monthly_price: 0,
     image_url: '',
     has_custom_prompt: false,
-    has_webhook: false,
     has_form_integration: false,
     has_table_integration: false,
   });
@@ -70,7 +68,6 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
         monthly_price: automation.monthly_price || 0,
         image_url: automation.image_url || '',
         has_custom_prompt: automation.has_custom_prompt || false,
-        has_webhook: automation.has_webhook || false,
         has_form_integration: automation.has_form_integration || false,
         has_table_integration: automation.has_table_integration || false,
       });
@@ -96,6 +93,26 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
       ...prev,
       [name]: checked
     }));
+  };
+
+  const handleNewAutomation = () => {
+    // Reset form data
+    setFormData({
+      title: '',
+      description: '',
+      installation_price: 0,
+      monthly_price: 0,
+      image_url: '',
+      has_custom_prompt: false,
+      has_form_integration: false,
+      has_table_integration: false,
+    });
+    setErrorFields([]);
+    setShowImageUrlField(true);
+    
+    if (onNewAutomation) {
+      onNewAutomation();
+    }
   };
 
   const handleImageUpload = async (file: File): Promise<string | null> => {
@@ -169,7 +186,6 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
           monthly_price: 0,
           image_url: '',
           has_custom_prompt: false,
-          has_webhook: false,
           has_form_integration: false,
           has_table_integration: false,
         });
@@ -184,7 +200,21 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEditing ? 'Update Automation' : 'Create Automation'}</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>{isEditing ? 'Update Automation' : 'Create Automation'}</CardTitle>
+          {!isEditing && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleNewAutomation}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              New Automation
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -331,24 +361,12 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="has_custom_prompt" className="cursor-pointer">Custom Prompt</Label>
-                  <p className="text-sm text-gray-500">Allow custom AI prompt configuration</p>
+                  <p className="text-sm text-gray-500">Allow custom AI prompt configuration with webhook integration</p>
                 </div>
                 <Switch 
                   id="has_custom_prompt"
                   checked={formData.has_custom_prompt}
                   onCheckedChange={(checked) => handleSwitchChange('has_custom_prompt', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="has_webhook" className="cursor-pointer">Webhook Integration</Label>
-                  <p className="text-sm text-gray-500">Enable webhook URL for external triggers</p>
-                </div>
-                <Switch 
-                  id="has_webhook"
-                  checked={formData.has_webhook}
-                  onCheckedChange={(checked) => handleSwitchChange('has_webhook', checked)}
                 />
               </div>
 

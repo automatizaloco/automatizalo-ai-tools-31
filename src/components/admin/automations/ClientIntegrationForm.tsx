@@ -58,6 +58,13 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
     }
   };
 
+  const updateButtonData = (setting: ClientIntegrationSetting, field: 'button_url' | 'button_text', value: string) => {
+    const updatedSettings = integrationSettings.map(s => 
+      s.id === setting.id ? { ...s, [field]: value } : s
+    );
+    setIntegrationSettings(updatedSettings);
+  };
+  
   const sendPromptToWebhook = async (promptText: string, webhookUrl: string) => {
     try {
       console.log('Sending prompt template to webhook:', webhookUrl);
@@ -407,12 +414,7 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
                 id="button-url"
                 type="url"
                 value={buttonSetting.button_url || ''}
-                onChange={(e) => {
-                  const updatedSettings = integrationSettings.map(s =>
-                    s.id === buttonSetting.id ? { ...s, button_url: e.target.value } : s
-                  );
-                  setIntegrationSettings(updatedSettings);
-                }}
+                onChange={(e) => updateButtonData(buttonSetting, 'button_url', e.target.value)}
                 placeholder="https://your-editor.com/automation/123"
                 className="mt-1"
               />
@@ -427,12 +429,7 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
                 id="button-text"
                 type="text"
                 value={buttonSetting.button_text || 'Abrir Editor'}
-                onChange={(e) => {
-                  const updatedSettings = integrationSettings.map(s =>
-                    s.id === buttonSetting.id ? { ...s, button_text: e.target.value } : s
-                  );
-                  setIntegrationSettings(updatedSettings);
-                }}
+                onChange={(e) => updateButtonData(buttonSetting, 'button_text', e.target.value)}
                 placeholder="Abrir Editor / Open Editor"
                 className="mt-1"
               />

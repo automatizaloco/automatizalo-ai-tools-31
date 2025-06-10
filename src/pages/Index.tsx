@@ -7,6 +7,7 @@ import About from '@/components/home/About';
 import SolutionsSection from '@/components/home/SolutionsSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import { useAuth } from '@/context/AuthContext';
+import { useAdminVerification } from '@/hooks/useAdminVerification';
 import { ensureContentBucket } from '@/services/blog/ensureBucket';
 import { useLocation } from 'react-router-dom';
 import { checkSupabaseConnection } from '@/services/supabaseService';
@@ -26,8 +27,9 @@ const Index = () => {
     { id: 3, name: 'Solutions Section', visible: true, component: 'SolutionsSection', order: 3 },
     { id: 4, name: 'Testimonials Section', visible: true, component: 'TestimonialsSection', order: 4 },
   ]);
+  
   const { user } = useAuth();
-  const isAdmin = !!user;
+  const { isAdmin, isVerifying } = useAdminVerification();
   const location = useLocation();
 
   // Ensure scroll to top on component mount
@@ -79,12 +81,12 @@ const Index = () => {
 
   // Inform admin users they can edit content
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && !isVerifying) {
       toast.info("You're logged in as admin. Click on any text or image to edit it.", {
         duration: 5000,
       });
     }
-  }, [isAdmin]);
+  }, [isAdmin, isVerifying]);
 
   const componentMap: Record<string, React.ReactNode> = {
     'Hero': <Hero isEditable={isAdmin} />,

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import { useAdminVerification } from '@/hooks/useAdminVerification';
 import EditableText from '@/components/admin/EditableText';
 
 interface HeroMainContentProps {
@@ -20,11 +21,15 @@ const HeroMainContent: React.FC<HeroMainContentProps> = ({
 }) => {
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const { isAdmin } = useAdminVerification();
+
+  // Only show editable components if user is authenticated AND is admin
+  const canEdit = isAuthenticated && isAdmin;
 
   return (
     <div className={`max-w-xl transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
       <span className="inline-block py-1 px-3 mb-4 bg-gray-200 text-gray-800 rounded-full text-sm font-medium">
-        {isAuthenticated ? (
+        {canEdit ? (
           <EditableText 
             id="hero-tagline"
             defaultText={t('home.hero.tagline')}
@@ -37,7 +42,7 @@ const HeroMainContent: React.FC<HeroMainContentProps> = ({
       </span>
       
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">
-        {isAuthenticated ? (
+        {canEdit ? (
           <EditableText 
             id="hero-title"
             defaultText={t('home.hero.title')}
@@ -50,7 +55,7 @@ const HeroMainContent: React.FC<HeroMainContentProps> = ({
       </h1>
       
       <p className="text-lg text-gray-600 mb-8">
-        {isAuthenticated ? (
+        {canEdit ? (
           <EditableText 
             id="hero-description"
             defaultText={t('home.hero.description')}

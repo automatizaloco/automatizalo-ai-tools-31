@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import SolutionCard from '@/components/ui/SolutionCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import { useAdminVerification } from '@/hooks/useAdminVerification';
 import EditableText from '@/components/admin/EditableText';
 
 interface SolutionsSectionProps {
@@ -25,6 +26,10 @@ const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
   const [isVisible, setIsVisible] = useState(false);
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const { isAdmin } = useAdminVerification();
+
+  // Only show editable components if user is authenticated AND is admin
+  const canEdit = isAuthenticated && isAdmin;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -90,7 +95,7 @@ const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
       <div className="container mx-auto px-4 md:px-8">
         <div className={`text-center max-w-2xl mx-auto mb-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <span className="inline-block py-1 px-3 mb-4 bg-blue-100 text-automatizalo-blue rounded-full text-sm font-medium">
-            {isAuthenticated ? (
+            {canEdit ? (
               <EditableText 
                 id="solutions-section-tag"
                 defaultText={t('solutions.sectionTag')}
@@ -102,7 +107,7 @@ const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
             )}
           </span>
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">
-            {isAuthenticated ? (
+            {canEdit ? (
               <EditableText 
                 id="solutions-section-title"
                 defaultText={t('solutions.sectionTitle')}
@@ -114,7 +119,7 @@ const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
             )}
           </h2>
           <p className="text-gray-600">
-            {isAuthenticated ? (
+            {canEdit ? (
               <EditableText 
                 id="solutions-section-description"
                 defaultText={t('solutions.sectionDescription')}
@@ -138,7 +143,7 @@ const SolutionsSection: React.FC<SolutionsSectionProps> = ({ isEditable }) => {
               imageUrl={solution.imageUrl}
               delay={index * 100}
               index={index}
-              isEditable={isEditable}
+              isEditable={canEdit}
               pageName="home"
               sectionName="solutions"
               imageId={solution.id}

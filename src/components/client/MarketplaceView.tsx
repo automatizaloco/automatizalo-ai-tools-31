@@ -177,13 +177,13 @@ const MarketplaceView: React.FC = () => {
               
               {/* Features list */}
               {(automation.has_custom_prompt || 
-                automation.has_form_integration || automation.has_table_integration) && (
+                automation.has_form_integration || automation.has_button_integration) && (
                 <div className="mt-4">
                   <p className="text-xs text-gray-500 mb-1">{t('marketplace.features')}:</p>
                   <ul className="text-xs text-gray-600">
                     {automation.has_custom_prompt && <li className="inline-block mr-2">• {t('marketplace.customPrompts')}</li>}
                     {automation.has_form_integration && <li className="inline-block mr-2">• {t('marketplace.forms')}</li>}
-                    {automation.has_table_integration && <li className="inline-block mr-2">• {t('marketplace.tables')}</li>}
+                    {automation.has_button_integration && <li className="inline-block mr-2">• {t('marketplace.buttons')}</li>}
                   </ul>
                 </div>
               )}

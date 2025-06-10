@@ -16,7 +16,7 @@ import IntegrationView from './IntegrationView';
 import WebhookAnalyticsDashboard from './WebhookAnalyticsDashboard';
 import CustomPromptEditor from './CustomPromptEditor';
 import FormIntegrationViewer from './FormIntegrationViewer';
-import TableDataManager from './TableDataManager';
+import ButtonIntegrationViewer from './ButtonIntegrationViewer';
 import CreateTicketModal from './CreateTicketModal';
 
 interface AutomationWithDetails {
@@ -27,7 +27,7 @@ interface AutomationWithDetails {
   has_custom_prompt: boolean;
   has_webhook: boolean;
   has_form_integration: boolean;
-  has_table_integration: boolean;
+  has_button_integration: boolean;
 }
 
 interface ClientAutomationDetails {
@@ -74,12 +74,12 @@ const AdvancedAutomationDetails: React.FC = () => {
   // Set initial tab based on available integrations
   useEffect(() => {
     if (clientAutomation?.automation) {
-      const { has_webhook, has_custom_prompt, has_form_integration, has_table_integration } = clientAutomation.automation;
+      const { has_webhook, has_custom_prompt, has_form_integration, has_button_integration } = clientAutomation.automation;
       
       if (has_webhook) setActiveTab('webhooks');
       else if (has_custom_prompt) setActiveTab('prompts');
       else if (has_form_integration) setActiveTab('forms');
-      else if (has_table_integration) setActiveTab('tables');
+      else if (has_button_integration) setActiveTab('buttons');
     }
   }, [clientAutomation]);
 
@@ -103,7 +103,7 @@ const AdvancedAutomationDetails: React.FC = () => {
     if (automation.has_webhook) tabs.push({ id: 'webhooks', label: t('automationDetails.webhooks'), icon: Activity });
     if (automation.has_custom_prompt) tabs.push({ id: 'prompts', label: t('automationDetails.customPrompts'), icon: FileText });
     if (automation.has_form_integration) tabs.push({ id: 'forms', label: t('automationDetails.forms'), icon: Settings });
-    if (automation.has_table_integration) tabs.push({ id: 'tables', label: t('automationDetails.tables'), icon: BarChart3 });
+    if (automation.has_button_integration) tabs.push({ id: 'buttons', label: t('automationDetails.buttons'), icon: BarChart3 });
     
     return tabs;
   };
@@ -273,9 +273,9 @@ const AdvancedAutomationDetails: React.FC = () => {
               </TabsContent>
             )}
 
-            {automation.has_table_integration && (
-              <TabsContent value="tables">
-                <TableDataManager 
+            {automation.has_button_integration && (
+              <TabsContent value="buttons">
+                <ButtonIntegrationViewer 
                   clientAutomationId={clientAutomation.id}
                   automationTitle={automation.title}
                 />

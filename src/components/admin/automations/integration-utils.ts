@@ -99,7 +99,7 @@ export const saveIntegration = async (data: Integration) => {
 /**
  * Initializes empty integration data based on type
  */
-export const createEmptyIntegration = (automationId: string, type: 'webhook' | 'form' | 'table'): Integration => {
+export const createEmptyIntegration = (automationId: string, type: 'webhook' | 'form' | 'button'): Integration => {
   const baseIntegration: Integration = {
     automation_id: automationId,
     integration_type: type,
@@ -113,7 +113,7 @@ export const createEmptyIntegration = (automationId: string, type: 'webhook' | '
         production_url: ''
       };
     case 'form':
-    case 'table':
+    case 'button':
       return {
         ...baseIntegration,
         integration_code: ''

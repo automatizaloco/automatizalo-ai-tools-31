@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -127,7 +128,7 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
                   <div className="flex flex-wrap gap-1 mb-2">
                     {automation.has_custom_prompt && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Custom Prompt</Badge>}
                     {automation.has_form_integration && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Form</Badge>}
-                    {automation.has_table_integration && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Table</Badge>}
+                    {automation.has_button_integration && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Button</Badge>}
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
                     Installation: ${automation.installation_price.toFixed(2)} | 

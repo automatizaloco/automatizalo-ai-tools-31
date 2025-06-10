@@ -174,8 +174,8 @@ const ClientAutomationsList: React.FC<ClientAutomationsListProps> = ({
                       <Badge variant="outline" className="bg-blue-50 text-blue-700">Custom Prompt</Badge>}
                     {clientAutomation.automation?.has_form_integration && 
                       <Badge variant="outline" className="bg-green-50 text-green-700">Form</Badge>}
-                    {clientAutomation.automation?.has_table_integration && 
-                      <Badge variant="outline" className="bg-amber-50 text-amber-700">Table</Badge>}
+                    {clientAutomation.automation?.has_button_integration && 
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700">Button</Badge>}
                   </div>
                 </div>
                 

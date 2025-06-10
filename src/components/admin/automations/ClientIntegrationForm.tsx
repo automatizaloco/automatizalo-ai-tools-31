@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +57,35 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
       setIsLoading(false);
     }
   };
+
+  const sendPromptToWebhook = async (promptText: string, webhookUrl: string) => {
+    try {
+      console.log('Sending prompt template to webhook:', webhookUrl);
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: promptText,
+          automation_name: clientAutomation.automation?.title,
+          client_automation_id: clientAutomation.id,
+          client_email: clientAutomation.client?.email,
+          action: 'template_created',
+          timestamp: new Date().toISOString()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook request failed: ${response.status}`);
+      }
+
+      console.log('Prompt template sent to webhook successfully');
+    } catch (error) {
+      console.error('Failed to send prompt template to webhook:', error);
+      // Don't show error to user, just log it
+    }
+  };
   
   const getSettingByType = (type: string): ClientIntegrationSetting | undefined => {
     return integrationSettings.find(setting => setting.integration_type === type);
@@ -75,6 +103,13 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
       
       if (result?.success) {
         toast.success(`${setting.integration_type} integration configured successfully`);
+        
+        // Send prompt to webhook if it's a custom_prompt with webhook URL and prompt text
+        if (setting.integration_type === 'custom_prompt' && 
+            setting.prompt_webhook_url && 
+            setting.prompt_text?.trim()) {
+          await sendPromptToWebhook(setting.prompt_text, setting.prompt_webhook_url);
+        }
         
         // Reload settings to get the latest data
         await loadIntegrationSettings();

@@ -126,21 +126,35 @@ const IntegrationView: React.FC<IntegrationViewProps> = ({
           
           {availableTypes.includes('form') && (
             <TabsContent value="form" className="pt-4">
-              <CodeEmbedView 
-                data={formSetting!}
-                title="Form Integration"
-                icon={<FileCode className="h-5 w-5 text-green-500" />}
-              />
+              <div className="space-y-4">
+                <CodeEmbedView 
+                  data={formSetting!}
+                  title="Form Integration"
+                  icon={<FileCode className="h-5 w-5 text-green-500" />}
+                />
+                <div className="bg-blue-50 p-4 rounded-md">
+                  <p className="text-sm text-blue-700">
+                    Form submissions will be processed automatically. You can view detailed analytics in the main automation dashboard.
+                  </p>
+                </div>
+              </div>
             </TabsContent>
           )}
           
           {availableTypes.includes('table') && (
             <TabsContent value="table" className="pt-4">
-              <CodeEmbedView 
-                data={tableSetting!}
-                title="Table Integration"
-                icon={<Table className="h-5 w-5 text-amber-500" />}
-              />
+              <div className="space-y-4">
+                <CodeEmbedView 
+                  data={tableSetting!}
+                  title="Table Integration"
+                  icon={<Table className="h-5 w-5 text-amber-500" />}
+                />
+                <div className="bg-amber-50 p-4 rounded-md">
+                  <p className="text-sm text-amber-700">
+                    Table data will be synchronized automatically. New entries will trigger the automation workflow.
+                  </p>
+                </div>
+              </div>
             </TabsContent>
           )}
         </Tabs>

@@ -1,18 +1,19 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useTheme } from "@/context/ThemeContext";
 import { AlertCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 
 const Login = () => {
-  const [email, setEmail] = useState("contact@automatizalo.co");
-  const [password, setPassword] = useState("Automatizalo2025@");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberPassword, setRememberPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
@@ -21,6 +22,20 @@ const Login = () => {
   const location = useLocation();
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("admin_saved_email");
+    const savedPassword = localStorage.getItem("admin_saved_password");
+    
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberPassword(true);
+    }
+    if (savedPassword) {
+      setPassword(savedPassword);
+    }
+  }, []);
 
   // Check for redirect parameter
   useEffect(() => {
@@ -58,6 +73,15 @@ const Login = () => {
       } else {
         console.log("Login successful");
         toast.success("Login successful!");
+        
+        // Save credentials if remember password is checked
+        if (rememberPassword) {
+          localStorage.setItem("admin_saved_email", email);
+          localStorage.setItem("admin_saved_password", password);
+        } else {
+          localStorage.removeItem("admin_saved_email");
+          localStorage.removeItem("admin_saved_password");
+        }
         
         // Redirect to the requested page or admin dashboard
         if (redirectTo) {
@@ -119,6 +143,20 @@ const Login = () => {
                 required
                 className={theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : ''}
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="remember" 
+                checked={rememberPassword}
+                onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
+              />
+              <Label 
+                htmlFor="remember" 
+                className={`text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}
+              >
+                Remember password
+              </Label>
             </div>
             
             <Button 

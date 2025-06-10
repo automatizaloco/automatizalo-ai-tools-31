@@ -7,6 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminVerification } from '@/hooks/useAdminVerification';
 import LanguageSwitcher from './LanguageSwitcher';
+import UserIndicator from './UserIndicator';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -99,17 +100,21 @@ const Navbar = () => {
             </div>
             
             {isAuthenticated && (
-              <Button 
-                variant="outline" 
-                className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 z-10"
-                onClick={logout}
-              >
-                {t('nav.logout')}
-              </Button>
+              <>
+                <UserIndicator />
+                <Button 
+                  variant="outline" 
+                  className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 z-10"
+                  onClick={logout}
+                >
+                  {t('nav.logout')}
+                </Button>
+              </>
             )}
           </div>
 
           <div className="md:hidden flex items-center gap-4">
+            {isAuthenticated && <UserIndicator />}
             <div className="z-20">
               <LanguageSwitcher />
             </div>

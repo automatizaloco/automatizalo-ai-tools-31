@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +13,7 @@ const ClientLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberPassword, setRememberPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -19,6 +21,20 @@ const ClientLogin = () => {
     user
   } = useAuth();
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("client_saved_email");
+    const savedPassword = localStorage.getItem("client_saved_password");
+    
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberPassword(true);
+    }
+    if (savedPassword) {
+      setPassword(savedPassword);
+    }
+  }, []);
 
   // Check for redirect parameter
   useEffect(() => {
@@ -56,6 +72,15 @@ const ClientLogin = () => {
       });
       if (error) throw error;
       console.log('Login successful, checking user role');
+
+      // Save credentials if remember password is checked
+      if (rememberPassword) {
+        localStorage.setItem("client_saved_email", email);
+        localStorage.setItem("client_saved_password", password);
+      } else {
+        localStorage.removeItem("client_saved_email");
+        localStorage.removeItem("client_saved_password");
+      }
 
       // Special case for the main admin account
       if (email === 'contact@automatizalo.co') {
@@ -151,7 +176,8 @@ const ClientLogin = () => {
     }
   };
 
-  return <Card className="max-w-md mx-auto mt-[100px]">
+  return (
+    <Card className="max-w-md mx-auto mt-[100px]">
       <CardHeader>
         <CardTitle>Client Login</CardTitle>
         <CardDescription>
@@ -162,12 +188,35 @@ const ClientLogin = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+            <Input 
+              id="email" 
+              type="email" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required 
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+            <Input 
+              id="password" 
+              type="password" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              required 
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="remember" 
+              checked={rememberPassword}
+              onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
+            />
+            <Label htmlFor="remember" className="text-sm text-gray-700">
+              Remember password
+            </Label>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
@@ -175,7 +224,8 @@ const ClientLogin = () => {
           </Button>
         </form>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
 
 export default ClientLogin;

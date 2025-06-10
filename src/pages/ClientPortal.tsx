@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClientLogin from '@/components/client/ClientLogin';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import MyAutomationsView from '@/components/client/MyAutomationsView';
 import MarketplaceView from '@/components/client/MarketplaceView';
 import SupportTicketsView from '@/components/client/SupportTicketsView';
@@ -21,6 +22,7 @@ const ClientPortal: React.FC<ClientPortalProps> = ({
   view = null 
 }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { ticketId, automationId } = useParams<{ ticketId: string; automationId: string }>();
 
   if (!user) {
@@ -52,8 +54,8 @@ const ClientPortal: React.FC<ClientPortalProps> = ({
         {!view && (
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Client Portal</h1>
-              <p className="text-gray-600">Manage your automations and integrations</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('clientPortal.title')}</h1>
+              <p className="text-gray-600">{t('clientPortal.subtitle')}</p>
             </div>
 
             <div className="bg-white rounded-lg shadow">
@@ -64,19 +66,19 @@ const ClientPortal: React.FC<ClientPortalProps> = ({
                       value="my-automations" 
                       className="text-base data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-700"
                     >
-                      My Automations
+                      {t('clientPortal.myAutomations')}
                     </TabsTrigger>
                     <TabsTrigger 
                       value="marketplace" 
                       className="text-base data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-700"
                     >
-                      Marketplace
+                      {t('clientPortal.marketplace')}
                     </TabsTrigger>
                     <TabsTrigger 
                       value="support" 
                       className="text-base data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-700"
                     >
-                      Support
+                      {t('clientPortal.support')}
                     </TabsTrigger>
                   </TabsList>
                 </div>

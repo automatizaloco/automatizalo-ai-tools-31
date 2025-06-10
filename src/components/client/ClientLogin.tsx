@@ -1,230 +1,129 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
-const ClientLogin = () => {
-  const [isLoading, setIsLoading] = useState(false);
+const ClientLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberPassword, setRememberPassword] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const {
-    isAuthenticated,
-    user
-  } = useAuth();
-  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const { t } = useLanguage();
 
   // Load saved credentials on component mount
   useEffect(() => {
-    const savedEmail = localStorage.getItem("client_saved_email");
-    const savedPassword = localStorage.getItem("client_saved_password");
+    const savedEmail = localStorage.getItem('client_saved_email');
+    const savedPassword = localStorage.getItem('client_saved_password');
     
-    if (savedEmail) {
+    if (savedEmail && savedPassword) {
       setEmail(savedEmail);
+      setPassword(savedPassword);
       setRememberPassword(true);
     }
-    if (savedPassword) {
-      setPassword(savedPassword);
-    }
   }, []);
-
-  // Check for redirect parameter
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const redirect = params.get('redirect');
-    if (redirect) {
-      setRedirectTo(redirect);
-    }
-  }, [location]);
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log("Already authenticated in client login, redirecting");
-      if (redirectTo) {
-        navigate(redirectTo);
-      } else if (user.email === 'contact@automatizalo.co') {
-        navigate('/admin');
-      } else {
-        navigate('/client-portal');
-      }
-    }
-  }, [isAuthenticated, user, navigate, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
-      const {
-        data,
-        error
-      } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      if (error) throw error;
-      console.log('Login successful, checking user role');
+      await signIn(email, password);
 
       // Save credentials if remember password is checked
       if (rememberPassword) {
-        localStorage.setItem("client_saved_email", email);
-        localStorage.setItem("client_saved_password", password);
+        localStorage.setItem('client_saved_email', email);
+        localStorage.setItem('client_saved_password', password);
       } else {
-        localStorage.removeItem("client_saved_email");
-        localStorage.removeItem("client_saved_password");
+        // Clear saved credentials if remember password is unchecked
+        localStorage.removeItem('client_saved_email');
+        localStorage.removeItem('client_saved_password');
       }
-
-      // Special case for the main admin account
-      if (email === 'contact@automatizalo.co') {
-        console.log('Main admin account detected, redirecting to admin');
-
-        // Ensure the user has admin role in the database
-        const {
-          data: userData,
-          error: fetchError
-        } = await supabase.from('users').select('role').eq('id', data.user.id).single();
-        console.log('User data for admin:', userData);
-        if (fetchError) {
-          console.error('Error fetching user role:', fetchError);
-        }
-
-        // If user doesn't exist or doesn't have admin role, update it
-        if (!userData || userData.role !== 'admin') {
-          console.log('Setting admin role for main account');
-          const {
-            error: updateError
-          } = await supabase.from('users').upsert({
-            id: data.user.id,
-            email: email,
-            role: 'admin'
-          });
-          if (updateError) {
-            console.error('Error updating admin role:', updateError);
-          } else {
-            console.log('Successfully updated to admin role');
-          }
-        }
-
-        // If there's a redirect URL, use it; otherwise go to admin
-        if (redirectTo) {
-          navigate(redirectTo);
-        } else {
-          navigate('/admin');
-        }
-        toast.success('Successfully logged in as administrator');
-        return;
-      }
-
-      // For regular users, check role in database
-      const {
-        data: userData,
-        error: userError
-      } = await supabase.from('users').select('role').eq('id', data.user.id).single();
-      if (userError) {
-        console.error('Error fetching user role:', userError);
-
-        // Try to create a user entry if it doesn't exist
-        const {
-          error: createError
-        } = await supabase.from('users').upsert({
-          id: data.user.id,
-          email: email,
-          role: 'client' // Default to client role
-        });
-        if (createError) {
-          console.error('Error creating user record:', createError);
-        }
-        if (redirectTo) {
-          navigate(redirectTo);
-        } else {
-          navigate('/client-portal');
-        }
-        toast.success('Successfully logged in');
-        return;
-      }
-      console.log('User data:', userData);
-
-      // Redirect based on role
-      if (userData?.role === 'admin') {
-        if (redirectTo) {
-          navigate(redirectTo);
-        } else {
-          navigate('/admin');
-        }
-        toast.success('Successfully logged in as administrator');
-      } else {
-        if (redirectTo) {
-          navigate(redirectTo);
-        } else {
-          navigate('/client-portal');
-        }
-        toast.success('Successfully logged in');
-      }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error:', error);
-      toast.error(error.message || 'An error occurred during login');
+      toast.error(t('login.loginError'));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="max-w-md mx-auto mt-[100px]">
-      <CardHeader>
-        <CardTitle>Client Login</CardTitle>
-        <CardDescription>
-          Login to access your client portal. Contact an administrator if you need an account.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
-            />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
+            <span className="text-2xl font-bold text-white">A</span>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              required 
-            />
+          <div>
+            <CardTitle className="text-2xl font-bold">{t('login.welcome')} Automatízalo</CardTitle>
+            <CardDescription className="mt-2">
+              {t('login.clientWelcomeDesc')}
+            </CardDescription>
           </div>
+        </CardHeader>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('login.email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder={t('login.email')}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">{t('login.password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder={t('login.password')}
+              />
+            </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="remember" 
-              checked={rememberPassword}
-              onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
-            />
-            <Label htmlFor="remember" className="text-sm text-gray-700">
-              Remember password
-            </Label>
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign In'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember-password"
+                checked={rememberPassword}
+                onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
+              />
+              <Label htmlFor="remember-password" className="text-sm">
+                {t('login.rememberPassword')}
+              </Label>
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('login.loggingIn')}
+                </>
+              ) : (
+                t('login.signIn')
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

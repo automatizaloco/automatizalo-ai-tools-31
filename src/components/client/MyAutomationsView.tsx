@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +16,7 @@ import type { ClientAutomation } from '@/types/automation';
 
 const MyAutomationsView: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Fetch client automations
@@ -54,22 +57,22 @@ const MyAutomationsView: React.FC = () => {
 
       if (error) throw error;
       
-      toast.success('Subscription canceled successfully');
+      toast.success(t('clientPortal.cancelSuccess'));
       refetch();
     } catch (error) {
       console.error('Error canceling subscription:', error);
-      toast.error('Failed to cancel subscription');
+      toast.error(t('clientPortal.cancelError'));
     }
   };
 
   const getSetupStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">Setup Pending</Badge>;
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">{t('clientPortal.setupPending')}</Badge>;
       case 'in_progress':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Setup In Progress</Badge>;
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">{t('clientPortal.setupInProgress')}</Badge>;
       case 'completed':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Ready to Use</Badge>;
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">{t('clientPortal.readyToUse')}</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -77,10 +80,10 @@ const MyAutomationsView: React.FC = () => {
 
   const getIntegrationBadges = (automation: any) => {
     const badges = [];
-    if (automation?.has_webhook) badges.push({ icon: Webhook, label: 'Webhook', color: 'bg-purple-50 text-purple-700' });
-    if (automation?.has_custom_prompt) badges.push({ icon: FileText, label: 'Custom Prompt', color: 'bg-blue-50 text-blue-700' });
-    if (automation?.has_form_integration) badges.push({ icon: FileCode, label: 'Form', color: 'bg-green-50 text-green-700' });
-    if (automation?.has_table_integration) badges.push({ icon: Table, label: 'Table', color: 'bg-amber-50 text-amber-700' });
+    if (automation?.has_webhook) badges.push({ icon: Webhook, label: t('clientPortal.webhook'), color: 'bg-purple-50 text-purple-700' });
+    if (automation?.has_custom_prompt) badges.push({ icon: FileText, label: t('clientPortal.customPrompt'), color: 'bg-blue-50 text-blue-700' });
+    if (automation?.has_form_integration) badges.push({ icon: FileCode, label: t('clientPortal.form'), color: 'bg-green-50 text-green-700' });
+    if (automation?.has_table_integration) badges.push({ icon: Table, label: t('clientPortal.table'), color: 'bg-amber-50 text-amber-700' });
     return badges;
   };
 
@@ -108,18 +111,18 @@ const MyAutomationsView: React.FC = () => {
   if (!clientAutomations || clientAutomations.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-between mb-6">
+        <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
           <Activity className="h-12 w-12 text-gray-400" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">No Active Automations</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('clientPortal.noActiveAutomations')}</h2>
         <p className="text-gray-600 mb-8 max-w-md mx-auto">
-          You don't have any active automations at the moment. Browse our marketplace to find automations that can help streamline your workflows.
+          {t('clientPortal.noActiveAutomationsDesc')}
         </p>
         <Button 
           onClick={() => navigate('/client-portal?tab=marketplace')}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          Browse Marketplace
+          {t('clientPortal.browseMarketplace')}
         </Button>
       </div>
     );
@@ -129,15 +132,15 @@ const MyAutomationsView: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">My Automations</h2>
-          <p className="text-gray-600">Manage and monitor your active automation workflows</p>
+          <h2 className="text-2xl font-bold text-gray-900">{t('clientPortal.myAutomationsTitle')}</h2>
+          <p className="text-gray-600">{t('clientPortal.myAutomationsDesc')}</p>
         </div>
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="bg-green-50 text-green-700">
-            {clientAutomations.filter(ca => ca.setup_status === 'completed').length} Ready
+            {clientAutomations.filter(ca => ca.setup_status === 'completed').length} {t('clientPortal.ready')}
           </Badge>
           <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            {clientAutomations.length} Total
+            {clientAutomations.length} {t('clientPortal.total')}
           </Badge>
         </div>
       </div>
@@ -186,11 +189,11 @@ const MyAutomationsView: React.FC = () => {
               <CardContent className="pb-4">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                   <div>
-                    <span className="text-gray-500 block">Purchase Date</span>
+                    <span className="text-gray-500 block">{t('clientPortal.purchaseDate')}</span>
                     <p className="font-medium">{format(new Date(clientAutomation.purchase_date), 'MMM d, yyyy')}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 block">Next Billing</span>
+                    <span className="text-gray-500 block">{t('clientPortal.nextBilling')}</span>
                     <p className="font-medium">
                       {clientAutomation.status === 'active' 
                         ? format(new Date(clientAutomation.next_billing_date), 'MMM d, yyyy') 
@@ -198,15 +201,15 @@ const MyAutomationsView: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-500 block">Monthly Price</span>
+                    <span className="text-gray-500 block">{t('clientPortal.monthlyPrice')}</span>
                     <p className="font-bold text-green-600">
                       ${clientAutomation.automation?.monthly_price?.toFixed(2) || '0.00'}
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-500 block">Status</span>
+                    <span className="text-gray-500 block">{t('clientPortal.status')}</span>
                     <Badge variant="outline" className="bg-green-50 text-green-700">
-                      {clientAutomation.status}
+                      {t(`clientPortal.${clientAutomation.status}`)}
                     </Badge>
                   </div>
                 </div>
@@ -223,12 +226,12 @@ const MyAutomationsView: React.FC = () => {
                   {clientAutomation.setup_status === 'pending' ? (
                     <>
                       <Settings className="w-4 h-4 mr-2" />
-                      Setting Up...
+                      {t('clientPortal.settingUp')}
                     </>
                   ) : (
                     <>
                       <BarChart3 className="w-4 h-4 mr-2" />
-                      Manage
+                      {t('clientPortal.manage')}
                     </>
                   )}
                 </Button>
@@ -240,7 +243,7 @@ const MyAutomationsView: React.FC = () => {
                     className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                     onClick={() => handleCancelSubscription(clientAutomation.id)}
                   >
-                    Cancel
+                    {t('clientPortal.cancel')}
                   </Button>
                 )}
               </CardFooter>

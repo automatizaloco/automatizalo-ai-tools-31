@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { escapeSql, runQuery } from '@/components/admin/adminActions';
@@ -10,6 +11,7 @@ export interface ClientIntegrationSetting {
   production_url?: string;
   integration_code?: string;
   prompt_text?: string;
+  prompt_webhook_url?: string;
   status: 'pending' | 'configured' | 'active';
   created_at?: string;
   updated_at?: string;

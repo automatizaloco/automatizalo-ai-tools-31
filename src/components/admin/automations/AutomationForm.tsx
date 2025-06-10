@@ -19,7 +19,7 @@ interface AutomationFormProps {
     image_url?: string;
     has_custom_prompt?: boolean;
     has_form_integration?: boolean;
-    has_table_integration?: boolean;
+    has_button_integration?: boolean;
   }) => Promise<void>;
   isSaving: boolean;
   automation?: {
@@ -31,7 +31,7 @@ interface AutomationFormProps {
     image_url?: string;
     has_custom_prompt?: boolean;
     has_form_integration?: boolean;
-    has_table_integration?: boolean;
+    has_button_integration?: boolean;
   };
   isEditing?: boolean;
   onNewAutomation?: () => void;
@@ -52,7 +52,7 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
     image_url: '',
     has_custom_prompt: false,
     has_form_integration: false,
-    has_table_integration: false,
+    has_button_integration: false,
   });
   const [errorFields, setErrorFields] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -69,7 +69,7 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
         image_url: automation.image_url || '',
         has_custom_prompt: automation.has_custom_prompt || false,
         has_form_integration: automation.has_form_integration || false,
-        has_table_integration: automation.has_table_integration || false,
+        has_button_integration: automation.has_button_integration || false,
       });
       setShowImageUrlField(!!automation.image_url);
     }
@@ -105,7 +105,7 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
       image_url: '',
       has_custom_prompt: false,
       has_form_integration: false,
-      has_table_integration: false,
+      has_button_integration: false,
     });
     setErrorFields([]);
     setShowImageUrlField(true);
@@ -187,7 +187,7 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
           image_url: '',
           has_custom_prompt: false,
           has_form_integration: false,
-          has_table_integration: false,
+          has_button_integration: false,
         });
       }
       toast.success(isEditing ? 'Automation updated successfully!' : 'Automation created successfully!');
@@ -384,13 +384,13 @@ const AutomationForm: React.FC<AutomationFormProps> = ({
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="has_table_integration" className="cursor-pointer">Table Integration</Label>
-                  <p className="text-sm text-gray-500">Connect to external data tables</p>
+                  <Label htmlFor="has_button_integration" className="cursor-pointer">Button Integration</Label>
+                  <p className="text-sm text-gray-500">Add external button link integration</p>
                 </div>
                 <Switch 
-                  id="has_table_integration"
-                  checked={formData.has_table_integration}
-                  onCheckedChange={(checked) => handleSwitchChange('has_table_integration', checked)}
+                  id="has_button_integration"
+                  checked={formData.has_button_integration}
+                  onCheckedChange={(checked) => handleSwitchChange('has_button_integration', checked)}
                 />
               </div>
             </div>

@@ -16,8 +16,8 @@ const translations = {
   en: {
     // Navigation translations
     nav: {
-      home: 'Get Started',
-      solutions: 'Learn More',
+      home: 'Home',
+      solutions: 'Solutions',
       blog: 'Blog',
       contact: 'Contact',
       logout: 'Logout'
@@ -282,8 +282,8 @@ const translations = {
   es: {
     // Navigation translations
     nav: {
-      home: 'Comenzar',
-      solutions: 'Aprender Más',
+      home: 'Inicio',
+      solutions: 'Soluciones',
       blog: 'Blog',
       contact: 'Contacto',
       logout: 'Cerrar Sesión'
@@ -546,8 +546,8 @@ const translations = {
   fr: {
     // Navigation translations
     nav: {
-      home: 'Commencer',
-      solutions: 'En Savoir Plus',
+      home: 'Accueil',
+      solutions: 'Solutions',
       blog: 'Blog',
       contact: 'Contact',
       logout: 'Se Déconnecter'
@@ -848,5 +848,3 @@ export const useLanguage = () => {
   }
   return context;
 };
-
-</edits_to_apply>

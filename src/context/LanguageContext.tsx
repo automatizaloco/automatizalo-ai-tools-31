@@ -14,7 +14,6 @@ interface LanguageProviderProps {
 
 const translations = {
   en: {
-    // Navigation translations
     nav: {
       home: 'Home',
       solutions: 'Solutions',
@@ -23,7 +22,6 @@ const translations = {
       logout: 'Logout',
       login: 'Login'
     },
-    // Home page translations
     home: {
       hero: {
         getStarted: 'Get Started',
@@ -33,7 +31,6 @@ const translations = {
         description: 'helps businesses automate repetitive tasks, improve efficiency, and scale operations with cutting-edge AI technology. From chatbots to data analysis, we\'ve got you covered.'
       }
     },
-    // Solutions page translations
     solutions: {
       title: 'Our Solutions',
       subtitle: 'Comprehensive AI Automation Solutions',
@@ -82,7 +79,6 @@ const translations = {
         feature3: 'Custom Workflows'
       }
     },
-    // Blog translations
     blog: {
       title: "Blog",
       subtitle: "Discover insights, trends, and innovations in automation and AI",
@@ -99,12 +95,9 @@ const translations = {
         success: 'Successfully subscribed!',
         error: 'Failed to subscribe. Please try again.'
       },
-      readMore: 'Read More',
       categories: 'Categories',
-      allPosts: 'All Posts',
-      featured: 'Featured Posts'
+      allPosts: 'All Posts'
     },
-    // Footer translations
     footer: {
       company: 'Company',
       about: 'About Us',
@@ -117,13 +110,11 @@ const translations = {
       privacyPolicy: 'Privacy Policy',
       termsOfService: 'Terms of Service'
     },
-    // Testimonials translations
     testimonials: {
       title: 'Testimonials',
       subtitle: 'What Our Clients Say',
       description: 'Hear from businesses that have transformed their operations with our AI automation solutions.'
     },
-    // Contact page translations
     contact: {
       title: 'Contact Us',
       subtitle: 'Get in Touch',
@@ -157,7 +148,6 @@ const translations = {
       loggingIn: 'Logging In...',
       loginError: 'Invalid credentials'
     },
-    // ... keep existing code (client portal translations) the same ...
     clientPortal: {
       title: 'Client Portal',
       subtitle: 'Manage your automations and support tickets',
@@ -206,7 +196,6 @@ const translations = {
       logs: 'Logs',
       configuration: 'Configuration'
     },
-    // ... keep existing code (marketplace and other translations) the same ...
     marketplace: {
       noAutomations: 'No Automations Available',
       noAutomationsDesc: 'There are currently no automations available in the marketplace.',
@@ -330,7 +319,6 @@ const translations = {
     }
   },
   es: {
-    // Navigation translations
     nav: {
       home: 'Inicio',
       solutions: 'Soluciones',
@@ -339,7 +327,6 @@ const translations = {
       logout: 'Cerrar Sesión',
       login: 'Iniciar Sesión'
     },
-    // Home page translations
     home: {
       hero: {
         getStarted: 'Comenzar',
@@ -349,7 +336,6 @@ const translations = {
         description: 'ayuda a las empresas a automatizar tareas repetitivas, mejorar la eficiencia y escalar operaciones con tecnología IA de vanguardia. Desde chatbots hasta análisis de datos, te tenemos cubierto.'
       }
     },
-    // Solutions page translations
     solutions: {
       title: 'Nuestras Soluciones',
       subtitle: 'Soluciones Integrales de Automatización IA',
@@ -398,7 +384,6 @@ const translations = {
         feature3: 'Flujos de Trabajo Personalizados'
       }
     },
-    // Blog translations
     blog: {
       title: "Blog",
       subtitle: "Descubre insights, tendencias e innovaciones en automatización e IA",
@@ -415,12 +400,9 @@ const translations = {
         success: '¡Suscripción exitosa!',
         error: 'Error al suscribirse. Por favor intenta de nuevo.'
       },
-      readMore: 'Leer Más',
       categories: 'Categorías',
-      allPosts: 'Todas las Publicaciones',
-      featured: 'Publicaciones Destacadas'
+      allPosts: 'Todas las Publicaciones'
     },
-    // Footer translations
     footer: {
       company: 'Empresa',
       about: 'Acerca de Nosotros',
@@ -433,7 +415,6 @@ const translations = {
       privacyPolicy: 'Política de Privacidad',
       termsOfService: 'Términos de Servicio'
     },
-    // ... keep existing code (spanish client portal translations) the same ...
     clientPortal: {
       title: 'Portal del Cliente',
       subtitle: 'Administra tus automatizaciones y tickets de soporte',
@@ -482,7 +463,6 @@ const translations = {
       logs: 'Registros',
       configuration: 'Configuración'
     },
-    // ... keep existing code (rest of spanish translations) the same ...
     testimonials: {
       title: 'Testimonios',
       subtitle: 'Lo Que Dicen Nuestros Clientes',
@@ -619,7 +599,7 @@ const translations = {
       configure: 'Configurar',
       test: 'Probar',
       save: 'Guardar',
-      copy: 'Copiar',
+      copy: '¡Copiado!',
       copied: '¡Copiado!',
       url: 'URL',
       method: 'Método',
@@ -644,7 +624,6 @@ const translations = {
     }
   },
   fr: {
-    // Navigation translations
     nav: {
       home: 'Accueil',
       solutions: 'Solutions',
@@ -653,7 +632,6 @@ const translations = {
       logout: 'Se Déconnecter',
       login: 'Se Connecter'
     },
-    // Home page translations
     home: {
       hero: {
         getStarted: 'Commencer',
@@ -663,7 +641,6 @@ const translations = {
         description: 'aide les entreprises à automatiser les tâches répétitives, améliorer l\'efficacité et faire évoluer les opérations avec une technologie IA de pointe. Des chatbots à l\'analyse de données, nous vous couvrons.'
       }
     },
-    // Solutions page translations
     solutions: {
       title: 'Nos Solutions',
       subtitle: 'Solutions Complètes d\'Automatisation IA',
@@ -712,7 +689,6 @@ const translations = {
         feature3: 'Flux de Travail Personnalisés'
       }
     },
-    // Blog translations
     blog: {
       title: "Blog",
       subtitle: "Découvrez les insights, tendances et innovations en automatisation et IA",
@@ -729,12 +705,9 @@ const translations = {
         success: 'Abonnement réussi!',
         error: 'Échec de l\'abonnement. Veuillez réessayer.'
       },
-      readMore: 'Lire Plus',
       categories: 'Catégories',
-      allPosts: 'Tous les Articles',
-      featured: 'Articles en Vedette'
+      allPosts: 'Tous les Articles'
     },
-    // Footer translations
     footer: {
       company: 'Entreprise',
       about: 'À Propos',
@@ -747,7 +720,6 @@ const translations = {
       privacyPolicy: 'Politique de Confidentialité',
       termsOfService: 'Conditions de Service'
     },
-    // ... keep existing code (french client portal translations) the same ...
     clientPortal: {
       title: 'Portail Client',
       subtitle: 'Gérez vos automatisations et tickets de support',
@@ -998,5 +970,3 @@ export const useLanguage = () => {
   }
   return context;
 };
-
-</edits_to_apply>

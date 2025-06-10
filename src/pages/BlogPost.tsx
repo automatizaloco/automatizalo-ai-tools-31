@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { language, translateContent } = useLanguage();
+  const { language } = useLanguage();
   
   // Optimized query for individual blog post
   const { 
@@ -31,6 +31,14 @@ const BlogPost = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
+
+  // Simple translation helper for blog content
+  const translateContent = (post: BlogPostType, field: 'title' | 'content', lang: string) => {
+    if (lang === 'en') return post[field];
+    if (lang === 'es' && post[`${field}_es`]) return post[`${field}_es`];
+    if (lang === 'fr' && post[`${field}_fr`]) return post[`${field}_fr`];
+    return post[field]; // fallback to English
+  };
 
   if (isLoading) {
     return (

@@ -14,6 +14,14 @@ interface LanguageProviderProps {
 
 const translations = {
   en: {
+    // Navigation translations
+    nav: {
+      home: 'Home',
+      solutions: 'Solutions',
+      blog: 'Blog',
+      contact: 'Contact',
+      logout: 'Logout'
+    },
     login: {
       welcome: 'Welcome to',
       clientWelcomeDesc: 'Client Portal - Access your automations',
@@ -53,7 +61,24 @@ const translations = {
       noActiveAutomationsDesc: 'Explore the marketplace to find the perfect automation for your needs.',
       browseMarketplace: 'Browse Marketplace',
       settingUp: 'Setting Up',
-      manage: 'Manage'
+      manage: 'Manage',
+      viewDetails: 'View Details',
+      configure: 'Configure',
+      getSupport: 'Get Support',
+      description: 'Description',
+      features: 'Features',
+      instructions: 'Instructions',
+      setupInstructions: 'Setup Instructions',
+      usageInstructions: 'Usage Instructions',
+      troubleshooting: 'Troubleshooting',
+      integrationSettings: 'Integration Settings',
+      webhookUrl: 'Webhook URL',
+      customPrompts: 'Custom Prompts',
+      formIntegration: 'Form Integration',
+      tableData: 'Table Data',
+      analytics: 'Analytics',
+      logs: 'Logs',
+      configuration: 'Configuration'
     },
     // Marketplace translations
     marketplace: {
@@ -71,7 +96,12 @@ const translations = {
       alreadyOwned: 'You already own this automation',
       loginToPurchase: 'Please login to purchase automations',
       purchaseSuccess: 'Automation purchased successfully! Our team will set it up for you soon.',
-      purchaseError: 'Failed to purchase automation'
+      purchaseError: 'Failed to purchase automation',
+      loading: 'Loading automations...',
+      price: 'Price',
+      oneTimeSetup: 'One-time setup',
+      description: 'Description',
+      included: 'Included features'
     },
 
     // Support tickets translations
@@ -108,7 +138,16 @@ const translations = {
       supportTeam: 'Support Team',
       client: 'Client',
       automationLabel: 'Automation:',
-      createdLabel: 'Created:'
+      createdLabel: 'Created:',
+      status: 'Status',
+      open: 'Open',
+      inProgress: 'In Progress',
+      resolved: 'Resolved',
+      closed: 'Closed',
+      priority: 'Priority',
+      high: 'High',
+      medium: 'Medium',
+      low: 'Low'
     },
 
     // Advanced automation details translations
@@ -129,10 +168,54 @@ const translations = {
       customPrompts: 'Custom Prompts',
       forms: 'Forms',
       tables: 'Tables',
-      createTicket: 'Create Ticket'
+      createTicket: 'Create Ticket',
+      overview: 'Overview',
+      integrations: 'Integrations',
+      documentation: 'Documentation',
+      support: 'Support',
+      settings: 'Settings',
+      webhook: 'Webhook',
+      customPrompt: 'Custom Prompt',
+      form: 'Form',
+      table: 'Table',
+      active: 'Active',
+      inactive: 'Inactive',
+      configure: 'Configure',
+      test: 'Test',
+      save: 'Save',
+      copy: 'Copy',
+      copied: 'Copied!',
+      url: 'URL',
+      method: 'Method',
+      headers: 'Headers',
+      payload: 'Payload',
+      response: 'Response',
+      logs: 'Logs',
+      analytics: 'Analytics',
+      requests: 'Requests',
+      errors: 'Errors',
+      successRate: 'Success Rate',
+      averageResponse: 'Average Response Time',
+      lastRequest: 'Last Request',
+      totalRequests: 'Total Requests',
+      edit: 'Edit',
+      delete: 'Delete',
+      add: 'Add',
+      update: 'Update',
+      loading: 'Loading...',
+      noData: 'No data available',
+      refresh: 'Refresh'
     }
   },
   es: {
+    // Navigation translations
+    nav: {
+      home: 'Inicio',
+      solutions: 'Soluciones',
+      blog: 'Blog',
+      contact: 'Contacto',
+      logout: 'Cerrar Sesión'
+    },
     login: {
       welcome: 'Bienvenido a',
       clientWelcomeDesc: 'Portal del Cliente - Accede a tus automatizaciones',
@@ -172,7 +255,24 @@ const translations = {
       noActiveAutomationsDesc: 'Explora el mercado para encontrar la automatización perfecta para tus necesidades.',
       browseMarketplace: 'Explorar Mercado',
       settingUp: 'Configurando',
-      manage: 'Administrar'
+      manage: 'Administrar',
+      viewDetails: 'Ver Detalles',
+      configure: 'Configurar',
+      getSupport: 'Obtener Soporte',
+      description: 'Descripción',
+      features: 'Características',
+      instructions: 'Instrucciones',
+      setupInstructions: 'Instrucciones de Configuración',
+      usageInstructions: 'Instrucciones de Uso',
+      troubleshooting: 'Solución de Problemas',
+      integrationSettings: 'Configuración de Integración',
+      webhookUrl: 'URL del Webhook',
+      customPrompts: 'Prompts Personalizados',
+      formIntegration: 'Integración de Formulario',
+      tableData: 'Datos de Tabla',
+      analytics: 'Analíticas',
+      logs: 'Registros',
+      configuration: 'Configuración'
     },
     // Marketplace translations
     marketplace: {
@@ -190,7 +290,12 @@ const translations = {
       alreadyOwned: 'Ya posees esta automatización',
       loginToPurchase: 'Por favor inicia sesión para comprar automatizaciones',
       purchaseSuccess: '¡Automatización comprada exitosamente! Nuestro equipo la configurará pronto.',
-      purchaseError: 'Error al comprar la automatización'
+      purchaseError: 'Error al comprar la automatización',
+      loading: 'Cargando automatizaciones...',
+      price: 'Precio',
+      oneTimeSetup: 'Configuración única',
+      description: 'Descripción',
+      included: 'Características incluidas'
     },
 
     // Support tickets translations
@@ -227,7 +332,16 @@ const translations = {
       supportTeam: 'Equipo de Soporte',
       client: 'Cliente',
       automationLabel: 'Automatización:',
-      createdLabel: 'Creado:'
+      createdLabel: 'Creado:',
+      status: 'Estado',
+      open: 'Abierto',
+      inProgress: 'En Progreso',
+      resolved: 'Resuelto',
+      closed: 'Cerrado',
+      priority: 'Prioridad',
+      high: 'Alta',
+      medium: 'Media',
+      low: 'Baja'
     },
 
     // Advanced automation details translations
@@ -248,10 +362,54 @@ const translations = {
       customPrompts: 'Prompts Personalizados',
       forms: 'Formularios',
       tables: 'Tablas',
-      createTicket: 'Crear Ticket'
+      createTicket: 'Crear Ticket',
+      overview: 'Resumen',
+      integrations: 'Integraciones',
+      documentation: 'Documentación',
+      support: 'Soporte',
+      settings: 'Configuración',
+      webhook: 'Webhook',
+      customPrompt: 'Prompt Personalizado',
+      form: 'Formulario',
+      table: 'Tabla',
+      active: 'Activo',
+      inactive: 'Inactivo',
+      configure: 'Configurar',
+      test: 'Probar',
+      save: 'Guardar',
+      copy: 'Copiar',
+      copied: '¡Copiado!',
+      url: 'URL',
+      method: 'Método',
+      headers: 'Encabezados',
+      payload: 'Carga',
+      response: 'Respuesta',
+      logs: 'Registros',
+      analytics: 'Analíticas',
+      requests: 'Solicitudes',
+      errors: 'Errores',
+      successRate: 'Tasa de Éxito',
+      averageResponse: 'Tiempo de Respuesta Promedio',
+      lastRequest: 'Última Solicitud',
+      totalRequests: 'Total de Solicitudes',
+      edit: 'Editar',
+      delete: 'Eliminar',
+      add: 'Agregar',
+      update: 'Actualizar',
+      loading: 'Cargando...',
+      noData: 'No hay datos disponibles',
+      refresh: 'Actualizar'
     }
   },
   fr: {
+    // Navigation translations
+    nav: {
+      home: 'Accueil',
+      solutions: 'Solutions',
+      blog: 'Blog',
+      contact: 'Contact',
+      logout: 'Se Déconnecter'
+    },
     login: {
       welcome: 'Bienvenue chez',
       clientWelcomeDesc: 'Portail Client - Accédez à vos automatisations',
@@ -291,7 +449,24 @@ const translations = {
       noActiveAutomationsDesc: 'Explorez le marché pour trouver l\'automatisation parfaite pour vos besoins.',
       browseMarketplace: 'Parcourir le Marché',
       settingUp: 'Configuration',
-      manage: 'Gérer'
+      manage: 'Gérer',
+      viewDetails: 'Voir les Détails',
+      configure: 'Configurer',
+      getSupport: 'Obtenir de l\'Aide',
+      description: 'Description',
+      features: 'Fonctionnalités',
+      instructions: 'Instructions',
+      setupInstructions: 'Instructions de Configuration',
+      usageInstructions: 'Instructions d\'Utilisation',
+      troubleshooting: 'Dépannage',
+      integrationSettings: 'Paramètres d\'Intégration',
+      webhookUrl: 'URL du Webhook',
+      customPrompts: 'Prompts Personnalisés',
+      formIntegration: 'Intégration de Formulaire',
+      tableData: 'Données de Tableau',
+      analytics: 'Analytiques',
+      logs: 'Journaux',
+      configuration: 'Configuration'
     },
     // Marketplace translations
     marketplace: {
@@ -309,7 +484,12 @@ const translations = {
       alreadyOwned: 'Vous possédez déjà cette automatisation',
       loginToPurchase: 'Veuillez vous connecter pour acheter des automatisations',
       purchaseSuccess: 'Automatisation achetée avec succès ! Notre équipe la configurera bientôt.',
-      purchaseError: 'Échec de l\'achat de l\'automatisation'
+      purchaseError: 'Échec de l\'achat de l\'automatisation',
+      loading: 'Chargement des automatisations...',
+      price: 'Prix',
+      oneTimeSetup: 'Configuration unique',
+      description: 'Description',
+      included: 'Fonctionnalités incluses'
     },
 
     // Support tickets translations
@@ -346,7 +526,16 @@ const translations = {
       supportTeam: 'Équipe de Support',
       client: 'Client',
       automationLabel: 'Automatisation:',
-      createdLabel: 'Créé:'
+      createdLabel: 'Créé:',
+      status: 'Statut',
+      open: 'Ouvert',
+      inProgress: 'En Cours',
+      resolved: 'Résolu',
+      closed: 'Fermé',
+      priority: 'Priorité',
+      high: 'Haute',
+      medium: 'Moyenne',
+      low: 'Basse'
     },
 
     // Advanced automation details translations
@@ -367,7 +556,43 @@ const translations = {
       customPrompts: 'Prompts Personnalisés',
       forms: 'Formulaires',
       tables: 'Tableaux',
-      createTicket: 'Créer un Ticket'
+      createTicket: 'Créer un Ticket',
+      overview: 'Aperçu',
+      integrations: 'Intégrations',
+      documentation: 'Documentation',
+      support: 'Support',
+      settings: 'Paramètres',
+      webhook: 'Webhook',
+      customPrompt: 'Prompt Personnalisé',
+      form: 'Formulaire',
+      table: 'Tableau',
+      active: 'Actif',
+      inactive: 'Inactif',
+      configure: 'Configurer',
+      test: 'Tester',
+      save: 'Sauvegarder',
+      copy: 'Copier',
+      copied: 'Copié!',
+      url: 'URL',
+      method: 'Méthode',
+      headers: 'En-têtes',
+      payload: 'Charge utile',
+      response: 'Réponse',
+      logs: 'Journaux',
+      analytics: 'Analytiques',
+      requests: 'Requêtes',
+      errors: 'Erreurs',
+      successRate: 'Taux de Réussite',
+      averageResponse: 'Temps de Réponse Moyen',
+      lastRequest: 'Dernière Requête',
+      totalRequests: 'Total des Requêtes',
+      edit: 'Éditer',
+      delete: 'Supprimer',
+      add: 'Ajouter',
+      update: 'Mettre à jour',
+      loading: 'Chargement...',
+      noData: 'Aucune donnée disponible',
+      refresh: 'Actualiser'
     }
   }
 };

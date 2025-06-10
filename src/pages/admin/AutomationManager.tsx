@@ -123,20 +123,10 @@ const AutomationManager = () => {
           )
         );
         
-        // Show integrations panel if any integration is enabled
-        const hasIntegrations = formData.has_custom_prompt || 
-                             formData.has_form_integration || formData.has_table_integration;
-                             
-        setShowIntegrations(hasIntegrations);
-        
-        if (!hasIntegrations) {
-          // Exit edit mode if no integrations
-          setIsEditing(false);
-          setSelectedAutomation(null);
-        } else {
-          // Keep the selected automation for integration settings
-          setSelectedAutomation({ ...selectedAutomation, ...formData });
-        }
+        // Exit edit mode after update
+        setIsEditing(false);
+        setSelectedAutomation(null);
+        setShowIntegrations(false);
       } else {
         // Create new automation
         console.log('Creating automation with data:', formData);
@@ -164,20 +154,9 @@ const AutomationManager = () => {
         console.log('Automation created successfully:', data);
         notification.showSuccess('Success', 'Automation created successfully');
         
-        // Check if any integration was enabled
-        const hasIntegrations = formData.has_custom_prompt || 
-                             formData.has_form_integration || formData.has_table_integration;
-        
-        if (hasIntegrations && data && data.length > 0) {
-          // Show integration settings for the new automation
-          setSelectedAutomation(data[0]);
-          setIsEditing(true);
-          setShowIntegrations(true);
-        }
+        // Simply refresh the list without redirecting to integrations
+        fetchAutomations();
       }
-      
-      // Refresh the automations list
-      fetchAutomations();
     } catch (error: any) {
       console.error('Exception in handleSubmit:', error);
       notification.showError(
@@ -341,35 +320,13 @@ const AutomationManager = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          {showIntegrations && selectedAutomation ? (
-            <>
-              <AutomationIntegrations
-                automationId={selectedAutomation.id}
-                hasCustomPrompt={selectedAutomation.has_custom_prompt || false}
-                hasFormIntegration={selectedAutomation.has_form_integration || false}
-                hasTableIntegration={selectedAutomation.has_table_integration || false}
-              />
-              <div className="mt-4 flex justify-end">
-                <Button
-                  onClick={() => {
-                    setShowIntegrations(false);
-                    setIsEditing(true);
-                  }}
-                  variant="outline"
-                >
-                  Back to Automation Settings
-                </Button>
-              </div>
-            </>
-          ) : (
-            <AutomationForm 
-              onSubmit={handleSubmit}
-              isSaving={isSaving}
-              automation={selectedAutomation || undefined}
-              isEditing={isEditing}
-              onNewAutomation={handleNewAutomation}
-            />
-          )}
+          <AutomationForm 
+            onSubmit={handleSubmit}
+            isSaving={isSaving}
+            automation={selectedAutomation || undefined}
+            isEditing={isEditing}
+            onNewAutomation={handleNewAutomation}
+          />
         </div>
 
         <div className="lg:col-span-2">
@@ -392,3 +349,5 @@ const AutomationManager = () => {
 };
 
 export default AutomationManager;
+
+}

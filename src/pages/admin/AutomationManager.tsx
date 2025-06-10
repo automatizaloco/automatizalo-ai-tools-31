@@ -238,14 +238,6 @@ const AutomationManager = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleManageIntegrations = (automation: Automation) => {
-    setSelectedAutomation(automation);
-    setIsEditing(true);
-    setShowIntegrations(true);
-    // Scroll to the form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const handleCancelEdit = () => {
     setIsEditing(false);
     setSelectedAutomation(null);
@@ -390,7 +382,6 @@ const AutomationManager = () => {
             onToggleStatus={handleToggleStatus}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            onManageIntegrations={handleManageIntegrations}
             error={fetchError}
             onRetry={fetchAutomations}
           />

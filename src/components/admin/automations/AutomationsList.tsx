@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, AlertTriangle, Trash, Settings, PlusCircle } from 'lucide-react';
+import { Loader2, AlertTriangle, Trash } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +22,6 @@ interface AutomationsListProps {
   onToggleStatus: (id: string, currentlyActive: boolean) => Promise<void>;
   onEdit: (automation: Automation) => void;
   onDelete?: (id: string) => Promise<void>;
-  onManageIntegrations?: (automation: Automation) => void;
   error: string | null;
   onRetry: () => void;
 }
@@ -34,7 +32,6 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
   onToggleStatus,
   onEdit,
   onDelete,
-  onManageIntegrations,
   error,
   onRetry
 }) => {
@@ -158,21 +155,6 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
                   >
                     Edit
                   </Button>
-                  
-                  {onManageIntegrations && 
-                   (automation.has_custom_prompt || 
-                    automation.has_form_integration || 
-                    automation.has_table_integration) && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100"
-                      onClick={() => onManageIntegrations(automation)}
-                    >
-                      <Settings className="mr-1 h-3 w-3" />
-                      Integrations
-                    </Button>
-                  )}
                   
                   <Button 
                     size="sm" 

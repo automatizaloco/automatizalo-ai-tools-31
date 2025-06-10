@@ -129,7 +129,6 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
                   </div>
                   <div className="flex flex-wrap gap-1 mb-2">
                     {automation.has_custom_prompt && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Custom Prompt</Badge>}
-                    {automation.has_webhook && <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Webhook</Badge>}
                     {automation.has_form_integration && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Form</Badge>}
                     {automation.has_table_integration && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Table</Badge>}
                   </div>
@@ -162,7 +161,6 @@ const AutomationsList: React.FC<AutomationsListProps> = ({
                   
                   {onManageIntegrations && 
                    (automation.has_custom_prompt || 
-                    automation.has_webhook || 
                     automation.has_form_integration || 
                     automation.has_table_integration) && (
                     <Button 

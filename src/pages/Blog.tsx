@@ -1,57 +1,116 @@
 
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { fetchOptimizedBlogPosts, fetchOptimizedFeaturedPosts } from "@/services/blog/optimizedBlogService";
 import { BlogPost } from "@/types/blog";
 import BlogHero from "@/components/blog/BlogHero";
 import FeaturedPosts from "@/components/blog/FeaturedPosts";
 import CategoryFilter from "@/components/blog/CategoryFilter";
+import TagFilter from "@/components/blog/TagFilter";
 import BlogList from "@/components/blog/BlogList";
 import NewsletterSignup from "@/components/blog/NewsletterSignup";
 import { useTheme } from "@/context/ThemeContext";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
 
 const Blog = () => {
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || "All");
+  const [activeTags, setActiveTags] = useState<string[]>(
+    searchParams.get('tag') ? [searchParams.get('tag')!] : []
+  );
   const { theme } = useTheme();
 
   // Categories
   const categories = ["All", "AI", "Automation", "Technology"];
 
-  // Optimized blog posts query with better caching
+  // Optimized blog posts query
   const { 
     data: blogPosts = [] as BlogPost[], 
     isLoading, 
     isError, 
-    error 
   } = useQuery({
     queryKey: ['optimized-blog-posts'],
     queryFn: fetchOptimizedBlogPosts,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-    retry: 1, // Reduce retries for better performance
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 1,
     retryDelay: 1000,
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchOnWindowFocus: false,
   });
 
-  // Separate query for featured posts for better performance
+  // Separate query for featured posts
   const { data: featuredPosts = [] as BlogPost[] } = useQuery({
     queryKey: ['featured-blog-posts'],
     queryFn: fetchOptimizedFeaturedPosts,
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 15 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
   });
 
-  // Memoized filtered posts for better performance
+  // Extraer todos los tags únicos de los posts
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    blogPosts.forEach(post => {
+      post.tags.forEach(tag => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  }, [blogPosts]);
+
+  // Filtrar posts por categoría y tags
   const filteredPosts = useMemo(() => {
-    if (activeCategory === "All") {
-      return blogPosts;
+    let filtered = blogPosts;
+
+    // Filtrar por categoría
+    if (activeCategory !== "All") {
+      filtered = filtered.filter(post => post.category === activeCategory);
     }
-    return blogPosts.filter(post => post.category === activeCategory);
-  }, [activeCategory, blogPosts]);
+
+    // Filtrar por tags
+    if (activeTags.length > 0) {
+      filtered = filtered.filter(post => 
+        activeTags.some(tag => post.tags.includes(tag))
+      );
+    }
+
+    return filtered;
+  }, [activeCategory, activeTags, blogPosts]);
+
+  // Actualizar URL cuando cambian los filtros
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (activeCategory !== "All") {
+      params.set('category', activeCategory);
+    }
+    
+    if (activeTags.length > 0) {
+      params.set('tag', activeTags[0]); // Solo el primer tag en la URL por simplicidad
+    }
+
+    if (params.toString()) {
+      setSearchParams(params);
+    } else {
+      setSearchParams({});
+    }
+  }, [activeCategory, activeTags, setSearchParams]);
+
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+  };
+
+  const handleTagToggle = (tag: string) => {
+    setActiveTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const handleClearTags = () => {
+    setActiveTags([]);
+  };
 
   // Handle error state
   if (isError) {
@@ -87,7 +146,13 @@ const Blog = () => {
               <CategoryFilter 
                 categories={categories} 
                 activeCategory={activeCategory}
-                onCategoryChange={setActiveCategory}
+                onCategoryChange={handleCategoryChange}
+              />
+              <TagFilter
+                tags={allTags}
+                activeTags={activeTags}
+                onTagToggle={handleTagToggle}
+                onClearTags={handleClearTags}
               />
               <BlogList posts={filteredPosts} />
               <NewsletterSignup />

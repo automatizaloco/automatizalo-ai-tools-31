@@ -84,9 +84,13 @@ const translations = {
     },
     // Blog translations
     blog: {
-      title: 'Our Blog',
-      subtitle: 'Latest insights and updates on AI automation',
-      description: 'Stay up to date with the latest trends and insights in AI automation technology.',
+      title: "Blog",
+      subtitle: "Discover insights, trends, and innovations in automation and AI",
+      description: "Stay updated with the latest articles about automation, artificial intelligence, and digital transformation. Learn how technology can revolutionize your business.",
+      featured: "Featured Posts",
+      all: "All Posts",
+      readMore: "Read More",
+      relatedPosts: "Related Posts",
       newsletter: {
         title: 'Stay Updated',
         subtitle: 'Subscribe to our newsletter for the latest AI automation insights',
@@ -396,9 +400,13 @@ const translations = {
     },
     // Blog translations
     blog: {
-      title: 'Nuestro Blog',
-      subtitle: 'Últimas perspectivas y actualizaciones sobre automatización IA',
-      description: 'Mantén al día con las últimas tendencias y perspectivas en tecnología de automatización IA.',
+      title: "Blog",
+      subtitle: "Descubre insights, tendencias e innovaciones en automatización e IA",
+      description: "Mantente actualizado con los últimos artículos sobre automatización, inteligencia artificial y transformación digital. Aprende cómo la tecnología puede revolucionar tu negocio.",
+      featured: "Artículos Destacados",
+      all: "Todos los Artículos",
+      readMore: "Leer Más",
+      relatedPosts: "Artículos Relacionados",
       newsletter: {
         title: 'Mantente Actualizado',
         subtitle: 'Suscríbete a nuestro boletín para las últimas perspectivas de automatización IA',
@@ -706,9 +714,13 @@ const translations = {
     },
     // Blog translations
     blog: {
-      title: 'Notre Blog',
-      subtitle: 'Dernières perspectives et mises à jour sur l\'automatisation IA',
-      description: 'Restez à jour avec les dernières tendances et perspectives en technologie d\'automatisation IA.',
+      title: "Blog",
+      subtitle: "Découvrez les insights, tendances et innovations en automatisation et IA",
+      description: "Restez à jour avec les derniers articles sur l'automatisation, l'intelligence artificielle et la transformation digitale. Apprenez comment la technologie peut révolutionner votre entreprise.",
+      featured: "Articles en Vedette",
+      all: "Tous les Articles",
+      readMore: "Lire Plus",
+      relatedPosts: "Articles Connexes",
       newsletter: {
         title: 'Restez Informé',
         subtitle: 'Abonnez-vous à notre newsletter pour les dernières perspectives d\'automatisation IA',
@@ -847,7 +859,7 @@ const translations = {
     support: {
       tickets: 'Tickets de Support',
       createNewTicket: 'Créer un Nouveau Ticket',
-      noTickets: 'Vous n\'avez encore créé aucun ticket de support.',
+      noTickets: 'Aucun ticket de support créé.',
       createFirstTicket: 'Créer Votre Premier Ticket',
       selectAutomation: 'Sélectionner une Automatisation',
       selectAutomationPlaceholder: 'Sélectionner une automatisation',
@@ -929,7 +941,7 @@ const translations = {
       response: 'Réponse',
       logs: 'Journaux',
       analytics: 'Analytiques',
-      requests: 'Requêtes',
+      requests: 'Solicitudes',
       errors: 'Erreurs',
       successRate: 'Taux de Réussite',
       averageResponse: 'Temps de Réponse Moyen',
@@ -986,3 +998,5 @@ export const useLanguage = () => {
   }
   return context;
 };
+
+</edits_to_apply>

@@ -3,17 +3,18 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fetchOptimizedBlogPostBySlug } from "@/services/blog/optimizedBlogService";
+import { fetchOptimizedBlogPostBySlug, fetchOptimizedBlogPosts } from "@/services/blog/optimizedBlogService";
 import { BlogPost as BlogPostType } from "@/types/blog";
 import { useLanguage } from "@/context/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import RelatedPosts from "@/components/blog/RelatedPosts";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const { language } = useLanguage();
   
-  // Optimized query for individual blog post
+  // Query para el post individual
   const { 
     data: post, 
     isLoading, 
@@ -22,8 +23,18 @@ const BlogPost = () => {
     queryKey: ['blog-post', slug],
     queryFn: () => slug ? fetchOptimizedBlogPostBySlug(slug) : Promise.resolve(null),
     enabled: !!slug,
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  // Query para todos los posts (para posts relacionados)
+  const { data: allPosts = [] } = useQuery({
+    queryKey: ['all-blog-posts-for-related'],
+    queryFn: fetchOptimizedBlogPosts,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -138,15 +149,21 @@ const BlogPost = () => {
               <h3 className="text-lg font-semibold mb-4">Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {post.tags.map((tag, index) => (
-                  <span 
+                  <Link
                     key={index}
-                    className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
+                    to={`/blog?tag=${encodeURIComponent(tag)}`}
+                    className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Posts relacionados */}
+          {allPosts.length > 0 && (
+            <RelatedPosts currentPost={post} allPosts={allPosts} />
           )}
         </div>
       </div>

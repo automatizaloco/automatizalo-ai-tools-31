@@ -16,11 +16,86 @@ const translations = {
   en: {
     // Navigation translations
     nav: {
-      home: 'Home',
-      solutions: 'Solutions',
+      home: 'Get Started',
+      solutions: 'Learn More',
       blog: 'Blog',
       contact: 'Contact',
       logout: 'Logout'
+    },
+    // Home page translations
+    home: {
+      hero: {
+        getStarted: 'Get Started',
+        learnMore: 'Learn More',
+        tagline: '🚀 Automated Business Solutions',
+        title: 'Transform Your Business with AI Automation',
+        description: 'helps businesses automate repetitive tasks, improve efficiency, and scale operations with cutting-edge AI technology. From chatbots to data analysis, we\'ve got you covered.'
+      }
+    },
+    // Solutions page translations
+    solutions: {
+      sectionTag: 'Our Solutions',
+      sectionTitle: 'Automate Your Business with AI',
+      sectionDescription: 'Discover our comprehensive suite of AI-powered automation solutions designed to streamline your operations and boost productivity.',
+      viewAllButton: 'View All Solutions',
+      chatbots: {
+        title: 'AI Chatbots',
+        description: 'Intelligent chatbots that provide 24/7 customer support and lead generation',
+        feature1: '24/7 Customer Support',
+        feature2: 'Lead Generation',
+        feature3: 'Multi-language Support'
+      },
+      leadGeneration: {
+        title: 'Lead Generation',
+        description: 'Automated systems to capture, qualify and nurture leads for your business',
+        feature1: 'Lead Capture Forms',
+        feature2: 'Automated Follow-up',
+        feature3: 'CRM Integration'
+      },
+      socialMedia: {
+        title: 'Social Media Automation',
+        description: 'Streamline your social media presence with automated posting and engagement',
+        feature1: 'Automated Posting',
+        feature2: 'Content Scheduling',
+        feature3: 'Engagement Tracking'
+      },
+      aiAgents: {
+        title: 'AI Agents',
+        description: 'Custom AI agents that handle complex business processes and decision-making',
+        feature1: 'Process Automation',
+        feature2: 'Data Analysis',
+        feature3: 'Custom Workflows'
+      }
+    },
+    // Testimonials translations
+    testimonials: {
+      title: 'Testimonials',
+      subtitle: 'What Our Clients Say',
+      description: 'Hear from businesses that have transformed their operations with our AI automation solutions.'
+    },
+    // Contact page translations
+    contact: {
+      title: 'Contact Us',
+      subtitle: 'Get in Touch',
+      description: 'Ready to transform your business? Contact us today to discuss your automation needs.',
+      whatsapp: {
+        title: 'Chat with Us on WhatsApp',
+        cta: 'Start a conversation with our team and get instant support.',
+        chat: 'Start Chat',
+        defaultMessage: 'Hello! I\'m interested in learning more about your automation services.'
+      },
+      chat: {
+        greeting: 'Hello! How can I help you with automation today?',
+        askServices: 'What automation services do you offer?',
+        explainServices: 'We offer AI chatbots, lead generation, social media automation, and custom AI agents. Would you like to schedule a consultation?',
+        askMeeting: 'Yes, I\'d like to schedule a meeting.',
+        confirmMeeting: 'Perfect! I can schedule a 30-minute consultation for tomorrow at 2 PM. Does that work for you?',
+        acceptTime: 'That sounds great!',
+        scheduledSuccess: 'Excellent! Meeting scheduled for tomorrow at 2 PM. You\'ll receive a calendar invite shortly.',
+        meetingScheduled: 'Meeting Scheduled Successfully!',
+        online: 'Online',
+        you: 'You'
+      }
     },
     login: {
       welcome: 'Welcome to',
@@ -32,6 +107,7 @@ const translations = {
       loggingIn: 'Logging In...',
       loginError: 'Invalid credentials'
     },
+    // ... keep existing code (client portal translations) the same ...
     clientPortal: {
       title: 'Client Portal',
       subtitle: 'Manage your automations and support tickets',
@@ -80,7 +156,7 @@ const translations = {
       logs: 'Logs',
       configuration: 'Configuration'
     },
-    // Marketplace translations
+    // ... keep existing code (marketplace and other translations) the same ...
     marketplace: {
       noAutomations: 'No Automations Available',
       noAutomationsDesc: 'There are currently no automations available in the marketplace.',
@@ -103,8 +179,6 @@ const translations = {
       description: 'Description',
       included: 'Included features'
     },
-
-    // Support tickets translations
     support: {
       tickets: 'Support Tickets',
       createNewTicket: 'Create New Ticket',
@@ -149,8 +223,6 @@ const translations = {
       medium: 'Medium',
       low: 'Low'
     },
-
-    // Advanced automation details translations
     automationDetails: {
       loadingDetails: 'Loading automation details...',
       notFound: 'Automation Not Found',
@@ -210,22 +282,58 @@ const translations = {
   es: {
     // Navigation translations
     nav: {
-      home: 'Inicio',
-      solutions: 'Soluciones',
+      home: 'Comenzar',
+      solutions: 'Aprender Más',
       blog: 'Blog',
       contact: 'Contacto',
       logout: 'Cerrar Sesión'
     },
-    login: {
-      welcome: 'Bienvenido a',
-      clientWelcomeDesc: 'Portal del Cliente - Accede a tus automatizaciones',
-      email: 'Correo electrónico',
-      password: 'Contraseña',
-      rememberPassword: 'Recordar contraseña',
-      signIn: 'Iniciar Sesión',
-      loggingIn: 'Iniciando Sesión...',
-      loginError: 'Credenciales inválidas'
+    // Home page translations
+    home: {
+      hero: {
+        getStarted: 'Comenzar',
+        learnMore: 'Aprender Más',
+        tagline: '🚀 Soluciones Empresariales Automatizadas',
+        title: 'Transforma Tu Negocio con Automatización IA',
+        description: 'ayuda a las empresas a automatizar tareas repetitivas, mejorar la eficiencia y escalar operaciones con tecnología IA de vanguardia. Desde chatbots hasta análisis de datos, te tenemos cubierto.'
+      }
     },
+    // Solutions page translations
+    solutions: {
+      sectionTag: 'Nuestras Soluciones',
+      sectionTitle: 'Automatiza Tu Negocio con IA',
+      sectionDescription: 'Descubre nuestra suite integral de soluciones de automatización impulsadas por IA diseñadas para optimizar tus operaciones y aumentar la productividad.',
+      viewAllButton: 'Ver Todas las Soluciones',
+      chatbots: {
+        title: 'Chatbots IA',
+        description: 'Chatbots inteligentes que brindan soporte al cliente 24/7 y generación de leads',
+        feature1: 'Soporte 24/7 al Cliente',
+        feature2: 'Generación de Leads',
+        feature3: 'Soporte Multiidioma'
+      },
+      leadGeneration: {
+        title: 'Generación de Leads',
+        description: 'Sistemas automatizados para capturar, calificar y nutrir leads para tu negocio',
+        feature1: 'Formularios de Captura',
+        feature2: 'Seguimiento Automatizado',
+        feature3: 'Integración CRM'
+      },
+      socialMedia: {
+        title: 'Automatización de Redes Sociales',
+        description: 'Optimiza tu presencia en redes sociales con publicación y engagement automatizados',
+        feature1: 'Publicación Automatizada',
+        feature2: 'Programación de Contenido',
+        feature3: 'Seguimiento de Engagement'
+      },
+      aiAgents: {
+        title: 'Agentes IA',
+        description: 'Agentes IA personalizados que manejan procesos empresariales complejos y toma de decisiones',
+        feature1: 'Automatización de Procesos',
+        feature2: 'Análisis de Datos',
+        feature3: 'Flujos de Trabajo Personalizados'
+      }
+    },
+    // ... keep existing code (spanish client portal translations) the same ...
     clientPortal: {
       title: 'Portal del Cliente',
       subtitle: 'Administra tus automatizaciones y tickets de soporte',
@@ -274,7 +382,45 @@ const translations = {
       logs: 'Registros',
       configuration: 'Configuración'
     },
-    // Marketplace translations
+    // ... keep existing code (rest of spanish translations) the same ...
+    testimonials: {
+      title: 'Testimonios',
+      subtitle: 'Lo Que Dicen Nuestros Clientes',
+      description: 'Escucha a empresas que han transformado sus operaciones con nuestras soluciones de automatización IA.'
+    },
+    contact: {
+      title: 'Contáctanos',
+      subtitle: 'Ponte en Contacto',
+      description: '¿Listo para transformar tu negocio? Contáctanos hoy para discutir tus necesidades de automatización.',
+      whatsapp: {
+        title: 'Chatea con Nosotros en WhatsApp',
+        cta: 'Inicia una conversación con nuestro equipo y obtén soporte instantáneo.',
+        chat: 'Iniciar Chat',
+        defaultMessage: '¡Hola! Estoy interesado en aprender más sobre sus servicios de automatización.'
+      },
+      chat: {
+        greeting: '¡Hola! ¿Cómo puedo ayudarte con automatización hoy?',
+        askServices: '¿Qué servicios de automatización ofrecen?',
+        explainServices: 'Ofrecemos chatbots IA, generación de leads, automatización de redes sociales y agentes IA personalizados. ¿Te gustaría programar una consulta?',
+        askMeeting: 'Sí, me gustaría programar una reunión.',
+        confirmMeeting: '¡Perfecto! Puedo programar una consulta de 30 minutos para mañana a las 2 PM. ¿Te funciona?',
+        acceptTime: '¡Suena genial!',
+        scheduledSuccess: '¡Excelente! Reunión programada para mañana a las 2 PM. Recibirás una invitación de calendario pronto.',
+        meetingScheduled: '¡Reunión Programada Exitosamente!',
+        online: 'En línea',
+        you: 'Tú'
+      }
+    },
+    login: {
+      welcome: 'Bienvenido a',
+      clientWelcomeDesc: 'Portal del Cliente - Accede a tus automatizaciones',
+      email: 'Correo electrónico',
+      password: 'Contraseña',
+      rememberPassword: 'Recordar contraseña',
+      signIn: 'Iniciar Sesión',
+      loggingIn: 'Iniciando Sesión...',
+      loginError: 'Credenciales inválidas'
+    },
     marketplace: {
       noAutomations: 'No Hay Automatizaciones Disponibles',
       noAutomationsDesc: 'Actualmente no hay automatizaciones disponibles en el mercado.',
@@ -297,8 +443,6 @@ const translations = {
       description: 'Descripción',
       included: 'Características incluidas'
     },
-
-    // Support tickets translations
     support: {
       tickets: 'Tickets de Soporte',
       createNewTicket: 'Crear Nuevo Ticket',
@@ -343,8 +487,6 @@ const translations = {
       medium: 'Media',
       low: 'Baja'
     },
-
-    // Advanced automation details translations
     automationDetails: {
       loadingDetails: 'Cargando detalles de la automatización...',
       notFound: 'Automatización No Encontrada',
@@ -404,22 +546,58 @@ const translations = {
   fr: {
     // Navigation translations
     nav: {
-      home: 'Accueil',
-      solutions: 'Solutions',
+      home: 'Commencer',
+      solutions: 'En Savoir Plus',
       blog: 'Blog',
       contact: 'Contact',
       logout: 'Se Déconnecter'
     },
-    login: {
-      welcome: 'Bienvenue chez',
-      clientWelcomeDesc: 'Portail Client - Accédez à vos automatisations',
-      email: 'Email',
-      password: 'Mot de passe',
-      rememberPassword: 'Se souvenir du mot de passe',
-      signIn: 'Se Connecter',
-      loggingIn: 'Connexion...',
-      loginError: 'Identifiants invalides'
+    // Home page translations
+    home: {
+      hero: {
+        getStarted: 'Commencer',
+        learnMore: 'En Savoir Plus',
+        tagline: '🚀 Solutions Automatisées pour Entreprises',
+        title: 'Transformez Votre Entreprise avec l\'Automatisation IA',
+        description: 'aide les entreprises à automatiser les tâches répétitives, améliorer l\'efficacité et faire évoluer les opérations avec une technologie IA de pointe. Des chatbots à l\'analyse de données, nous vous couvrons.'
+      }
     },
+    // Solutions page translations
+    solutions: {
+      sectionTag: 'Nos Solutions',
+      sectionTitle: 'Automatisez Votre Entreprise avec l\'IA',
+      sectionDescription: 'Découvrez notre suite complète de solutions d\'automatisation alimentées par l\'IA conçues pour rationaliser vos opérations et augmenter la productivité.',
+      viewAllButton: 'Voir Toutes les Solutions',
+      chatbots: {
+        title: 'Chatbots IA',
+        description: 'Chatbots intelligents qui fournissent un support client 24/7 et la génération de leads',
+        feature1: 'Support Client 24/7',
+        feature2: 'Génération de Leads',
+        feature3: 'Support Multilingue'
+      },
+      leadGeneration: {
+        title: 'Génération de Leads',
+        description: 'Systèmes automatisés pour capturer, qualifier et nourrir les leads pour votre entreprise',
+        feature1: 'Formulaires de Capture',
+        feature2: 'Suivi Automatisé',
+        feature3: 'Intégration CRM'
+      },
+      socialMedia: {
+        title: 'Automatisation des Médias Sociaux',
+        description: 'Rationalisez votre présence sur les médias sociaux avec publication et engagement automatisés',
+        feature1: 'Publication Automatisée',
+        feature2: 'Planification de Contenu',
+        feature3: 'Suivi d\'Engagement'
+      },
+      aiAgents: {
+        title: 'Agents IA',
+        description: 'Agents IA personnalisés qui gèrent les processus métier complexes et la prise de décision',
+        feature1: 'Automatisation de Processus',
+        feature2: 'Analyse de Données',
+        feature3: 'Flux de Travail Personnalisés'
+      }
+    },
+    // ... keep existing code (french client portal translations) the same ...
     clientPortal: {
       title: 'Portail Client',
       subtitle: 'Gérez vos automatisations et tickets de support',
@@ -468,7 +646,44 @@ const translations = {
       logs: 'Journaux',
       configuration: 'Configuration'
     },
-    // Marketplace translations
+    testimonials: {
+      title: 'Témoignages',
+      subtitle: 'Ce Que Disent Nos Clients',
+      description: 'Écoutez les entreprises qui ont transformé leurs opérations avec nos solutions d\'automatisation IA.'
+    },
+    contact: {
+      title: 'Contactez-Nous',
+      subtitle: 'Entrer en Contact',
+      description: 'Prêt à transformer votre entreprise ? Contactez-nous aujourd\'hui pour discuter de vos besoins d\'automatisation.',
+      whatsapp: {
+        title: 'Chattez avec Nous sur WhatsApp',
+        cta: 'Commencez une conversation avec notre équipe et obtenez un support instantané.',
+        chat: 'Commencer le Chat',
+        defaultMessage: 'Bonjour ! Je suis intéressé à en savoir plus sur vos services d\'automatisation.'
+      },
+      chat: {
+        greeting: 'Bonjour ! Comment puis-je vous aider avec l\'automatisation aujourd\'hui ?',
+        askServices: 'Quels services d\'automatisation offrez-vous ?',
+        explainServices: 'Nous offrons des chatbots IA, génération de leads, automatisation des médias sociaux et agents IA personnalisés. Aimeriez-vous planifier une consultation ?',
+        askMeeting: 'Oui, j\'aimerais planifier une réunion.',
+        confirmMeeting: 'Parfait ! Je peux planifier une consultation de 30 minutes pour demain à 14h. Cela vous convient-il ?',
+        acceptTime: 'Cela sonne bien !',
+        scheduledSuccess: 'Excellent ! Réunion planifiée pour demain à 14h. Vous recevrez une invitation de calendrier bientôt.',
+        meetingScheduled: 'Réunion Planifiée avec Succès !',
+        online: 'En ligne',
+        you: 'Vous'
+      }
+    },
+    login: {
+      welcome: 'Bienvenue chez',
+      clientWelcomeDesc: 'Portail Client - Accédez à vos automatisations',
+      email: 'Email',
+      password: 'Mot de passe',
+      rememberPassword: 'Se souvenir du mot de passe',
+      signIn: 'Se Connecter',
+      loggingIn: 'Connexion...',
+      loginError: 'Identifiants invalides'
+    },
     marketplace: {
       noAutomations: 'Aucune Automatisation Disponible',
       noAutomationsDesc: 'Il n\'y a actuellement aucune automatisation disponible sur le marché.',
@@ -491,8 +706,6 @@ const translations = {
       description: 'Description',
       included: 'Fonctionnalités incluses'
     },
-
-    // Support tickets translations
     support: {
       tickets: 'Tickets de Support',
       createNewTicket: 'Créer un Nouveau Ticket',
@@ -537,8 +750,6 @@ const translations = {
       medium: 'Moyenne',
       low: 'Basse'
     },
-
-    // Advanced automation details translations
     automationDetails: {
       loadingDetails: 'Chargement des détails de l\'automatisation...',
       notFound: 'Automatisation Non Trouvée',
@@ -637,3 +848,5 @@ export const useLanguage = () => {
   }
   return context;
 };
+
+</edits_to_apply>

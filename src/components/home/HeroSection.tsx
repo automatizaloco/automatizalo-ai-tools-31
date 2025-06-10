@@ -46,11 +46,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isEditable = false }) => {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <HeroMainContent 
             isVisible={isVisible} 
-            getStartedText={t('home.hero.getStarted')} 
-            learnMoreText={t('home.hero.learnMore')}
-            tagline={t('home.hero.tagline')}
-            title={t('home.hero.title')}
-            description={t('home.hero.description')}
+            getStartedText={t('nav.home')}
+            learnMoreText={t('nav.solutions')}
           />
           
           <div className={`relative w-full max-w-md transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>

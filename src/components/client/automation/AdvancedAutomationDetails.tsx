@@ -123,8 +123,7 @@ const AdvancedAutomationDetails: React.FC = () => {
           return (
             <CustomPromptEditor 
               clientAutomationId={clientAutomation.id}
-              initialPrompt={promptSetting.prompt_text}
-              webhookUrl={promptSetting.prompt_webhook_url}
+              automationName={clientAutomation.automation?.title || 'Unknown Automation'}
             />
           );
         }
@@ -329,10 +328,9 @@ const AdvancedAutomationDetails: React.FC = () => {
 
         {/* Support Ticket Modal */}
         <CreateTicketModal
-          open={showTicketModal}
-          onOpenChange={setShowTicketModal}
           automationId={automationId!}
           automationTitle={clientAutomation.automation?.title || ''}
+          clientAutomationId={clientAutomation.id}
         />
       </div>
     </div>

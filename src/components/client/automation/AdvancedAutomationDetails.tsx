@@ -17,156 +17,147 @@ import ButtonIntegrationViewer from './ButtonIntegrationViewer';
 import TableIntegrationViewer from './TableIntegrationViewer';
 import CreateTicketModal from './CreateTicketModal';
 import type { ClientAutomation } from '@/types/automation';
-
 const AdvancedAutomationDetails: React.FC = () => {
-  const { automationId } = useParams<{ automationId: string }>();
+  const {
+    automationId
+  } = useParams<{
+    automationId: string;
+  }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [showTicketModal, setShowTicketModal] = useState(false);
-
-  const { data: clientAutomation, isLoading, refetch } = useQuery({
+  const {
+    data: clientAutomation,
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ['client-automation', automationId, user?.id],
     queryFn: async () => {
       if (!user || !automationId) throw new Error('Not authenticated or automationId missing');
-
-      const { data, error } = await supabase
-        .from('client_automations')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('client_automations').select(`
           *,
           automation:automation_id (*)
-        `)
-        .eq('automation_id', automationId)
-        .eq('client_id', user.id)
-        .eq('status', 'active')
-        .single();
-
+        `).eq('automation_id', automationId).eq('client_id', user.id).eq('status', 'active').single();
       if (error) throw error;
       return data as ClientAutomation;
     },
-    enabled: !!user && !!automationId,
+    enabled: !!user && !!automationId
   });
-
-  const { data: integrationSettings, isLoading: isLoadingSettings } = useQuery({
+  const {
+    data: integrationSettings,
+    isLoading: isLoadingSettings
+  } = useQuery({
     queryKey: ['integration-settings', clientAutomation?.id],
     queryFn: async () => {
       if (!clientAutomation?.id) return [];
-
-      const { data, error } = await supabase
-        .from('client_integration_settings')
-        .select('*')
-        .eq('client_automation_id', clientAutomation.id)
-        .order('integration_type');
-
+      const {
+        data,
+        error
+      } = await supabase.from('client_integration_settings').select('*').eq('client_automation_id', clientAutomation.id).order('integration_type');
       if (error) throw error;
       return data;
     },
-    enabled: !!clientAutomation?.id,
+    enabled: !!clientAutomation?.id
   });
-
   const getIntegrationTabs = () => {
     if (!integrationSettings) return [];
-    
-    const tabs = [
-      { id: 'overview', label: 'Overview', icon: Activity }
-    ];
-    
+    const tabs = [{
+      id: 'overview',
+      label: 'Overview',
+      icon: Activity
+    }];
     integrationSettings.forEach(setting => {
       if (setting.status === 'active' || setting.status === 'configured') {
         switch (setting.integration_type) {
           case 'webhook':
-            tabs.push({ id: 'webhook', label: 'Webhook', icon: Webhook });
+            tabs.push({
+              id: 'webhook',
+              label: 'Webhook',
+              icon: Webhook
+            });
             break;
           case 'custom_prompt':
-            tabs.push({ id: 'prompt', label: 'Custom Prompt', icon: FileText });
+            tabs.push({
+              id: 'prompt',
+              label: 'Custom Prompt',
+              icon: FileText
+            });
             break;
           case 'form':
-            tabs.push({ id: 'form', label: 'Form', icon: ExternalLink });
+            tabs.push({
+              id: 'form',
+              label: 'Form',
+              icon: ExternalLink
+            });
             break;
           case 'button':
-            tabs.push({ id: 'button', label: 'Editor Button', icon: ExternalLink });
+            tabs.push({
+              id: 'button',
+              label: 'Editor Button',
+              icon: ExternalLink
+            });
             break;
           case 'table':
-            tabs.push({ id: 'table', label: 'Estadísticas', icon: TableIcon });
+            tabs.push({
+              id: 'table',
+              label: 'Estadísticas',
+              icon: TableIcon
+            });
             break;
         }
       }
     });
-    
     return tabs;
   };
-
   const renderTabContent = () => {
     const webhookSetting = integrationSettings?.find(s => s.integration_type === 'webhook');
     const promptSetting = integrationSettings?.find(s => s.integration_type === 'custom_prompt');
     const formSetting = integrationSettings?.find(s => s.integration_type === 'form');
     const buttonSetting = integrationSettings?.find(s => s.integration_type === 'button');
     const tableSetting = integrationSettings?.find(s => s.integration_type === 'table');
-
     switch (activeTab) {
       case 'overview':
         return renderOverviewTab();
       case 'webhook':
         if (webhookSetting && (webhookSetting.status === 'active' || webhookSetting.status === 'configured')) {
-          return (
-            <WebhookUrlDisplay 
-              webhookData={{
-                test_url: webhookSetting.test_url,
-                production_url: webhookSetting.production_url
-              }}
-            />
-          );
+          return <WebhookUrlDisplay webhookData={{
+            test_url: webhookSetting.test_url,
+            production_url: webhookSetting.production_url
+          }} />;
         }
         return <div>Webhook integration not configured</div>;
       case 'prompt':
         if (promptSetting && (promptSetting.status === 'active' || promptSetting.status === 'configured')) {
-          return (
-            <CustomPromptEditor 
-              clientAutomationId={clientAutomation.id}
-              automationName={clientAutomation.automation?.title || 'Unknown Automation'}
-            />
-          );
+          return <CustomPromptEditor clientAutomationId={clientAutomation.id} automationName={clientAutomation.automation?.title || 'Unknown Automation'} />;
         }
         return <div>Custom prompt integration not configured</div>;
       case 'form':
         if (formSetting && (formSetting.status === 'active' || formSetting.status === 'configured')) {
-          return (
-            <FormIntegrationViewer 
-              clientAutomationId={clientAutomation.id}
-              automationTitle={clientAutomation.automation?.title}
-            />
-          );
+          return <FormIntegrationViewer clientAutomationId={clientAutomation.id} automationTitle={clientAutomation.automation?.title} />;
         }
         return <div>Form integration not configured</div>;
       case 'button':
         if (buttonSetting && (buttonSetting.status === 'active' || buttonSetting.status === 'configured')) {
-          return (
-            <ButtonIntegrationViewer 
-              clientAutomationId={clientAutomation.id}
-              automationTitle={clientAutomation.automation?.title}
-            />
-          );
+          return <ButtonIntegrationViewer clientAutomationId={clientAutomation.id} automationTitle={clientAutomation.automation?.title} />;
         }
         return <div>Button integration not configured</div>;
       case 'table':
         if (tableSetting && (tableSetting.status === 'active' || tableSetting.status === 'configured')) {
-          return (
-            <TableIntegrationViewer 
-              tableUrl={tableSetting.table_url}
-              tableTitle={tableSetting.table_title}
-              automationTitle={clientAutomation.automation?.title}
-            />
-          );
+          return <TableIntegrationViewer tableUrl={tableSetting.table_url} tableTitle={tableSetting.table_title} automationTitle={clientAutomation.automation?.title} />;
         }
         return <div>Table integration not configured</div>;
       default:
         return renderOverviewTab();
     }
   };
-
   const renderOverviewTab = () => {
-    return (
-      <div className="space-y-4">
+    return <div className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Automation Details</CardTitle>
@@ -191,23 +182,18 @@ const AdvancedAutomationDetails: React.FC = () => {
           </CardContent>
         </Card>
 
-        {clientAutomation.automation?.description && (
-          <Card>
+        {clientAutomation.automation?.description && <Card>
             <CardHeader>
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
               {clientAutomation.automation.description}
             </CardContent>
-          </Card>
-        )}
-      </div>
-    );
+          </Card>}
+      </div>;
   };
-
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
+    return <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="flex items-center gap-4 mb-6">
             <Skeleton className="h-10 w-32" />
@@ -223,13 +209,10 @@ const AdvancedAutomationDetails: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!clientAutomation) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
+    return <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Automation Not Found</h2>
@@ -242,14 +225,10 @@ const AdvancedAutomationDetails: React.FC = () => {
             </Button>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const tabs = getIntegrationTabs();
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
+  return <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -269,24 +248,8 @@ const AdvancedAutomationDetails: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowTicketModal(true)}
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              Get Support
-            </Button>
-            <Badge 
-              variant="outline" 
-              className={
-                clientAutomation.setup_status === 'completed' 
-                  ? 'bg-green-100 text-green-800 border-green-200'
-                  : clientAutomation.setup_status === 'in_progress'
-                  ? 'bg-blue-100 text-blue-800 border-blue-200'
-                  : 'bg-yellow-100 text-yellow-800 border-yellow-200'
-              }
-            >
+            
+            <Badge variant="outline" className={clientAutomation.setup_status === 'completed' ? 'bg-green-100 text-green-800 border-green-200' : clientAutomation.setup_status === 'in_progress' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}>
               {clientAutomation.setup_status === 'completed' && 'Ready to Use'}
               {clientAutomation.setup_status === 'in_progress' && 'Setup In Progress'}
               {clientAutomation.setup_status === 'pending' && 'Setup Pending'}
@@ -295,31 +258,19 @@ const AdvancedAutomationDetails: React.FC = () => {
         </div>
 
         {/* Navigation Tabs */}
-        {tabs.length > 1 && (
-          <div className="bg-white rounded-lg shadow-sm mb-6">
+        {tabs.length > 1 && <div className="bg-white rounded-lg shadow-sm mb-6">
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
+                {tabs.map(tab => {
+              const Icon = tab.icon;
+              return <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
                       <Icon className="h-4 w-4" />
                       {tab.label}
-                    </button>
-                  );
-                })}
+                    </button>;
+            })}
               </nav>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Tab Content */}
         <div className="space-y-6">
@@ -327,14 +278,8 @@ const AdvancedAutomationDetails: React.FC = () => {
         </div>
 
         {/* Support Ticket Modal */}
-        <CreateTicketModal
-          automationId={automationId!}
-          automationTitle={clientAutomation.automation?.title || ''}
-          clientAutomationId={clientAutomation.id}
-        />
+        <CreateTicketModal automationId={automationId!} automationTitle={clientAutomation.automation?.title || ''} clientAutomationId={clientAutomation.id} />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default AdvancedAutomationDetails;

@@ -110,10 +110,10 @@ const AdvancedAutomationDetails: React.FC = () => {
         if (webhookSetting && (webhookSetting.status === 'active' || webhookSetting.status === 'configured')) {
           return (
             <WebhookUrlDisplay 
-              clientAutomationId={clientAutomation.id}
-              automationTitle={clientAutomation.automation?.title}
-              testUrl={webhookSetting.test_url}
-              productionUrl={webhookSetting.production_url}
+              webhookData={{
+                test_url: webhookSetting.test_url,
+                production_url: webhookSetting.production_url
+              }}
             />
           );
         }
@@ -123,7 +123,6 @@ const AdvancedAutomationDetails: React.FC = () => {
           return (
             <CustomPromptEditor 
               clientAutomationId={clientAutomation.id}
-              automationId={automationId!}
               initialPrompt={promptSetting.prompt_text}
               webhookUrl={promptSetting.prompt_webhook_url}
             />
@@ -135,7 +134,6 @@ const AdvancedAutomationDetails: React.FC = () => {
           return (
             <FormIntegrationViewer 
               clientAutomationId={clientAutomation.id}
-              integrationCode={formSetting.integration_code}
               automationTitle={clientAutomation.automation?.title}
             />
           );
@@ -145,8 +143,7 @@ const AdvancedAutomationDetails: React.FC = () => {
         if (buttonSetting && (buttonSetting.status === 'active' || buttonSetting.status === 'configured')) {
           return (
             <ButtonIntegrationViewer 
-              buttonUrl={buttonSetting.button_url}
-              buttonText={buttonSetting.button_text}
+              clientAutomationId={clientAutomation.id}
               automationTitle={clientAutomation.automation?.title}
             />
           );
@@ -332,8 +329,8 @@ const AdvancedAutomationDetails: React.FC = () => {
 
         {/* Support Ticket Modal */}
         <CreateTicketModal
-          isOpen={showTicketModal}
-          onClose={() => setShowTicketModal(false)}
+          open={showTicketModal}
+          onOpenChange={setShowTicketModal}
           automationId={automationId!}
           automationTitle={clientAutomation.automation?.title || ''}
         />

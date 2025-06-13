@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,7 +82,8 @@ const MyAutomationsView: React.FC = () => {
     if (automation?.has_webhook) badges.push({ icon: Webhook, label: t('clientPortal.webhook'), color: 'bg-purple-50 text-purple-700' });
     if (automation?.has_custom_prompt) badges.push({ icon: FileText, label: t('clientPortal.customPrompt'), color: 'bg-blue-50 text-blue-700' });
     if (automation?.has_form_integration) badges.push({ icon: FileCode, label: t('clientPortal.form'), color: 'bg-green-50 text-green-700' });
-    if (automation?.has_table_integration) badges.push({ icon: Table, label: t('clientPortal.table'), color: 'bg-amber-50 text-amber-700' });
+    if (automation?.has_button_integration) badges.push({ icon: BarChart3, label: 'Button', color: 'bg-amber-50 text-amber-700' });
+    if (automation?.has_table_integration) badges.push({ icon: Table, label: 'Estadísticas', color: 'bg-teal-50 text-teal-700' });
     return badges;
   };
 

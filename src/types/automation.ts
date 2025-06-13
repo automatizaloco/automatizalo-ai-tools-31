@@ -1,3 +1,4 @@
+
 export interface Automation {
   id: string;
   title: string;
@@ -11,6 +12,7 @@ export interface Automation {
   has_custom_prompt?: boolean;
   has_form_integration?: boolean;
   has_button_integration?: boolean;
+  has_table_integration?: boolean;
 }
 
 export interface ClientAutomation {
@@ -56,13 +58,15 @@ export interface CustomPrompt {
 export interface Integration {
   id?: string;
   automation_id: string;
-  integration_type: 'webhook' | 'form' | 'button' | 'custom_prompt';
+  integration_type: 'webhook' | 'form' | 'button' | 'custom_prompt' | 'table';
   test_url?: string;
   production_url?: string;
   integration_code?: string;
   prompt_webhook_url?: string;
   button_url?: string;
   button_text?: string;
+  table_url?: string;
+  table_title?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -70,7 +74,7 @@ export interface Integration {
 export interface ClientIntegrationSetting {
   id?: string;
   client_automation_id: string;
-  integration_type: 'webhook' | 'form' | 'button' | 'custom_prompt';
+  integration_type: 'webhook' | 'form' | 'button' | 'custom_prompt' | 'table';
   test_url?: string;
   production_url?: string;
   integration_code?: string;
@@ -78,6 +82,8 @@ export interface ClientIntegrationSetting {
   prompt_webhook_url?: string;
   button_url?: string;
   button_text?: string;
+  table_url?: string;
+  table_title?: string;
   status: 'pending' | 'configured' | 'active';
   created_at?: string;
   updated_at?: string;

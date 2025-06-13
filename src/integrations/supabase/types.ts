@@ -17,6 +17,7 @@ export type Database = {
           has_button_integration: boolean | null
           has_custom_prompt: boolean | null
           has_form_integration: boolean | null
+          has_table_integration: boolean | null
           has_webhook: boolean | null
           id: string
           image_url: string | null
@@ -32,6 +33,7 @@ export type Database = {
           has_button_integration?: boolean | null
           has_custom_prompt?: boolean | null
           has_form_integration?: boolean | null
+          has_table_integration?: boolean | null
           has_webhook?: boolean | null
           id?: string
           image_url?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           has_button_integration?: boolean | null
           has_custom_prompt?: boolean | null
           has_form_integration?: boolean | null
+          has_table_integration?: boolean | null
           has_webhook?: boolean | null
           id?: string
           image_url?: string | null
@@ -204,6 +207,8 @@ export type Database = {
           prompt_text: string | null
           prompt_webhook_url: string | null
           status: string
+          table_title: string | null
+          table_url: string | null
           test_url: string | null
           updated_at: string
         }
@@ -220,6 +225,8 @@ export type Database = {
           prompt_text?: string | null
           prompt_webhook_url?: string | null
           status?: string
+          table_title?: string | null
+          table_url?: string | null
           test_url?: string | null
           updated_at?: string
         }
@@ -236,6 +243,8 @@ export type Database = {
           prompt_text?: string | null
           prompt_webhook_url?: string | null
           status?: string
+          table_title?: string | null
+          table_url?: string | null
           test_url?: string | null
           updated_at?: string
         }

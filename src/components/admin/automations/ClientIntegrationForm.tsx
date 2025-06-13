@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, ArrowLeft, Save, Webhook, Box, ExternalLink, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Save, Webhook, Box, ExternalLink, Loader2, Table } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import WebhookConfigCard from '@/components/admin/webhooks/WebhookConfigCard';
@@ -59,6 +59,13 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
   };
 
   const updateButtonData = (setting: ClientIntegrationSetting, field: 'button_url' | 'button_text', value: string) => {
+    const updatedSettings = integrationSettings.map(s => 
+      s.id === setting.id ? { ...s, [field]: value } : s
+    );
+    setIntegrationSettings(updatedSettings);
+  };
+
+  const updateTableData = (setting: ClientIntegrationSetting, field: 'table_url' | 'table_title', value: string) => {
     const updatedSettings = integrationSettings.map(s => 
       s.id === setting.id ? { ...s, [field]: value } : s
     );
@@ -206,6 +213,8 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
             <TabsTrigger value="form">Form</TabsTrigger>}
           {availableIntegrations.includes('button') && 
             <TabsTrigger value="button">Editor Button</TabsTrigger>}
+          {availableIntegrations.includes('table') && 
+            <TabsTrigger value="table">Table</TabsTrigger>}
         </TabsList>
         
         {availableIntegrations.includes('webhook') && (
@@ -229,6 +238,12 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
         {availableIntegrations.includes('button') && (
           <TabsContent value="button" className="pt-4">
             {renderButtonIntegration()}
+          </TabsContent>
+        )}
+        
+        {availableIntegrations.includes('table') && (
+          <TabsContent value="table" className="pt-4">
+            {renderTableIntegration()}
           </TabsContent>
         )}
       </Tabs>
@@ -451,6 +466,72 @@ const ClientIntegrationForm: React.FC<ClientIntegrationFormProps> = ({
                 <>
                   <Save className="mr-2 h-4 w-4" />
                   Save Button Integration
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+  
+  const renderTableIntegration = () => {
+    const tableSetting = getSettingByType('table');
+    if (!tableSetting) return null;
+    
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Table className="h-5 w-5" />
+            Table Integration (NocoDB)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="table-title">Table Title</Label>
+              <Input
+                id="table-title"
+                type="text"
+                value={tableSetting.table_title || 'Estadísticas'}
+                onChange={(e) => updateTableData(tableSetting, 'table_title', e.target.value)}
+                placeholder="Estadísticas de la automatización"
+                className="mt-1"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Título que se mostrará encima de la tabla embebida.
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="table-url">NocoDB Embed URL</Label>
+              <Input
+                id="table-url"
+                type="url"
+                value={tableSetting.table_url || ''}
+                onChange={(e) => updateTableData(tableSetting, 'table_url', e.target.value)}
+                placeholder="https://your-nocodb-instance.com/dashboard/..."
+                className="mt-1"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                URL de embed de NocoDB para mostrar las estadísticas de esta automatización.
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => handleSave(tableSetting)}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Table Integration
                 </>
               )}
             </Button>

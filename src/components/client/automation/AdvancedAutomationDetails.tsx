@@ -149,7 +149,12 @@ const AdvancedAutomationDetails: React.FC = () => {
         return <div>Button integration not configured</div>;
       case 'table':
         if (tableSetting && (tableSetting.status === 'active' || tableSetting.status === 'configured')) {
-          return <TableIntegrationViewer tableUrl={tableSetting.table_url} tableTitle={tableSetting.table_title} automationTitle={clientAutomation.automation?.title} />;
+          return <TableIntegrationViewer 
+            tableUrl={tableSetting.table_url} 
+            tableTitle={tableSetting.table_title} 
+            automationTitle={clientAutomation.automation?.title}
+            clientAutomationId={clientAutomation.id}
+          />;
         }
         return <div>Table integration not configured</div>;
       default:

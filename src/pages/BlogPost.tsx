@@ -43,12 +43,23 @@ const BlogPost = () => {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  // Simple translation helper for blog content
-  const translateContent = (post: BlogPostType, field: 'title' | 'content', lang: string) => {
-    if (lang === 'en') return post[field];
-    if (lang === 'es' && post[`${field}_es`]) return post[`${field}_es`];
-    if (lang === 'fr' && post[`${field}_fr`]) return post[`${field}_fr`];
-    return post[field]; // fallback to English
+  // Función mejorada para obtener contenido traducido
+  const getTranslatedContent = (post: BlogPostType, field: 'title' | 'content' | 'excerpt') => {
+    // Si el idioma es inglés, devolver el contenido original
+    if (language === 'en') {
+      return post[field];
+    }
+    
+    // Si hay traducciones disponibles para el idioma actual
+    if (post.translations && post.translations[language as 'fr' | 'es']) {
+      const translation = post.translations[language as 'fr' | 'es'];
+      if (translation && translation[field] && translation[field].trim() !== '') {
+        return translation[field];
+      }
+    }
+    
+    // Fallback al contenido original si no hay traducción
+    return post[field];
   };
 
   if (isLoading) {
@@ -95,8 +106,8 @@ const BlogPost = () => {
     );
   }
 
-  const title = translateContent(post, 'title', language);
-  const content = translateContent(post, 'content', language);
+  const title = getTranslatedContent(post, 'title');
+  const content = getTranslatedContent(post, 'content');
 
   return (
     <main className="flex-grow pt-32 pb-16">

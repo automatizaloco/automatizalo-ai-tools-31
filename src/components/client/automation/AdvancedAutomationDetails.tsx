@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Activity, Settings, Webhook, FileText, ExternalLink, Table as TableIcon, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Activity, Settings, Webhook, FileText, ExternalLink, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import WebhookUrlDisplay from './WebhookUrlDisplay';
@@ -84,9 +84,7 @@ const AdvancedAutomationDetails: React.FC = () => {
           case 'button':
             tabs.push({ id: 'button', label: 'Editor Button', icon: ExternalLink });
             break;
-          case 'table':
-            tabs.push({ id: 'table', label: 'Vista Externa', icon: TableIcon });
-            break;
+          // Eliminamos el caso 'table' ya que ahora está integrado en la pestaña de estadísticas
         }
       }
     });
@@ -106,9 +104,11 @@ const AdvancedAutomationDetails: React.FC = () => {
         return renderOverviewTab();
       case 'stats':
         return (
-          <AutomationStatsDashboard 
-            clientAutomationId={clientAutomation.id}
+          <TableIntegrationViewer 
+            tableUrl={tableSetting?.table_url} 
+            tableTitle={tableSetting?.table_title} 
             automationTitle={clientAutomation.automation?.title}
+            clientAutomationId={clientAutomation.id}
           />
         );
       case 'webhook':
@@ -143,16 +143,6 @@ const AdvancedAutomationDetails: React.FC = () => {
           />;
         }
         return <div>Button integration not configured</div>;
-      case 'table':
-        if (tableSetting && (tableSetting.status === 'active' || tableSetting.status === 'configured')) {
-          return <TableIntegrationViewer 
-            tableUrl={tableSetting.table_url} 
-            tableTitle={tableSetting.table_title} 
-            automationTitle={clientAutomation.automation?.title}
-            clientAutomationId={clientAutomation.id}
-          />;
-        }
-        return <div>Table integration not configured</div>;
       default:
         return renderOverviewTab();
     }

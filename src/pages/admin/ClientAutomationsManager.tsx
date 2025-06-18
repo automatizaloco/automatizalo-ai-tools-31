@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAdminVerification } from '@/hooks/useAdminVerification';
-import { Loader2, Users } from 'lucide-react';
+import { Loader2, Users, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ClientAutomationWithDetails,
   fetchClientAutomations,
@@ -10,6 +11,7 @@ import {
 } from '@/components/admin/automations/client-integration-utils';
 import ClientAutomationsList from '@/components/admin/automations/ClientAutomationsList';
 import ClientIntegrationForm from '@/components/admin/automations/ClientIntegrationForm';
+import AdminAutomationStats from '@/components/admin/automations/AdminAutomationStats';
 import { useIsMobile } from '@/hooks/use-mobile';
 import AdminContent from '@/components/layout/admin/AdminContent';
 
@@ -19,6 +21,7 @@ const ClientAutomationsManager: React.FC = () => {
   const [selectedAutomation, setSelectedAutomation] = useState<ClientAutomationWithDetails | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('automations');
   const { isAdmin, isVerifying } = useAdminVerification();
   const isMobile = useIsMobile();
 
@@ -31,7 +34,7 @@ const ClientAutomationsManager: React.FC = () => {
       setClientAutomations(data);
     } catch (error) {
       console.error('Error fetching client automations:', error);
-      toast.error('Failed to load client automations');
+      toast.error('Failed to load client autom   ations');
     } finally {
       setIsLoading(false);
     }
@@ -97,15 +100,34 @@ const ClientAutomationsManager: React.FC = () => {
           onConfigUpdate={fetchData}
         />
       ) : (
-        <ClientAutomationsList 
-          clientAutomations={clientAutomations}
-          isLoading={isLoading}
-          onViewConfig={handleViewConfig}
-          selectedClientId={selectedClientId}
-          onClientFilterChange={handleClientFilterChange}
-          selectedStatus={selectedStatus}
-          onStatusFilterChange={handleStatusFilterChange}
-        />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="automations" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Automatizaciones
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Estadísticas Generales
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="automations" className="mt-6">
+            <ClientAutomationsList 
+              clientAutomations={clientAutomations}
+              isLoading={isLoading}
+              onViewConfig={handleViewConfig}
+              selectedClientId={selectedClientId}
+              onClientFilterChange={handleClientFilterChange}
+              selectedStatus={selectedStatus}
+              onStatusFilterChange={handleStatusFilterChange}
+            />
+          </TabsContent>
+          
+          <TabsContent value="stats" className="mt-6">
+            <AdminAutomationStats />
+          </TabsContent>
+        </Tabs>
       )}
     </AdminContent>
   );

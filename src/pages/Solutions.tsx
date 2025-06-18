@@ -1,16 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, MessageSquare, PieChart, Smartphone, Brain, Zap, Shield, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductFeature from '@/components/solutions/ProductFeature';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import { useContactInfo } from '@/stores/contactInfoStore';
 import EditableText from '@/components/admin/EditableText';
 
 const Solutions = () => {
   const [visibleSection, setVisibleSection] = useState(0);
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const { contactInfo } = useContactInfo();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -19,6 +20,13 @@ const Solutions = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleWhatsAppClick = () => {
+    const phoneNumber = contactInfo.whatsapp || contactInfo.phone || "+57 3192963363";
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    const message = encodeURIComponent("Hello, I would like more information about your solutions");
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+  };
 
   const solutions = [
     {
@@ -197,7 +205,10 @@ const Solutions = () => {
             )}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button className="bg-white text-automatizalo-blue hover:bg-gray-100 px-8 py-3 text-lg">
+            <Button 
+              onClick={handleWhatsAppClick}
+              className="bg-white text-automatizalo-blue hover:bg-gray-100 px-8 py-3 text-lg"
+            >
               {t('solutions.cta.button')}
               <ArrowRight size={20} className="ml-2" />
             </Button>

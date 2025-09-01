@@ -51,7 +51,7 @@ const AdminLayoutSimple: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="w-full px-4 py-4">
         <Tabs value={currentPath} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="sticky top-0 z-40 grid w-full grid-cols-5 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
             {adminTabs.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
                 <tab.icon className="h-4 w-4" />

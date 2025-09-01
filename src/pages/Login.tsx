@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,14 +49,31 @@ const Login = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log("Already authenticated, redirecting");
-      if (redirectTo) {
-        navigate(redirectTo);
-      } else {
-        navigate("/admin");
+    const checkUserAndRedirect = async () => {
+      if (isAuthenticated && user) {
+        console.log("Already authenticated, checking role");
+        
+        const { data: userRole } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        const isAdmin = userRole?.role === 'admin';
+        
+        if (isAdmin) {
+          if (redirectTo && redirectTo.startsWith('/admin')) {
+            navigate(redirectTo);
+          } else {
+            navigate("/admin");
+          }
+        } else {
+          navigate("/client-portal");
+        }
       }
-    }
+    };
+    
+    checkUserAndRedirect();
   }, [isAuthenticated, user, navigate, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,11 +101,25 @@ const Login = () => {
           localStorage.removeItem("admin_saved_password");
         }
         
-        // Redirect to the requested page or admin dashboard
-        if (redirectTo) {
-          navigate(redirectTo);
+        // Check user role and redirect accordingly
+        const { data: userRole } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user?.id)
+          .single();
+        
+        const isAdmin = userRole?.role === 'admin';
+        
+        if (isAdmin) {
+          // Admin goes to admin panel
+          if (redirectTo && redirectTo.startsWith('/admin')) {
+            navigate(redirectTo);
+          } else {
+            navigate("/admin");
+          }
         } else {
-          navigate("/admin");
+          // Client goes to client portal
+          navigate("/client-portal");
         }
       }
     } catch (error: any) {
@@ -108,7 +140,7 @@ const Login = () => {
         }`}>
           <h1 className={`text-xl md:text-2xl font-bold text-center mb-6 ${
             theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-          }`}>Admin Login</h1>
+          }`}>Iniciar Sesión</h1>
           
           {error && (
             <div className={`p-3 mb-4 rounded-md flex items-center gap-2 ${

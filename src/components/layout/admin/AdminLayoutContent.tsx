@@ -19,7 +19,7 @@ const AdminLayoutContent: React.FC<AdminLayoutContentProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="w-full overflow-hidden">
+    <div className="w-full overflow-hidden pt-16">
       {isPageLoading && (
         <div className="fixed top-0 left-0 right-0 z-50">
           <Progress value={100} className="h-1 animate-pulse" />

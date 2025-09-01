@@ -49,7 +49,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   );
 
   return (
-    <div className="bg-white shadow sticky top-0 z-50">
+    <div className="bg-white shadow-md fixed top-0 left-0 right-0 z-50 border-b border-gray-200">
       <div className="px-4 h-16 flex justify-between items-center">
         <div className="flex-shrink-0 flex items-center">
           <h1 
@@ -62,19 +62,18 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         
         <div className="flex items-center gap-2">
           
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onViewAsClient}
+            className="flex items-center gap-1 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+          >
+            <Eye className="h-4 w-4" />
+            <span className="hidden xs:inline">{t.viewAsClient}</span>
+          </Button>
           
           {!isMobile && (
             <>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onViewAsClient}
-                className="flex items-center gap-1"
-              >
-                <Eye className="h-4 w-4" />
-                <span className="hidden sm:inline">{t.viewAsClient}</span>
-              </Button>
-              
               <Button 
                 variant="outline"
                 size="sm"

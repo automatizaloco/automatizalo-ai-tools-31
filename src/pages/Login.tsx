@@ -140,7 +140,7 @@ const Login = () => {
         }`}>
           <h1 className={`text-xl md:text-2xl font-bold text-center mb-6 ${
             theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-          }`}>Iniciar Sesión</h1>
+          }`}>Login</h1>
           
           {error && (
             <div className={`p-3 mb-4 rounded-md flex items-center gap-2 ${

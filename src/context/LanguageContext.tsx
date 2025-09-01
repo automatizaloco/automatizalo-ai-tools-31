@@ -931,12 +931,11 @@ const translations = {
 };
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [language, setLanguage] = useState('en'); // Force English only
+  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
 
-  // Remove localStorage persistence to force English
-  // useEffect(() => {
-  //   localStorage.setItem('language', language);
-  // }, [language]);
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
 
   const t = useCallback((key: string, options: Record<string, any> = {}) => {
     const keys = key.split('.');

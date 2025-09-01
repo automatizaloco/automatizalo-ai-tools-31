@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAdminVerification } from '@/hooks/useAdminVerification';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Wrench, Webhook, Settings, MessageSquare } from 'lucide-react';
+import { Users, Wrench, Settings, MessageSquare } from 'lucide-react';
 
 const AdminLayoutSimple: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +19,6 @@ const AdminLayoutSimple: React.FC = () => {
     { id: 'automations', label: 'Automatizaciones', icon: Settings, path: '/admin/automations' },
     { id: 'client-automations', label: 'Clientes', icon: Wrench, path: '/admin/client-automations' },
     { id: 'support', label: 'Soporte', icon: MessageSquare, path: '/admin/support' },
-    { id: 'webhooks', label: 'Webhooks', icon: Webhook, path: '/admin/webhooks' },
   ];
 
   const handleTabChange = (value: string) => {
@@ -52,7 +51,7 @@ const AdminLayoutSimple: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="w-full px-4 py-4">
         <Tabs value={currentPath} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             {adminTabs.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
                 <tab.icon className="h-4 w-4" />

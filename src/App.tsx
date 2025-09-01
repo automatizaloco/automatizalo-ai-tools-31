@@ -7,7 +7,6 @@ import AdminLayoutSimple from './components/layout/AdminLayoutSimple';
 /* Admin routes only - simplified backend interface */
 const SupportManager = lazy(() => import('./pages/admin/SupportManager'));
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
-const WebhookManager = lazy(() => import('./pages/admin/WebhookManager'));
 const AutomationManager = lazy(() => import('./pages/admin/AutomationManager'));
 const ClientAutomationsManager = lazy(() => import('./pages/admin/ClientAutomationsManager'));
 
@@ -23,7 +22,6 @@ function App() {
             <Route index element={<Navigate to="/admin/users" replace />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="support" element={<SupportManager />} />
-            <Route path="webhooks" element={<WebhookManager />} />
             <Route path="automations" element={<AutomationManager />} />
             <Route path="client-automations" element={<ClientAutomationsManager />} />
           </Route>

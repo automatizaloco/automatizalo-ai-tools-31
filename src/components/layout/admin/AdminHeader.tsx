@@ -61,7 +61,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
-          {!isMobile && <LanguageSwitcher />}
+          
           
           {!isMobile && (
             <>
@@ -118,9 +118,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
                 ))}
                 
                 <div className="px-4 py-2 mt-4 border-t">
-                  <div className="mb-4">
-                    <LanguageSwitcher />
-                  </div>
                   
                   <SheetClose asChild>
                     <Button 

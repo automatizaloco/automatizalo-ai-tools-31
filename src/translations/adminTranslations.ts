@@ -4,7 +4,7 @@ export const adminTranslations = {
     adminHeader: {
       adminTitle: 'Admin Panel',
       navigation: 'Navigation',
-      viewAsClient: 'Client View',
+      viewAsClient: 'Client Portal',
       home: 'Home',
       logout: 'Logout'
     }
